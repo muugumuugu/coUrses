@@ -4,13 +4,13 @@
 
 ---
 
-##./Bill Kinney's yt course.
+## ./Bill Kinney's yt course.
 ---
 - [ ] Lecture 31
 - [ ] Lecture 32
 
 ---
-##./M204 req.
+## ./M204 req.
 - [ ] Metric spaces
 - [ ] open balls and open sets
 - [ ] limit and cluster points
