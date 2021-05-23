@@ -6,25 +6,25 @@
 
 ## ./M203 req.
 
----
+> ---
 
 ## ./M208 req.
----
+>---
 ### graph theory
-- [ ] Graphs
-- [ ] subgraphs
-- [ ] graph isomorphisms
-- [ ] degree sequence
-- [ ] paths
-- [ ] cycles
+- [x] Graphs
+- [x] subgraphs
+- [x] graph isomorphisms
+- [x] degree sequence
+- [x] paths
+- [x] cycles
 - [ ] trees
-- [ ] bipartite graphs
-- [ ] Hamilton cycles
+- [x] bipartite graphs
+- [x] Hamilton cycles
 - [ ] Euler tours
 - [ ] directed graphs
-- [ ] matching
+- [x] matching
 - [ ] Tutte’s theorem
-- [ ] connectivity
+- [x] connectivity
 - [ ] Menger’s theorem
 - [ ] planar graphs
 - [ ] Kuratowski’s theorem
@@ -32,16 +32,13 @@
 - [ ] network flows
 - [ ] maxflow min- cut theorem
 - [ ] Ramsey theory for graphs
-- [ ] matrices associated with graphs.
-
-## NPETL iisc graph theory
-- [ ]
-- [ ]
+- [x] matrices associated with graphs.
+---
 
 ## NPETL iitm graph theory
-- [ ] [Course Contents](../resources/NPETL/GraphTheory/iitm%20handouts/Contents.pdf)
-- [ ] [Preliminaries](../resources/NPETL/GraphTheory/iitm%20handouts/Module1.pdf)
-- [ ] [Connected graphs and shortest paths](../resources/NPETL/GraphTheory/iitm%20handouts/Module2.pdf)
+- [x] [Course Contents](../resources/NPETL/GraphTheory/iitm%20handouts/Contents.pdf)
+- [x] [Preliminaries](../resources/NPETL/GraphTheory/iitm%20handouts/Module1.pdf)
+- [x] [Connected graphs and shortest paths](../resources/NPETL/GraphTheory/iitm%20handouts/Module2.pdf)
 - [ ] [Trees](../resources/NPETL/GraphTheory/iitm%20handouts/Module3.pdf)
 - [ ] [Special classes of graphs](../resources/NPETL/GraphTheory/iitm%20handouts/Module4.pdf)
 - [ ] [Eulerian Graphs](../resources/NPETL/GraphTheory/iitm%20handouts/Module5.pdf)
@@ -51,3 +48,8 @@
 - [ ] [Edge colorings](../resources/NPETL/GraphTheory/iitm%20handouts/Module9.pdf)
 - [ ] [Planar Graphs](../resources/NPETL/GraphTheory/iitm%20handouts/Module10.pdf)
 - [ ] [Directed Graphs](../resources/NPETL/GraphTheory/iitm%20handouts/Module11.pdf)
+
+---
+## NPETL iisc graph theory
+- [ ] 
+- [ ] 
