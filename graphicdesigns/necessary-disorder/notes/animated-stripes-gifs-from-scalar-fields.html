@@ -1,0 +1,205 @@
+<html><head><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/muugumuugu/coDing/css/hacker.min.css"><title>necessarily-disorder tutorials</title><script src="https://cdn.jsdelivr.net/gh/muugumuugu/coDing/js/syntaxhighlighter.min.js"></script><script>hljs.highlightAll();</script></head><body><main>
+<p>This tutorial explains how to obtain this kind of GIF with Processing :</p>
+<p><img alt="agif3" src="images/agif3.gif" title="agif3"></p>
+<p>We’ll start from this code that generates the following simple animation ;</p>
+<pre><code lang="java">
+int margin = 50;
+int numFrames = 20;
+
+void setup(){
+  size(600,600);
+
+}
+
+float pixel_color(float x,float y,float t){
+  float result = map(sin(TWO_PI*t),-1,1,0,1);
+  return 255*result;
+}
+
+void draw(){
+  background(0);
+
+  float t = 1.0*(frameCount-1)%numFrames/numFrames;
+
+  // Draws every pixel
+  for(int i=margin;i&lt;width-margin;i++){
+    for(int j=margin;j&lt;height-margin;j++){
+      stroke(pixel_color(i,j,t));
+      point(i,j);
+    }
+  }
+
+  // Draws a white rectangle
+  stroke(255);
+  noFill();
+  rect(margin,margin,width-2*margin,height-2*margin);
+
+  // Saves the frame
+  println(frameCount,"/",numFrames);
+  saveFrame("frame###.png");
+
+  // Stops when all the frames are rendered
+  if(frameCount == numFrames){
+    println("finished");
+    stop();
+  }
+}
+</code></pre>
+<p><img alt="agif" src="images/agif.gif" title="agif"></p>
+<p>That code makes each pixel in a white rectangle oscillate between black and white over time. The rest will be only little variations from there so make sure you understand the basis.</p>
+<p>Now let’s have moving stripes !<br/>
+So let’s change the pixel_color function so that the color of pixels doesn’t oscillate at the same time vertically.</p>
+<pre><code lang="java">
+float pixel_color(float x,float y,float t){
+  float result = map(sin(TWO_PI*(t+0.05*y)),-1,1,0,1);
+  return 255*result;
+}
+</code></pre>
+<p><img alt="agif2" src="images/agif2.gif" title="agif2"></p>
+<p>Now let’s make those stripes more contrasted. To achieve that we’ll use an easing function that makes values between 0 and 0.5 closer to 0 and values between 0.5 and 1 closer to 1, with a parameter g to increase the effect.</p>
+<pre><code lang="java">
+float ease(float p, float g) {
+  if (p &lt; 0.5)
+    return 0.5 * pow(2*p, g);
+  else
+    return 1 - 0.5 * pow(2*(1 - p), g);
+}
+</code></pre>
+<p>Let’s use it on our oscillating color :</p>
+<pre><code lang="java">
+float pixel_color(float x,float y,float t){
+  float result = ease(map(sin(TWO_PI*(t+0.05*y)),-1,1,0,1),3.0);
+  return 255*result;
+}
+</code></pre>
+<p>This is the result :</p>
+<p><img alt="agif3" src="images/agif3.gif" title="agif3"></p>
+<p>Now let’s make a general function that controls the offset in the oscilation :<br/>
+(a scalar field is just a function that gives a real value for each position of the plane in our case)</p>
+<pre><code lang="java">
+float scalar_field_offset(float x,float y){
+  return 0.05*x+0.05*y;
+}
+
+float pixel_color(float x,float y,float t){
+  float result = ease(map(sin(TWO_PI*(t+scalar_field_offset(x,y))),-1,1,0,1),3.0);
+  return 255*result;
+}
+</code></pre>
+<p>Result (there is now horzontal change due to 0.05*x) :</p>
+<p><img alt="agif4" src="images/agif4.gif" title="agif4"></p>
+<p>Now to obtain different results we just have to change the scalar field. Let’s use the distance to the center.</p>
+<pre><code lang="java">
+float scalar_field_offset(float x,float y){
+  float distance = dist(x,y,width/2,height/2);
+  return 0.05*distance;
+}
+</code></pre>
+<p><img alt="agif5" src="images/agif5.gif" title="agif5"></p>
+<p>Perlin noise (a very nice function given by Processing, I won’t make a tutorial about it here) :</p>
+<pre><code lang="java">
+float scalar_field_offset(float x,float y){
+  float scale = 0.003;
+  float result = 40*noise(scale*x,scale*y);
+  return result;
+}
+</code></pre>
+<p><img alt="agif6" src="images/agif6.gif" title="agif6"></p>
+<p>Stripes and perlin noise gradually vertically :</p>
+<pre><code lang="java">
+float scalar_field_offset(float x,float y){ 
+  float perlin_noise_intensity = pow(constrain(map(y,0.1*height,height,0,1),0,1),2);
+  
+  float scale = 0.006;
+  float result = -0.05*y + 20*(noise(scale*x,scale*y)-0.5)*perlin_noise_intensity;
+  return result;
+}
+</code></pre>
+<p><img alt="agif7" src="images/agif7.gif" title="agif7"> :</p>
+<p>Perlin noise in the center :</p>
+<pre><code lang="java">
+float scalar_field_offset(float x,float y){
+  float distance = dist(x,y,width/2,height/2);
+  float perlin_noise_intensity = ease(constrain(map(distance,0,0.3*height,1,0),0,1),2);
+  
+  float scale = 0.002;
+  float result = -0.05*y -0.05*x + 60*(noise(scale*x,scale*y)-0.5)*perlin_noise_intensity;
+  return result;
+}
+</code></pre>
+<p><img alt="agif8" src="images/agif8.gif" title="agif8"></p>
+<p>Using distance differently :</p>
+<pre><code lang="java">
+float scalar_field_offset(float x,float y){
+  float distance = dist(x,y,0.5*width,0.5*height);
+  
+  float result = 300/(25+distance);
+  return result;
+}
+</code></pre>
+<p><img alt="agif9" src="images/agif9.gif" title="agif9"></p>
+<p>By adding the effect of many centers you can get something like this :</p>
+<p><img alt="tumblr_ouscz6fS6X1w3y4ilo1_500" src="images/tumblr_ouscz6fS6X1w3y4ilo1_500.gif" title="tumblr_ouscz6fS6X1w3y4ilo1_500"></p>
+<p>And with many centers and using an effect only near them :</p>
+<p><img alt="agif" src="images/agif.gif" title="agif"></p>
+<p>Here is a complete code to generate one in case you missed anything :</p>
+<pre><code lang="java">
+int margin = 50;
+int numFrames = 20;
+
+void setup(){
+  size(600,600);
+  
+}
+
+float ease(float p, float g) {
+  if (p &lt; 0.5) 
+    return 0.5 * pow(2*p, g);
+  else
+    return 1 - 0.5 * pow(2*(1 - p), g);
+}
+
+float scalar_field_offset(float x,float y){
+  float distance = dist(x,y,0.5*width,0.5*height);
+  
+  float result = 300/(25+distance);
+  return result;
+}
+
+float pixel_color(float x,float y,float t){
+  float result = ease(map(sin(TWO_PI*(t+scalar_field_offset(x,y))),-1,1,0,1),3.0);
+  return 255*result;
+}
+
+void draw(){
+  background(0);
+  
+  float t = 1.0*(frameCount-1)%numFrames/numFrames;
+  
+  // Draws every pixel
+  for(int i=margin;i&lt;width-margin;i++){
+    for(int j=margin;j&lt;height-margin;j++){
+      stroke(pixel_color(i,j,t));
+      point(i,j);
+    }
+  }
+  
+  // Draws a white rectangle
+  stroke(255);
+  noFill();
+  rect(margin,margin,width-2*margin,height-2*margin);
+  
+  // Saves the frame
+  println(frameCount,"/",numFrames);
+  saveFrame("frame###.png");
+  
+  // Stops when all the frames are rendered
+  if(frameCount == numFrames){
+    println("finished");
+    stop();
+  }
+}
+</code></pre>
+<p>I hope this was helpful and that you will be creative and come up with better stuff than me !</p>
+<p>Bonus : if you know glsl, it would be a better idea to code this in glsl to have much faster rendering.</p>
+</main></body></html>

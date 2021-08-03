@@ -1,0 +1,194 @@
+<html><head><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/muugumuugu/coDing/css/hacker.min.css"><title>necessarily-disorder tutorials</title><script src="https://cdn.jsdelivr.net/gh/muugumuugu/coDing/js/syntaxhighlighter.min.js"></script><script>hljs.highlightAll();</script></head><body><main>
+<h3>Intro, goal, examples</h3>
+<p>The following gifs use the same trick to draw some curves in Processing and I will do my best to try explaining it here. I’ll link their code and describe them at the end.</p>
+<p>(I put them here in chronological order of creation)</p>
+<p><img alt="manymovingonefixed" src="images/manymovingonefixed.gif" title="manymovingonefixed"></p>
+<p><img alt="10allconnected" src="images/10allconnected.gif" title="10allconnected"></p>
+<p><img alt="lotslittleconnections" src="images/lotslittleconnections.gif" title="lotslittleconnections"></p>
+<p><img alt="approxsun" src="images/approxsun.gif" title="approxsun"></p>
+<p><img alt="propafight" src="images/propafight.gif" title="propafight"></p>
+<p><img alt="rotatedstuff" src="images/rotatedstuff.gif" title="rotatedstuff"></p>
+<p><img alt="movinginthemiddle" src="images/movinginthemiddle.gif" title="movinginthemiddle"></p>
+<p>Some of them look quite complex but you’ll see the maths behind them isn’t complicated, and I’ll try to explain everything slowly.</p>
+<h3>Some basic code to start with</h3>
+<p>Here is some code to generate the frames of a gif showing two disks moving in circles (one twice faster than the other one) :</p>
+<pre><code lang="java">
+int numFrames = 100;
+
+void setup(){
+  size(500,500,P3D);
+
+  stroke(255);
+  fill(255);
+}
+
+float x1(float t){
+  return 0.25*width + 50*cos(TWO_PI*t);
+}
+float y1(float t){
+  return 0.5*height + 50*sin(TWO_PI*t);
+}
+
+float x2(float t){
+  return 0.75*width + 50*cos(2*TWO_PI*t);
+}
+float y2(float t){
+  return 0.5*height + 50*sin(2*TWO_PI*t);
+}
+
+void draw(){
+  float t = 1.0*(frameCount - 1)/numFrames;
+
+  background(0);
+
+  ellipse(x1(t),y1(t),6,6);
+  ellipse(x2(t),y2(t),6,6);
+
+  println("saving frame " + frameCount + "/" + numFrames);
+  if(frameCount&lt;=numFrames) saveFrame("fr###.png");
+  if(frameCount == numFrames) stop();
+}
+</code></pre>
+<p>Here is the result :</p>
+<p><img alt="agif1" src="images/agif1.gif" title="agif1"></p>
+<p>It might be quite a lot of code already but there won’t be much more code do draw the curves. I use P3D because it renders things more smoothly in some cases.</p>
+<p>For all the rest of this tutorial, the disks must have any trajectory that loops well.</p>
+<h3>The lerp function</h3>
+<p>A fundamental function/thing in the curve trick is the use of the function <strong>lerp</strong> of Processing, that does linear interpolation. Skip this part if you already know it !</p>
+<p>In case you have not heard about it, lerp(a,b,t) = (1-t)*a + t*b. when t=0 it returns a, when t=1 it returns b, when t is between 0 and 1 it returns a value between a and b linearly.</p>
+<p>If you still don’t feel familiar with that, here is a video of Daniel Shiffman explaining it : <a href="https://www.youtube.com/watch?v=8uLVnM36XUc" rel="nofollow">https://www.youtube.com/watch?v=8uLVnM36XUc</a><br/>
+I haven’t even watched it but I know he’s great at explaining stuff.</p>
+<h3>Drawing a line between two points with little points and lerp</h3>
+<p>Let’s draw lots of little transparent white points between the two disks. This trick seems useless so far but then when the curve won’t be a line, it will give cool shades of grey, that you can’t get easily with beginShape() endShape() (I think).</p>
+<p>Added code :</p>
+<pre><code lang="java">
+int m = 1000;
+</code></pre>
+<p>(number of little points)<br/>
+and :</p>
+<pre><code lang="java">
+  pushStyle();
+  strokeWeight(2);
+  stroke(255,100);
+  for(int i=0;i&lt;=m;i++){
+    float tt = 1.0*i/m;
+
+    float x = lerp(x1(t),x2(t),tt);
+    float y = lerp(y1(t),y2(t),tt);
+
+    point(x,y);
+  }
+  popStyle();
+</code></pre>
+<p>(inside draw())<br/>
+If you understood lerp there isn't much more to understand there. I use the variable name "tt" because I want to call it "t" but it's already taken by time. Really I don't know what more to say about this code.<br/>
+<a href="https://gist.github.com/Bleuje/d7ad0525275911866f23beab3bd90d07">Link to full code</a></p>
+<p>Result :<br/>
+<img alt="agif2" src="images/agif2.gif" title="agif2"></p>
+<h3>Seeing the disks with a delay</h3>
+<p>The idea is that the disk will be seen with a delay kind of proportional with the distance to the disk. Let’s begin to use this delay trick for the first disk only.</p>
+<p>Let’s add this to the code :<br/>
+This parameter :</p>
+<pre><code lang="java">
+float delay_factor = 2.0;
+</code></pre>
+<p>and :</p>
+<pre><code lang="java">
+    float x = lerp(x1(t - delay_factor*tt),x2(t),tt);
+    float y = lerp(y1(t - delay_factor*tt),y2(t),tt);
+</code></pre>
+<p>(x1 and y1 seen with a greater delay when tt is greater, no delay when tt = 0)</p>
+<p>Here is the result :<br/>
+<img alt="agif3" src="images/agif3.gif" title="agif3"></p>
+<p>With delay_factor = 1.0 :<br/>
+<img alt="agif3_1" src="images/agif3_1.gif" title="agif3_1"></p>
+<p>With delay_factor = 5.0 :<br/>
+<img alt="agif3_5" src="images/agif3_5.gif" title="agif3_5"></p>
+<p><a href="https://gist.github.com/Bleuje/bdd2516b8428ac1fee9590874f912e66">Link to full code</a></p>
+<h3>Seeing both disks with a delay</h3>
+<p>Now let’s have a delay on both disks.</p>
+<p>The only change to make is :</p>
+<pre><code lang="java">
+    float x = lerp(x1(t - delay_factor*tt),x2(t - delay_factor*(1-tt)),tt);
+    float y = lerp(y1(t - delay_factor*tt),y2(t - delay_factor*(1-tt)),tt);
+</code></pre>
+<p>You can use different delay factors if you want…</p>
+<p>Result with delay_factor = 1.0 :<br/>
+<img alt="agif4" src="images/agif4.gif" title="agif4"></p>
+<p><a href="https://gist.github.com/Bleuje/4eb013ed2fe8ab21b961bec18d6fa5ce">Link to full code</a></p>
+<h3>Using openSimplex noise for smooth random curves</h3>
+<p>Let’s have a perfectly looping random trajectory for the first disk. To understand this I advise to check out my previous tutorial <a href="drawing-from-noise-and-then-making-animated-loopy-gifs-from-there.html">“Drawing from noise, and then making animated loopy GIFs from there”</a>, but you may understand anyway if you don’t have time/motivation for that.</p>
+<p>To use openSimplex noise, put <a href="https://gist.github.com/Bleuje/fce86ef35b66c4a2b6a469b27163591e">this code</a> in another Processing tab of your sketch.</p>
+<p>Also put this in setup() :</p>
+<pre><code lang="java">
+noise = new OpenSimplexNoise();
+</code></pre>
+<p>and define it before setup() :</p>
+<pre><code lang="java">
+OpenSimplexNoise noise;
+</code></pre>
+<p>Now we can change the code for x1() and y1() :</p>
+<pre><code lang="java">
+float motion_radius = 0.5;
+float x1(float t){
+  float seed = 1337;
+  return 0.25*width + 150*(float)noise.eval(seed + motion_radius*cos(TWO_PI*t),motion_radius*sin(TWO_PI*t));
+}
+float y1(float t){
+  float seed = 1515;
+  return 0.5*height + 150*(float)noise.eval(seed + motion_radius*cos(TWO_PI*t),motion_radius*sin(TWO_PI*t));
+}
+</code></pre>
+<p>We go through simplex noise to get horizontal and vertical values with a radius equal to motion_radius.</p>
+<p>Result :<br/>
+<img alt="agif5" src="images/agif5.gif" title="agif5"><br/>
+(where the seond disk doesn’t move to show clearly the propagation)<br/>
+<img alt="agif5_2" src="images/agif5_2.gif" title="agif5_2"><br/>
+(where the second disk moves like before)<br/>
+<img alt="agif5_3" src="images/agif5_3.gif" title="agif5_3"><br/>
+(where “motion_radius” has been increased)</p>
+<p>I also actually changed some other parameters… <a href="https://gist.github.com/Bleuje/72dc395861b7a09d6fefe72026e0e1e6">here is the full code</a>.</p>
+<h3>Explanation and code for more complex gifs</h3>
+<p>I’ll give a link to the code of each gif, but I warn you : it uses the motion blur system of beesandbombs (Dave Whyte), it might be experimental code with bad variable names, unecessary stuff, details that may be hard to understand, or just stupid stuff, or there might be some mistakes.</p>
+<h4>Gif 1</h4>
+<p><img alt="manymovingonefixed" src="images/manymovingonefixed.gif" title="manymovingonefixed"><br/>
+This gif simply uses an array of disks that have a trajectory based on simplex noise like previously, with different seeds for each disk. A curve is drawn with the trick between each disk and a point at the bottom that doesn’t move. Each disk has a method that gives the position depending on time, like array[i].x(t) makes sense.</p>
+<p><a href="https://gist.github.com/Bleuje/37096dcf07f94e8d314841cdad040d33">Code</a></p>
+<h4>Gif 2</h4>
+<p><img alt="10allconnected" src="images/10allconnected.gif" title="10allconnected"><br/>
+Here there is an array of 10 disks that have their simplex noise trajectory centered on points forming a circle. Like previously positions (with delay) can be obtained with array[i].x(t – f*tt).</p>
+<p><a href="https://gist.github.com/Bleuje/4a299e08df5618a784a0558ba2c5e193">Code</a><br/>
+(parameters are different, I haven’t found back the right ones)</p>
+<h4>Gif 3</h4>
+<p><img alt="lotslittleconnections" src="images/lotslittleconnections.gif" title="lotslittleconnections"><br/>
+Here it is the same thing as Gif 2, excepted that trajectories are centered differently. Also there is higher opacity and stroke weight when the disks are closer to each other. Also now the delay factor is actually proportionnal to the distance between the disks (so an almost straight curve between them is drawn when they are close). I can’t remember well why I changed the curves like that but I remember I thought I needed it. (Update : it’s because when the two points are closer with the original curve trick, the curve will just be contracted, in order to avoid that I use a smaller “delay factor” when the points are closer).</p>
+<p><a href="https://gist.github.com/Bleuje/8436d64bc688a7b1028d89deddd43c2a">Code for something similar</a></p>
+<h4>Gif 4</h4>
+<p><img alt="approxsun" src="images/approxsun.gif" title="approxsun"><br/>
+It is similar to the previous gif. The differences : the center of trajectories are generated randomly inside a circle, with a random angle and a random radius that has quite high probability to be close to the radius of the circle (I adjusted a probability distribution). When the center of trajectory is closer to the center of the canvas, the trajectory becomes larger (it can be so large that some disks stay far outside the circle), when it’s close to the circle it moves less.</p>
+<p><a href="https://gist.github.com/Bleuje/6af946703e74ecef9625a3b5b25e86d0">Code</a><br/>
+(I love the different results this one gives when you run it again)</p>
+<h4>Gif 5</h4>
+<p><img alt="propafight" src="images/propafight.gif" title="propafight"><br/>
+The only thing to talk about here might be the trajectory of the left point, and it’s in the code.</p>
+<p><a href="https://gist.github.com/Bleuje/6dc3b93b71f58a970981a544ebe72e02">Code</a></p>
+<h4>Gif 6</h4>
+<p><img alt="movinginthemiddle" src="images/movinginthemiddle.gif" title="movinginthemiddle"><br/>
+The only thing really new here is the trajectory of the point in the middle. It is a simplex noise based trajectory, with an easing function to distort time.</p>
+<p><a href="https://gist.github.com/Bleuje/15b17bb9c0e05207722350c6c1066143">Code</a></p>
+<h4>Gif 7</h4>
+<p><img alt="rotatedstuff" src="images/rotatedstuff.gif" title="rotatedstuff"><br/>
+Take one random moving curve generated with the tutorial trick between two disks, rotate it around the center of the canvas, add some time offset depending on the angle (and so that it loops well), and you can get this kind of gif.<br/>
+I was inspired by <a href="http://78.media.tumblr.com/85946b757e50d2842e8fd4328c5c083c/tumblr_ojnrh2ltZh1six59bo1_500.gif">this gif</a> from echophon.tumblr.com.</p>
+<p><a href="https://gist.github.com/Bleuje/20e269f7cff254573121851fb95a5c76">Code</a></p>
+<h3>Conclusion</h3>
+<p>This was quite long for such a simple trick. I hope you understood well the trick, and that you’ll go further and come up with stuff I haven’t made yet. Thanks a lot for reading !</p>
+<h3>Things made by other people from this tutorial</h3>
+<p>Check out this codepen by Decatron where you can change the parameters like “delay factors” and see the results in real time.<br/>
+Link : <a href="https://codepen.io/megatroncoder/pen/MVGrer">curve-experiment</a></p>
+<p>Also check out this SketchpunkLabs video where my trick is used as a path in 3D.<br/>
+Link : <a href="https://www.youtube.com/watch?v=aW2yD8uIq1Q">WebGL2 : 085 : Curved Paths</a></p>
+<p>This gif by wavegrower on tumblr :<br/>
+<img src="https://78.media.tumblr.com/d6093d2e27434b07beda8cc0e6e323cf/tumblr_p6tgp5l5Pw1twrbr9o1_r1_540.gif"/><br/>
+You can see he seems to have used a negative delay factor with three points 🙂</p>
+</main></body></html>

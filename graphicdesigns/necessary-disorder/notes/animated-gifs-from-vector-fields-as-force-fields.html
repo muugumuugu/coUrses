@@ -1,0 +1,59 @@
+<html><head><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/muugumuugu/coDing/css/hacker.min.css"><title>necessarily-disorder tutorials</title><script src="https://cdn.jsdelivr.net/gh/muugumuugu/coDing/js/syntaxhighlighter.min.js"></script><script>hljs.highlightAll();</script></head><body><main>
+<p>This tutorial is about generating this kind of gif :</p>
+<p><img alt="agif4opt" src="images/agif4opt.gif" title="agif4opt"></p>
+<p>This is a variant of the previous <a href="animated-gifs-from-vector-fields.html">flow field tutorial</a>, so make sure to check it out first.</p>
+<p>The difference with flow fields is that here the vector field will be used to accelerate the particles. It will be an acceleration field instead of speed field. Particles will keep their inertia and now trajectories can cross. To avoid particles going too fast, a coefficient is used to slow down the speed at each time step.</p>
+<p>Here are the only changes from the flow field algorithm :</p>
+<pre><code lang="java">
+// slowdown coefficient on speed
+float slowdown = 0.93;
+</code></pre>
+<p>initial speed for each path :</p>
+<pre><code lang="java">
+  // initial speed
+  float vx = 0;
+  float vy = 0;
+</code></pre>
+<p>new “update” method to Path :</p>
+<pre><code lang="java">
+  void update(){
+    PVector res = field(x,y);
+    vx += DT*res.x;
+    vy += DT*res.y;
+    vx *= slowdown;
+    vy *= slowdown;
+    x += DT*vx;
+    y += DT*vy;
+    positions.add(new PVector(x,y));
+  }
+</code></pre>
+<p>If you decrease the “slowdown” coefficient particles will go slower and follow the field more like a speed field than acceleration field.</p>
+<p><a href="https://gist.github.com/Bleuje/9f6be4e2c6f7d0b9790fa5a0210aa39e">Here is the code</a> to get the following example of result :<br/>
+<img alt="agif" src="images/agif.gif" title="agif"></p>
+<p>It uses this vector field :</p>
+<pre><code lang="java">
+float curvex(float q){
+  return cos(q);
+}
+
+float curvey(float q){
+  return sin(q);
+}
+
+PVector field(float x,float y){
+  
+  float amount = 30;
+  
+  float scl = 0.004;
+  
+  float ns = 50*noise(100+scl*x,100+scl*y);
+  
+  float fx = amount*curvex(ns);
+  float fy = amount*curvey(ns);
+  
+  return new PVector(fx,fy);
+}
+</code></pre>
+<p>The example in the beginning of the tutorial uses a field that uses centers, its code is <a href="https://gist.github.com/Bleuje/5911fdd00ee3ea01bab30497b426dbe1">here</a>.</p>
+<p>I hope you found this helpful and that you will come up with nice gifs. Please don’t hesitate to ask questions or suggest improvements.</p>
+</main></body></html>

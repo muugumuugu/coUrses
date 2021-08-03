@@ -1,0 +1,206 @@
+<html><head><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/muugumuugu/coDing/css/hacker.min.css"><title>necessarily-disorder tutorials</title><script src="https://cdn.jsdelivr.net/gh/muugumuugu/coDing/js/syntaxhighlighter.min.js"></script><script>hljs.highlightAll();</script></head><body><main>
+<p>This short tutorial explains how to obtain this kind of effect on images with Processing :</p>
+<p><img alt="agif" src="images/agif.gif" title="agif"></p>
+<p>I advice to read the <a href="animated-stripes-gifs-from-scalar-fields.html">stripes tutorial</a> first because this is kind of an extension to it.</p>
+<p>This is the photograph we’ll work with :</p>
+<p><img alt="water" src="images/water.jpg" title="water"></p>
+<p>First of all let’s distort an image without animation. To do that we’ll use a vector field that indicates for each pixel of the resulting image which pixel from the original image to take. We’ll use a vector field based on Perlin noise :</p>
+<pre><code lang="java">
+PVector vector_field(float x,float y){
+  float amount = 100;
+  float scale = 0.01;
+  return new PVector(amount*(noise(scale*x,scale*y)-0.5),4*amount*(noise(100+scale*x,scale*y)-0.5));
+}
+</code></pre>
+<p>The “+100” is there to have independant noise values from the first calculated ones. The “-0.5” are there because noise values are centered on 0.5.</p>
+<p>Here is the complete code achieve the static distortion :</p>
+<pre><code lang="java">
+int numFrames = 25;
+
+color[] result;
+PImage img;
+
+PVector vector_field(float x,float y){
+  float amount = 100;
+  float scale = 0.01;
+  return new PVector(amount*(noise(scale*x,scale*y)-0.5),4*amount*(noise(100+scale*x,scale*y)-0.5));
+}
+
+PVector distortion(float x,float y,float time){
+  PVector res = vector_field(x,y);
+  return res;
+}
+
+void setup() {
+  img = loadImage("water.jpg");
+  size(370,254);
+  
+  result = new color[width*height];
+}
+
+void draw(){
+  // Time variable
+  float t = 1.0*(frameCount-1)%numFrames/numFrames;
+  
+  image(img,0,0);
+  
+  // Renders the pixels using the distortion field
+  loadPixels();
+  for (int i=0; i&lt;width; i++) {
+    for(int j=0;j&lt;height;j++){
+      PVector res = distortion(i,j,t);
+      
+      int ii = constrain(floor(i + res.x),0,width-1);
+      int jj = constrain(floor(j + res.y),0,height-1);
+      
+      result[i + width*j] = pixels[ii + width*jj];
+    }
+  }
+  for (int i=0; i&lt;width; i++) {
+    for(int j=0;j&lt;height;j++){
+      pixels[i + width*j] = result[i + width*j];
+    }
+  }
+  updatePixels();
+  
+  // Saves the frame
+  println(frameCount,"/",numFrames);
+  saveFrame("frame###.png");
+  
+  // Stops when all the frames are rendered
+  if(frameCount==numFrames){
+    println("finished");
+    stop();
+  }
+}
+</code></pre>
+<p>Result :</p>
+<p><img alt="frame025" src="images/frame025.png" title="frame025"></p>
+<p>The position of the pixel from which we take the color is constrained to avoid having an out of bounds error :</p>
+<pre><code lang="java">
+      int ii = constrain(floor(i + res.x),0,width-1);
+      int jj = constrain(floor(j + res.y),0,height-1);
+</code></pre>
+<p>An array “result” is used to avoid ovewriting on original pixels that must be used to compute other resulting pixels.</p>
+<p>Now to animate it, we’ll have moving stripes over the image activating and desactivating the distortion, that’s why I advice to understand the <a href="animated-stripes-gifs-from-scalar-fields.html">stripes tutorial</a> first.</p>
+<p>Here is the added code :</p>
+<pre><code lang="java">
+float scalar_field(float x,float y){
+  return 0.03*y;
+}
+
+PVector distortion(float x,float y,float time){
+  PVector res = vector_field(x,y);
+  
+  float intensity = map(sin(TWO_PI*(time+scalar_field(x,y))),-1,1,0,1);
+  
+  res.mult(intensity);
+  
+  return res;
+}
+</code></pre>
+<p>It should be easy to understand if you understood the stripes tutorial, because here the white stripes correspond to the use of the distortion and black stripes to no distortion.</p>
+<p>Here is the result :</p>
+<p><img alt="agif2" src="images/agif2.gif" title="agif2"></p>
+<p>Now we can try other vector and scalar fields :</p>
+<pre><code lang="java">
+PVector vector_field(float x,float y){
+  float amount = 50;
+  float scale = 0.01;
+  return new PVector(amount*(noise(scale*x,scale*y)-0.5),amount*(noise(100+scale*x,scale*y)-0.5));
+}
+
+float scalar_field(float x,float y){
+  return 0.05*dist(x,y,width/2,height/2);
+}
+</code></pre>
+<p>Result :</p>
+<p><img alt="agif3" src="images/agif3.gif" title="agif3"></p>
+<p>By reducing the intensity of the distortion away from the center :</p>
+<pre><code lang="java">
+PVector vector_field(float x,float y){
+  float amount = 150;
+  float scale = 0.01;
+  float intensity = constrain(map(dist(x,y,width/2,height/2),0,0.75*height,1,0),0,1);
+  return new PVector(amount*(noise(scale*x,scale*y)-0.5)*intensity,amount*(noise(100+scale*x,scale*y)-0.5)*intensity);
+}
+
+float scalar_field(float x,float y){
+  return -0.05*dist(x,y,width/2,height/2);
+}
+</code></pre>
+<p>Result :</p>
+<p><img alt="agif4" src="images/agif4.gif" title="agif4"></p>
+<p>That is all, I hope things were quite clear and that this tutorial will inspire you to make something (maybe much better and interesting) yourself.</p>
+<p>Here is the complete code to generate the last GIF in case you missed anything…</p>
+<pre><code lang="java">
+int numFrames = 25;
+
+color[] result;
+PImage img;
+
+PVector vector_field(float x,float y){
+  float amount = 150;
+  float scale = 0.01;
+  float intensity = constrain(map(dist(x,y,width/2,height/2),0,0.75*height,1,0),0,1);
+  return new PVector(amount*(noise(scale*x,scale*y)-0.5)*intensity,amount*(noise(100+scale*x,scale*y)-0.5)*intensity);
+}
+
+float scalar_field(float x,float y){
+  return -0.05*dist(x,y,width/2,height/2);
+}
+
+PVector distortion(float x,float y,float time){
+  PVector res = vector_field(x,y);
+  
+  float intensity = map(sin(TWO_PI*(time+scalar_field(x,y))),-1,1,0,1);
+  
+  res.mult(intensity);
+  
+  return res;
+}
+
+void setup() {
+  img = loadImage("water.jpg");
+  size(370,254);
+  
+  result = new color[width*height];
+}
+
+void draw(){
+  // Time variable
+  float t = 1.0*(frameCount-1)%numFrames/numFrames;
+  
+  image(img,0,0);
+  
+  // Renders the pixels using the distortion field
+  loadPixels();
+  for (int i=0; i&lt;width; i++) {
+    for(int j=0;j&lt;height;j++){
+      PVector res = distortion(i,j,t);
+      
+      int ii = constrain(floor(i + res.x),0,width-1);
+      int jj = constrain(floor(j + res.y),0,height-1);
+      
+      result[i + width*j] = pixels[ii + width*jj];
+    }
+  }
+  for (int i=0; i&lt;width; i++) {
+    for(int j=0;j&lt;height;j++){
+      pixels[i + width*j] = result[i + width*j];
+    }
+  }
+  updatePixels();
+  
+  // Saves the frame
+  println(frameCount,"/",numFrames);
+  saveFrame("frame###.png");
+  
+  // Stops when all the frames are rendered
+  if(frameCount==numFrames){
+    println("finished");
+    stop();
+  }
+}
+</code></pre>
+</main></body></html>

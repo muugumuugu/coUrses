@@ -1,0 +1,626 @@
+<html><head><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/muugumuugu/coDing/css/hacker.min.css"><title>necessarily-disorder tutorials</title><script src="https://cdn.jsdelivr.net/gh/muugumuugu/coDing/js/syntaxhighlighter.min.js"></script><script>hljs.highlightAll();</script></head><body><main>
+<p>This tutorial explains how to obtain this kind of gif with Processing :</p>
+<p><img alt="agif" src="images/agif.gif" title="agif"></p>
+<p>Vector fields will give the speed of particles at any location (x,y), that’s why here they will be called “flow fields”.</p>
+<p><strong>THE ALGORITHM</strong></p>
+<p>The algorithm here computes trajectories (called paths here) and then animates particles following them.</p>
+<p>Here is the code to generate an animation from a simple flow field, I’ll explain it later on. You can skip this part if you don’t want to know how the algorithm works and just want to change the flow field (but this might be useful to understand the parameters of the algorithm and change them).</p>
+<pre><code lang="java">
+/// This code starts with with the rendering system I took from @beesandbombs
+/// (it also contains some useful functions and stuff)
+/// You don't have to understand it
+/// Just know that it does an average on many drawings
+/// from drawings parametrized by the global variable t going from 0 to 1
+
+int[][] result;
+float t, c;
+
+float ease(float p) {
+  return 3*p*p - 2*p*p*p;
+}
+
+float ease(float p, float g) {
+  if (p &lt; 0.5) 
+    return 0.5 * pow(2*p, g);
+  else
+    return 1 - 0.5 * pow(2*(1 - p), g);
+}
+
+float mn = .5*sqrt(3), ia = atan(sqrt(.5));
+
+void push() {
+  pushMatrix();
+  pushStyle();
+}
+
+void pop() {
+  popStyle();
+  popMatrix();
+}
+
+void draw() {
+
+  if (!recording) {
+    t = mouseX*1.0/width;
+    c = mouseY*1.0/height;
+    if (mousePressed)
+      println(c);
+    draw_();
+  } else {
+    for (int i=0; i&lt;width*height; i++)
+      for (int a=0; a&lt;3; a++)
+        result[i][a] = 0;
+
+    c = 0;
+    for (int sa=0; sa&lt;samplesPerFrame; sa++) {
+      t = map(frameCount-1 + sa*shutterAngle/samplesPerFrame, 0, numFrames, 0, 1);
+      draw_();
+      loadPixels();
+      for (int i=0; i&lt;pixels.length; i++) {
+        result[i][0] += pixels[i] &gt;&gt; 16 &amp; 0xff;
+        result[i][1] += pixels[i] &gt;&gt; 8 &amp; 0xff;
+        result[i][2] += pixels[i] &amp; 0xff;
+      }
+    }
+
+    loadPixels();
+    for (int i=0; i&lt;pixels.length; i++)
+      pixels[i] = 0xff &lt;&lt; 24 | 
+        int(result[i][0]*1.0/samplesPerFrame) &lt;&lt; 16 | 
+        int(result[i][1]*1.0/samplesPerFrame) &lt;&lt; 8 | 
+        int(result[i][2]*1.0/samplesPerFrame);
+    updatePixels();
+    
+    if(invert_colors){
+      filter(INVERT);
+    }
+
+    saveFrame("frame###.png");
+    println(frameCount,"/",numFrames);
+    
+    if (frameCount==numFrames)
+      exit();
+  }
+}
+
+/// END OF THE RENDERING SYSTEM
+//////////////////////////////////////////////////////////////////////////////
+
+// Number of drawings used to render each final frame with motion blur
+int samplesPerFrame = 7;
+// Total number of frames in the gif
+int numFrames = 20;
+// Kind of the time interval used for each frame in the motion blur
+float shutterAngle = .8;
+// If you put this to false you will control time with the mouse and no pictures will be saved
+boolean recording = true;
+
+///////////////////////////////////////////////////
+/// various parameters to control the aesthetic
+
+// This one is quite explicit
+boolean use_white_rectangle = true;
+// Border margin
+int border = 50;
+// Inverting colors or not
+boolean invert_colors = false;
+// Maximum point size
+float maximimum_point_size = 1;
+
+/////////////////////////////////////////////////
+/// FLOW FIELD ANIMATION ALGORITHM
+
+// Time step
+float DT = 0.1;
+// Number of steps
+int nsteps = 500;
+// Number of particles per path
+int number_of_particles_per_path = 40;
+// Number of paths
+int NPath = 3000;
+// The total number of particles will be NPath*number_of_particles_per_path
+
+/// A class to define paths particles take
+class Path{
+  float x = random(width);
+  float y = random(height);
+  
+  ArrayList&lt;PVector&gt; positions = new ArrayList&lt;PVector&gt;();
+  
+  // point size
+  float sz = random(1,maximimum_point_size);
+  
+  // Nunmber of particles per path
+  int npart = number_of_particles_per_path;
+  
+  // offset so that particles don't appear at the same time for each path
+  float t_off = random(1);
+  
+  Path(){
+    positions.add(new PVector(x,y));
+  }
+  
+  void update(){
+    PVector res = field(x,y);
+    x += DT*res.x;
+    y += DT*res.y;
+    positions.add(new PVector(x,y));
+  }
+  
+  void show(){
+    
+    strokeWeight(sz);
+    
+    float tt = (t+t_off)%1;
+    
+    int len = positions.size();
+    
+    for(int i=0;i&lt;npart;i++){
+      // Particle location calculated by linear interpolation from the computed positions
+      float loc = constrain(map(i+tt,0,npart,0,len-1),0,len-1-0.001);;
+      int i1 = floor(loc);
+      int i2 = i1+1;
+      float interp = loc - floor(loc);
+      float xx = lerp(positions.get(i1).x,positions.get(i2).x,interp);
+      float yy = lerp(positions.get(i1).y,positions.get(i2).y,interp);
+      
+      float fact = 1;
+      if(use_white_rectangle &amp;&amp; (xx&lt;border||xx&gt;width-border||yy&lt;border||yy&gt;height-border)) fact = 0;
+      
+      // This is to make the particles appear and disappear gradually
+      float alpha = fact*255*pow(sin(PI*loc/(len-1)),0.25);
+      
+      stroke(255,alpha);
+      
+      point(xx,yy);
+    }
+  }
+}
+
+Path[] array2 = new Path[NPath];
+
+void path_step(){
+  for(int i=0;i&lt;NPath;i++){
+    array2[i].update();
+  }
+}
+
+//////////////////////////////////////
+/// Definition of the flow field
+
+PVector field(float x,float y){
+  return new PVector(0,15);
+}
+
+////////////////////
+/// SETUP AND DRAW_
+
+
+void setup(){
+  /// drawing size
+  size(500,500);
+  
+  /// Initialization of the array used to render frames
+  result = new int[width*height][3];
+  
+  /// Initilization of Paths
+  for(int i=0;i&lt;NPath;i++){
+    array2[i] = new Path();
+  }
+  
+  /// Computation of Paths
+  for(int i=0;i&lt;nsteps;i++){
+    println(i+1,"/",nsteps);
+    path_step();
+  }
+}
+
+void draw_(){
+  background(0);
+
+  for(int i=0;i&lt;NPath;i++){
+    array2[i].show();
+  }
+  
+  if(use_white_rectangle){
+    noFill();
+    stroke(255);
+    strokeWeight(1);
+    rect(border,border,width-2*border,height-2*border);
+  }
+}
+</code></pre>
+<p>Gives :</p>
+<p><img alt="agif2" src="images/agif2.gif" title="agif2"></p>
+<p>Each object of the class Path corresponds to a trajectory. Trajectories start from random locations :</p>
+<pre><code lang="java">
+  float x = random(width);
+  float y = random(height);
+</code></pre>
+<p>x,y will then represent the current latest computed position later on.</p>
+<p>An array stores the different positions of the trajectory :</p>
+<pre><code lang="java">
+  ArrayList&lt;PVector&gt; positions = new ArrayList&lt;PVector&gt;();
+</code></pre>
+<p>The paths are initilized by adding the starting position to that array :</p>
+<pre><code lang="java">
+  Path(){
+    positions.add(new PVector(x,y));
+  }
+</code></pre>
+<p>The update() method adds a next position to the array “positions”, using the time step “DT” and the speed field (flow field) “field”.</p>
+<pre><code lang="java">
+  void update(){
+    PVector res = field(x,y);
+    x += DT*res.x;
+    y += DT*res.y;
+    positions.add(new PVector(x,y));
+  }
+</code></pre>
+<p>We will use many trajectories so an array of Paths is created :</p>
+<pre><code lang="java">
+Path[] array2 = new Path[NPath];
+</code></pre>
+<p>Here is a function to update (add a position) all the trajectories :</p>
+<pre><code lang="java">
+void path_step(){
+  for(int i=0;i&lt;NPath;i++){
+    array2[i].update();
+  }
+}
+</code></pre>
+<p>In setup() this function is repeated “nsteps” times :</p>
+<pre><code lang="java">
+  /// Computation of Paths
+  for(int i=0;i&lt;nsteps;i++){
+    println(i+1,"/",nsteps);
+    path_step();
+  }
+</code></pre>
+<p>By the way the Paths are initiliazed in setup() :</p>
+<pre><code lang="java">
+  /// Initilization of Paths
+  for(int i=0;i&lt;NPath;i++){
+    array2[i] = new Path();
+  }
+</code></pre>
+<p>Now the draw_() function needs to draw things parametrized by the global variable “t” going from 0 to 1.</p>
+<p>Each Path has a draw() method to draw it depending on t.<br/>
+The animation algorithm used here uses many particles on a same trajectory. Linear interpolation is used to use positions between computed positions of the array “positions”. For example a particle at location 2.2 in the array will be between the position 2 and the position 3 from “positions”, and closer to the position 2 (2.5 would be in the middle). This gives us an infinite number of positions from the array “positions”. We’ll make a loop to go through each particle i of the trajectory to display and show it at location map(i+t,0,number_of_particles_of_the _path,0,lengh_of_positions_array-1) in the array “position”. That way as t goes from 0 to 1 each particle will take the place of the next particle and it will loop nicely.</p>
+<p>To avoid having particles appearing at the same time for each path, an offset is used :</p>
+<pre><code lang="java">
+  float t_off = random(1);
+</code></pre>
+<p>And gives a new time variable “tt” :</p>
+<pre><code lang="java">
+    float tt = (t+t_off)%1;
+</code></pre>
+<p>The sine curve between 0 and PI, put to the power 0.25 gives a nice curve to define the alpha channel of the particle so that particles appear and disappear gradually.</p>
+<p>Here is the method show() to implement all of that :</p>
+<pre><code lang="java">
+  void show(){
+    
+    strokeWeight(sz);
+    
+    float tt = (t+t_off)%1;
+    
+    int len = positions.size();
+    
+    for(int i=0;i&lt;npart;i++){
+      // Particle location calculated by linear interpolation from the computed positions
+      float loc = constrain(map(i+tt,0,npart,0,len-1),0,len-1-0.001);;
+      int i1 = floor(loc);
+      int i2 = i1+1;
+      float interp = loc - floor(loc);
+      float xx = lerp(positions.get(i1).x,positions.get(i2).x,interp);
+      float yy = lerp(positions.get(i1).y,positions.get(i2).y,interp);
+      
+      float fact = 1;
+      if(use_white_rectangle &amp;&amp; (xx&lt;border||xx&gt;width-border||yy&lt;border||yy&gt;height-border)) fact = 0;
+      
+      // This is to make the particles appear and disappear gradually
+      float alpha = fact*255*pow(sin(PI*loc/(len-1)),0.25);
+      
+      stroke(255,alpha);
+      
+      point(xx,yy);
+    }
+  }
+</code></pre>
+<p>show() is called in draw_() :</p>
+<pre><code lang="java">
+  for(int i=0;i&lt;NPath;i++){
+    array2[i].show();
+  }
+</code></pre>
+<p>Here are the main parameters of the algorithm (it can also be interesting to change the start positions). They are defined before the class Path in the full code.</p>
+<pre><code lang="java">
+// Time step
+float DT = 0.1;
+// Number of steps
+int nsteps = 500;
+// Number of particles per path
+int number_of_particles_per_path = 40;
+// Number of paths
+int NPath = 3000;
+// The total number of particles will be NPath*number_of_particles_per_path
+</code></pre>
+<p><strong>MOTION BLUR RENDERING</strong></p>
+<p>I took the motion blur rendering system from @beesandbombs. It is the first part of the code. The function draw() will use many drawings depending on t from draw_() (“samplesPerFrame” exactly), to compute a final frame averaging the colors on those drawings. This produces a nice motion blur effect on things that change fast.</p>
+<p><strong>FLOW FIELD DESIGN</strong></p>
+<p>Now it’s time to experiment with different flow fields.</p>
+<p>The gif above uses a field that goes down vertically :</p>
+<pre><code lang="java">
+PVector field(float x,float y){
+  return new PVector(0,15);
+}
+</code></pre>
+<p>With Perlin noise and an horizontal bias (+20) :</p>
+<pre><code lang="java">
+PVector field(float x,float y){
+  float amount = 50;
+  float scale = 0.03;
+  return new PVector(amount*(noise(scale*x,scale*y)-0.5)+20,amount*(noise(100+scale*x,scale*y)-0.5));
+}
+</code></pre>
+<p>Result :<br/>
+<img alt="agif3" src="images/agif3.gif" title="agif3"></p>
+<p>Because particles go mostly out of view, let’s change some parameters for faster rendering :</p>
+<pre><code lang="java">
+// Number of steps
+int nsteps = 100;
+// Number of particles per path
+int number_of_particles_per_path = 10;
+</code></pre>
+<p>let’s change the field too :</p>
+<pre><code lang="java">
+PVector field(float x,float y){
+  float amount = 50;
+  float scale = 0.03;
+  return new PVector(amount*(noise(scale*x,scale*y)-0.5)+10,amount*(noise(100+scale*x,scale*y)-0.5)+10);
+}
+</code></pre>
+<p>Result :<br/>
+<img alt="agif4" src="images/agif4.gif" title="agif4"></p>
+<p>Let’s use “Perlin noise on a circle” as field :</p>
+<pre><code lang="java">
+PVector field(float x,float y){
+  float amount = 50;
+  float scale = 0.01;
+  float parameter = 25*noise(scale*x,scale*y);
+  return new PVector(amount*cos(parameter),amount*sin(parameter));
+}
+</code></pre>
+<p>Result :<br/>
+<img alt="agif5" src="images/agif5.gif" title="agif5"></p>
+<p>You can combine (add, substract, multiply…) fields to obtain new ones.</p>
+<p>Here is a great tutorial to obtain interesting fields : <a href="https://generateme.wordpress.com/2016/04/24/drawing-vector-field/">drawing vector field</a>.</p>
+<p>Here is some code to use fields based on the effect of some centers : <a href="https://gist.github.com/Bleuje/a16d65de7ac4bef9db8497268cb78586">link</a>.<br/>
+Result :<br/>
+<img alt="agif" src="images/agif.gif" title="agif"></p>
+<p>I hope this was helpful and that you will come up with nice stuff. Let me know if you have questions or ideas of improvements. In case you missed anything here’s the complete code to make a flow field gif :</p>
+<pre><code lang="java">
+int[][] result;
+float t, c;
+
+float ease(float p) {
+  return 3*p*p - 2*p*p*p;
+}
+
+float ease(float p, float g) {
+  if (p &lt; 0.5) 
+    return 0.5 * pow(2*p, g);
+  else
+    return 1 - 0.5 * pow(2*(1 - p), g);
+}
+
+float mn = .5*sqrt(3), ia = atan(sqrt(.5));
+
+void push() {
+  pushMatrix();
+  pushStyle();
+}
+
+void pop() {
+  popStyle();
+  popMatrix();
+}
+
+void draw() {
+
+  if (!recording) {
+    t = mouseX*1.0/width;
+    c = mouseY*1.0/height;
+    if (mousePressed)
+      println(c);
+    draw_();
+  } else {
+    for (int i=0; i&lt;width*height; i++)
+      for (int a=0; a&lt;3; a++)
+        result[i][a] = 0;
+
+    c = 0;
+    for (int sa=0; sa&lt;samplesPerFrame; sa++) {
+      t = map(frameCount-1 + sa*shutterAngle/samplesPerFrame, 0, numFrames, 0, 1);
+      draw_();
+      loadPixels();
+      for (int i=0; i&lt;pixels.length; i++) {
+        result[i][0] += pixels[i] &gt;&gt; 16 &amp; 0xff;
+        result[i][1] += pixels[i] &gt;&gt; 8 &amp; 0xff;
+        result[i][2] += pixels[i] &amp; 0xff;
+      }
+    }
+
+    loadPixels();
+    for (int i=0; i&lt;pixels.length; i++)
+      pixels[i] = 0xff &lt;&lt; 24 | 
+        int(result[i][0]*1.0/samplesPerFrame) &lt;&lt; 16 | 
+        int(result[i][1]*1.0/samplesPerFrame) &lt;&lt; 8 | 
+        int(result[i][2]*1.0/samplesPerFrame);
+    updatePixels();
+    
+    if(invert_colors){
+      filter(INVERT);
+    }
+
+    saveFrame("frame###.png");
+    println(frameCount,"/",numFrames);
+    
+    if (frameCount==numFrames)
+      exit();
+  }
+}
+
+/// END OF THE RENDERING SYSTEM
+//////////////////////////////////////////////////////////////////////////////
+
+// Number of drawings used to render each final frame with motion blur
+int samplesPerFrame = 7;
+// Total number of frames in the gif
+int numFrames = 20;
+// Kind of the time interval used for each frame in the motion blur
+float shutterAngle = .8;
+// If you put this to false you will control time with the mouse and no pictures will be saved
+boolean recording = true;
+
+///////////////////////////////////////////////////
+/// various parameters to control the aesthetic
+
+// This one is quite explicit
+boolean use_white_rectangle = true;
+// Border margin
+int border = 50;
+// Inverting colors or not
+boolean invert_colors = false;
+// Maximum point size
+float maximimum_point_size = 1;
+
+/////////////////////////////////////////////////
+/// FLOW FIELD ANIMATION ALGORITHM
+
+// Time step
+float DT = 0.1;
+// Number of steps
+int nsteps = 100;
+// Number of particles per path
+int number_of_particles_per_path = 10;
+// Number of paths
+int NPath = 3000;
+// The total number of particles will be NPath*number_of_particles_per_path
+
+/// A class to define paths particles take
+class Path{
+  float x = random(width);
+  float y = random(height);
+  
+  ArrayList&lt;PVector&gt; positions = new ArrayList&lt;PVector&gt;();
+  
+  // point size
+  float sz = random(1,maximimum_point_size);
+  
+  // Nunmber of particles per path
+  int npart = number_of_particles_per_path;
+  
+  // offset so that particles don't appear at the same time for each path
+  float t_off = random(1);
+  
+  Path(){
+    positions.add(new PVector(x,y));
+  }
+  
+  void update(){
+    PVector res = field(x,y);
+    x += DT*res.x;
+    y += DT*res.y;
+    positions.add(new PVector(x,y));
+  }
+  
+  void show(){
+    
+    strokeWeight(sz);
+    
+    float tt = (t+t_off)%1;
+    
+    int len = positions.size();
+    
+    for(int i=0;i&lt;npart;i++){
+      // Particle location calculated by linear interpolation from the computed positions
+      float loc = constrain(map(i+tt,0,npart,0,len-1),0,len-1-0.001);;
+      int i1 = floor(loc);
+      int i2 = i1+1;
+      float interp = loc - floor(loc);
+      float xx = lerp(positions.get(i1).x,positions.get(i2).x,interp);
+      float yy = lerp(positions.get(i1).y,positions.get(i2).y,interp);
+      
+      float fact = 1;
+      if(use_white_rectangle &amp;&amp; (xx&lt;border||xx&gt;width-border||yy&lt;border||yy&gt;height-border)) fact = 0;
+      
+      // This is to make the particles appear and disappear gradually
+      float alpha = fact*255*pow(sin(PI*loc/(len-1)),0.25);
+      
+      stroke(255,alpha);
+      
+      point(xx,yy);
+    }
+  }
+}
+
+Path[] array2 = new Path[NPath];
+
+void path_step(){
+  for(int i=0;i&lt;NPath;i++){
+    array2[i].update();
+  }
+}
+
+//////////////////////////////////////
+/// Definition of the flow field
+
+
+PVector field(float x,float y){
+  float amount = 50;
+  float scale = 0.005;
+  float parameter = 25*noise(scale*x,scale*y);
+  return new PVector(amount*cos(parameter),amount*sin(parameter));
+}
+
+
+////////////////////
+/// SETUP AND DRAW_
+
+
+void setup(){
+  /// drawing size
+  size(500,500);
+  
+  /// Initialization of the array used to render frames
+  result = new int[width*height][3];
+  
+  /// Initilization of Paths
+  for(int i=0;i&lt;NPath;i++){
+    array2[i] = new Path();
+  }
+  
+  /// Computation of Paths
+  for(int i=0;i&lt;nsteps;i++){
+    println(i+1,"/",nsteps);
+    path_step();
+  }
+}
+
+void draw_(){
+  background(0);
+
+  for(int i=0;i&lt;NPath;i++){
+    array2[i].show();
+  }
+  
+  if(use_white_rectangle){
+    noFill();
+    stroke(255);
+    strokeWeight(1);
+    rect(border,border,width-2*border,height-2*border);
+  }
+}
+</code></pre>
+</main></body></html>
