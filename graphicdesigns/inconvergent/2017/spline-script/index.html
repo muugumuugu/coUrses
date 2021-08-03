@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3" />
+<link rel="stylesheet" href="../../css/main-16.css" />
+<link rel="apple-touch-icon" sizes="180x180" href="../../img/icons/apple-touch-icon.png?v=7kb27Qjm9N" />
+<link rel="icon" type="image/png" sizes="32x32" href="../../img/icons/favicon-32x32.png?v=7kb27Qjm9N" />
+<link rel="icon" type="image/png" sizes="16x16" href="../../img/icons/favicon-16x16.png?v=7kb27Qjm9N" />
+<link rel="manifest" href="../../img/icons/manifest.json?v=7kb27Qjm9N" />
+<link rel="mask-icon" href="../../img/icons/safari-pinned-tab.svg?v=7kb27Qjm9N" color="#333333" />
+<link rel="shortcut icon" href="../../img/icons/favicon.ico?v=7kb27Qjm9N" />
+<meta name="msapplication-config" content="img/icons/browserconfig.xml?v=7kb27Qjm9N" />
+<meta name="theme-color" content="#ffffff" />
+<title>Spline Script &middot; inconvergent</title>
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@inconvergent" />
+<meta name="twitter:domain" content="inconvergent.net" />
+<meta name="twitter:creator" content="@inconvergent" />
+<meta property="og:image" content="img/writing/spline/20171001-154310-451606-d1cf720-f98e2da-000.png" />
+<meta name="twitter:image0" content="img/writing/spline/20171001-154310-451606-d1cf720-f98e2da-000.png" />
+<meta property="og:title" content="Spline Script &middot; inconvergent" />
+<meta property="og:site_name" content="inconvergent.net" />
+<meta property="og:url" content="2017/spline-script/" />
+<link rel="canonical" href="index.html" />
+<meta property="og:type" content="website" />
+<meta property="og:description" content="A generative algorithms that uses splines to create illegible writing." />
+<meta name="description" content="A generative algorithms that uses splines to create illegible writing." />
+<meta name="google-site-verification" content="KymIUCYkzGHgYeDgr3pIZyz63dwmhDhNkNj9Yd1IIfM" />
+<link rel="alternate" type="application/atom+xml" href="../../atom.xml" />
+
+<meta name="pinterest" content="nopin" />
+
+<meta name="author" content="inconvergent, anders hoff" />
+<meta name="keywords" content="generative, art, generative art, algorithm, algorithms, inconvergent, anders hoff, computational, lisp, common lisp, python, mathematics, biology, patterns, rules" />
+<link href="https://fonts.googleapis.com/css?family=Inconsolata|Open+Sans|Open+Sans+Condensed:300&display=swap" rel="stylesheet">
+</head>
+<body>
+<!--googleoff: all-->
+<div class="wide">
+<div class="site-title">
+<header>
+<a title="inconvergent.net" href="../../index.html">inconvergent</a>
+</header>
+</div>
+</div>
+<!--googleon: all-->
+<main>
+<article itemscope itemtype="https://schema.org/Article">
+<meta itemprop="headline" content="Spline Script">
+<meta itemprop="datePublished" content="2017-10-01" />
+<meta itemprop="dateModified" content="2017-10-02" />
+<div itemscope itemprop="author" itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<div itemscope itemprop="publisher" itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<div itemprop="image" itemscope itemtype="https://schema.org/ImageObject">
+<meta itemprop="url" content="img/writing/spline/20171001-154310-451606-d1cf720-f98e2da-000.png">
+<meta itemprop="width" content="800">
+<meta itemprop="height" content="800">
+</div>
+<!--googleon: all-->
+<div class="text">
+<h1 class="dark"><a href="index.html">Spline Script</a></h1>
+<p>It's been <a href="../../generative/sand-glyphs/index.html">a while</a> since the last
+time I was down the rabbit hole of generative handwriting. However, I
+thought I'd describe the experiments I've been doing over the past week or
+so in some more detail. <a class="footnote-counter" href="index.html#footnotes"></a></p>
+<p>Let me start by pointing out that many have been <a href="https://en.wikipedia.org/wiki/Asemic_writing">exploring this</a>
+before me, whether generative or not. My personal favorite is <a href="http://collections.vam.ac.uk/item/O216188/letters-from-my-mother-print-molnar-vera/">Letters
+from my Mother</a> by <a href="https://en.wikipedia.org/wiki/Vera_Molnár">Vera Molnár</a>. Another
+interesting project is this work on <a href="https://distill.pub/2016/handwriting/">neural networks for
+handwriting</a>.</p>
+<p>My current script consists of an alphabet that is generated before each
+execution. Each character, or glyph, is generated in the same way, but they
+can have different properties.</p>
+<p>First you will need to define a function that can generate points
+distributed within a suitable domain. Let's call this function
+<code>domainfxn</code>. <code>domainfxn</code> defines the area within
+which the glyph is generated. An easy choice is a square. A more natural
+choice, if you want it to look like hand writing, is a tilted ellipsoid.
+The latter is what I will use here.</p>
+<p>One way to create such an ellipsoid is to create a function that can
+generate points that are <a href="https://stackoverflow.com/questions/5837572/generate-a-random-point-within-a-circle-uniformly">uniformly
+distributed</a> in a <a href="https://en.wikipedia.org/wiki/Unit_circle">unit circle</a>. Then
+squeeze those points together by multiplying the x coordinate by by a small
+number (e.g. 0.5) Finally you can tilt the results by <a href="https://en.wikipedia.org/wiki/Rotation_matrix#In_two_dimensions">rotating
+the points</a> by a suitable angle. <a class="footnote-counter" href="index.html#footnotes"></a></p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="Domain Visualization" />
+<meta itemprop="artMedium" content="image" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<a href="../../img/writing/spline/20171001-132522-789399-4a0e4aa-ffee16e-b.png"><img itemprop="image" src="../../img/writing/spline/20171001-132522-789399-4a0e4aa-ffee16e-b.png" alt="Glyph Visualization" title="Domain Visualization" /></a>
+<div class="cred">Domain with five centroids</div>
+</div>
+<div class="text">
+<p>We now have a function that defines the domain. Next we use that function
+to generate <code>n</code> centroids. In my example I use <code>n=5</code>. These
+centroids split the domain into <code>n</code> sections. If you are
+familiar with <a href="https://en.wikipedia.org/wiki/Voronoi_diagram">Voronoi
+tessellations</a>, you will already know what this means. If not, have a
+look at the illustration above.<a class="footnote-counter" href="index.html#footnotes"></a></p>
+</div>
+<div class="text">
+<p>These <code>n</code> centroids combined with <code>domainfxn</code> is now
+used to define a glyph. Each time we want to draw the glyph we now do the
+following: For each centroid, generate a new point within the area of the
+domain that corresponds to that particular centroid. And finally, use these
+new points to draw a <a href="https://en.wikipedia.org/wiki/Spline_(mathematics)">spline</a>. An
+example of this can seen below.</p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="Glyph Animation" />
+<meta itemprop="artMedium" content="animation" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<a href="../../img/writing/spline/vis.gif"><img itemprop="image" src="../../img/writing/spline/vis.gif" alt="Glyph Animation" title="Glyph Animation" /></a>
+<div class="cred">Glyph Animation</div>
+</div>
+<div class="text">
+<p>This approach has the advantage of giving the glyph some variation between
+each time it is drawn. Arguably it also has the disadvantage of giving too
+much variation. To illustrate this we show multiple instances of the same
+glyph in the illustration below. Each line corresponds to a single glyph.
+There are some ways to make this a little more "tight", but I also like how
+this looks.</p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="Glyph Examples" />
+<meta itemprop="artMedium" content="image" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<a href="../../img/writing/spline/20171001-152536-999846-45254e9-a1bc7f7.png"><img itemprop="image" src="../../img/writing/spline/20171001-152536-999846-45254e9-a1bc7f7.png" alt="Glyph Examples" title="Glyph Examples" /></a>
+<div class="cred">Glyph Examples</div>
+</div>
+<div class="text">
+<p>If you look carefully at the above illustration you will also notice that
+every glyph has a "looping" tendency. This is achieved by ordering the
+centroids according to their angle relative to the middle of the glyph (the
+origin of the domain). This is just one of many possible tweaks you can add
+to control the overall appearance of the resulting script. Another
+adjustment is to change the size of the domain of some of the glyphs.</p>
+<p>We now have the means to generate a working alphabet. To use the alphabet
+to write words we simply concatenate the spline of a single glyph with the
+neighbouring characters in the word.</p>
+<p>Below is an example of how it looks when you put it all together. This
+image writes out a section from the first chapter of Oryx and Crake by <a href="https://en.wikipedia.org/wiki/Margaret_Atwood">Margaret Atwood</a>.
+The cursive effect is created by using the sand painting method described
+in this <a href="../grains-of-sand/index.html">earlier post</a>, along with random
+walks as described <a href="shepherding-random-numbers/">here</a>.
+</p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="Spline Script" />
+<meta itemprop="artMedium" content="digital" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<a href="../../img/writing/spline/20171001-154310-451606-d1cf720-f98e2da-000.png"><img itemprop="image" src="../../img/writing/spline/20171001-154310-451606-d1cf720-f98e2da-000.png" alt="Spline Script" title="Spline Script" /></a>
+<div class="cred">Spline Script, excerpt from Orxy and Crake by Margaret Atwood.</div>
+</div>
+<div class="text">
+<p>There are many more things to test with this system, but this is how the
+current version behaves.</p>
+<p>One of the main reasons for coming back to asemic writing is to test it on
+my plotter. Below is picture of a plot I made with a Pilot Parallel Pen and
+Lamy turquoise ink. Using a fountain pen gives a very interesting effect as
+you can see below. The way the ink flows and the resulting gradients and
+layering effects makes the writing look more convincing.</p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="Drawing 4c80cca" />
+<meta itemprop="artMedium" content="drawing" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<a href="../../img/writing/spline/4c80cca.png"><img itemprop="image" src="../../img/writing/spline/4c80cca.png" alt="Drawing 4c80cca" title="Drawing 4c80cca" /></a>
+<div class="cred">Spline Script plotted with a Pilot Parallel Pen on the <a href="https://www.axidraw.com/">Axidraw</a> (v2) plotter,<br>excerpt from Orxy
+and Crake by Margaret Atwood.</div>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="Drawing 4c80cca" />
+<meta itemprop="artMedium" content="drawing" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<a href="../../img/writing/spline/4c80cca-close.png"><img itemprop="image" src="../../img/writing/spline/4c80cca-close.png" alt="Drawing 4c80cca" title="Drawing 4c80cca" /></a>
+<div class="cred">Plotted Spline Script Detail</div>
+</div>
+<div class="text">
+<p>If you want to buy a plot like this you should have a look <a href="../spline-script-plots/index.html">here</a>.
+Otherwise, if you are interested in the actual code I use to do this, you
+can find it at <a href="incovnvergent-git-repos/snek/blob/master/examples/spline-script.lisp">Github</a>.
+The code makes use of my Lisp framework, which is described <a href="snek-is-not-an-acronym/">here</a>.</p>
+<p></p>
+</div>
+<div class="text">
+<div class="footnotes">
+<hr>
+<ol id="footnotes">
+<li>Having read this you will hopefully be qualified to be frustrated
+over how you can't quite make this work the way you want it to.</li>
+<li>For instance ~0.3&pi; <a href="https://en.wikipedia.org/wiki/Radian">radians</a>, depending on
+your coordinate system.</li>
+<li>I found the color scheme <a href="http://www.npr.org/2016/04/18/474256366/why-americas-schools-have-a-money-problem">here</a>.</li>
+</ol>
+</div>
+</div>
+</article>
+</main>
+<!--googleoff: all-->
+<footer class="footer">
+<small>
+© 2014-2021 anders hoff
+<br>⁂
+</small>
+</footer>
+</body>
+</html>

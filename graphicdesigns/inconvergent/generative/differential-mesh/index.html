@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3" />
+<link rel="stylesheet" href="../../css/main-16.css" />
+<link rel="apple-touch-icon" sizes="180x180" href="../../img/icons/apple-touch-icon.png?v=7kb27Qjm9N" />
+<link rel="icon" type="image/png" sizes="32x32" href="../../img/icons/favicon-32x32.png?v=7kb27Qjm9N" />
+<link rel="icon" type="image/png" sizes="16x16" href="../../img/icons/favicon-16x16.png?v=7kb27Qjm9N" />
+<link rel="manifest" href="../../img/icons/manifest.json?v=7kb27Qjm9N" />
+<link rel="mask-icon" href="../../img/icons/safari-pinned-tab.svg?v=7kb27Qjm9N" color="#333333" />
+<link rel="shortcut icon" href="../../img/icons/favicon.ico?v=7kb27Qjm9N" />
+<meta name="msapplication-config" content="img/icons/browserconfig.xml?v=7kb27Qjm9N" />
+<meta name="theme-color" content="#ffffff" />
+<title>On Generative Algorithms&#58; Differential Mesh &middot; inconvergent</title>
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@inconvergent" />
+<meta name="twitter:domain" content="inconvergent.net" />
+<meta name="twitter:creator" content="@inconvergent" />
+<meta property="og:image" content="img/generative/differential-mesh-10k-small.png" />
+<meta name="twitter:image0" content="img/generative/differential-mesh-10k-small.png" />
+<meta property="og:title" content="On Generative Algorithms&#58; Differential Mesh &middot; inconvergent" />
+<meta property="og:site_name" content="inconvergent.net" />
+<meta property="og:url" content="generative/differential-mesh/" />
+<link rel="canonical" href="index.html" />
+<meta property="og:type" content="website" />
+<meta property="og:description" content="Differential Mesh is an algorithm inspired by differential growth in nature." />
+<meta name="description" content="Differential Mesh is an algorithm inspired by differential growth in nature." />
+<meta name="google-site-verification" content="KymIUCYkzGHgYeDgr3pIZyz63dwmhDhNkNj9Yd1IIfM" />
+<link rel="alternate" type="application/atom+xml" href="../../atom.xml" />
+
+<meta name="pinterest" content="nopin" />
+
+<meta name="author" content="inconvergent, anders hoff" />
+<meta name="keywords" content="generative, art, generative art, algorithm, algorithms, inconvergent, anders hoff, computational, lisp, common lisp, python, mathematics, biology, patterns, rules" />
+<link href="https://fonts.googleapis.com/css?family=Inconsolata|Open+Sans|Open+Sans+Condensed:300&display=swap" rel="stylesheet">
+</head>
+<body>
+<!--googleoff: all-->
+<div class="wide">
+<div class="site-title">
+<header>
+<a title="inconvergent.net" href="../../index.html">inconvergent</a>
+</header>
+</div>
+</div>
+<!--googleon: all-->
+<main>
+<article itemscope itemtype="https://schema.org/Article">
+<meta itemprop="headline" content="On Generative Algorithms&#58; Differential Mesh">
+<meta itemprop="datePublished" content="2015-11-01" />
+<meta itemprop="dateModified" content="2016-09-01" />
+<div itemscope itemprop="author" itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<div itemscope itemprop="publisher" itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<div itemprop="image" itemscope itemtype="https://schema.org/ImageObject">
+<meta itemprop="url" content="img/generative/differential-mesh-10k-small.png">
+<meta itemprop="width" content="800">
+<meta itemprop="height" content="800">
+</div>
+<div class="text">
+<h1 class="fade"><a href="../index.html">On Generative Algorithms</a></h1>
+<h2>Differential Mesh
+<a class="ghlink" href="incovnvergent-git-repos/differential-mesh">Github</a>
+</h2>
+<p>When I had gotten <a href="../differential-line/index.html">Differential Line</a>
+working the obvious next step was to try to create something similar in
+three dimensions; and one alternative is to make the line itself move in
+three dimensions. However, that did not really seem all that appealing.
+Instead I chose to go for a combination of the attraction/rejection
+behaviour of <a href="../differential-line/index.html">Differential Line</a>, and the
+growing behaviour of Hyphae. Essentially I wanted to make a (triangular)
+mesh that grew outward without self-intersecting or colliding. Doing this
+directly in three dimensions seemed a little daunting, so I started with a
+two dimensional version.</p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="differential mesh triangles" />
+<meta itemprop="artMedium" content="digital" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<img itemprop="image" src="../../img/generative/differential-mesh3-tri.gif" alt="differential mesh triangles" title="differential mesh triangles" />
+</div>
+<div class="text">
+<p>In the animation above you can see that new triangles are added to the
+outside if the existing mesh. They are added in such a way that they don't
+collide with existing parts of the mesh. I use a very naive collision
+detection where I check if a potential new vertex is too close to any
+existing vertices before adding it. In addition all vertices still behave
+similarly to the vertices in Differential Line; that is, they try to get
+as much space around themselves as possible, whilst remaining close enough
+to their neighbors.</p>
+<p>The key thing to get this to work is to have the mesh do various
+self-balancing operations as it grows. There are a few things you can
+try:</p>
+<ul>
+<li>Split edges that are too long.</li>
+<li>Avoid inserting new vertices where the vertex density is too high.</li>
+<li>Flip edges to reduce the length of the edge.</li>
+<li>Add a force that makes the triangles attempt to be roughly
+equilateral.</li>
+</ul>
+<p>The animation above employs a combination of all of these.</p>
+<p>Now we scale down the triangle size and add some structure.</p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="differential mesh uniform" />
+<meta itemprop="artMedium" content="digital" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<img src="../../img/generative/differential-mesh1-uniform.gif" alt="differential
+  mesh mesh uniform" title="differential mesh uniform" />
+</div>
+<div class="text">
+<p>The hope was that this set of rules would resemble the growth of slime
+mold or, more likely, lichen. It turns out the basic version of this is
+quite similar to certain types of lichens. And it seems to match the growth
+of <a href="https://en.wikipedia.org/wiki/Marchantiophyta">liverworts</a>
+as well, as was pointed out to me on <a href="https://twitter.com/CieraReports/status/621068347430449152">twitter</a>.</p>
+<p>The way I initially controlled the growth was to choose random edges,
+check if they were on the outside if the structure, and see if I could
+attach a new triangle to that edge. The problem with this strategy is that
+eventually most edges are going to be on the "inside" of the structure.
+This means that you are going to spend a lot of resources checking edges
+that you can't do anything with.</p>
+<p>There is a pretty obvious solution to this problem. (And, as usual, when I
+say obvious, I mean that it took me a few months to realize) Instead of
+picking random edges and testing if you can grow a new triangle from it,
+you can use food sources. First you randomly position food sources in the
+domain. Then you have something happen each time an edge in the structure
+hits one of these food sources. For instance if you let the growth of the
+mesh spike when a food source is hit you get something like this.</p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="differential mesh sources" />
+<meta itemprop="artMedium" content="digital" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<img itemprop="image" src="../../img/generative/differential-mesh2-sources.gif" alt="differential mesh sources" title="differential mesh sources" />
+</div>
+<div class="text">
+<p>If you let this simulation run for a while you can get a number of
+interesting results. Here is a version where the color of each triangle
+gradually changes according to when it was created. The color changes
+gradually from white to black, then flips instantly back to white again.
+The first time I did this it was an accident, but as you can see it gives
+it a nice three dimensional illusion.</p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="differential mesh rose" />
+<meta itemprop="artMedium" content="digital" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<img itemprop="image" src="../../img/generative/differential-mesh-10k-small.png" alt="differential mesh rose" title="differential mesh rose" />
+</div>
+<div class="text">
+<a class="prev" href="../differential-line/index.html">Differential Line</a>
+<a class="next" href="../differential-mesh-3d/index.html">Differential Mesh 3D</a>
+</div>
+</article>
+</main>
+<!--googleoff: all-->
+<footer class="footer">
+<small>
+© 2014-2021 anders hoff
+<br>⁂
+</small>
+</footer>
+</body>
+</html>

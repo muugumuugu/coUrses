@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3" />
+<link rel="stylesheet" href="../../css/main-16.css" />
+<link rel="apple-touch-icon" sizes="180x180" href="../../img/icons/apple-touch-icon.png?v=7kb27Qjm9N" />
+<link rel="icon" type="image/png" sizes="32x32" href="../../img/icons/favicon-32x32.png?v=7kb27Qjm9N" />
+<link rel="icon" type="image/png" sizes="16x16" href="../../img/icons/favicon-16x16.png?v=7kb27Qjm9N" />
+<link rel="manifest" href="../../img/icons/manifest.json?v=7kb27Qjm9N" />
+<link rel="mask-icon" href="../../img/icons/safari-pinned-tab.svg?v=7kb27Qjm9N" color="#333333" />
+<link rel="shortcut icon" href="../../img/icons/favicon.ico?v=7kb27Qjm9N" />
+<meta name="msapplication-config" content="img/icons/browserconfig.xml?v=7kb27Qjm9N" />
+<meta name="theme-color" content="#ffffff" />
+<title>Depth of Field with Colour Shift &middot; inconvergent</title>
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@inconvergent" />
+<meta name="twitter:domain" content="inconvergent.net" />
+<meta name="twitter:creator" content="@inconvergent" />
+<meta property="og:image" content="img/writing/colour-shift/20191211-202721-e988b66-acaee157.png" />
+<meta name="twitter:image0" content="img/writing/colour-shift/20191211-202721-e988b66-acaee157.png" />
+<meta property="og:title" content="Depth of Field with Colour Shift &middot; inconvergent" />
+<meta property="og:site_name" content="inconvergent.net" />
+<meta property="og:url" content="2019/colour-shift/" />
+<link rel="canonical" href="index.html" />
+<meta property="og:type" content="website" />
+<meta property="og:description" content="Depth of Field from random sampling, with colour shift" />
+<meta name="description" content="Depth of Field from random sampling, with colour shift" />
+<meta name="google-site-verification" content="KymIUCYkzGHgYeDgr3pIZyz63dwmhDhNkNj9Yd1IIfM" />
+<link rel="alternate" type="application/atom+xml" href="../../atom.xml" />
+
+<meta name="pinterest" content="nopin" />
+
+<meta name="author" content="inconvergent, anders hoff" />
+<meta name="keywords" content="generative, art, generative art, algorithm, algorithms, inconvergent, anders hoff, computational, lisp, common lisp, python, mathematics, biology, patterns, rules" />
+<link href="https://fonts.googleapis.com/css?family=Inconsolata|Open+Sans|Open+Sans+Condensed:300&display=swap" rel="stylesheet">
+</head>
+<body>
+<!--googleoff: all-->
+<div class="wide">
+<div class="site-title">
+<header>
+<a title="inconvergent.net" href="../../index.html">inconvergent</a>
+</header>
+</div>
+</div>
+<!--googleon: all-->
+<main>
+<article itemscope itemtype="https://schema.org/Article">
+<meta itemprop="headline" content="Depth of Field with Colour Shift">
+<meta itemprop="datePublished" content="2019-12-04" />
+<meta itemprop="dateModified" content="2019-12-11" />
+<div itemscope itemprop="author" itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<div itemscope itemprop="publisher" itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<div itemprop="image" itemscope itemtype="https://schema.org/ImageObject">
+<meta itemprop="url" content="img/writing/colour-shift/20191211-202721-e988b66-acaee157.png">
+<meta itemprop="width" content="800">
+<meta itemprop="height" content="800">
+</div>
+<!--googleon: all-->
+<div class="text">
+<h1 class="dark"><a href="index.html">Depth of Field with Colour Shift</a></h1>
+<p>The last time I wrote, I described a relatively easy way to get a nice <a href="../depth-of-field/index.html">depth of field</a> effect. Let's see how we
+can add a colour shift effect as well. I've tried to repeat most of the
+relevant information here, but you might want to read the previous post
+before you continue. <a class="footnote-counter" href="index.html#footnotes"></a></p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="colour shift animation" />
+<meta itemprop="artMedium" content="digital animation" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<a href="../../img/writing/colour-shift/ani-1.gif"><img itemprop="image" src="../../img/writing/colour-shift/ani-1.gif" alt="colour shift animation" title="colour shift animation" /></a>
+<div class="cred"></div>
+</div>
+<div class="text">
+<p>We can modify the depth of field algorithm so that you offset the rendered
+point in two dimensions, not in 3D. That is, we offset it inside a circle,
+not a sphere. This has the added benefit of requiring slightly fewer
+calculations. And it will look quite similar.</p>
+<p>We assume that we have the same definitions as before:</p>
+<ul>
+<li>A line in 3D, <code>l=[a, b]</code>;</li>
+<li>a camera at position, <code>c</code>;</li>
+<li>a focus distance from the camera, <code>f</code></li>
+<li>a distance function, <code>dst(a, b)</code> that yields the distance
+between <code>a</code> and <code>b</code>; <a class="footnote-counter" href="index.html#footnotes"></a></li>
+<li>a function, <code>lerp(a, b, s) = a + s*(b-a)</code>, which
+interpolates between <code>a</code> and <code>b</code>;</li>
+<li>a function, <code>rnd()</code>, that yields random numbers between
+<code>0</code> and <code>1</code>.</li>
+</ul>
+<p>In addition, we need the following new functions:</p>
+<ul>
+<li><code>rndNorm()</code>, returns a <a href="https://en.wikipedia.org/wiki/Normal_distribution">normally
+distributed</a> random number with a zero mean and unit variance. <a class="footnote-counter" href="index.html#footnotes"></a>;</li>
+<li><code>rndNorm2D(r) = </code>, returns <code>r * [rndNorm(),
+rndNorm()]</code></li>
+<li><code>clamp(v, l, h)</code>, returns <code>min(h, max(l,
+v))</code>;</li>
+<li><code>pow(a, b)</code>, returns <code>a</code> to the power of
+<code>b</code>;</li>
+<li><code>cross(a, b)</code>, returns <code>a.x*b.y - a.y*b.x</code>;</li>
+<li><code>hsvToRgb(h, s, v)</code> converts a <a href="https://en.wikipedia.org/wiki/HSL_and_HSV">HSV</a> value to an <a href="https://en.wikipedia.org/wiki/RGB_color_model">RGB</a>
+value;</li>
+<li><code>nrm(v)</code>, scales <code>v</code> to unit length; and
+</li>
+<li><code>proj(v)</code>, projects <code>v</code> from 3D into 2D. <a class="footnote-counter" href="index.html#footnotes"></a></li>
+</ul>
+<p>The modified algorithm is as follows:</p>
+<pre><span>; a point on l</span>
+v = lerp(a, b, rnd())
+<span>; projection of v on the canvas</span>
+q = proj(v)
+<span>; sample radius based on distance to camera</span>
+<span>; larger m yields more blur</span>
+<span>; start with e=1 and adjust</span>
+r = m * pow(abs(f - dst(v, c)), e)
+<span>; random vector</span>
+o = rndNorm2D(r)
+<span>; position to draw on canvas</span>
+w = q + o
+<span>; mid is the middle of your canvas</span>
+x = cross(nrm(q-mid), o)</pre>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="colour shift rendering" />
+<meta itemprop="artMedium" content="digital" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<a href="../../img/writing/colour-shift/20191204-221101-be6478b-dc6af80a.png"><img itemprop="image" src="../../img/writing/colour-shift/20191204-221101-be6478b-dc6af80a.png" alt="colour shift rendering" title="colour shift rendering" /></a>
+<div class="cred">Colour shift rendering</div>
+</div>
+<div class="text">
+<p>Finally we are ready to obtain the colour value. We assume <a href="https://en.wikipedia.org/wiki/HSL_and_HSV">HSV</a> where where hue,
+saturation and value range between <code>0</code> and <code>1</code>. This
+also assumes a dark background. To obtain different results, you will have to
+experiment.</p>
+<pre><span>; start with he=1, and adjust</span>
+<span>; lower hs yields more colour variation</span>
+rr = pow(abs(r) / hs, he)
+<span>; select your colours</span>
+if r &lt; 0:
+<span>  ; cyan-ish</span>
+  hueStart = 0.5
+else:
+<span>  ; magenta-ish</span>
+  hueStart = 0.833
+
+hue = clamp(hueStart + rr, 0, 1)
+
+<span>; start with se=1, and adjust</span>
+<span>; higher ss yields lower saturation</span>
+sat = clamp(pow(abs(r) / ss, se), 0, 1)
+
+<span>; value = 1</span>
+rgb = hsvToRgb(hue, sat, 1)
+</pre>
+<p>Now that we have an <a href="https://en.wikipedia.org/wiki/RGB_color_model">RGB</a> colour we can
+draw a point at <code>w</code> using <code>rgb</code>. As in the <a href="../depth-of-field/index.html">previous post</a>, this method
+relies on sampling a large number of points from
+<code>l</code>, and drawing those points with a low alpha
+value.</p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="colour shift rendering" />
+<meta itemprop="artMedium" content="digital" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<a href="../../img/writing/colour-shift/20191211-202721-e988b66-acaee157.png"><img itemprop="image" src="../../img/writing/colour-shift/20191211-202721-e988b66-acaee157.png" alt="colour shift rendering" title="colour shift rendering" /></a>
+<div class="cred">Subtle colour shift rendering</div>
+</div>
+<div class="text">
+<p>There are a number of factors in here that will depend on the 3D shapes
+you are drawing, the desired output resolution as well as your programming
+environment. The trickiest part might be to scale the values of
+<code>hs</code>, <code>he</code>, <code>ss</code> and <code>se</code>. Keep
+in mind that you want <code>hue</code> and <code>sat</code> to fall largely
+between <code>0</code> and <code>1</code>. The <code>clamp</code> functions
+are there for safety.</p>
+<p>Hopefully this is enough to give you some ideas.</p>
+</div>
+<div class="text">
+<div class="footnotes">
+<hr>
+<ol id="footnotes">
+<li>Note that this is a description of how my code works, it is not an
+"out of the box" solution.</li>
+<li>This is a little simplified. My projection function,
+<code>proj(v)</code>, uses <a href="https://en.wikipedia.org/wiki/Orthographic_projection">orthographic
+projection</a>. Because of this, the distance function does not
+calculate the distance from <code>p</code> to <code>c</code>. Instead
+it calculates the distance from <code>p</code> to the point where
+<code>p</code> hits the camera plane. Using the euclidean distance will
+also work. Depending on how you project, you might notice that the
+focal area is curved.</li>
+<li>One way to get this is to use the <a href="https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform">Box-Muller
+transform</a>. Many random number libraries will also provide this
+readily.</li>
+<li>This depends a lot on what tools you use. My images use an <a href="https://en.wikipedia.org/wiki/Orthographic_projection">orthographic
+projection</a>. Mostly because it is not too complicated to
+implement.</li>
+</ol>
+</div>
+</div>
+</article>
+</main>
+<!--googleoff: all-->
+<footer class="footer">
+<small>
+© 2014-2021 anders hoff
+<br>⁂
+</small>
+</footer>
+</body>
+</html>

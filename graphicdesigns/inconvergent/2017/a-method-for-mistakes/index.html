@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3" />
+<link rel="stylesheet" href="../../css/main-16.css" />
+<link rel="apple-touch-icon" sizes="180x180" href="../../img/icons/apple-touch-icon.png?v=7kb27Qjm9N" />
+<link rel="icon" type="image/png" sizes="32x32" href="../../img/icons/favicon-32x32.png?v=7kb27Qjm9N" />
+<link rel="icon" type="image/png" sizes="16x16" href="../../img/icons/favicon-16x16.png?v=7kb27Qjm9N" />
+<link rel="manifest" href="../../img/icons/manifest.json?v=7kb27Qjm9N" />
+<link rel="mask-icon" href="../../img/icons/safari-pinned-tab.svg?v=7kb27Qjm9N" color="#333333" />
+<link rel="shortcut icon" href="../../img/icons/favicon.ico?v=7kb27Qjm9N" />
+<meta name="msapplication-config" content="img/icons/browserconfig.xml?v=7kb27Qjm9N" />
+<meta name="theme-color" content="#ffffff" />
+<title>A Method for Mistakes &middot; inconvergent</title>
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@inconvergent" />
+<meta name="twitter:domain" content="inconvergent.net" />
+<meta name="twitter:creator" content="@inconvergent" />
+<meta property="og:image" content="img/writing/mistakes/20170509-182723-527460-c428405-7fcf2f6.png" />
+<meta name="twitter:image0" content="img/writing/mistakes/20170509-182723-527460-c428405-7fcf2f6.png" />
+<meta property="og:title" content="A Method for Mistakes &middot; inconvergent" />
+<meta property="og:site_name" content="inconvergent.net" />
+<meta property="og:url" content="2017/a-method-for-mistakes/" />
+<link rel="canonical" href="index.html" />
+<meta property="og:type" content="website" />
+<meta property="og:description" content="A method for introducing errors to a generative system." />
+<meta name="description" content="A method for introducing errors to a generative system." />
+<meta name="google-site-verification" content="KymIUCYkzGHgYeDgr3pIZyz63dwmhDhNkNj9Yd1IIfM" />
+<link rel="alternate" type="application/atom+xml" href="../../atom.xml" />
+
+<meta name="pinterest" content="nopin" />
+
+<meta name="author" content="inconvergent, anders hoff" />
+<meta name="keywords" content="generative, art, generative art, algorithm, algorithms, inconvergent, anders hoff, computational, lisp, common lisp, python, mathematics, biology, patterns, rules" />
+<link href="https://fonts.googleapis.com/css?family=Inconsolata|Open+Sans|Open+Sans+Condensed:300&display=swap" rel="stylesheet">
+</head>
+<body>
+<!--googleoff: all-->
+<div class="wide">
+<div class="site-title">
+<header>
+<a title="inconvergent.net" href="../../index.html">inconvergent</a>
+</header>
+</div>
+</div>
+<!--googleon: all-->
+<main>
+<article itemscope itemtype="https://schema.org/Article">
+<meta itemprop="headline" content="A Method for Mistakes">
+<meta itemprop="datePublished" content="2017-05-09" />
+<meta itemprop="dateModified" content="2018-06-10" />
+<div itemscope itemprop="author" itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<div itemscope itemprop="publisher" itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<div itemprop="image" itemscope itemtype="https://schema.org/ImageObject">
+<meta itemprop="url" content="img/writing/mistakes/20170509-182723-527460-c428405-7fcf2f6.png">
+<meta itemprop="width" content="800">
+<meta itemprop="height" content="800">
+</div>
+<!--googleon: all-->
+<div class="text">
+<h1 class="dark"><a href="index.html">A Method for Mistakes</a></h1>
+<p>
+A few days ago I wrote about a <a href="../a-propensity-for-mistakes/index.html">possible strategy</a> for getting more
+interesting generative results. Basically I suggested that you need a way
+to introduce errors into your system, as well as a way for the system to
+correct itself. <a class="footnote-counter" href="index.html#footnotes"></a>
+</p>
+<p>
+Below I will illustrate one possible interpretation of this using my
+experimental generative system called <a href="../snek-is-not-an-acronym/index.html"><code>snek</code></a>.
+</p>
+<p>
+<code>SNEK</code> is a data structure for dealing with geometry (vertices
+and edges), combined with a method for generating and applying
+<em>alterations</em> to that structure.
+</p>
+<p>
+By design these <em>alterations</em> do not depend on the current state of
+the <code>snek</code> instance. At the end of a context the
+<em>alterations</em> are applied to the instance according to a set of
+rules designed to keep the data structure intact. Specifically this means
+that nonsensical <em>alterations</em> are discarded. This feature is
+important, as we will see now.
+</p>
+<p>
+Consider the following example, which is a part of the rules that make up
+the <a href="https://twitter.com/sandpaintbot/status/861959158039552005">"Drift"</a>
+algorithm from <a href="index.html">@sandpaintbot.</a>
+</p>
+<pre><span>; context start</span>
+(snek:with (snk)
+  <span>; pick a random vertex, v, and create</span>
+  <span>; a new edge between v and xy</span>
+  (snek:with-rnd-vert (snk v)
+    <span>; xy placed relative to position of v</span>
+    (snek:append-edge? v xy :rel t))
+  (snek:with-rnd-vert (snk v)
+    (snek:with-rnd-vert (snk w)
+      <span>; create an edge between arbitrary</span>
+      <span>; vertices v and w</span>
+      (snek:join-verts? w v)))))
+  <span>; context end</span>
+  <span>; alterations have been applied</span></pre>
+<p>
+If the <code>(snek:join-verts? ...)</code> <em>alteration</em> happens to be
+created with <code>w</code> equal to <code>v</code> then that
+<em>alteration</em> won't make sense. In this case it will be gracefully
+discarded.
+</p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="Drift" />
+<meta itemprop="artMedium" content="digital" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<img itemprop="image" src="../../img/writing/mistakes/20170509-182723-527460-c428405-7fcf2f6.png" alt="Drift" title="Drift" />
+<div class="cred">A variation of <a href="https://twitter.com/sandpaintbot/status/861959158039552005">"Drift"
+by @sandpaintbot</a> on dark background.</div>
+</div>
+<div class="text">
+<p>
+Since the <em>alterations</em> are independent of the <code>snek</code>
+instance, and since the <code>snek</code> structure will gracefully ignore
+faulty <em>alterations</em>, there is nothing stopping us from arbitrarily
+changing the <em>alterations</em> before they are applied.<a class="footnote-counter" href="index.html#footnotes"></a>
+</p>
+<p>
+It is not a stretch to imagine this as <em>mutating</em> the
+<em>alterations</em>. For instance we can randomly mutate an
+<em>alteration</em> by a given probability. In code it can look like the
+example below. Here <code>mut</code> contains the existing
+mutations as well as the mutation probability.
+</p>
+<pre><span>; context start</span>
+(snek:with (snk)
+  <span>; mutate alterations</span>
+  (snek:mutate (mut)
+    <span>; remaining code is exactly as above</span>
+    (snek:with-rnd-vert (snk v)
+      (snek:append-edge? v xy :rel t))
+    (snek:with-rnd-vert (snk v)
+      (snek:with-rnd-vert (snk w)
+        (snek:join-verts? w v))))))</pre>
+<p>
+The mutations can be controlled by whatever rules you can come up with.
+For instance, you can randomly change the index (or indices) affected by an
+<em>alteration</em>. In the above example this will probably not have much
+of a visible effect&mdash;we are already selecting indices at random.
+However, if we were to say that all mutated <em>alterations</em> would have
+(one of) their affected indices replaced by <code>0</code>, then we would
+certainly see something.
+</p>
+<p>
+In the below image we can see an example of a slightly more complex
+mutation rule. I will leave it up to those who are interested to speculate
+on what is going on.
+</p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="Mutated Drift" />
+<meta itemprop="artMedium" content="digital" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<img itemprop="image" src="../../img/writing/mistakes/20170509-182621-773931-c428405-21b39f9.png" alt="Mutated Drift" title="Mutated Drift" />
+<div class="cred">A mutated variation of the same algorithm from <a href="https://twitter.com/sandpaintbot">@sandpaintbot</a>.</div>
+</div>
+<div class="text">
+<p>
+All things considered, there is no real reason why this "error process"
+can't be incorporated into the original algorithm. As such, what we have
+really done is create a new algorithm by combining the original with an
+error process. <a class="footnote-counter" href="index.html#footnotes"></a>
+</p>
+<p>
+This somewhat basic example might seem a little contrived, but I do believe
+there is a value in being able to apply these kinds of mutations. And as
+such, I will explore it further.
+</p>
+</div>
+<div class="text">
+<div class="footnotes">
+<hr>
+<ol id="footnotes">
+<li>I recommend reading <a href="../a-propensity-for-mistakes/index.html">the
+post</a> before continuing.</li>
+<li><em>Alterations</em> are immutable, so technically we do not change
+<em>alterations</em>, we create new ones.</li>
+<li>It is my opinion that "the algorithm" must be the combination of all
+the components that created a given result.</li>
+</ol>
+</div>
+</div>
+</article>
+</main>
+<!--googleoff: all-->
+<footer class="footer">
+<small>
+© 2014-2021 anders hoff
+<br>⁂
+</small>
+</footer>
+</body>
+</html>

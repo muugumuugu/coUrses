@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Inconvergent - isopleth</title>
+<meta name="twitter:card" content="photo">
+<meta name="twitter:site" content="@inconvergent">
+<meta name="twitter:creator" content="@inconvergent">
+<meta name="twitter:url" content="app/isopleth/">
+<meta name="twitter:title" content="Inconvergent - isopleth">
+<meta name="twitter:description" content="Isopleth, a WebGL experiment">
+<meta name="twitter:image" content="app/isopleth/img/img.png">
+<meta name="twitter:image:width" content="800">
+<meta name="twitter:image:height" content="800">
+<meta property="og:title" content="Inconvergent - Isopleth" />
+<meta property="og:site_name" content="Inconvergent - Isopleth" />
+<meta property="og:url" content="app/isopleth/" />
+<meta property="og:image" content="app/isopleth/img/img.png" />
+<meta property="og:type" content="website" />
+<meta property="og:description" content="Isopleth, a WebGL experiment" />
+<meta name="description" content="Isopleth, a WebGL experiment" />
+<meta name="author" content="Inconvergent, Anders Hoff" />
+<meta name="keywords" content="generative,art,animation,inconvergent,computational,webgl" />
+<meta name="viewport" content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
+<link href='https://fonts.googleapis.com/css?family=Droid+Sans:400,700' rel='stylesheet' type='text/css'>
+<style>
+/* #Reset & Basics (Made by E. Meyers)
+================================================== */
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p,
+blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img,
+ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i,
+center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption,
+tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section,
+summary, time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline; }
+article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {
+  display: block; }
+body {
+  line-height: 1; }
+ol, ul {
+  list-style: none; }
+blockquote, q {
+  quotes: none; }
+blockquote:before, blockquote:after,
+q:before, q:after {
+  content: '';
+  content: none; }
+table {
+  border-collapse: collapse;
+  border-spacing: 0; }
+
+body{
+  background-color: #FFF;
+  color: #000;
+  padding: 0px;
+  margin: 0px;
+  font-family: 'Droid Sans', sans-serif;
+  -webkit-font-smoothing: antialiased; /* Fix for webkit rendering */
+  -webkit-text-size-adjust: 100%;
+  font-style: italic;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  line-height: 30px;
+  font-style: italic;
+  font-weight: normal;
+  -webkit-font-smoothing: antialiased; /* Fix for webkit rendering */
+  -webkit-text-size-adjust: 100%;
+}
+h1 a, h2 a, h3 a, h4 a, h5 a, h6 a { font-weight: inherit; }
+h1,.h1 { font-size: 46px; line-height: 50px; margin-bottom: 14px;}
+h2,.h2 { font-size: 35px; line-height: 40px; margin-bottom: 10px; }
+h3,.h3 { font-size: 28px; line-height: 34px; margin-bottom: 8px; }
+
+strong { font-weight: bold; }
+
+#box canvas {
+  padding: 0px;
+  margin: 0px;
+}
+.message {
+  top: 0px;
+  left: 0px;
+  position: absolute;
+  padding: 10px;
+  text-align: left;
+  width: 240px;
+  opacity: 0.4;
+}
+hr{
+  color: #000;
+}
+.content {
+  min-width: 100px;
+  min-height: 100px;
+  position: relative;
+  text-align: center;
+  margin: 0 auto;
+}
+a, a.active, a.visited, a.hover{
+  color: #000;
+  text-decoration: none;
+}
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="lib/ndarray.js"></script>
+<script src="lib/three.min.js"></script>
+<script src="lib/Detector.js"></script>
+<script src="lib/OrbitControls.js"></script>
+<script src="lib/stats.min.js"></script>
+<script src="src/mountain.js"></script>
+<script type="x-shader/x-vertex" id="vertexShader">
+
+uniform float size;
+uniform float hsize;
+uniform float vnum;
+uniform sampler2D heights;
+uniform float texSize;
+uniform vec3 light;
+uniform vec3 camPos;
+
+varying vec3 vPosition;
+varying vec3 vCamera;
+
+attribute vec3 color;
+varying vec3 vColor;
+
+varying vec2 texCoord;
+
+float rand(vec2 co){
+  return fract(sin(dot(co.xy,vec2(12.9898,78.233)))* 43758.5453);
+}
+
+void main(){
+
+  vColor = color;
+  //vCamera = modelViewMatrix*vec4(vPosition,1.0);
+  vCamera = camPos;
+  vPosition = position;
+
+  // i cant for the life of me understand why vnum is needed here.
+  // position.xy/size E [0,1]
+  // texSize > vnum
+  texCoord = position.xy/size/texSize*vnum;
+  float tmp = texCoord.x;
+  texCoord.x = texCoord.y;
+  texCoord.y = 1.0-tmp;
+  vec3 h = texture2D(heights,texCoord).xyz;
+  vPosition.z = clamp(h.z,0.0,1.0)*hsize;
+
+  gl_Position = projectionMatrix *
+    modelViewMatrix *
+    vec4(vPosition,1.0);
+}
+
+</script>
+<script type="x-shader/x-fragment" id="fragmentShader">
+
+uniform float size;
+uniform float hsize;
+uniform sampler2D heights;
+uniform float texSize;
+uniform vec3 light;
+
+uniform vec3 fogColor;
+uniform float fogNear;
+uniform float fogFar;
+
+varying vec3 vPosition;
+varying vec3 vCamera;
+varying vec2 texCoord;
+varying vec3 vColor;
+varying vec3 vNormal;
+
+
+float levels(float f, float l){
+  return (ceil(f*l)/l);
+}
+
+float rand(vec2 co){
+  return fract(sin(dot(co.xy,vec2(12.9898,78.233)))*43758.5453);
+}
+
+float getRdV(float LndNn, vec3 Nn, vec3 Ln, vec3 Vn){
+  vec3 R;
+  vec3 Rn;
+  if (LndNn>0.0){
+    R = clamp(2.0*LndNn*Nn-Ln,0.0,1.0);
+    Rn = normalize(R);
+    //return clamp(levels(dot(Rn,Vn),100.0),0.0,1.0);
+    return clamp(dot(Rn,Vn),0.0,1.0);
+  }
+  else{
+    return 0.0;
+  }
+}
+
+vec3 getNormal(sampler2D heights, vec2 texCoord){
+  vec3 s = vec3(size,size,hsize);
+  vec3 off = vec3(-1.0/texSize,0.0,1.0/texSize);
+  vec3 rl = texture2D(heights,texCoord+off.zy).xyz-
+    texture2D(heights,texCoord+off.xy).xyz;
+  vec3 tb = texture2D(heights,texCoord+off.yz).xyz-
+      texture2D(heights,texCoord+off.yx).xyz;
+  vec3 norm = normalize(cross(rl/s,tb/s));
+  return norm;
+}
+
+vec3 effect(vec3 I, vec3 Nn, vec3 Ln, vec3 Vn){
+  vec3 index = vec3(2.0,0.5,0.0)/50.0;
+  vec3 ref = clamp(abs(refract(Vn,Nn,1.0)),0.0,1.0);
+  vec3 x = I*ref*index*5.0;
+  return clamp(I-x,0.0,1.0);
+}
+
+
+/* ASHIMA
+functions below are from:
+  https://github.com/ashima/webgl-noise/blob/master/src/noise2D.glsl
+They are under a separate licence from the rest of this file:
+
+Copyright (C) 2011 by Ashima Arts (Simplex noise)
+Copyright (C) 2011 by Stefan Gustavson (Classic noise)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+vec3 mod289(vec3 x) {
+  return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+
+vec2 mod289(vec2 x) {
+  return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+
+vec3 permute(vec3 x) {
+  return mod289(((x*34.0)+1.0)*x);
+}
+
+float snoise(vec2 v)
+  {
+  const vec4 C = vec4(0.211324865405187,  // (3.0-sqrt(3.0))/6.0
+                      0.366025403784439,  // 0.5*(sqrt(3.0)-1.0)
+                     -0.577350269189626,  // -1.0 + 2.0 * C.x
+                      0.024390243902439); // 1.0 / 41.0
+// First corner
+  vec2 i  = floor(v + dot(v, C.yy) );
+  vec2 x0 = v -   i + dot(i, C.xx);
+
+// Other corners
+  vec2 i1;
+  //i1.x = step( x0.y, x0.x ); // x0.x > x0.y ? 1.0 : 0.0
+  //i1.y = 1.0 - i1.x;
+  i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+  // x0 = x0 - 0.0 + 0.0 * C.xx ;
+  // x1 = x0 - i1 + 1.0 * C.xx ;
+  // x2 = x0 - 1.0 + 2.0 * C.xx ;
+  vec4 x12 = x0.xyxy + C.xxzz;
+  x12.xy -= i1;
+
+// Permutations
+  i = mod289(i); // Avoid truncation effects in permutation
+  vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
+    + i.x + vec3(0.0, i1.x, 1.0 ));
+
+  vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+  m = m*m ;
+  m = m*m ;
+
+// Gradients: 41 points uniformly over a line, mapped onto a diamond.
+// The ring size 17*17 = 289 is close to a multiple of 41 (41*7 = 287)
+
+  vec3 x = 2.0 * fract(p * C.www) - 1.0;
+  vec3 h = abs(x) - 0.5;
+  vec3 ox = floor(x + 0.5);
+  vec3 a0 = x - ox;
+
+// Normalise gradients implicitly by scaling m
+// Approximation of: m *= inversesqrt( a0*a0 + h*h );
+  m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+
+// Compute final noise value at P
+  vec3 g;
+  g.x  = a0.x  * x0.x  + h.x  * x0.y;
+  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+  return 130.0 * dot(m, g);
+}
+/*ASHIMA END*/
+
+vec3 applyFog(vec3 I, vec3 V){
+
+  float Vdist = length(V);
+
+  if (Vdist>fogFar){
+    return fogColor;
+  }
+  if (Vdist>fogNear){
+    //float rnd = (0.5-snoise(vPosition.xy))*0.01;
+    float fogRange = fogFar-fogNear;
+    float d = fogFar-Vdist;
+    float dens = sqrt(d/fogRange);
+    return I*dens+(1.0-dens)*(fogColor);
+  }
+  return I;
+}
+
+
+void main(){
+
+  vec3 h = texture2D(heights,texCoord).xyz;
+
+  vec3 c = vColor*(1.0-h.z) + (h.z);
+  //vec3 c = vec3(0.5,0.5,h.z);
+  //vec3 c = vColor;
+
+  // ambient
+  const vec3 ia = vec3(0.00);
+  vec3 ka = c;
+
+  // diffuse
+  const vec3 id = vec3(0.7);
+  vec3 kd = c;
+
+  // specular
+  const vec3 is = vec3(0.1);
+  vec3 ks = c;
+  float shiny = 30.0;
+
+  // attenuation
+  float iatt = size*9400.0;
+  float atta = 0.23;
+  float attb = 0.2;
+  float attc = 0.0;
+
+  vec3 Nn = getNormal(heights,texCoord);
+  vec3 L = light-vPosition;
+  vec3 Ln = normalize(L);
+  vec3 V = vCamera-vPosition;
+  vec3 Vn = normalize(V);
+
+  float Ldist = length(L);
+
+  float att = iatt/(atta*pow(Ldist,2.0)+attb*Ldist+attc);
+  float LndNn = dot(Ln,Nn);
+  float RndVn = getRdV(LndNn,Nn,Ln,Vn);
+
+  float rnd = (0.5-snoise(vPosition.xy))*0.2;
+  //float rnd2 = (0.5-snoise(vPosition.xy))*0.01;
+
+  vec3 D = clamp(levels(LndNn+rnd,5.0),0.0,1.0)*kd*id;
+  //vec3 D = clamp(LndNn+rnd,0.0,1.0)*kd*id;
+  vec3 A = ka*ia;
+  vec3 S = pow(RndVn,shiny)*ks*is;
+  vec3 I = A+att*(D+S);
+  I = effect(I,Nn,Ln,Vn);
+  I = applyFog(I*I,V);
+
+  gl_FragColor = vec4(
+    I,
+    1.0
+  );
+}
+
+</script>
+</head>
+<body>
+<div class="content">
+<div class="message">
+<h1 class="h2"><strong>Isopleth</strong></h1>
+<div>
+<strong>Click or tap to regenerate.</strong><br><hr>
+<a href="../../index.html">inconvergent.net</a>
+</div>
+</div>
+<div id="box"></div>
+</div>
+<script src="src/isopleth.js"></script>
+</body>
+</html>
