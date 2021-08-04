@@ -1,0 +1,139 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Creating equirectangular projection for multipass rendering, eg: Unity3D</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800 cellpadding=0 cellspacing=0><tr><td>
+
+<center>
+<h1>Creating equirectangular projection for multipass rendering, eg: Unity3D</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+February 2019
+</center><p>
+<p><br><p>
+
+<p align="justify">
+In the following: <a href="http://paulbourke.net/panorama/unity3d/">Creating fisheye views with the Unity3D engine</a>
+a multipass rendering technique was introduced to create a fisheye projection. It involved
+rendering 4 faces of a cubemap and applying those to four specially designed meshes such
+that the result is a fisheye.
+</p>
+
+<p align="justify">
+The following illustrates the same technique but to create an equirectangular projection
+instead of fisheye.
+Obviously, unlike the fisheye case, one needs to render all the 6 faces of the cubemaps.
+The process is similar to cube2sphere described here: <a href="../cubemaps/index.html">
+Converting to and from 6 cubic environment maps and a spherical projection</a> except the
+approach here is suited to realtime applications.
+</p>
+
+<p align="justify">
+Creating the 2D mesh that will have the 6 cubemaps applied as textures involves creating
+a cube with each face tessellated into a regular grid. Here the grid resolution in the
+examples is 64x64 square cells per face. The (u,v) coordinates of each
+vertex of this mesh relate to the
+cubemap textures, so a simple linear samplings on each axis. The (x,y,z) coordinates of
+each vertex of 
+the 6 meshes are mapped to longitude and latitude, the longitude ranging from -2&pi; to 2&pi;
+and the latitude ranging from -&pi; to &pi;, the expected 2:1 aspect ratio. 
+This is now a 2D mesh, to be precise 6 meshes,
+one for each face of the cube. The untextured mesh is shown below, the cube nature is
+clearly evident.
+</p>
+<center>
+	<a href="http://paulbourke.net/panorama/objequirectangular/image1.png"><img src="http://paulbourke.net/panorama/objequirectangular/image1s.png" width=800 height=400 border=1></a>
+</center><p><br><p>
+
+<p align="justify">
+The main trick is the wrapping of the mesh triangles between the left and right edge
+of the equirectangular mesh. These are the triangles down the middle of the "back" face.
+Zooming in (click on image) on the image above illustrates the edges that have been
+bisected by the wrap-around edge.
+A trickier aspect is the center grid cell on the top and bottom face, these two cells
+get spread across the whole of the top edge (North pole) and bottom edge (South pole).
+</p>
+
+<p align="justify">
+Testing is more readily performed by starting with an equirectangular image, dicing into 
+cube maps, applying each to the mesh above and checking one gets the same result.
+The input equirectangular is the shearing shed as below.
+</p>
+<center>
+   <a href="http://paulbourke.net/panorama/objequirectangular/shearing.jpg"><img src="http://paulbourke.net/panorama/objequirectangular/shearing_s.jpg" width=800 height=400 border=1></a>
+</center><p><br><p>
+
+<p align="justify">
+The cube map textures are shown below.
+</p>
+
+<center>
+<table cellpadding=0 cellspacing=0><tr>
+	<td>
+	</td>
+   <td>
+		<a href="http://paulbourke.net/panorama/objequirectangular/shearing_t.jpg"><img src="http://paulbourke.net/panorama/objequirectangular/shearing_ts.jpg" width=200 height=200 border=1></a>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+</tr><tr>
+   <td>
+		<a href="http://paulbourke.net/panorama/objequirectangular/shearing_l.jpg"><img src="http://paulbourke.net/panorama/objequirectangular/shearing_ls.jpg" width=200 height=200 border=1></a>
+   </td>
+   <td>
+		<a href="http://paulbourke.net/panorama/objequirectangular/shearing_f.jpg"><img src="http://paulbourke.net/panorama/objequirectangular/shearing_fs.jpg" width=200 height=200 border=1></a>
+   </td>
+   <td>
+		<a href="http://paulbourke.net/panorama/objequirectangular/shearing_r.jpg"><img src="http://paulbourke.net/panorama/objequirectangular/shearing_rs.jpg" width=200 height=200 border=1></a>
+   </td>
+   <td>
+		<a href="http://paulbourke.net/panorama/objequirectangular/shearing_b.jpg"><img src="http://paulbourke.net/panorama/objequirectangular/shearing_bs.jpg" width=200 height=200 border=1></a>
+   </td>
+</tr><tr>
+   <td>
+   </td>
+   <td>
+		<a href="http://paulbourke.net/panorama/objequirectangular/shearing_d.jpg"><img src="http://paulbourke.net/panorama/objequirectangular/shearing_ds.jpg" width=200 height=200 border=1></a>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+</tr></table>
+</center><p><br><p>
+
+<p align="justify">
+The following shows the textures applied to each mesh.
+</p>
+
+<center>
+   <a href="http://paulbourke.net/panorama/objequirectangular/image2.png"><img src="http://paulbourke.net/panorama/objequirectangular/image2s.png" width=800 height=400 border=1></a>
+</center><p><br><p>
+
+<p align="justify">
+As expected there are issues at the two poles. This occurs for various reasons but one include
+the type of interpolation realtime engines perform. In this case the texture fragment on the
+top and bottom edge needs to be interpolated across the entire width of the image. The issue
+is also apparent in the triangles approaching the poles. There are a variety of ways of
+reducing these issues, they generally involve creating a higher density mesh or applying a
+different tessellation.
+</p>
+
+</td></tr></table></center>
+<p><br><br><br><p>
+</body>
+</html>

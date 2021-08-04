@@ -1,0 +1,149 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>YouTube 360 video format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><tD>
+
+<center>
+<h1>YouTube 360 video format</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+January 2020
+</center>
+<p>
+
+<p align="justify">
+In the following the internal format YouTube uses to store 360 video content will be explained.
+As with many documents in the technology space this may be out of date in the future as
+YouTube may choose to change the way they store 360 videos.
+</p>
+
+<p align="justify">
+When 360 video, monoscopic or stereoscopic, is uploaded to YouTube it is generally
+in the equirectangular format. This is the default format created by the vaste majority
+of software provided by the camera manufactures, and others.
+YouTube does not retain this format but instead remaps
+the footage. If you subsequently download the footage then it appears in that new
+remapped format. For example, here is a single frame from a downloaded 4K YouTube
+video.
+</p>
+
+<center>
+	<a href="http://paulbourke.net/panorama/youtubeformat/sample.jpg">
+	<img src="http://paulbourke.net/panorama/youtubeformat/sample_s.jpg" width=800 height=427 border=1></a><br>
+	<smalltext>Same from "Elephants on the Brink", YouTube Discovery channel.</smalltext>
+</center><p>
+
+<p align="justify">
+While one might be tempted to think this is two partial panoramas, it is in fact
+the 6 faces of the conventional cube map. The layout is slightly cunning in that
+it forms two strips, upper and lower half of the image. The upper strip contains
+faces left-front-right and the bottom strip contains faces bottom-back-top, noting
+that the face names can vary depending on conventions. This is essentially splitting the 
+cube into two halves and laying each flat.
+</p>
+
+<p align="justify">
+The discussion here is for the YouTube "4K" format, the other aspect ratios are just 
+variations on this theme. Similarly knowing how this works should make it 
+straightforward to work out what is happening in the stereoscopic case.
+</p>
+
+<p align="justify">
+In any pipeline to reconstruct the equirectangular one is likely to extract each
+face, rotate according to local conventions (especially the orientation of the top
+and bottom faces), scale to create square images, and then run through a 
+<a href="../cubemaps/index.html"> cube to equirectangular converter</a>.
+The faces extracted, rotated and scaled are shown below. The reader should be able to
+determine which face came from where.
+</p>
+
+<center>
+<table><tr><td>
+	<a href="http://paulbourke.net/panorama/youtubeformat/frame_l.jpg"><img src="http://paulbourke.net/panorama/youtubeformat/frame_l.jpg" width=260 height=260 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/panorama/youtubeformat/frame_f.jpg"><img src="http://paulbourke.net/panorama/youtubeformat/frame_f.jpg" width=260 height=260 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/panorama/youtubeformat/frame_r.jpg"><img src="http://paulbourke.net/panorama/youtubeformat/frame_r.jpg" width=260 height=260 border=1></a>
+</td></tr><tr><td>
+   <a href="http://paulbourke.net/panorama/youtubeformat/frame_d.jpg"><img src="http://paulbourke.net/panorama/youtubeformat/frame_d.jpg" width=260 height=260 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/panorama/youtubeformat/frame_b.jpg"><img src="http://paulbourke.net/panorama/youtubeformat/frame_b.jpg" width=260 height=260 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/panorama/youtubeformat/frame_t.jpg"><img src="http://paulbourke.net/panorama/youtubeformat/frame_t.jpg" width=260 height=260 border=1></a>
+</td></tr></table>
+</center><p>
+
+<p align="justify">
+Converting downloaded YouTube movies back to equirectangular can be readily scripted.
+The process might be to use ffmpeg to extract the frames. ImageMagick "convert" to
+extract the 6 cube faces, apply something like <a href="../cubemaps/index.html">cube2sphere</a> to 
+turn the cubemaps faces
+into equirectangular, and then finally building the movie again using ffmpeg, reassigning the
+audio track. Of course
+the result will not be as good as the original due to these multiple image manipulation
+steps, multiple encodings and the extreme compression YouTube performs.
+</p>
+
+<p align="justify">
+The final reconstructed equirectangular is shown below, noting that the
+<a href="../cubemaps/index.html">equiangle</a> version of the cube map projection is used.
+</p>
+<center>
+	<a href="http://paulbourke.net/panorama/youtubeformat/spherical.jpg"><img src="http://paulbourke.net/panorama/youtubeformat/spherical_s.jpg" width=800 height=400 border=1></a>
+</center><p>
+
+<p align="justify">
+For example, the ImageMagick "convert" command lines for MacOS or Linux to extract the 6 cube maps
+from the YouTube frames might be as follows
+</p>
+<pre>
+convert -crop 1280x1024+0+0       $1 -flip -resize 1280x1280\!             frame_l.tga
+convert -crop 1280x1024+1280+0    $1 -flip -resize 1280x1280\!             frame_f.tga
+convert -crop 1280x1024+2560+0    $1 -flip -resize 1280x1280\!             frame_r.tga
+convert -crop 1280x1024+0+1024    $1 -flip -rotate -90 -resize 1280x1280\! frame_d.tga
+convert -crop 1280x1024+1280+1024 $1 -flip -rotate  90 -resize 1280x1280\! frame_b.tga
+convert -crop 1280x1024+2560+1024 $1 -flip -rotate -90 -resize 1280x1280\! frame_t.tga
+</pre>
+
+<b>Notes</b>
+<ul>
+<li><p align="justify">
+Why create a format based on cube maps
+where the horizontal and vertical resolution isn't the same?
+In the 4K case, the frame size is 3840x2048, so each cube face is 1280x1024.
+</p>
+</li>
+<li><p align="justify">
+What is so special about an aspect ratio of 1.875 (3840x2048), the possible
+explanation of the uneven horizontal and vertical resolution? For square faces,
+each being 1280 pixels, the frame size would be 3840x2560. Or for a 1K square cube map the
+overall frame size would be 3072x2048, an aspect of 1.5. Why were these seemingly more sensible
+aspect ratios not chosen?
+</p>
+</li>
+<li><p align="justify">
+The resolution of "2K" footage is 2560x1440, aspect ratio of 16x9.
+In this case there is not even an integer number of pixels for each face, 2560/3 = 853.3333...?!
+A strange choice. Fortunately it is a rather mute point given who would want 2K 360 video anyway,
+even 4K with the extreme YouTube compression is questionable, doubly so for stereoscopic 360 video.
+</p></li>
+</ul>
+<p>
+
+</td></tr</table></center>
+</body>
+</html>
+

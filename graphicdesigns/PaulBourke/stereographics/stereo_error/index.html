@@ -1,0 +1,390 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Spatial errors in stereoscopic displays</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Spatial errors in stereoscopic displays</h1>
+<h3>(In the absence of head tracking)</h3>
+Written by <a href="../index.html">Paul Bourke</a><br>
+March 2017<p>
+
+In collaboration with Andrew Woods and Joshua Hollick.<br>
+See also:
+<a href="https://www.youtube.com/watch?v=OF7mlwaiEc4&index=28&list=PLoksP178KYM5OZh7Bw4aSz0aXV3KK20v-">
+Image distortions in large-scale immersive display systems - Cylinder and wedge 
+displays. Stereoscopic Displays and Applications XXVIII (SD&A 2017)</a>.<br>
+<smalltext>
+Andrew Woods, Joshua Hollick, Jesse Helliwell, Paul Bourke</a>
+</smalltext>
+</center><p><br><p>
+
+<p align="justify">
+Stereoscopic displays present the viewer with a sense of depth, that is, objects
+presented on the display are perceived to appear in front of (negative parallax) or behind
+the display surface (positive parallax). However, in order for the depth perception
+to be correct, there needs to be a match between the optics of the viewer and the
+optics of either the stereoscopic recording system (camera and lens) or the computer
+rendering configuration (virtual camera and lens). So, for example, the left and
+right eye cameras need to match the viewer's eye separation. The relationship of the
+viewer's position to the display surface needs to match the position and field of
+view of the camera lens, this includes a match between the view frustum from the
+viewer position to the corners/edges of the display.
+</p>
+
+<p align="justify">
+This rigour is rarely satisfied. Not all audience members watching a stereoscopic movie
+can be collocated in the same position. Even if some care is taken to record the stereoscopic
+content correctly for one viewer, the viewing conditions change for different size 
+displays (theatre vs home television for example). Satisfying different screen sizes
+alone would require a multiplicity of different recordings and associated
+post production exercises.
+The reality is that every stereoscopic experience, even if recorded correctly (which is
+rarely the case), presents a distorted sense of space except possibly for a single person.
+The cause of this distortion is most easily appreciated by considering two viewer
+positions (figure 1), the projection of an object onto the display for each of these positions
+should be different and yet for precomputed or recorded content it clearly cannot be
+since it was only captured or rendered from a single position.
+</p>
+
+<center><table width=600><tr><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/fig3.png" width=600 height=403 border=0><br><br>
+   <smalltext>
+	Figure 1. Plan view. An object in the scene represented by the
+	blue rectangle is projected onto the display surface (green) 
+	for each eye as shown. This projection doesn't change for a viewer to the left
+	in which case the object is perceived to be in the position shown in red.
+   </smalltext>
+</td></tr></table></center>
+
+<p align="justify">
+The effects of the distortion due to a non-stationary viewer are clear to anyone who has
+moved about when watching pre-rendered stereoscopic content, moving towards or away from
+the display results in a compression or stretching of depth respectively (figure 1 and 2). 
+Moving to
+the left or right results in a sheering of depth across the display. The same effect
+occurs vertically, for example, 
+for viewer's of different heights. Another way to think about this
+is to realise that if an object is, for example, located half way between the viewer
+and the display surface, it is always located half way despite the viewer moving towards
+or away from the display.
+Fortunately, if a viewer stays
+stationary (eg: seated) then we seem to be relatively insensitive to these spatial
+distortions, or at least rapidly adapt.
+</p>
+
+<center><table width=600><tr><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/fig4.png" width=600 height=353 border=0><br><br>
+   <smalltext>
+	Figure 2. Plan view. An object in the scene represented by the
+   blue rectangle is projected onto the display surface (green)              
+   for each eye as shown. This projection doesn't change for a viewer closer to the display
+   in which case the object is perceived in the position shown in red,
+	depth becomes compressed.
+   </smalltext>
+</td></tr></table></center>
+
+<p align="justify">
+In virtual reality (VR) applications where the viewer does wish to move around, for example, to
+look at objects from different viewpoints, 
+the solution is well established. Since the content is
+being generated in real time it is possible to track the viewer and configure the virtual
+camera to create the correct view frustums for each eye (figure 3). Indeed this tracking might be
+considered key to calling something a VR experience since it is attempting to reproduce what
+is occurring naturally in reality.
+</p>
+
+<center><table width=600><tr><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/fig5.png" width=600 height=351 border=0><br><br>
+   <smalltext>
+	Figure 3. Required view frustums for two viewer positions. Note how the correct projection of an
+	object in the scene (blue rectangle) onto the display surface
+	changes depending on the viewer position. In addition, there are parts of the scene visible
+	in one position that are not visible in the other position, and vice versa.
+   </smalltext>
+</td></tr></table></center>
+
+<p align="justify">
+For precomputed content there will in general always be spatial distortion, this will arise for a
+single viewer not located in the position for which the stereoscopic content is created,
+or if there are multiple viewer's since all but one can be in the correct location. It can
+be noted here that the degree of spatial distortion increases with the increased distance the viewer is
+from the so-called "sweet spot", the position from which the content was recorded or rendered. 
+This is relative to the scale of the display, so a large
+display can support more viewer's within some tolerated maximum spatial error.
+</p>
+
+<p align="justify">
+In what follows a method will be described for estimating the spatial error for a number
+of stereoscopic display geometries. Three types will be presented, a single flat display, a wedge
+(two flat displays at right angles to each other) and an 180 degree cylindrical display
+(figure 4).
+For all displays four situations will be considered, the viewer at the sweet spot, the viewer
+1m further back, 1/2m to the right, and finally at the sweet spot but looking 30 degrees
+to the right. For the wedge two sweet spot locations in common usage will be examined,
+one with the sweet spot in the center and the other at the opposite corner of the box for
+which the wedge defines 2 sides.
+</p>
+
+<center><table width=500><tr><td>
+	<img src="http://paulbourke.net/stereographics/stereo_error/fig1.png" width=500 height=544 border=0><br><br>
+	<smalltext>
+	Figure 4. The parametrisation and conventions for the three displays
+	in the simulation software. The sweet spot is considered to be at the origin,
+	the location of the axes in the figures above.
+	</smalltext>
+</td></tr></table></center>
+
+<p align="justify">
+In the cylindrical case, there are two types of content, directional and 
+<a href="../../papers/vsmm2006/index.html">omnidirectional
+stereoscopic panoramas</a>. Directional stereoscopic panoramas are only designed for
+the viewer to be looking forward, the display real-estate towards the edges of
+the cylinder is there only to support peripheral vision. 
+<a href="../../papers/vsmm2010/index.html">Omnidirectional stereoscopic
+panoramas</a> intentionally provide an increasingly incorrect stereoscopic view towards
+one peripheral vision, but has the advantage of the viewer being able to look around
+with a correct stereoscopic stimuli in the center of their field of view.
+</p>
+
+<b>Planar wall</b><br>
+Dimensions: width 3.75m, height 2m, distance from viewer 1.875m.
+<p>
+
+<p align="justify">
+In the analysis presented here the viewer's field of view is limited to 90 degrees
+(green wedge). This eliminates numerical issues for some cases, provides a consistent
+scaling between the display cases, allows the range of distortions to have a constant scale.
+The justification is that since the viewer is wearing some sort of eye-wear (glasses)
+they typically have a limited field of view for the stereoscopic effect. While thin
+rimmed glasses allows the viewer a view outside the rim of the glasses, one does
+not perceive depth perception in that area due to it being outside the rim of the
+glasses or due to one eye being blocked by the viewer's nose.
+</p>
+
+<p align="justify">
+The simulation software that creates the following diagrams has a parametrised
+description of each display. The dimensions of each are set as similar as possible in
+order to facilitate comparison. 
+</p>
+
+<p align="justify">
+The algorithm functions as follows:
+</p>
+<ul>
+<li><p align="justify">
+Create a regular grid as the virtual scene geometry. In reality, any 3D geometry can be
+used can be used in the simulation but a 2D grid is easier to visualise.
+</p>
+<li><p align="justify">
+For each point on the grid the corresponding position on the display surface
+is calculated for each eye.
+</p>
+<li><p align="justify">
+The viewer position is modified.
+Note the projection of the pair of points on the screen doesn't change.
+</p>
+<li><p align="justify">
+The new perceived
+point in 3D can be calculated as the intersection of the lines from each new eye position through
+the screen points (figure 1).
+</p>
+</ul><p>
+
+<p align="justify">
+In the simulation and following diagrams the screen, position of each eye and horizontal field of view
+are shown in green. All views are in plan, the regular grid is on the x-y plane, z-axis
+is up. The viewer is at the origin and centered on the display vertically.
+A similar analysis could be performed vertically, or even volumetrically, but the salient
+features can be understood with the 2D grid considered here.
+</p>
+
+<center><table width=600 border=1 cellpadding=6 cellspacing=0 width=800><tr><td>
+	<img src="http://paulbourke.net/stereographics/stereo_error/0_a.png" width=300 height=300 border=0><br>
+	<smalltext>Viewer at sweet spot</smalltext>
+</td><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/0_b.png" width=300 height=300 border=0>
+   <smalltext>Viewer 1m back from the sweet spo</smalltext>
+</td></tr><tr><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/0_c.png" width=300 height=300 border=0>
+   <smalltext>Viewer 1/2m to the right of the spot</smalltext>
+</td><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/0_z.png" width=300 height=300 border=0>
+   <smalltext>Viewer at sweet spot but turned 30 degrees</smalltext>
+</td></tr></table></center><p>
+
+<p align="justify">
+In each of these diagrams blue represents no spatial distortion, that is, an object in the
+scene appears in the correct position from the viewer's perspective. Not surprisingly
+in most of the cases here (omnidirectional stereoscopic panorama being the exception) there
+is no spatial distortion when the viewer is located in the sweet spot, the spot for
+which the stereoscopic images are created.
+</p>
+
+<p align="justify">
+Red grid points correspond to the perceived object position being 1m or more away from its
+correct position. As such the situation (top right) where the viewer is standing back
+from the screen illustrates the expected stretching of space. The case where the viewer
+is standing to the side (bottom left) illustrates the expected sheering of space.
+The case where the viewer has turned to the right is accounted for by the fact
+that a correct projection would see the effective eye separation getting narrower on
+the left of the field of view and wider on the right of the field of view. The consequence
+of not performing that correction sees objects on the left of the display
+being stretched out in 
+depth and the object on the right of the display being compressed.
+</p>
+
+<b>Cylinder, directional panorama</b><br>
+Dimensions: radius 2.5m, height 3m.
+<p>
+
+<center><table width=600 border=1 cellpadding=6 cellspacing=0 width=800><tr><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/1_a.png" width=300 height=300 border=0><br>
+   <smalltext>Viewer at sweet spot</smalltext>
+</td><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/1_b.png" width=300 height=300 border=0>
+   <smalltext>Viewer 1m back from the sweet spot</smalltext>
+</td></tr><tr><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/1_c.png" width=300 height=300 border=0>
+   <smalltext>Viewer 1/2m to the right of the spot</smalltext>
+</td><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/1_z.png" width=300 height=300 border=0>
+   <smalltext>Viewer at sweet spot but turned 30 degrees</smalltext>
+</td></tr></table></center><p>
+
+<p align="justify">
+The reader should now be equipped with the thought processes necessary to analyse
+these simulation results.
+In the 1m back case for the directional stereoscopic panorama, one sees the familiar
+stretching of space but also some curvature being added. The large distortions near
+the viewer are rarely experienced because content is normally not brought so close
+to the camera, this also applies to the other cases presented here.
+</p>
+
+<p align="justify">
+Note that, as expected, in all these simulations the spatial error tends to zero
+as points tend to the depth of the screen surface. This is expected because objects
+at the display depth exhibit zero parallax irrespective of the viewer's position.
+</p>
+
+<center><table width=600><tr><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/fig6.png" width=600 height=241 border=0><br><br>
+   <smalltext>
+   Figure 5. Plan view.
+	Objects at the display depth (zero parallax) appear in the correct positions
+	for all viewer locations and orientations.
+   </smalltext>
+</td></tr></table></center>
+
+<b>Cylinder, omnidirectional panorama</b><br>
+Dimensions: radius 2.5m, height 3m.
+<p>
+
+<center><table width=600 border=1 cellpadding=6 cellspacing=0 width=800><tr><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/2_a.png" width=300 height=300 border=0><br>
+   <smalltext>Viewer at sweet spot</smalltext>
+</td><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/2_b.png" width=300 height=300 border=0>
+   <smalltext>Viewer 1m back from the sweet spot</smalltext>
+</td></tr><tr><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/2_c.png" width=300 height=300 border=0>
+   <smalltext>Viewer 1/2m to the right of the spot</smalltext>
+</td><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/2_z.png" width=300 height=300 border=0>
+   <smalltext>Viewer at sweet spot but turned 30 degrees</smalltext>
+</td></tr></table></center><p>
+
+<p align="justify">
+This is the only case where even though the viewer is located at the sweet spot (top left), there is
+spatial distortion. Given the method by which omnidirectional stereoscopic panoramas
+are created, this is no surprise, indeed it is intentional.
+The benefit of the omnidirectional stereoscopic panorama reveals itself in the case
+where the viewer is looking in a different direction (bottom right), here in contrast to
+the directional panorama case, there is no distortion along the line of sight of the viewer.
+It is this key feature that makes this projection the preferred choice for large cylindrical
+displays intended for multiple participants all of which could 
+potentially be looking in different directions.
+</p>
+
+<b>Wedge, central location</b><br>
+Dimensions: width of each wall 3.75m, height 2m.
+<p>
+
+<center><table width=600 border=1 cellpadding=6 cellspacing=0 width=800><tr><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/3_a.png" width=300 height=300 border=0><br>
+   <smalltext>Viewer at sweet spot</smalltext>
+</td><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/3_b.png" width=300 height=300 border=0>
+   <smalltext>Viewer 1m back from the sweet spot</smalltext>
+</td></tr><tr><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/3_c.png" width=300 height=300 border=0>
+   <smalltext>Viewer 1/2m to the right of the spot</smalltext>
+</td><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/3_z.png" width=300 height=300 border=0>
+   <smalltext>Viewer at sweet spot but turned 30 degrees</smalltext>
+</td></tr></table></center><p>
+
+<p align="justify">
+The most noticeable feature in the case of the wedge is the discontinuity that occurs
+when the viewer moves off the central axis. It is understood by considering the sheering
+that occurs with a planar display wall except now the sheering is different for each wall.
+It goes part way to understanding why head
+tracking is key to displays made up of discrete planar surfaces, such as the original
+CAVE.
+</p>
+
+<b>Wedge, corner location</b><br>
+Dimensions: width of each wall 3.75m, height 2m.
+<p>
+
+<center><table width=600 border=1 cellpadding=6 cellspacing=0 width=800><tr><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/4_a.png" width=300 height=300 border=0><br>
+   <smalltext>Viewer at sweet spot</smalltext>
+</td><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/4_b.png" width=300 height=300 border=0>
+   <smalltext>Viewer 1m back from the sweet spot</smalltext>
+</td></tr><tr><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/4_c.png" width=300 height=300 border=0>
+   <smalltext>Viewer 1/2m to the right of the spot</smalltext>
+</td><td>
+   <img src="http://paulbourke.net/stereographics/stereo_error/4_z.png" width=300 height=300 border=0>
+   <smalltext>iewer at sweet spot but turned 30 degrees</smalltext>
+</td></tr></table></center><p>
+
+<p align="justify">
+Compared to the previous case, if the viewer is standing on the corner of the box
+defined by the 2 walls of the wedge then the distortion effects are less. This is
+a reflection that at such a position less of
+the viewer's peripheral vision is engaged and the "wedge" nature is diminished. It 
+approaches the case of the single display wall without any advantages but with
+the disadvantage of a seam in the middle for off-axis viewing.
+</p>
+
+<b>Summary Chart</b><p>
+
+<center><table width=600><tr><td>
+	<a href="http://paulbourke.net/stereographics/stereo_error/comparison_chart.pdf">
+   <img src="http://paulbourke.net/stereographics/stereo_error/fig2.png" width=600 height=493 border=0></a><br>
+   <smalltext>
+	All the results on one PDF are presented above, click to download.
+   </smalltext>
+</td></tr></table></center>
+
+</td></tr></table></center>
+</body>
+</head>
+

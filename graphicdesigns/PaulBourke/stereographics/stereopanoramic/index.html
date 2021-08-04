@@ -1,0 +1,490 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Stereoscopic Panoramics</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center><table width=100%><tr><td>
+<center>
+<h1>Stereoscopic 3D Panoramic Images</h1>
+Written by <a href="../index.html">Paul Bourke</a><bR>
+May 2002<p>
+Updated October 2003 to handle spherical and very high resolution maps.<br>
+Updated April 2004 to support stereoscopic cubic and planar maps.<p>
+<a href="http://paulbourke.net/stereographics/stereopanoramic/procedure/">Details on Roundshot and matching CG Stereoscopic Panoramic Creation</a><p>
+See also: <a href="../../papers/vsmm2006/index.html">
+Synthetic stereoscopic panoramic images</a><br>
+Lecture Notes in Computer Science (LNCS), Springer, ISBm 978-3-540-46304-7, Volume 4270/2006, 
+pp 147-155
+</center>
+</td><td>
+<img src="http://paulbourke.net/stereographics/stereopanoramic/roundshot.jpg" width=150 height=188>
+</td></tr></table></center>
+<p><br><p>
+
+<p align="justify">
+There are three frequently used techniques for rapidly displaying
+either photographic or computer generated surround environments, 
+they are: cylindrical
+panoramics, spherical maps, or cubic maps. 
+In the late 80s panoramic and spherical maps were popularised by
+Apple with their QuickTime VR software, more recently (2000) that technology
+was extended to handle cubic maps.
+In all three cases images
+are mapped onto some geometry (cylinder, sphere, cube) with a virtual
+camera located in the center, depending on the performance of the
+host hardware and software the user can interactively look in any
+direction. This can lead to a strong sense of immersion especially
+if the environment is projected onto a wide display that fills up
+a significant part of the viewers field of view. One might ask how
+a greater sense of immersion can be achieved and in particular whether
+stereoscopic projection is possible. It turns out that stereoscopic
+3D cylindrical panoramas are straightforward to create, the rest of this
+document will discuss the process for computer generated stereoscopic 3D
+panoramas. A more recent addition to this document will further describe
+an interactive viewer and show examples of stereoscopic panoramics of real
+world environments.
+</p>
+
+<p align="justify">
+As with all stereoscopic 3D projection it is necessary to create two
+images from slightly different viewpoints corresponding to the two
+human eyes. In this case we need to create two panoramics. Many rendering
+packages support panoramic cameras but they are modelled after a centered
+camera, for a stereoscopic panorama one needs to create the panorama using
+a cameras with a narrow horizontal field of view and wide vertical field
+of view. A large number of these slice renderings are calculated as the
+camera is rotated, all the resulting slice renderings are stuck together
+to form the final panoramic. So in the following example 360 one degree
+slices are created and stuck together to form the following panoramic.
+</p>
+
+<center>
+<img src="http://paulbourke.net/stereographics/stereopanoramic/slices.jpg" width=709 height=247><p>
+</center>
+
+<p align="justify">
+The reason why one needs to revert to such a scheme is because the
+cameras, unlike a normal panoramic, don't rotate about the center
+of the camera but rather about a rim with radius of half the intended
+eye separation. Two possible topologies are illustrated below, in
+the first the view direction vectors for each camera are parallel
+to each other, in the second they toed-in and meet at what will be
+called the focal length (this is the distance for zero parallax).
+So to summarise, in either geometry the left and right eye camera
+rotates by some small amount (say 1 degree) and a rendering is performed
+with a perspective camera with a 1 degree horizontal aperture and
+a larger vertical aperture (eg: 90, 120, &lt;180). The exact settings that
+will ensure that the slices join properly is dependent on the rendering
+software being used.
+</p>
+
+<center>
+<img src="http://paulbourke.net/stereographics/stereopanoramic/rig.gif" width=539 height=231><p>
+</center>
+
+<p align="justify">
+For the toe-in setup the final panoramic is automatically aligned, that is,
+objects that are the focal length away from the camera will be at zero
+parallax and so the two panoramics can be projected without any horizontal
+offset applied.
+</p>
+
+<center>
+<img src="http://paulbourke.net/stereographics/stereopanoramic/focal1.gif" width=700 height=389><p>
+</center>
+
+<p align="justify">
+For parallel view directions the final panoramics need to be shifted
+horizontally with respect to each other. This can be seen in the
+image below for an object at the focal distance. In order for it to
+be at zero parallax the solid red line on the left image needs to
+lined up with the solid blue line on the right image.
+</p>
+
+<center>
+<img src="http://paulbourke.net/stereographics/stereopanoramic/focal2.gif" width=700 height=431><p>
+</center>
+
+<p align="justify">
+The degree of horizontal shift is easy to calculate given the geometry
+above. If r is half the eye separation then the angle theta is given
+by
+</p>
+
+<center>
+theta = 2 asin(r / focallength)<br>
+</center>
+
+<p align="justify">
+And so the pixel shift is just the proportion of this angle to 360
+degrees. The pixel shift can either be applied when joining the slices
+together to form the panoramic (recommended) or it could be applied
+within the stereoscopic panorama viewer.
+</p>
+
+<center>
+pixelshift = width theta / 2 pi<br>
+</center>
+<p>
+<a href="http://paulbourke.net/stereographics/stereopanoramic/comparison.pdf">Comparison between two cylinderical installations</a>
+<p>
+
+<p><b>Notes</b><p>
+
+<ul>
+<li><p align="justify">
+As with most stereoscopy one needs to choose the focal length
+and the eye separation. The focal length is related to the geometry
+in the scene, namely what distance should be at zero parallax while making
+sure objects never come too close to the camera. For most safe viewing
+the eye separation is taken to be 1/25 or 1/30 of the focal length.
+</p>
+<li><p align="justify">
+By rotating the camera rig clockwise, the image slices can be added
+sequentially from left to right to make up the final panoramics.
+</p>
+<li><p align="justify">
+It isn't necessary to make the slices the exact size, one might made
+wider renderings and extract the central portion. One reason for this
+can be to ensure antialiasing at the edges is performed properly, the
+details are dependent on the rendering software.
+</p>
+<li><p align="justify">
+The above discussion relates to cylindrical panoramic images, the same
+applies to spherical panoramas. However, the stereo pairs get increasingly
+distorted as one moves towards to pole of the spherical map.
+</p>
+<li><p align="justify">
+The horizontal aperture of the camera is the same as the angle between
+pairs of camera positions.
+</p>
+<center><img src="http://paulbourke.net/stereographics/stereopanoramic/aperture.gif" width=600 height=522></center>
+</ul>
+
+<p><b>Capture using one camera</b><p>
+
+<p align="justify">
+It is possible to capture stereoscopic panoramic images by using one camera,
+generally with a wide angle lens. The camera rotates perpendicular to a circle,
+as shown below, in small steps. 
+</p>
+<center><img src="http://paulbourke.net/stereographics/stereopanoramic/onecam_a.gif" width=669 height=591></center><p>
+
+<p align="justify">
+A strip of pixels is extracted from each image, they are aligned next to each
+other to create the left and right eye panoramic images. Depending on which pair
+of pixels is chosen, the effective eye separation for the panoramic images
+can be varied, see the inner circle above.
+</p>
+
+<center><img src="http://paulbourke.net/stereographics/stereopanoramic/onecam_b.gif" width=595 height=557></center><p>
+
+<p><b>Example using PovRay</a></b><p>
+
+<p align="justify">
+In order to facilitate the creation of the rotating camera rig in
+PovRay a <a href="http://paulbourke.net/stereographics/stereopanoramic/stereopanoramic.inc">camera include file</a> 
+was created as follows. This should be
+included into the PovRay scene file in place of any other camera
+specification. It makes a number of assumptions 
+(for example, up is the y axis) but it gives the basic idea.
+</p>
+
+<p align="justify">
+To see how one might use this here are the ini and pov files for the
+left and right panoramics for a scene courtesy of Joseph Strout:
+<a href="http://paulbourke.net/stereographics/stereopanoramic/test1left.ini">test1left.ini</a>,
+<a href="http://paulbourke.net/stereographics/stereopanoramic/test1left.pov">test1left.pov</a>,
+<a href="http://paulbourke.net/stereographics/stereopanoramic/test1right.ini">test1right.ini</a>,
+<a href="http://paulbourke.net/stereographics/stereopanoramic/test1right.pov">test1right.pov</a>.
+The ini file creates a 360 frame animation with a 1 degree wide
+camera. The final panoramic in this case will be 3600 pixels by 1800 pixels.
+</p>
+
+<p align="justify">
+Update (Nov 2007): a 
+<a href="../povcameras/index.html">custom camera</a> for PovRay that renders a stereoscopic
+panoramic image pair directly.
+</p>
+
+<p><b>Stereo-capable panoramic viewer</b><p>
+
+<p align="justify">
+Writing a panoramic viewer based upon OpenGL is "trivial", it only
+requires a cylinder with the panoramic mapped as a texture. Writing
+a stereoscopic viewer is not much more difficult.
+</p>
+
+<p align="justify">
+The main complication for high resolution panoramics is the texture
+memory available and the largest texture supported. For example a
+4096 by 2048 texture is usually going to require 32 MB. Many
+OpenGL drivers place modest limits on the largest texture size, the
+way around any such restriction is to tile the panoramic in N by N pieces on
+the cylinder.
+</p>
+
+<b>Examples</b><p>
+
+<center>
+<table cellspacing=10>
+<tr><td>
+Left
+</td><td>
+Right
+</td></tr>
+<tr><td>
+<a href="http://paulbourke.net/stereographics/stereopanoramic/tetraleft.jpg"><img src="http://paulbourke.net/stereographics/stereopanoramic/tetralefts.gif" width=256 height=128></a>
+</td><td>
+<a href="http://paulbourke.net/stereographics/stereopanoramic/tetraright.jpg"><img src="http://paulbourke.net/stereographics/stereopanoramic/tetrarights.gif" width=256 height=128></a>
+</td></tr>
+<tr><td>
+<a href="http://paulbourke.net/stereographics/stereopanoramic/redentleft.jpg"><img src="http://paulbourke.net/stereographics/stereopanoramic/redentlefts.gif" width=256 height=64></a>
+</td><td>
+<a href="http://paulbourke.net/stereographics/stereopanoramic/redentright.jpg"><img src="http://paulbourke.net/stereographics/stereopanoramic/redentrights.gif" width=256 height=64></a>
+</td></tr>
+<tr><td>
+<a href="http://paulbourke.net/stereographics/stereopanoramic/test1left.jpg"><img src="http://paulbourke.net/stereographics/stereopanoramic/test1lefts.gif" width=256 height=128></a>
+</td><td>
+<a href="http://paulbourke.net/stereographics/stereopanoramic/test1right.jpg"><img src="http://paulbourke.net/stereographics/stereopanoramic/test1rights.gif" width=256 height=128></a>
+</td></tr>
+</table>
+</center>
+<p>
+
+<b>Extensions, October 2003</b><p>
+<p align="justify">
+The viewer originally written for cylindrical stereoscopic panoramic images
+has been extended as follows.
+
+<ul>
+<li><p align="justify">
+Support for spherical panoramics.
+</p>
+<li><p align="justify">
+Support for panning over large planar stereoscopic images.
+</p>
+<li><p align="justify">
+Removal of restrictions found in most other viewers (eg: QuickTime VR), in
+particular it is possible to barrel roll, in other words, the virtual camera
+need not be upright. While this is useful in mono mode it has limited application
+when viewing stereoscopic panoramic pairs.
+</p>
+<li><p align="justify">
+The viewer runs under Linux (with hardware OpenGL support)
+and Mac OS-X, others are almost certainly possible.
+</p>
+<li><p align="justify">
+Support for multiple synced and optionally gen-locked machines has been implemented.
+A server and n clients are supported through TCP-IP communications, any user
+actions on the server is replicated on the clients. This has been tested on
+the 8 machines in the VROOM environment.
+</p>
+<li><p align="justify">
+Edge blending has been implemented to provide a double width display on a dual
+display card. For examples see: <a href="../../miscellaneous/edgeblend/index.html">Edgeblending
+with commodity projectors</a>. This includes the ability to interactively
+vary the edge blending parameters, save them, and read them back when launching
+the application.
+</p>
+</ul>
+<pre>
+Usage: panoramic [options] tga_file_name [right_tga_file_name]
+Options
+           -h     this text
+           -f     full screen
+           -F     half full screen
+           -2     stereo panoramics (default: mono)
+           -a n   vertical camera aperture (default: 60)
+           -t n   width in degrees (default: 360)
+           -r n   start in rotate mode, speed n (default: 0)
+           -s     spherical map (default)
+           -c     cylindrical map
+           -l     planar map
+          -dt n   delta theta (default: 360)
+          -up     constrain up vector (default: on)
+           -0     constrain to plane (default: off)
+         -fps n   set target fps to n (default: 40)
+           -e n   edge blend mode, n pixel overlap
+          -eb s   edge blend settings read from file
+        -wall n   which vroom wall (1 to 8)
+      -server n   server mode, n clients
+      -client s   client mode, name of server
+Interaction
+   arrow keys     rotate left/right/up/down, pan for planar map
+   left mouse     rotate, pan for planar map
+ middle mouse     roll
+  right mouse     pop up menus
+          [,]     roll
+          a,A     autospin faster/slower
+          +,-     zoom in/out
+            w     window dump
+         1..8     VROOM wall ID
+          e,E     increase/decrease eye separation
+          f,F     increase/decrease focallength
+            q     quit
+</pre>
+
+<p align="justify">
+Some stunning examples of real world stereoscopic panoramics have been captured
+by Peter Murphy. An example showing the left eye of a panoramic stereo pair is
+given below, this is a full spherical panoramic image,
+the original around 4000 pixels wide!
+</p>
+<center><img src="http://paulbourke.net/stereographics/stereopanoramic/graveyard1.jpg" width=512 height=256></center><p>
+
+<p align="justify">
+The following shows the left and right views from within the viewer,
+note that normally these would be displayed full screen on a dual display
+card and viewed through a dual projector passive stereo system. 
+Using above average graphics cards (at the time of writing) this viewer
+was readily able to display 4096 pixel stereo panoramic pairs at 30 frames
+per second.
+</p>
+<center><img src="http://paulbourke.net/stereographics/stereopanoramic/graveyard2.jpg" width=600 height=242></center><p>
+
+<p align="justify">
+And finally, two images showing the geometry of the 
+underlying textured cylinder and sphere.
+</p>
+<center><img src="http://paulbourke.net/stereographics/stereopanoramic/graveyard4.jpg" width=600 height=225></center><p>
+<center><img src="http://paulbourke.net/stereographics/stereopanoramic/graveyard3.jpg" width=600 height=225></center><p>
+
+<p align="justify">
+An obvious extension is to add computer generated aspects to the environment
+such as avatars. To to this correctly the added geometry needs to be in the
+correct perspective, it may need to be occluded behind geometry in the
+panoramic, and it needs to be illuminated in a consistent way with the
+lighting of the panoramic. The first step to achieving this is illustrated
+below, the sun position is determined, a ground plane(s) are positioned
+so any additional geometry can lie at the correct vertical position and
+move into the foreground/distance correctly, and finally if the outlines
+of objects in the scene are known such as the gravestone then any added
+geometry that movies behind that gravestone will be occluded by it.
+</p>
+<center><table width=512 cellpadding=0 cellspacing=0><tr><td>
+
+<center>
+<a href="http://paulbourke.net/stereographics/stereopanoramic/original.jpg"><img src="http://paulbourke.net/stereographics/stereopanoramic/original_s.jpg" width=512 height=192 border=2></a><br>
+</center>
+Original scene courtesy of Peter Murphy.
+<p>
+
+<center>
+<a href="http://paulbourke.net/stereographics/stereopanoramic/combined.jpg"><img src="http://paulbourke.net/stereographics/stereopanoramic/combined_s.jpg" width=512 height=192 border=2></a><br>
+</center>
+With geometry overlaid, current primitives include line, box, plane, sphere, light.
+Note how the objects align in both eyes (as they should!). Note however that the
+ground plane doesn't align with the lower ground level, it is actually at the
+level of the raised plot on the left.
+<p>
+
+<center>
+<a href="http://paulbourke.net/stereographics/stereopanoramic/wireframe.jpg"><img src="http://paulbourke.net/stereographics/stereopanoramic/wireframe_s.jpg" width=512 height=192 border=2></a><br>
+</center>
+Wireframe
+<p>
+
+<center>
+<a href="http://paulbourke.net/stereographics/stereopanoramic/sunpos.jpg"><img src="http://paulbourke.net/stereographics/stereopanoramic/sunpos_s.jpg" width=512 height=192 border=2></a><br>
+</center>
+Sun position for correct lighting of any added geometry
+<p>
+
+</td></tr></table></center>
+
+<p><b>Extensions, April 2004</b><p>
+<p align="justify">
+A number of changes were made to the performance and in addition two new map formats
+were supported, namely high resolution stereo planar images and stereoscopic cubic
+maps. 
+</p>
+An example follows courtesy of Peter Murphy<p>
+<center>
+<a href="http://paulbourke.net/stereographics/stereopanoramic/cube_unwrapped.jpg"><img src="http://paulbourke.net/stereographics/stereopanoramic/cube_unwrapped_s.jpg" width=600 height=450 border=2></a><br>
+Left eye cubic maps as unwrapped cube.
+<p>
+<a href="http://paulbourke.net/stereographics/stereopanoramic/cubic.jpg"><img src="http://paulbourke.net/stereographics/stereopanoramic/cubic_s.jpg" width=600 height=225 border=2></a><br>
+Side-by-Side stereo pairs for passive stereo projection.
+<p>
+<a href="http://paulbourke.net/stereographics/stereopanoramic/cubic_frame.jpg"><img src="http://paulbourke.net/stereographics/stereopanoramic/cubic_frame_s.jpg" width=600 height=225 border=2></a><br>
+Showing the cubic texture mesh.
+<p>
+</center>
+
+<b>Update August 2004</b>
+<p align="justify">
+Added new cubic map type, now supports 6 face cubic maps as well as 4 face cubic maps. 
+The performance has also been greatly improved, as well as the support for 
+higher quality/resolution images. The largest cubic map attempted has been 
+4 x (4096x4096) in stereo with a frame rate of more than 75 fps (it is limited by 
+vertical refresh synchronisation). Indeed, the frame rate is now not limited by the
+size of the panoramic but by the display size and the camera aperture. The limit
+of the size of the panoramic that can be handled is dictated by system memory.
+The largest stereoscopic spherical map attempted is 8192 x 8192, again with a vertical refresh 
+limited frame rate on a 1024x768 stereo display.
+</p>
+
+<b>Update October 2004</b>
+<p align="justify">
+Experiments in augmented characters filmed in stereo.
+</p>
+<center>
+<img src="http://paulbourke.net/stereographics/stereopanoramic/augment1.jpg" width=600 height=225 border=2>
+</center>
+<p>
+
+<b>Update, Octover 2005</b><p>
+Interface with Intersense tracker<p>
+<center><img src="http://paulbourke.net/stereographics/stereopanoramic/tracker1s.jpg" width=600 height=800></center>
+<p>
+
+<p><b>References</b><p>
+
+Shmuel Peleg,<br>
+Omnistereo: Panoramic Stereo Imaging<br>
+IEEE Transactions on Pattern Analysis and Machine Intelligence,
+Vol 15, No 3, March 2001.
+<p>
+
+S. Tzavidas and A.K. Katsaggelos,<br>
+Multicamera Setup for Generating Stereo Panoramic Video,<bR>
+Proc. 2002 SPIE Conference on VCIP, San Jose, CA, Jan. 2002. 
+<p>
+
+H.C. Huang and Y.P. Hung.<br>
+Panoramic stereo imaging system with automatic disparity 
+warping and seaming.<bR> 
+In Proceedings of International Conference on Image Processing and 
+Character Recognition,<bR>
+ICS'96, pages 48-55, Taiwan, ROC, December 1996.
+<p>
+
+J. Gluckman, S. Nayar, and K. Thoresz.<br>
+Real-time omnidirectional and panoramic stereo.<bR>
+In DARPA IUW-98, pages 299-303, Monterey, California, November 1998. Morgan
+<p>
+
+S. Peleg and M. Ben-Ezra.<br>
+Stereo panorama with a single camera.<bR>
+In IEEE Conference on Computer Vision and
+Pattern Recognition, pages 395-401, Ft. Collins, Colorado, June 1999.
+<p>
+
+</td></tr></table></center<p>
+</body>
+</html>

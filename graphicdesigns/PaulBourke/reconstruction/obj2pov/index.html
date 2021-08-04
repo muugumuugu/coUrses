@@ -1,0 +1,271 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>PhotoScan to PovRay Animation</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>PhotoScan to PovRay Animations</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+August 2015
+</center>
+<p><br><p>
+
+<p align="justify">
+The following describes a pipeline for converting 3D reconstructed models
+from PhotoScan to a format suitable for rendering and creating animations in PovRay. 
+Why, compared to creating animations in another package? There are a number of possible reasons:
+</p>
+<ul>
+<li><p align="justify">
+For those with PovRay experience this has many advantages. PovRay is a highly scriptable
+and automated environment which often can compensate for the lack of a graphical user
+interface.
+</p>
+<li><p align="justify">
+PovRay can run on "big" machines (license free)
+and thus one can render animations on hundreds of nodes (potentially) simultaneously.
+</p>
+<li><p align="justify">
+PovRay can handle huge mesh datasets, of a size that would adversely affect the interactive
+performance of other rendering/animation packages.
+</p>
+</ul>
+
+<p align="justify">
+The work flow presented here will be illustrated with a reconstruction of a door
+from a cathedral in Magdeburg, Germany. The details of the reconstruction will not
+be covered here except to say the photoset consists of about 60 photographs taken with a
+24 MPixel camera. Some of the gaps behind the geometry have not been successfully
+reconstructed due to limitation of access to the receded door way.
+The model is exported as an OBJ (WaveFront) with just 1 million triangles and comprising of 
+four 4Kx4K texture maps.
+</p>
+
+<center>
+	<img src="http://paulbourke.net/reconstruction/obj2pov/fig1.png" width=800 height=1441 border=0><br>
+	<smalltext>Figure 1: Sample model (meshlab), Cathedral door from Magdeburg (Germany)</smalltext>
+</center><p>
+
+<p align="justify">
+The key to this process is a utility developed called simply "obj2pov". It takes a single
+command line argument (UNIX style utility) that is the OBJ file, the names of the 
+output files for PovRay are internally generated. It should be pointed out that this is
+by no means a general OBJ converter, rather it handles the OBJ export from the reconstruction
+packages encountered and tested so far.
+Running the utility generates screen output as follows.
+</p>
+
+<pre>
+>obj2pov magdeburgdoor.obj
+Found material: "magdeburgdoor.mtl"
+Using material: "magdeburgdoor"
+Using material: "magdeburgdoor1"
+Using material: "magdeburgdoor2"
+Using material: "magdeburgdoor3"
+Centroid: 0.0724077,-0.365133,8.93211
+Bounds: -6.78253,-5.0335,4.96469 -> 5.26816,4.09476,11.1872
+</pre>
+
+<p align="justify">
+The 4 materials correspond to the 4 textures the reconstruction was generated with. 
+For those familiar with OBJ files it should be noted that it was not necessary to
+parse the material (.mtl) or the image files themselves, this connection can be made later
+in the PovRay scene file.
+The files making up this project are listed below. The first 6 are the exported OBJ files,
+the surf?.inc are the 4 mesh files (one per texture) created for PovRay, and the two last files are
+the scene files for the rendering. This whole package can be downloaded 
+here: <a href="http://paulbourke.net/reconstruction/obj2pov/archive.zip">archive.zip</a>.
+</p>
+
+<pre>
+magdeburgdoor.obj
+magdeburgdoor.mtl
+magdeburgdoor.jpg
+magdeburgdoor1.jpg
+magdeburgdoor2.jpg
+magdeburgdoor3.jpg
+surf0.inc
+surf1.inc
+surf2.inc
+surf3.inc
+scene.pov
+scene.ini
+</pre>
+
+<p align="justify">
+This is not a PovRay tutorial and as such only those aspects relevant to this work flow
+will be explained. Version 3.7 of PovRay is used, the latest at the time of writing but
+more importantly the first parallel implementation that does image space splitting across
+available cores, a key for high rendering speeds especially on typically high core count
+HPC facilities.
+</p>
+
+<p align="justify">
+The .ini file shown below is nothing special, it implements supersampling antialiasing, sets the image
+size and in this case a 300 frame animation will be created. As per usual PovRay animations
+the clock variable will be used to control the camera, the frame count being a convenient
+way to create preview movies before longer smoother movies.
+The "Output_Alpha" can be turned on to provide frames with the (empty) background transparent,
+this is often useful for compositing.
+</p>
+<pre>
+Output_File_Type=N
+Output_Alpha=off
+Width=800
+Height=1200
+Antialias=on
+Antialias_Threshold=0.01
+Display=on
+Initial_Frame=0
+Final_Frame=300
+Initial_Clock=0
+Final_Clock=1
+</pre>
+
+<p align="justify">
+The first requirement is to link the textures to the materials in the OBJ file.
+The converter creates meshes (surf*.inc files) with textures called "texture0",
+"texture1" etc. Each of these needs to be defined in terms of the texture "image_maps".
+For this example no lighting model will be used so the finish
+is set to pure ambient. Also for the purposes of this exercise the light source
+will be placed at the camera location.
+</p>
+
+<pre>
+// Finish and material definitions
+#declare finish1 = finish { ambient 1 diffuse 0 specular 0 }
+#declare texture0 = texture {
+   pigment { image_map { jpeg "magdeburgdoor.jpg" map_type 0 once interpolate 2 } }
+   finish { finish1 }
+}
+#declare texture1 = texture {
+   pigment { image_map { jpeg "magdeburgdoor1.jpg" map_type 0 once interpolate 2 } }
+   finish { finish1 }
+}
+#declare texture2 = texture {
+   pigment { image_map { jpeg "magdeburgdoor2.jpg" map_type 0 once interpolate 2 } }
+   finish { finish1 }
+}
+#declare texture3 = texture {
+   pigment { image_map { jpeg "magdeburgdoor3.jpg" map_type 0 once interpolate 2 } }
+   finish { finish1 }
+}
+</pre>
+
+<p align="justify">
+The surf?.inc files created by the converter look as follows, basically a "mesh2"
+primitive with uv textures. The mesh is defined by vertices, (u,v) textures coordinates,
+followed by face and uv indices. These are simple format mappings from the OBJ data.
+Note that useful definitions such as the overall size (RANGE) and center of the
+model are included, in this example it is used to center the model at the origin.
+</p>
+
+<pre>
+#declare CENTROID = <0.072408,-0.365133,8.932111>;
+#declare CENTER = <-0.757182,-0.469374,8.075937>;
+#declare RANGE = 16.348200;
+mesh2 {
+ vertex_vectors { 501745,
+  <-5.744940,-0.151598,11.102096>,
+  <-5.776857,-0.161643,11.107796>,
+    :
+    :
+  <-3.449267,-5.019722,8.133036>,
+  <-3.441377,-5.023549,8.123404>
+ }
+ uv_vectors { 562810,
+  <0.311544,0.515209>,
+  <0.320269,0.515553>,
+    :
+    :
+  <0.122397,0.739929>,
+  <0.122704,0.758646>
+ }
+ face_indices { 276098,
+  <100150,99688,99689>,
+  <100150,99689,100149>,
+    :
+    :
+  <455970,501735,455819>,
+  <462373,501734,459175>
+ }
+ uv_indices { 276098,
+  <17,18,19>,
+  <17,19,20>,
+    :
+    :
+  <515935,519440,515797>,
+  <522847,519439,519437>
+ }
+ uv_mapping
+ texture { texture0 }
+}
+</pre>
+
+<p align="justify">
+Often models from 3D reconstruction are not positioned, scaled, or orientated. Remedying this
+in the most general case will be discussed next. The center and scale allow for two corrections, the
+orientation is corrected in PovRay by importing the model as shown below. Note that if the orientation
+can be performed in the reconstruction phase then these additional rotations are not required.
+The coordinate system used here is the authors choice, right handed, "z" upwards ... others
+options are obviously possible.
+</p>
+
+<pre>
+union {
+   #include "surf3.inc"
+   #include "surf2.inc"
+   #include "surf1.inc"
+   #include "surf0.inc"
+   translate -CENTROID // Center model
+   rotate <190,0,0>    // The following align the model with the coordinate system
+   rotate <0,99,0>
+   rotate <4,0,0>
+   scale <1,1,1>/RANGE // Scale to unit cube
+}
+</pre>
+
+<p align="justify">
+All that remains is to render the model with the desired camera settings and animation
+path. The following is the command line and 
+a preview showing the axes that were used to check the axes alignment.
+</p>
+
+<pre>
+povray +sf0 +ef0 +iscene.pov scene.ini
+</pre>
+
+<center>
+   <img src="http://paulbourke.net/reconstruction/obj2pov/fig2.png" width=636 height=690 border=0><br>
+   <smalltext>Figure 2: Resulting image in PovRay with axes visible, camera 1 unit away.</smalltext>
+</center><p>
+
+<p align="justify">
+The following is a zoomed in view of the first frame of a simple rotation animation
+from -30 degrees to +30 degrees. The movie can be viewed or downloaded here:
+<a href="http://paulbourke.net/reconstruction/obj2pov/sample.mov">sample.mov</a>.
+</p>
+
+<center>
+   <img src="http://paulbourke.net/reconstruction/obj2pov/fig3.png" width=800 height=1200 border=0><br>
+   <smalltext>Figure 3: First frame of sample animation</smalltext>
+</center><p>
+
+</td></tr></table></center>
+</body>
+</html>
+

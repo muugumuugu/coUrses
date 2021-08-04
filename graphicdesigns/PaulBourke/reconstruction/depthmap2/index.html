@@ -1,0 +1,358 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Creating depth maps using Povray</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+<center><table width=800><tr><td>
+
+<center>
+<h1>Creating depth maps using PovRay</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+September 2019<p>
+<a href="http://paulbourke.net/reconstruction/depthmap2/index_no.html">Norwegian translation</a> courtesy Lars Olden.<br>
+<a href="http://paulbourke.net/reconstruction/depthmap2/index_ab.html">Azerbaijanian translation</a> courtesy Amir Abbasov.<br>
+<a href="http://paulbourke.net/reconstruction/depthmap2/index_fi.html">Finnish version</a> by globusbet.com<br>
+</center>
+<p><br><p>
+
+<p align="justify">
+The following is a short instructional guide to how to create depth maps using PovRay.
+There are various applications in stereoscopy why one might want to do this, but the
+motivation at the time of writing was to create depth maps for FaceBooks "3D model"
+images. These take an image along with an associated depth map image allowing a viewer
+to slightly change their view point left-right-up-down.
+</p>
+
+<p align="justify">
+An example of what FaceBook accepts when a 3D model is uploaded, is illustrated
+below. It consists of the primary image along with a secondary image with the same
+name but with "_depth" appended. 
+Obviously these are expected to match, that is, are rendered from the same view position.
+In this secondary image white refers to objects
+close to the camera and black to objects further away.
+</p>
+
+<center><table><tr><td>
+	<A href="http://paulbourke.net/reconstruction/depthmap2/elephant.png">
+	<img src="http://paulbourke.net/reconstruction/depthmap2/elephant_s.png" width=400 height=400 border=1></a><br>
+	<smalltext>Primary image: Elephant.png</smalltext></a>
+</td><td>
+   <A href="http://paulbourke.net/reconstruction/depthmap2/elephant_depth.png">
+	<img src="http://paulbourke.net/reconstruction/depthmap2/elephant_depth_s.png" width=400 height=400 border=1></a><br>
+   <smalltext>Secondary image: Elephant_depth.png</smalltext></a>
+</td></tr></table></center><p>
+
+<p align="justify">
+Depth maps can be generated in a number of different ways. For example, one can manually mask regions
+of almost constant depth and create depth maps in an image editing package. Depth maps can be
+created by taking a number (2 or more) photographs of an object or scene and using photogrammetric
+techniques derive depth maps. In the discussion here we are only going to present how to use
+PovRay to create depth maps of an existing 3D model.
+The principles are likely to be similar in other rendering packages but the terminology will
+be different. For example the reference below to a gradient pigment would in other packages
+be called a shader.
+</p>
+
+<p align="justify">
+The basic features of PovRay that can be used to create depth maps is a combination of a "gradient"
+pigment and "colour_maps". A gradient pigment generates a number between 0 and 1 depending on the
+position in space of a point on the surface of the object.
+A colour_map is used to map that value to black-white ramp that
+is ultimately mapped back to depth. The following PovRay code snippet for the texture might be used.
+</p>
+<pre>
+   #declare thetexture = texture {
+      pigment { 
+         gradient z
+         color_map {
+            [0 color rgb <1,1,1> ]
+            [1 color rgb <0,0,0> ]
+          }
+         scale <1,1,ZMAX-ZMIN>
+         translate <0,0,ZMIN>
+      }
+      finish { ambient 1 diffuse 0 specular 0 }
+   }
+</pre>
+
+<p align="justify">
+Notes on the above:
+</p>
+<ul>
+<li><p align="justify">
+The model is assumed to be orientated such that the intended depth map is along the z axis.
+The camera position is similarly assumed to be along the z axis.
+</p></li>
+<li><p align="justify">
+It is assumes the variables ZMIN and ZMAX have been previously declared, these map the gradient
+range from 0 -&gt; 1 to zmin -&gt; zmax.
+</p></li>
+<li><p align="justify">
+The gradient pigment is periodic so the model depth needs to be contained with the bounds.
+This is what the scale and translate commands are achieving.
+</p></li>
+<li><p align="justify">
+The geometry of the model is assumed to be within a single union{} entity and have no existing
+textures applied. For example
+</p>
+<pre>
+union { 
+   object { modelpart1 }
+   object { modelpart2 }
+       etc
+   texture { thetexture }
+}
+</pre>
+</li>
+</ul>
+
+<p align="justify">
+Another example. This and the last are brick elephants holding up a platform on which a stupa
+is built, located in Sukhothai, Thailand.
+</p>
+
+<center><table><tr><td>
+   <A href="http://paulbourke.net/reconstruction/depthmap2/elephant2.png">
+   <img src="http://paulbourke.net/reconstruction/depthmap2/elephant2_s.png" width=400 height=400 border=1></a><br>
+</td><td>
+   <A href="http://paulbourke.net/reconstruction/depthmap2/elephant2_depth.png">
+   <img src="http://paulbourke.net/reconstruction/depthmap2/elephant2_depth_s.png" width=400 height=400 border=1></a><br>
+</td></tr></table></center><p>
+
+<p align="justify">
+Example from the Siew San Teng temple in Kuching, East Malaysia.
+</p>
+<center><table><tr><td>
+   <A href="http://paulbourke.net/reconstruction/depthmap2/begger.png">
+   <img src="http://paulbourke.net/reconstruction/depthmap2/begger_s.png" width=400 height=635 border=1></a><br>
+</td><td>
+   <A href="http://paulbourke.net/reconstruction/depthmap2/begger_depth.png">
+   <img src="http://paulbourke.net/reconstruction/depthmap2/begger_depth_s.png" width=400 height=635 border=1></a><br>
+</td></tr></table></center><p>
+
+<p><br><br><p>
+<center>
+<h2>More general approach</h2>
+Contribution by Pascal Baillehache<br>
+December 2020
+</center>
+
+<p align="justify">
+In the solution introduced above, the camera and the depth map are assumed to be located along the z axis, and the scene is assumed to be contained within ZMIN-ZMAX. A more general approach would be to use the camera properties to align the depth map along the view axis, and a functional pigment to avoid the periodicity of the gradient pigment.
+</p>
+
+<p align="justify">
+Given CAMERAPOS and CAMERALOOKAT the location and look_at vectors of the camera, and DEPTHMIN and DEPTHMAX the bounds of the depth map, the following texture might be used instead:
+</p>
+
+<pre>
+#include "math.inc"
+
+#declare CAMERAFRONT  = vnormalize(CAMERALOOKAT - CAMERAPOS);
+#declare CAMERAFRONTX = CAMERAFRONT.x;
+#declare CAMERAFRONTY = CAMERAFRONT.y;
+#declare CAMERAFRONTZ = CAMERAFRONT.z;
+
+#declare clipped_scaled_gradient =
+  function(x, y, z, gradx, grady, gradz, gradmin, gradmax) {
+    clip(
+      ((x * gradx + y * grady + z * gradz) - gradmin) / (gradmax - gradmin),
+      0,1)
+  }
+
+#declare thetexture = texture {
+  pigment {
+    function {
+      clipped_scaled_gradient(
+        x, y, z, CAMERAFRONTX, CAMERAFRONTY, CAMERAFRONTZ, DEPTHMIN, DEPTHMAX)
+    }
+    color_map {
+      [0 color rgb <1,1,1>]
+      [1 color rgb <0,0,0>]
+    }
+    translate CAMERAPOS
+  }
+  finish { ambient 1 diffuse 0 specular 0 }
+}
+</pre>
+
+<p align="justify">
+Notes on the above:
+</p>
+<ul>
+<li><p align="justify">
+math.inc is necessary to use the clip() function.
+</p></li>
+<li><p align="justify">
+CAMERAFRONT is the normalized direction vector of the camera.
+</p></li>
+<li><p align="justify">
+CAMERAFRONTX, CAMERAFRONTY, CAMERAFRONTZ are the scalar components of the direction vector, necessary to be able to use the CAMERAFRONT vector as argument of the function clipped_scaled_gradient() (Pov-Ray does not accept vectors as function's arguments).
+</p></li>
+<li><p align="justify">
+In this approach a functional pigment is used to generate the depth map: the ramp, scaling and clipping of the depth are calculated by the function clipped_scaled_gradient().
+</p></li>
+<li><p align="justify">
+x,y,z is the location in the scene during rendering, relative to the camera location. gradx,grady,gradz is the gradient vector (the view axis in this case). gradmin,gradmax are the bounds of the depth map (distances from the camera of the start and end of the map)
+</p></li>
+<li><p align="justify">
+(x * gradx + y * grady + z * gradz) is the scalar product of the vector from the camera to a point in the scene and the normalized vector aligned with the view axis. This gives the planar distance from the camera according to the view axis.
+</p></li>
+<li><p align="justify">
+( ... - gradmin) / (gradmax - gradmin) normalizes the distance calculated above from DEPTHMIN-&gt;DEPTHMAX to 0.0-&gt;1.0.
+</p></li>
+<li><p align="justify">
+Finally, clip(..., 0,1) maps location in the scene nearer than DEPTHMIN to 0.0 and those farther than DEPTHMAX to 1.0. This is also avoid the periodicity of the gradient pigment and the reason why a functional pigment is used instead of a gradient one, which could otherwise be used as gradient CAMERAFRONT and appropriate scaling and translation as in the first approach.
+</p></li>
+<li><p align="justify">
+The clipped_scaled_gradient() function is then used instead of the gradient pigment with the direction vector of the camera and the depth bounds: clipped_scaled_gradient(x, y, z, CAMERAFRONTX, CAMERAFRONTY, CAMERAFRONTZ, DEPTHMIN, DEPTHMAX). To allow the correct calculation of the planar distance using the scalar product, x,y,z must refer to the position relative to the camera location, hence the translate CAMERAPOS in the pigment definition.
+</p></li>
+<li><p align="justify">
+The texture can be used as in the first approach:
+</p>
+<pre>
+union { 
+   object { modelpart1 }
+   object { modelpart2 }
+       etc
+   texture { thetexture }
+}
+</pre></li>
+</ul>
+
+<p align="justify">
+Example on a simple scene:
+</p>
+<center><table><tr><td>
+   <A href="http://paulbourke.net/reconstruction/depthmap2/functional_pigment.png">
+   <img src="http://paulbourke.net/reconstruction/depthmap2/functional_pigment_s.png" width=400 height=400 border=1></a><br>
+</td><td>
+   <A href="http://paulbourke.net/reconstruction/depthmap2/functional_pigment_depth.png">
+   <img src="http://paulbourke.net/reconstruction/depthmap2/functional_pigment_s_depth.png" width=400 height=400 border=1></a><br>
+</td></tr></table></center><p>
+
+<p align="justify">
+To render properly a depth map using Pov-Ray, one must also be careful about the rendering paramaters used.
+</p>
+<ul>
+<li><p align="justify">
+Antialias must be turned off, which can be done with the following command in the ini script:</p>
+<pre>
+Antialias=off
+</pre>
+</li>
+<li><p align="justify">
+From Pov-Ray version 3.7, the gamma value must be specified, in the scene script with:</p>
+<pre>
+global_settings { assumed_gamma 1 }</pre>
+<p align="justify">and in the ini script with:
+</p>
+<pre>
+File_Gamma=1.0
+</pre>
+</li>
+<li><p align="justify">
+Rendering quality must be set to 0 in the ini script to avoid any interference from the light model:</p>
+<pre>
+Quality=0
+</pre>
+</li>
+<li><p align="justify">
+By default, the rendering image will be saved in RGB format, allowing only 256 levels in the depth map which would lead to a very poor resolution in most case. Pov-Ray can also output in 16 bits PNG format, allowing 65536 levels, with the following command in the ini script:</p>
+<pre>
+Output_File_Type=N
+Bits_Per_Color=16
+</pre>
+</li>
+</ul>
+
+<p align="justify">
+Finally the ini script used to render the depth map above becomes:
+</p>
+<pre>
+Input_File_Name=depth.pov
+Width=2000
+Height=2000
+Display=off
+Output_File_Type=N
+Bits_Per_Color=16
+Antialias=off
+Output_File_Name=functional_pigment_depth.png
+Quality=0
+File_Gamma=1.0
+</pre>
+<p align="justify">
+and the scene script:
+</p>
+<pre>
+#version 3.7;
+#include "math.inc"
+
+global_settings {
+  assumed_gamma 1
+}
+
+#declare CAMERAPOS    = <3,3,3>;
+#declare CAMERALOOKAT = <0,0,0>;
+#declare CAMERAFRONT  = vnormalize(CAMERALOOKAT - CAMERAPOS);
+#declare CAMERAFRONTX = CAMERAFRONT.x;
+#declare CAMERAFRONTY = CAMERAFRONT.y;
+#declare CAMERAFRONTZ = CAMERAFRONT.z;
+
+#declare DEPTHMIN = 3.1;
+#declare DEPTHMAX = 7.0;
+
+camera {
+  location CAMERAPOS
+  up <0,1,0>
+  right <1,0,0>
+  look_at CAMERALOOKAT
+}
+
+#declare clipped_scaled_gradient =
+  function(x, y, z, gradx, grady, gradz, gradmin, gradmax) {
+    clip(
+      ((x * gradx + y * grady + z * gradz) - gradmin) / (gradmax - gradmin),
+      0,1)
+  }
+
+#declare thetexture = texture {
+  pigment {
+    function {
+      clipped_scaled_gradient(
+        x, y, z, CAMERAFRONTX, CAMERAFRONTY, CAMERAFRONTZ, DEPTHMIN, DEPTHMAX)
+    }
+    color_map {
+      [0 color rgb <1,1,1>]
+      [1 color rgb <0,0,0>]
+    }
+    translate CAMERAPOS
+  }
+  finish { ambient 1 diffuse 0 specular 0 }
+}
+
+union {
+  plane  { y,0 }
+  sphere { 0,.5     translate <-1,.5,-1> }
+  box    { -.5,.5   translate <1,.5,-1> }
+  cone   { 0,.5,y,0 translate <-1,0,1> }
+  torus  { .5,.25   translate <1,.25,1> }
+  texture { thetexture }
+}
+</pre>
+
+
+</td></tr></table></center>
+<p><br><br><br><p>
+</body>
+</html>
+

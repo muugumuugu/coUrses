@@ -1,0 +1,155 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Processing images from the Lucy 360 degree video camera</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Processing images from the Lucy 360 degree video camera</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+April 2009
+</center><p>
+
+<p align="justify">
+The Lucy camera from Kogeto is one of a number of cameras that record 360 video
+by placing a radially symmetric parabolic mirror in front of a single video camera lens,
+see figure 1. The following is an attempt to create an in-house means of processing
+the footage from this camera but also to make it general enough to handle footage
+from other designs including in-house cameras based upon higher resolution cameras.
+There would also seem to be some deficiencies in the software distributed with the
+Lucy, in particular, being able to correct for various aberration and provide
+interactive playback on other operating systems and packages.
+</p>
+<p>
+
+<center>
+<img src="http://paulbourke.net/panorama/LucyCamera/diagram0.png" width=800 height=467 border=0><br>
+</center>
+<smalltext>
+Figure 1. Optics of the parabolic mirror.
+</smalltext>
+<p>
+
+<p align="justify">
+The image recorded by
+the video camera has a geometry as shown in figure 2. It is distinguished by a
+central dead zone hiding the camera lens mount, and an outer circle which is the
+maximum vertical angle (latitude) captured.
+</p>
+
+<center>
+<img src="http://paulbourke.net/panorama/LucyCamera/diagram1.png" width=800 height=456 border=0><br>
+</center>
+<smalltext>
+Figure 2. Sample frame from the Lucy camera.
+</smalltext>
+<p>
+
+<p align="justify">
+The native image from a camera such as this is not a particularly standard type of projection.
+More standard are cylindrical and spherical (equirectangular) panoramas. There is of course a
+one-to-one mapping between the image as filmed and these panoramas. In particular, panoramas are
+a more natural image projection for immersive displays in which these 360 videos may be presented,
+for example the 
+<a href="../../dome/iDome/index.html">iDome</a>
+or HMDs. The mapping between the Lucy frames and a spherical panorama is
+shown below.
+</p>
+<p>
+
+<center>
+<img src="http://paulbourke.net/panorama/LucyCamera/diagram2.png" width=800 height=861 border=0><br>
+</center>
+<smalltext>
+Figure 3. Illustrative mapping between the Lucy frames and a spherical panorama frame.
+</smalltext>
+<p>
+
+<p align="justify">
+There are a number of parameters any image warping needs to consider when doing the transformation
+between Lucy image space and spherical panorama space. 
+<ul>
+<li><p align="justify">
+The centre of the Lucy image is not necessarily
+the center of the HD video frame.
+</p>
+<li><p align="justify">
+The radius in pixels of the inner and outer ring.
+</p>
+<li><p align="justify">
+The corresponding latitude of the inner and outer ring.
+</p>
+<li><p align="justify">
+The ability to flip the image horizontally and vertically in cases where the camera may be
+mounted upside-down.
+</p>
+</ul>
+<p>
+
+<center>
+<img src="http://paulbourke.net/panorama/LucyCamera/diagram3.png" width=800 height=400 border=0><br>
+</center>
+<smalltext>
+Figure 4. Spherical projection of the image shown in figure 2.
+</smalltext>
+<p>
+
+<p align="justify">
+A command line utility has been written to test the mappings described above.
+Equally a warping mesh could be developed for software such as Warpplayer, the
+Quartz Composer pbmesh, an OpenGL shader or any other image distorting API.
+Of particular importance in an off-line converter is treating antialiasing
+appropriately, in the test software here supersampling antialiasing is used.
+</p>
+
+<pre>
+lucy2sph [options] tgafile
+Options:
+   -r    n n   inner and outer radius, default: 130 532
+   -l    n n   inner and outer latitude, default: -60 60
+   -c    x y   center of cone, default: 952 553
+   -a      n   set antialias level, default: 2
+   -w      n   width of the spherical image, default: 1024
+   -v          apply vertical flip, default: off
+   -h          apply horizontal flip, default: off
+</pre>
+
+<b>Resolution</b>
+
+<p align="justify">
+The advantage of single camera based 360 degree video recorder over multiple camera solutions
+is that there are no blend zones with the inevitable errors. It is fundamentally not possible
+to combine images from multiple cameras so as to avoid stitching/blending issues for all depths.
+The disadvantage of single camera solutions is the lack of image resolution, and fidelity if a
+standard Bayer style single panel video camera is being used along with lossy compression.
+</p>
+<p align="justify">
+The question of resolution is complicated by the fact that it depends on the region of the
+image involved. Objects closer to the central region of the camera image, corresponding to 
+low/negative values of latitude are much less resolved than objects towards the outer
+region of the camera image, corresponding to high/positive angle of latitude.
+For example, for an inner radius of 130 and an outer radius of 532 pixels
+(from an actual Lucy camera), at those respective
+values of latitude there are 2 pi r samples captured. This linear function suggest almost 4 times the
+effective resolution at the outer radius latitude than the inner radius latitude.
+At the equator this equates to a panorama of about 2000 pixels, significantly less than any
+of the multiple camera rigs which aim for between 5000 and 8000 pixel panoramas and generally
+support a more regular distribution of resolution with latitude.
+</p>
+
+</td></tr></table></center>
+</body>
+</html>

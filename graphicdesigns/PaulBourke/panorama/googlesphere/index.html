@@ -1,0 +1,177 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Creating equirectangular projections using GoogleEarth</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Creating equirectangular projections using GoogleEarth</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+March 2020<p>
+See also: <a href="../stellariumsphere/index.html">Create equirectangular projections using Stellarium</a><br>
+See also: <a href="../celestiasphere/index.html">Create equirectangular projections using Celestia</a>
+</center>
+<p><br><p>
+
+<p align="justify">
+The following documents how one might create equirectangular projections from GoogleEarth.
+Why might one want to do this? Equirectangular projections are a convenient image format
+for presenting 360x180 data online or through head mounted displays. It is one of a few formats
+that records everything visible from a point in space. The other major format are cube maps,
+in the following the cube maps are created and the equirectangular derived from those.
+</p>
+
+<p align="justify">
+The document here: <a href="../stellariumsphere/index.html">Create equirectangular projections using Stellarium
+</a> achieved the result by rendering two fisheyes in order to capture the whole 360x180 view.
+GoogleEarth does not have a fisheye rendering mode so the "standard" alternative is to render the
+6 faces of a cube, each a 90 degree by 90 degree field of view. These 6 cubemap faces can be
+used directly in many viewing software solutions or they can be remapped to an equirectangular.
+This is similar to the approach taken in <a href="../celestiasphere/index.html">
+Create equirectangular projections using Celestia</a>.
+</p>
+
+<p align="justify">
+The 6 cube maps are automatically generated with a .kml "tour" file, specifically it orientates
+the camera along each of the positive and negative coordinate axes 
+while retaining the same position in 3D space. GoogleEarth .kml files
+do not offer a means of doing a window or screen capture
+automatically so this needs to be performed manually.
+GoogleEarth also does not provide a means to set an exact window size, normally one would want
+a square window to ensure both the horizontal and vertical field of view are the same, namely 90
+degrees. The way around this is made possible because the horizontal FOV can be specified in the .kml file.
+Given the aspect ratio of the window (or screen since the capture will be performed in full screen mode)
+one can calculate the horizontal FOV given the desired 90 degree vertical FOV
+(assuming the window is wider than high).
+So, in summary, one runs a tour in a .kml file with delays at each camera orientation
+and do a screen grab at each orientation. A simple post processing script can trim and rotate the images to
+conform to any desired cubemap convention.
+Example of cube map images are presented below, 2km above the city of Pokhara in Nepal.
+</p>
+
+<center><table><tr><td>
+	&nbsp;
+<td><td>
+	<a href="http://paulbourke.net/panorama/googlesphere/googleearth_t.jpg"><img src="http://paulbourke.net/panorama/googlesphere/googleearth_ts.jpg" width=200 height=200 border=1></a>
+</td><td>
+   &nbsp;
+</td><td>
+   &nbsp;
+</td></tr><tr><td>
+   <a href="http://paulbourke.net/panorama/googlesphere/googleearth_l.jpg"><img src="http://paulbourke.net/panorama/googlesphere/googleearth_ls.jpg" width=200 height=200 border=1></a>
+<td><td>
+   <a href="http://paulbourke.net/panorama/googlesphere/googleearth_f.jpg"><img src="http://paulbourke.net/panorama/googlesphere/googleearth_fs.jpg" width=200 height=200 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/panorama/googlesphere/googleearth_r.jpg"><img src="http://paulbourke.net/panorama/googlesphere/googleearth_rs.jpg" width=200 height=200 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/panorama/googlesphere/googleearth_b.jpg"><img src="http://paulbourke.net/panorama/googlesphere/googleearth_bs.jpg" width=200 height=200 border=1></a>
+</td></tr><tr><td>
+   &nbsp;
+<td><td>
+   <a href="http://paulbourke.net/panorama/googlesphere/googleearth_d.jpg"><img src="http://paulbourke.net/panorama/googlesphere/googleearth_ds.jpg" width=200 height=200 border=1></a>
+</td><td>
+   &nbsp;
+</td><td>
+   &nbsp;
+</td></tr></table></center><p>
+<center>
+<a href="http://paulbourke.net/panorama/googlesphere/googleearth.html">Interactive viewer of the above 6 cube maps</a>
+</center>
+
+<p align="justify">
+The corresponding equirectangular is as follows.
+</p>
+
+<center>
+	<a href="http://paulbourke.net/panorama/googlesphere/googleearth_s.jpg"><img src="http://paulbourke.net/panorama/googlesphere/googleearth_ss.jpg" width=800 height=400 border=1></a><br>
+   <smalltext>
+   Credits: Google Earth<br>
+   Image: Maxar Technologies, CNES Airbus, Landsat / Copernicus<br>
+   Data: SIO, NOAA, US Navy, NGA, GEBCO
+</smalltext>
+</center><p>
+
+<b>Notes</b><p>
+<ul>
+<li>Please read the Google license as it apples to credits.<p>
+<li>Hide sidebar and toolbar.<p>
+<li>An example .kml tour is supplied for the location in the above example:
+<a href="http://paulbourke.net/panorama/googlesphere/pokhara.kml">pokhara.kml</a> or as a text file
+<a href="http://paulbourke.net/panorama/googlesphere/pokhara.txt">pokhara.txt</a><p>
+<li>Given the way GoogleEarth displays text labels, these will typically not result
+in seamless matches across the cube faces.<p>
+<li>.kmz files are simply zipped .kml files. Rename them to have a .zip extension and
+use your favourity unzip software.<p>
+<li>Converting from vertical FOV (vfov) to horizontal 
+hfov = 2 atan[ window_width tan(vfov/2) / window_height]<p>
+<li>On the Mac a screen grab is performed by command-shift-3 but there are
+lots of alternatives.
+Order for the .kml file is front, right, back, left, down, top.<p>
+<li>The credits at the bottom of the GoogleEarth window can be avoided by further vertically
+clipping the screen captures, of course one also need to recompute the horizontal FOV given the
+clipped vertical frame which still needs to be 90 degrees vertical FOV.<p>
+</ul><p>
+
+<p align="justify">
+A second example from Martigny, Switzerland.
+</p>
+
+<center><table><tr><td>
+   &nbsp;
+<td><td>
+   <a href="http://paulbourke.net/panorama/googlesphere/googleearth2_t.jpg"><img src="http://paulbourke.net/panorama/googlesphere/googleearth2_ts.jpg" width=200 height=200 border=1></a>
+</td><td>
+   &nbsp;
+</td><td>
+   &nbsp;
+</td></tr><tr><td>
+   <a href="http://paulbourke.net/panorama/googlesphere/googleearth2_l.jpg"><img src="http://paulbourke.net/panorama/googlesphere/googleearth2_ls.jpg" width=200 height=200 border=1></a>
+<td><td>
+   <a href="http://paulbourke.net/panorama/googlesphere/googleearth2_f.jpg"><img src="http://paulbourke.net/panorama/googlesphere/googleearth2_fs.jpg" width=200 height=200 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/panorama/googlesphere/googleearth2_r.jpg"><img src="http://paulbourke.net/panorama/googlesphere/googleearth2_rs.jpg" width=200 height=200 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/panorama/googlesphere/googleearth2_b.jpg"><img src="http://paulbourke.net/panorama/googlesphere/googleearth2_bs.jpg" width=200 height=200 border=1></a>
+</td></tr><tr><td>
+   &nbsp;
+<td><td>
+   <a href="http://paulbourke.net/panorama/googlesphere/googleearth2_d.jpg"><img src="http://paulbourke.net/panorama/googlesphere/googleearth2_ds.jpg" width=200 height=200 border=1></a>
+</td><td>
+   &nbsp;
+</td><td>
+   &nbsp;
+</td></tr></table></center><p>
+<center>
+<a href="http://paulbourke.net/panorama/googlesphere/googleearth2.html">Interactive viewer of the above 6 cube maps</a>
+</center>
+
+<p align="justify">
+The corresponding equirectangular is as follows.
+</p>
+
+<center>
+   <a href="http://paulbourke.net/panorama/googlesphere/googleearth2_s.jpg"><img src="http://paulbourke.net/panorama/googlesphere/googleearth2_ss.jpg" width=800 height=400 border=1></a><br>
+	<smalltext>
+	Credits: Google Earth<br>
+	Image: Maxar Technologies, CNES Airbus, Landsat / Copernicus<br>
+	Data: SIO, NOAA, US Navy, NGA, GEBCO
+</smalltext>
+</center><p>
+
+</td></tr></table></center>
+</body>
+</html>
+

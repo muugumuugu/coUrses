@@ -1,0 +1,195 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Converting an equirectangular image to a cylindrical panoramic projection</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Converting an equirectangular image to a cylindrical panoramic projection</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+November 2010<br>
+Update (Aug 2018): Added panoramic vertical shifting.<p>
+See also: <a href="../../dome/2fish/index.html">
+sphere2fish to convert an equirectangular projection to a fisheye projection</a><br>
+and <a href="../sphere2persp/index.html">
+sphere2persp to convert an equirectangular projection to a perspective projection</a>
+</center>
+
+<p align="justify">
+<i>The source code implementing the projections below is only available
+on request for a small fee. It includes a demo application and an invitation to
+convert an image of your choice to verify the code does what you seek. 
+For more information please contact the <a href="../../index.html">author</a>.</i>
+</p>
+<p><br><p>
+
+<p align="justify">
+In what follows I describe software for extracting a cylindrical panorama from an equirectangular
+(spherical) projection. There are various reasons why one might want to do this, the driver
+here is creating images for large scale cylindrical displays. Diagramatically, for some
+displays and 360 cameras used by the author <a href="http://paulbourke.net/panorama/sphere2pano/framing.pdf">this diagram</a> illustrates
+the geometry.
+</p>
+
+<b>Usage string</b><p>
+<pre>
+sphere2pano [options] sphericalimagename
+Options:
+   -t n   vertical FOV of panoramic, 0...180 (default: 45)
+   -a n   set antialias level, 1, 2 or 3 typical (default: 2)
+   -w n   width of the spherical image (default: 1024)
+   -z n   horizontal rotation angle (default: 0)
+   -v n   vertical rotation angle (default: 0)
+   -f     flip in longitude (default: off)
+   -d     enable verbose debugging mode
+</pre>
+
+<p align="justify">
+Like an equirectangular projection, the horizontal axis of a cylindrical panorama is equal
+steps of longitude. However the vertical axis resembles a perspective projection. As such, while
+an equirectangular can represent from -90 to 90 degrees in latitude, a cylindrical panorama
+becomes increasingly inefficient after about 140 degrees vertical field of view (FOV).
+</p>
+
+<p align="justify">
+The following equirectangular will be used to illustrate the basic transformations.
+</p>
+
+<center>
+<img src="http://paulbourke.net/panorama/sphere2pano/sample_s.jpg" width=800 height=400 border=1>
+</center><p>
+
+<p align="justify">
+The following is a 45 degree vertical FOV.
+</p>
+<center>
+<a href="http://paulbourke.net/panorama/sphere2pano/vfov45deg.jpg">
+<img src="http://paulbourke.net/panorama/sphere2pano/vfov45deg_s.jpg" width=800 height=105 border=1></a><br>
+sphere2pano -w 4096 sample.jpg
+</center><p>
+
+<p align="justify">
+The following is a 70 degree vertical FOV.
+</p>
+<center>
+<a href="http://paulbourke.net/panorama/sphere2pano/vfov70deg.jpg">
+<img src="http://paulbourke.net/panorama/sphere2pano/vfov70deg_s.jpg" width=800 height=178 border=1></a><br>
+sphere2pano -w 4096 -t 70 sample.jpg
+</center><p>
+
+<p align="justify">
+As is usual with such mapping the process is performed in reverse, that is, one considers
+each pixel in the output cylindrical panorama and computes the best estimate in the input
+image, the equirectangular in this case. Antialising is performed here using a straightforward
+supersampling of each output pixel.
+</p>
+
+<p align="justify">
+To illustrate the vertical shifting consider the following which was filmed using the Obsidian
+R 360 camera.
+</p>
+<center>
+<img src="http://paulbourke.net/panorama/sphere2pano/pigs_s.jpg" width=800 height=400 border=1>
+</center><p>
+
+<p align="justify">
+The following are increasing vertical offsets from 0 (first) to 30 degrees (last), the
+vertical FOV in each case is 50 degrees.
+</p>
+<center>
+<a href="http://paulbourke.net/panorama/sphere2pano/pig_00.jpg">
+<img src="http://paulbourke.net/panorama/sphere2pano/pig_00s.jpg" width=800 height=119 border=1></a><br>
+sphere2pano -w 4096 -t 50 -v 0 sample.jpg
+</center><p>
+<center>
+<a href="http://paulbourke.net/panorama/sphere2pano/pig_10.jpg">
+<img src="http://paulbourke.net/panorama/sphere2pano/pig_10s.jpg" width=800 height=119 border=1></a><br>
+sphere2pano -w 4096 -t 50 -v 10 sample.jpg
+</center><p>
+<center>
+<a href="http://paulbourke.net/panorama/sphere2pano/pig_30.jpg">
+<img src="http://paulbourke.net/panorama/sphere2pano/pig_30s.jpg" width=800 height=119 border=1></a><br>
+sphere2pano -w 4096 -t 50 -v 30 sample.jpg
+</center><p>
+
+<p><br><p>
+
+<center>
+<h1>Older version: Convert spherical projections to cylindrical projection</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+February 2006<p>
+</center>
+<p><br><p>
+
+<p align="justify">
+The following utility was written to convert spherical projections
+into cylindrical projections. Of course only a slice of the spherical projection
+is used. The original reason for developing this was to convert video content
+from the LadyBug-3 camera (spherical projection) to a suitable image
+for a 360 cylindrical display. This a command line utility and as such
+straightforward to script to convert sequences of frames that make up a movie.
+</p>
+
+<pre>
+sph2pan [options] sphericalimagename
+Options:
+-t n       set max theta on vertical axis of panoramic, 0...90 (default: 45)
+-a n       set antialias level, 1 upwards, 2 or 3 typical (default: 2)
+-w n       width of the spherical image
+-r n       horizontal rotation angle (default: 0)
+-v n       vertical rotation angle (default: 0)
+-f         flip insideout (default: off)
+</pre>
+<p>
+
+<b>Sample spherical projection (from the LadyBug-3)</b><p>
+<center>
+<a href="http://paulbourke.net/panorama/sphere2pano/dervish_sph.jpg"><img src="http://paulbourke.net/panorama/sphere2pano/dervish_sph_s.jpg" width=800 height=400 border=1></a>
+<br>
+Click for original image (5400x2700 pixels).
+<p>
+</center>
+
+<p align="justify">
+As with all such image transformations, one considers a point in the destination
+image noting that the point may be a sub pixel (required for supersampling antialiasing).
+This point corresponds to a vector in 3D space, this is then used to determine the
+corresponding point in the input image. Options such as rotations and flips
+correspond to operations on the 3D vector.
+</p>
+
+<b>Sample derived cylindrical projections</b><p>
+<p align="justify">
+The following show example transformations illustrating some of the
+more important options. In particular the ability to specify the vertical field of
+view and the vertical offset for the cylindrical image.
+</p>
+<center>
+<img src="http://paulbourke.net/panorama/sphere2pano/cyl1.jpg" width=800 height=105 border=1><br>
+<smalltext>sph2pan -w 800 -v -7.5 dervish_sph.tga</smalltext>
+<p>
+<img src="http://paulbourke.net/panorama/sphere2pano/cyl2.jpg" width=800 height=147 border=1><br>
+<smalltext>sph2pan -w 800 -v -7.5 -t 60 dervish_sph.tga</smalltext>
+<p>
+<img src="http://paulbourke.net/panorama/sphere2pano/cyl3.jpg" width=800 height=147 border=1><br>
+<smalltext>sph2pan -w 800 -v -7.5 -t 60 -r 90 dervish_sph.tga</smalltext>
+<p>
+</center>
+
+</td></tr></table></center><p>
+</body>
+</html>
+

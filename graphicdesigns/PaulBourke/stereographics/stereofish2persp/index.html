@@ -1,0 +1,281 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Extracting stereo pairs from 180 VR cameras</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Extracting stereo pairs from 180 VR cameras</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+Image example courtesy of Ed Bates<br>
+August 2019
+</center><p><br><p>
+
+<b>Introduction</b>
+
+<p align="justify">
+In the current climate of interest in virtual reality and head mounted displays
+there are a number of cameras on the market designed to capture video for these
+devices. One category does not attempt to create full 360 stereoscopic panoramas,
+since that is frankly rather difficult to do well, but rather a left and right
+eye fisheye pair. This is generally called VR180, even though the lenses are often
+wider than 180 degrees.
+Within a head mounted display one gets a stereoscopic 3D depth
+effect including peripheral vision but without the ability to look around.
+</p>
+
+<center>
+<table width=100%><tr><td>
+	<center>
+	<img src="http://paulbourke.net/stereographics/stereofish2persp/vuze.jpg" width=300 height=300 border=0>
+	</center>
+</td><td>
+	<center>
+	<img src="http://paulbourke.net/stereographics/stereofish2persp/zcam.jpg" width=300 height=300 border=0>
+	</center>
+</td></tr></table>
+</center><p>
+
+<p align="justify">
+While these cameras are perfectly suited to creating content for head mounted
+displays, the fisheye projections are not suitable for viewing on flat screen
+stereoscopic projection systems or televisions displays.
+However the fisheyes so captured obviously include the necessary material for
+the limited field of view of these flat screen stereoscopic systems. All that is
+required is to extract the perspective projection at the desired field of view.
+<p>
+
+<b>Example</b>
+
+<p align="justify">
+The remainder of this document presents an example of this and the workflow one
+might engage. It is based upon the <a href="../../dome/fish2/index.html">fish2persp</a> utility
+by the author that can be implemented in a number of ways, including CPU based
+off-line processing, GPU as a GLSL shader, or as lookup remap images for ffmpeg
+or Nuke.
+</p>
+
+<center>
+<table><tr><td>
+	<center>
+   <a href="http://paulbourke.net/stereographics/stereofish2persp/cam_left.jpg"><img src="http://paulbourke.net/stereographics/stereofish2persp/cam_left_s.jpg" width=400 height=400 border=1></a><br>
+	<smalltext>Left camera</smalltext>
+	</center>
+</td><td>
+	<center>
+   <a href="http://paulbourke.net/stereographics/stereofish2persp/cam_right.jpg"><img src="http://paulbourke.net/stereographics/stereofish2persp/cam_right_s.jpg" width=400 height=400 border=1></a><br>
+	<smalltext>Right camera</smalltext>
+	</center>
+</td></tr></table>
+</center><p>
+
+<p align="justify">
+The 
+<a href="../../dome/fish2/index.html">fish2persp</a> command line utility allows one to extract a perspective projection of
+any reasonable horizontal field of view (-t option), and orientated in any direction
+within the fisheye field of view. For example, to extract a perspective view from the
+center one might use:
+</p>
+
+<pre>
+   fish2persp -w 2100 -h 1200 -s 190 -r 1480 -c 1448 1436 -t 100 cam_left.jpg
+   fish2persp -w 2100 -h 1200 -s 190 -r 1480 -c 1414 1426 -t 100 cam_right.jpg
+</pre>
+
+<p align="justify">
+For the meaning of the other command line options the reader should refer to the 
+documentation on the <a href="../../dome/fish2/index.html">fish2persp</a> web page.
+</p>
+
+<p align="justify">
+Once the fisheye is extracted then the stereoscopic pairs need to be aligned, in
+much the same way as one would align images from a standard stereoscopic camera.
+Any vertical misalignment corrected, this is typically due to inaccuracies in
+the camera/lens/sensor mechanical alignment. Secondly the zero parallax distance
+needs to be set, that is, the distance that will appear at the screen depth. This is
+typically an object close to the camera to reduce negative parallax objects cutting
+the display boundary. 
+After selecting a feature to reside at the screen depth, one translates the stereo pairs
+so that this feature has zero parallax, in aligned in the two stereo pair images.
+After these two procedures the images would typically be cropped
+to the final desired resolution, in this case 1920x1080, note this alignment and cropping
+is the reason for choosing slightly larger perspective views of 2100x1200 in the command
+options (-w and -h).
+</p>
+
+<center>
+<table><tr><td>
+   <center>
+   <a href="http://paulbourke.net/stereographics/stereofish2persp/cam_left1_persp.jpg">
+	<img src="http://paulbourke.net/stereographics/stereofish2persp/cam_left1_persp_s.jpg" width=400 height=225 border=1></a><br>
+   <smalltext>Left eye</smalltext>
+   </center>
+</td><td>
+   <center>
+   <a href="http://paulbourke.net/stereographics/stereofish2persp/cam_right1_persp.jpg">
+	<img src="http://paulbourke.net/stereographics/stereofish2persp/cam_right1_persp_s.jpg" width=400 height=225 border=1></a><br>
+   <smalltext>Right eye</smalltext>
+   </center>
+</td></tr></table>
+</center><p>
+
+<p align="justify">
+An example looking down on the bench.
+</p>
+<pre>
+   fish2persp -w 2100 -h 1200 -s 190 -r 1480 -c 1448 1436 -t 100 -x 30 cam_left.jpg
+   fish2persp -w 2100 -h 1200 -s 190 -r 1480 -c 1414 1426 -t 100 -x 30 cam_right.jpg
+</pre>
+
+<center>
+<table><tr><td>
+   <center>
+   <a href="http://paulbourke.net/stereographics/stereofish2persp/cam_left2_persp.jpg">
+   <img src="http://paulbourke.net/stereographics/stereofish2persp/cam_left2_persp_s.jpg" width=400 height=225 border=1></a><br>
+   <smalltext>Left eye</smalltext>
+   </center>
+</td><td>
+   <center>
+   <a href="http://paulbourke.net/stereographics/stereofish2persp/cam_right2_persp.jpg">
+   <img src="http://paulbourke.net/stereographics/stereofish2persp/cam_right2_persp_s.jpg" width=400 height=225 border=1></a><br>
+   <smalltext>Right eye</smalltext>
+   </center>
+</td></tr></table>
+</center><p>
+
+<p align="justify">
+While the example above is using the CPU post processing approach, with a  GLSL shader
+the above could readily be performed in real time allowing the viewer to interactively
+navigate within the fisheye bounds.
+</p>
+
+<b>Notes</b>
+<ul>
+<li>
+<p align="justify">
+The correct perspective field of view depends on the distance of the viewer from the
+projection screen and the width of the projection screen. That is, the viewers field of
+view to the screen should match the extracted field of view of the perspective projection.
+</p>
+</li>
+<li>
+<p align="justify">
+One is generally going to want a high resolution fisheye capture system since the final
+resolution of the perspective image will only be a fraction of that, depending on the
+perspective field of view extracted.
+</p>
+</li>
+<li>
+<p align="justify">
+Towards the boundary of the fisheye view vertical parallax and image feature compression
+may occur due to non-linearities in the physical fisheye lens. These are readily
+corrected for, see <a href="../../dome/fisheyecorrect/index.html">fisheye lens correction</a>.
+</p>
+</li>
+</ul>
+
+<p><br><p>
+<b>ffmpeg remap filters</b><br>
+February 2021<br>
+<a href="http://paulbourke.net/stereographics/stereofish2persp/Documentation.pdf">PDF documentation for specific pipeline</a><p>
+
+<center>
+	<img src="http://paulbourke.net/stereographics/stereofish2persp/evocam.png" width=580 height=346 border=0>
+</center><p>
+
+<p align="justify">
+While the above is suitable for still images, converting movies from a VR180 camera is
+inefficient if the movie first needs to be converted to frames, each mapped to perspective,
+and then reconstituted into a standard perspective stereoscopic movie.
+The following is an exercise in creating a perspective stereoscopic movie from a movie
+recorded with the Insta360 Evo camera. Unlike most VR180 cameras, the Evo in the VR180 
+configuration automatically converts each eye from fisheye into half of an equirectangular,
+it then places these side-by-side in the equirectangular frame.
+</p>
+
+<center>
+<a href="http://paulbourke.net/stereographics/stereofish2persp/testpattern.jpg">
+<img src="http://paulbourke.net/stereographics/stereofish2persp/testpattern_s.jpg" width=600 height=300 border=0></a>
+</center>
+
+<p align="justify">
+To extract a perspective view from an equirectangular the author has
+<a href="../../panorama/sphere2persp/index.html">sphere2persp</a>. To facilitate the extraction
+of a perspective projection, two additional capabilities have been added. The first is to support offset
+perspectives (see -ho option), 
+this allows control over zero parallax distance when screen based viewing
+is required. This acts the same as so called "asymmetric perspective" in computer graphics
+or shift lenses in photography.
+The second is the generation of pgm files for the remap filter in ffmpeg (see -f option).
+</p>
+
+<pre>
+Usage: ./sphere2persp [options] sphericalimage
+Options
+   -w n     perspective image width, default = 1920
+   -h n     perspective image height, default = 1080
+   -t n     FOV of perspective (degrees), default = 100
+   -x n     tilt angle (degrees), default: 0
+   -y n     roll angle (degrees), default: 0
+   -z n     pan angle (degrees), default: 0
+   -vo n    vertical offset for offaxis perspective (percentage), default: 0
+   -ho n    horizontal offset for offaxis perspective (percentage), default: 0
+   -f       create remap filters for ffmpeg, default: off
+   -a n     antialiasing level, default = 2
+   -n s     output file name, default: derived from input image filename
+   -d       enable verbose mode, default: off
+</pre>
+
+<p align="justify">
+The procedure then is to convert a single frame choosing the desired values of field
+of view, image dimensions and aspect, pan and tilt angles, along with optimal values of horizontal offset.
+The resulting PGM files are using in ffmpeg to extract a perspective from each half of the
+equirectangular movie, and also used to optionally combine those two halves back into a 
+side-by-side stereoscopic movie.
+</p>
+
+<p align="justify">
+For example, creating PGM files for the perspective views for each half of the equirectangular
+might be done like the following. 
+</p>
+<pre>
+sphere2persp -f -w 1920 -h 1080 -t 110 -ho  5 -x 10 -z -90 testpattern.jpg
+sphere2persp -f -w 1920 -h 1080 -t 110 -ho -5 -x 10 -z  90 testpattern.jpg
+</pre>
+
+<p align="justify">
+The above will create four PGM files, an x and y PGM for both the left and right eye.
+The pan of -90 and 90 is to position the default perspective camera on each half the equirectangular.
+The movie might then be converted into a left and right eye as follows
+</p>
+<pre>
+# extract movies
+ffmpeg -i sourcemovie.mp4 -i leftx.pgm  -i lefty.pgm  -lavfi remap left.mp4
+ffmpeg -i sourcemovie.mp4 -i rightx.pgm -i righty.pgm -lavfi remap right.mp4
+# combine side-by-side
+ffmpeg -i left.mp4 -i right.mp4 -filter_complex hstack sbs.mp4
+</pre>
+
+<p align="justify">
+Note that the remap filters in ffmpeg are point sampling without any antialising.
+The solution to this is to extract the perspective at 2 or 3 times the desired final resolution,
+scaling the perspective movies down as a final pass.
+</p>
+
+</td></tr></table></center<p>
+</body>
+</html>
+

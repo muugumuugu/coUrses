@@ -1,0 +1,151 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>High resolution omnidirectional stereo panorama imaging and tiled displays</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width="800"><tr><td>
+
+<center>
+<h1>High resolution omnidirectional stereo panorama imaging and tiled displays</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+Unity 5 and getreal3D implementation by Nick Oliver<br>
+DOI: 10.13140/RG.2.1.4212.5922<br>
+June 2015
+</center>
+<p><br><p>
+
+<p align="justify">
+The following is an informal discussion around stereoscopic panorama photography and presentation on tiled displays. It is not intended to be an extensive survey of the field but rather some (possibly) interesting observations from a newly installed 18MPixel tiled wall at iVEC@UWA.
+</p>
+
+<p align="justify">
+The example imagery is based upon stereoscopic panoramas captured using the RoundShot camera (Sarah Kenderdine, Jeffrey Shaw 2010). The imagery is captured on 70mm film, drum scanned, post processed (author) to align the pairs and blend across the 0-360 degree seam, and finally cleaned to remove dirt or hairs on the film or drum scanner.
+</p>
+
+<center>
+   <a href="http://paulbourke.net/stereographics/tilestereo/figure1.jpg"><img src="http://paulbourke.net/stereographics/tilestereo/figure1s.jpg" width=800 height=533 border=1></a>
+	<smalltext>Figure 1. Interactive viewer on a 6Kx3K pixel display.
+	[<a href="https://vimeo.com/129536504">Movie</a>]</smalltext> 
+</center>
+
+<p align="justify">
+One may ask what the limiting factor is to the image fidelity. The original film was scanned to approximately 17,000 pixels across the width of the film. The resulting scans appear to be at the limit of either the film (iso noise) or the scanner used, see figure 2. The final production image pairs were reduced to approximately 8K wide in order to be a match to the proposed projector based cylindrical display system. 
+</p>
+
+<p align="justify">
+The projection onto a cylinder involves a geometry correction (image warping) and possibly an edge blending. Even if the lens optics were perfect this results in pixels no longer being independent and a resulting "softness". As such the actual perceived resolution on screen is lower than the theoretical projected image. The display employed here is shown in figure 1 and consists of a 3x3 array of tiled Barco panels, stereoscopic 3D capable. In this case there is no geometry correction or large glass lenses and thus the difference between theoretical and perceived resolution is minimal. 
+</p>
+
+<center>
+<table width=100%><tr><td>
+	<center>
+	<img src="http://paulbourke.net/stereographics/tilestereo/figure2a.png" width=204 height=423 border=1>
+	</center>
+</td><td>
+	<center>
+	<img src="http://paulbourke.net/stereographics/tilestereo/figure2b.png" width=393 height=863 border=1>
+	</center>
+</td></tr></table>
+</center>
+<p align="justify"><smalltext>
+Figure 2. Image on the right is a screen dump zoomed in 200%, the image on the left a 100% capture. The image noise is obvious at 200% and would appear to place an upper limit on either the resolution achievable at the iso chosen or in the scanning process.
+</smalltext>
+</p>
+
+<p align="justify">
+The projection parameters in figure were designed for a viewer 1.5m back from a 3m wide display. This is a field of view of 90 degrees. Since the display in question is 6000 pixels across, a matching panorama resolution would be 24,000 pixels. The original panoramas were reprocessed to 16K pixels across, the visual difference when switching between the 8K and the 16K was 
+significant. 3D structure that was not visible in the 8K version was made apparent, for example
+in the roughness of surfaces or the curvature of small curved objects. This is expected
+since depth fidelity is dependent on having sufficient pixels to differentiate depth variation.
+Noting that in this case it was still the panoramas that were the limiting factor to the perceived resolution, not the display itself. This raises interesting questions on how one captures imagery for increasingly high resolution tiled displays, assuming one wishes to make full use of the available display capability.
+</p>
+
+<p align="justify">
+The playback solution is based upon Unity version 5 and the getreal3D software
+[<a href="https://vimeo.com/129536504">Movie</a>].
+Two cylindrical meshes are placed around the viewer and assigned to each camera, the cameras
+are coincident since the stereoscopic information is encapsulated in the panoramas
+themselves. In Unity version 5 and assuming appropriate hardware one may assign up to
+an 8K texture to this mesh. So an 8K representation only requires a single cylindrical shaped mesh.
+The 16K version requires that each mesh is formed in two halves, each assigned half of a
+stereoscopic panorama for that eye, each image half being 8K. See figure 3.
+Similarly, a 32K resolution cylinder would require 4 meshes, one for each 90 degree
+quadrant and each with a 8K quarter panorama texture.
+</p>
+
+<center>
+   <a href="http://paulbourke.net/stereographics/tilestereo/figure3.png"><img src="http://paulbourke.net/stereographics/tilestereo/figure3s.png" width=800 height=420 border=1></a>
+   <smalltext>Figure 3. Two cylinder halves each with an 8K texture.</smalltext>
+</center><p>
+
+<center>
+   <a href="http://paulbourke.net/stereographics/tilestereo/figure4.png"><img src="http://paulbourke.net/stereographics/tilestereo/figure4s.png" width=800 height=420 border=1></a>
+   <smalltext>Figure 4. Four cylinder quarters each with an 4K texture, or possibly 8K if higher resolution
+is required.</smalltext>
+</center><p>
+
+<b>Appendix 1: Height of cylinder</b>
+<p align="justify">
+Given a scene cylinder of radius "r" and a panorama of width "W" and height "H" then the height "h" of the scene cylinder is given by
+</p>
+<center>
+	<img src="http://paulbourke.net/stereographics/tilestereo/equation1.jpg" border=0 width=90 height=50>
+</center><p>
+<p align="justify">
+This scaling is performed in Unity, the mesh creation just creates a unit height and
+radius mesh.
+</p>
+
+<b>Appendix 2: Unity 5 notes</b>
+<ul>
+<li>Textures should be set to clamp mode, otherwise slight seams will be observed at
+the joins between textures and/or at the 0-360 degree wrap around position.
+<p>
+<li>Care must be taken when editing textures after they have been split into pieces to avoid any filters that have edge effects.
+<p>
+<li>The cylindrical textures are to be viewed from the inside so the normals need to be
+arranged accordingly. The 2 and 4 piece cylinders can be downloaded from here:
+<a href="http://paulbourke.net/stereographics/tilestereo/cylindersobj.zip">cylindersobj.zip</a>
+<p>
+<li>The camera height is normally placed at the mid-height of the panoramas, the position of
+the RoundShot camera. Other positions would result in parallax errors.
+<p>
+</ul>
+
+<b>Appendix 3: Imaging</b>
+<p align="justify">
+An example of two images (not full resolution) from the drum scanner are shown in
+figure 5. Note the overshoot in the rotational camera capture, it allows a blending to be
+performed across the 0-360 seam. Figure 6 shows the processed panorama pair,
+the alignment and blending process is automated, this includes a histogram (colour) matching
+between the pairs.
+The final panoramas would normally be further cropped to avoid viewing the film markings,
+alternatively the extend of the vertical panning could be constrained.
+</p>
+<center>
+	<a href="http://paulbourke.net/stereographics/tilestereo/figure5a.jpg"><img src="http://paulbourke.net/stereographics/tilestereo/figure5as.jpg" border=0 width=800 height=243></a><p>
+	<a href="http://paulbourke.net/stereographics/tilestereo/figure5b.jpg"><img src="http://paulbourke.net/stereographics/tilestereo/figure5bs.jpg" border=0 width=800 height=243></a><br>
+	<smalltext>Figure 5: Left and right eye stereoscopic panorama after drum scan</smalltext>
+</center><p>
+<center>
+   <a href="http://paulbourke.net/stereographics/tilestereo/figure6a.jpg"><img src="http://paulbourke.net/stereographics/tilestereo/figure6as.jpg" border=0 width=800 height=305></a><p>
+   <a href="http://paulbourke.net/stereographics/tilestereo/figure6b.jpg"><img src="http://paulbourke.net/stereographics/tilestereo/figure6bs.jpg" border=0 width=800 height=305></a><br>
+   <smalltext>Figure 6: Left and right eye stereoscopic panorama after alignment.</smalltext>
+</center><p>
+
+<p><br><p>
+</td></tr></table></center>
+</body>
+</html>

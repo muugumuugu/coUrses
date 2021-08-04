@@ -1,0 +1,1069 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Converting to/from cubemaps</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Converting to/from cubemaps</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+Original November 2003. Updated May 2006. Updated July 2016, July 2020<br>
+Added cube2sphere in November 2020.
+<p>
+See also: <a href="../../dome/cube2fish/index.html">Converting cubemaps to fisheye</a>.
+</center><p><br><p>
+
+<i>
+The source code implementing the projections below is only available on request for a small fee. It includes a demo application and an invitation to convert an image of your choice to verify the code does what you seek. For more information please contact the author.
+</i>
+<p>
+<br>
+
+<b>Index</b><p>
+<a href="index.html#1">Converting from cubemaps to cylindrical projections</a><br>
+<a href="index.html#2">Converting from cylindrical projections to cube maps</a><br>
+<a href="index.html#3">Converting to and from 6 cubic environment maps and a spherical projection</a><br>
+<a href="index.html#eac">EAC: EqualAngular cubemaps</a><br>
+<a href="index.html#4">Extracting a perspective projection from cubemaps</a>
+
+<p><br><br><br><p>
+
+<a name="1">&nbsp;</a>
+<h3>Converting from cubemaps to cylindrical projections</h3>
+
+<p align="justify">
+The following discusses the transformation of a cubic environment map (90
+degree perspective projections onto the face of a cube) into a cylindrical
+panoramic image. The motivation for this was the creation of cylindrical panoramic
+images from rendering software that didn't explicitly support panoramic
+creation. The software was scripted to create the 6 cubic images and this
+utility created the panoramic.
+</p>
+
+<b>Usage</b><br>
+<pre>
+Usage: cube2cyl [options] filemask
+filemask can contain %c which will substituted with each of [l,r,t,d,b,f]
+For example: "blah_%c.tga" or "%c_something.tga"
+Options
+  -a n   sets antialiasing level, default = 2
+  -v n   vertical aperture, default = 90
+  -w n   sets the output image width, default = 3 * cube image width
+  -c     enable top and bottom cap texture generation, default = off
+  -s     split cylinder into 4 pieces, default = off
+</pre>
+
+<b>File name conventions</b>
+<p align="justify">
+The names of the cubic maps are assumed to contain the letters
+'f', 'l', 'r', 't', 'b', 'd' that indicate the face 
+(front,left,right,top,back,down).
+The file mask needs to contain "%c" which specifies the view.
+</p>
+<p align="justify">
+So for example the following cubic maps would be specified as %c_starmap.tga,<br>
+l_starmap.tga, r_starmap.tga, f_starmap.tga,<br>
+t_starmap.tga, b_starmap.tga, d_starmap.tga.<br>
+</p>
+
+<b>Test pattern</b><br>
+Note the orientation convention for the cube faces.<br>
+<center>
+<img src="http://paulbourke.net/panorama/cubemaps/test.gif" width=700 height=525 border=0>
+</center><p>
+
+cube2cyl -a 3 -v 90<br>
+Note that in this special case the top of the face should coincide
+with the top of the cylindrical panoramic.
+<center>
+<img src="http://paulbourke.net/panorama/cubemaps/test1.gif" width=700 height=175 border=1>
+</center><p>
+
+cube2cyl -a 3 -v 120<br>
+<center>
+<img src="http://paulbourke.net/panorama/cubemaps/test2.gif" width=700 height=233 border=1>
+</center><p>
+
+cube2cyl -a 3 -v 150<br>
+<center>
+<img src="http://paulbourke.net/panorama/cubemaps/test3.gif" width=700 height=292 border=1>
+</center><p>
+<p align="justify">
+As the vertical field of view approaches 180 degree the representation
+as a cylindrical projection become increasingly inefficient. If a wide
+vertical field of view is required then perhaps one should be using
+spherical (equirectangular) projections, see later.
+</p>
+
+The mapping for each pixel in the destination cylindrical panoramic from
+the correct location on the appropriate cubic face is
+relatively straightforward. The horizontal axis maps linearly onto the angle
+about the cylinder. The vertical axis of the panoramic image maps onto
+the vertical axis of the cylinder by a tan relationship.
+</p>
+In particular, if (i,j) is the pixel index of the panoramic normalised to (-1,+1)
+the the direction vector is given as follows.<br>
+<dd>
+x = cos(i pi)<br>
+y = j tan(v/2)<br>
+z = sin(i pi)<br>
+</dd>
+<p>
+
+<center>
+<img src="http://paulbourke.net/panorama/cubemaps/diagram1.gif" width=460 height=136 border=0>
+</center><p>
+<center>
+<img src="http://paulbourke.net/panorama/cubemaps/diagram2.gif" width=357 height=338 border=0>
+</center><p align="justify">
+This direction vector is then used within the texture mapped cubic geometry.
+The face of the cube it intersects needs to be found and then the pixel the
+ray passes through is determined (intersection of the direction vector with
+the plane of the face). Critical to obtaining good quality results is antialiasing,
+in this implementation a straightforward constant weighted supersampling is
+used.
+</p>
+
+<b>Example</b><br>
+Cubic map<br>
+<center>
+<a href="http://paulbourke.net/panorama/cubemaps/cube.jpg"><img src="http://paulbourke.net/panorama/cubemaps/cube_s.jpg" width=800 height=600 border=0></a>
+</center><p>
+Cylindrical panoramic (90 degrees)<br>
+<center>
+<a href="http://paulbourke.net/panorama/cubemaps/pano.jpg"><img src="http://paulbourke.net/panorama/cubemaps/pano_s.jpg" width=800 height=200 border=1></a>
+</center><p>
+Cylindrical panoramic (60 degrees)<br>
+<center>
+<a href="http://paulbourke.net/panorama/cubemaps/pano2.jpg"><img src="http://paulbourke.net/panorama/cubemaps/pano2_s.jpg" width=800 height=133 border=1></a>
+</center><p>
+Cylindrical panoramic (120 degrees)<br>
+<center>
+<a href="http://paulbourke.net/panorama/cubemaps/pano3.jpg"><img src="http://paulbourke.net/panorama/cubemaps/pano3_s.jpg" width=800 height=266 border=1></a>
+</center><p>
+
+<b>Notes</b><br>
+<ul>
+<li><p align="justify">
+The vertical aperture must be greater than 0 and less than 180 degrees. The
+current implementation limits it to be between 1 and 179 degrees.
+</p>
+<li><p align="justify">
+While not a requirement, the current implementation retains the height to
+width ratio of the output image to the same as the vertical aperture to
+horizontal aperture.
+</p>
+<li><p align="justify">Typically antialiasing levels of 3 are more than enough.
+</p>
+</ul>
+
+<b>Addendum: Top and bottom caps</b><p>
+
+<p align="justify">
+One can equally form the image textures for a top and bottom cap. The following 
+is an example of such caps, in this case the vertical field of view is 90 degrees
+so the cylinder is cubic (diameter of 2 and height of 2 units). It should be noted
+that a relatively high degree of tessellation is required for the cylindrical
+mesh if the linear approximations of the edges is not to create seam artefacts.
+</p>
+
+<center><table><tr><td>
+	<a href="http://paulbourke.net/panorama/cubemaps/cap1.png"><img src="http://paulbourke.net/panorama/cubemaps/cap1s.png" width=400 height=300 border=1></a>
+</td><td width=10>
+   &nbsp;
+</td><td>
+	<a href="http://paulbourke.net/panorama/cubemaps/cap2.png"><img src="http://paulbourke.net/panorama/cubemaps/cap2s.png" width=400 height=300 border=1></a>
+</td></tr></table></center><p>
+
+<center><table><tr><td>
+   <a href="http://paulbourke.net/panorama/cubemaps/cap3.png"><img src="http://paulbourke.net/panorama/cubemaps/cap3s.png" width=400 height=300 border=1></a>
+</td><td width=10>
+	&nbsp;
+</td><td>
+   <a href="http://paulbourke.net/panorama/cubemaps/cap4.png"><img src="http://paulbourke.net/panorama/cubemaps/cap4s.png" width=400 height=300 border=1></a>
+</td></tr></table></center><p>
+
+<p align="justify">
+The aspect of the cylinder height to the width for an undistorted cylindrical
+view and for the two caps to match is tan(verticalFOV/2).
+</p>
+
+<p><br><br><br><p>
+
+<a name="2">&nbsp;</a>
+<h3>Converting from cylindrical projections to cube maps</h3>
+
+<p align="justify">
+The following maps a cylindrical projection onto the 6 faces of a cube map. In reality
+it takes any 2D image and treats it as it were a cylindrical projection, conceptually mapping
+the image onto a cylinder around the virtual camera and then projecting onto the cube faces.
+Indeed, it was originally developed for taking famous painting and wrapping them around
+the viewer in a virtual reality environment. Key to whether the image represents an actual
+cylindrical panorama or an arbitrary image is the correct computation of the vertical field
+of view so as to minimise any apparent distortion.
+</p>
+
+<p align="justify">
+If the following example the cylindrical panorama is exactly 90 degree vertical field
+of view, so in the cube maps the image extends to the midpoint of each f,r,l,b face.
+</p>
+<center>
+	<a href="http://paulbourke.net/panorama/cubemaps/cyl90.jpg"><img src="http://paulbourke.net/panorama/cubemaps/cyl90_s.jpg" width=800 height=255 border=1></a>
+</center>
+<p>
+<center>
+	<a href="http://paulbourke.net/panorama/cubemaps/cylcube90.jpg"><img src="http://paulbourke.net/panorama/cubemaps/cylcube90_s.jpg" width=800 height=600 border=1></a>
+</center><p>
+
+<pre>
+Usage: cyl2cube [options] cylindricalimage
+Options
+   -w n      output image size, default: outwidth/4
+   -a n      antialiasing level, default: 2
+   -x n      tilt angle (degrees), default: 0
+   -y n      roll angle (degrees), default: 0
+   -z n      pan angle (degrees), default: 0
+   -d        debug mode, default: off
+</pre>
+
+<p align="justify">
+A PovRay scene that performs the same operation:
+<a href="http://paulbourke.net/panorama/cubemaps/cyl2cube.pov">cyl2cube.pov</a>, <a href="http://paulbourke.net/panorama/cubemaps/cyl2cube.ini">cyl2cube.ini</a>.
+
+<p><br><br><br><p>
+
+<a name="3">&nbsp;</a>
+<h3>Converting to and from 6 cubic environment maps and a spherical projection</h3>
+
+<b>Introduction</b><br>
+<p align="justify">
+There are two common methods of representing environment maps,
+cubic and spherical, the later also known as equirectangular projections.
+In cubic maps the virtual camera is surrounded by a cube the 6 
+faces of which have an appropriate texture map. These texture
+maps are often created by imaging the scene with six 90 degree
+fov cameras giving a left, front, right, back, top, and bottom
+texture. In a spherical map the camera is surrounded by a 
+sphere with a single spherically distorted texture. This
+document describes software that converts 6 cubic maps into a single
+spherical map, the reverse is also developed.
+</p>
+
+<b>Example</b><br>
+<p align="justify">
+As an illustrative example the following 6 images are the
+textures placed on the cubic environment, they are arranged
+as an unfolded cube. Below that is the spherical texture map
+that would give the same appearance if applied as a texture to
+a sphere about the camera.
+</p>
+
+Cubic map<br>
+<center>
+<a href="http://paulbourke.net/panorama/cubemaps/cube2.jpg"><img src="http://paulbourke.net/panorama/cubemaps/cube2_s.jpg" width=800 height=600 border=0></a>
+</center><p>
+Spherical (equirectangular) projection<br>
+<center>
+<a href="http://paulbourke.net/panorama/cubemaps/sph2.jpg"><img src="http://paulbourke.net/panorama/cubemaps/sph2_s.jpg" width=800 height=400 border=1></a>
+</center><p>
+
+<b>Algorithm</b><br>
+<p align="justify">
+The conversion process involves two main stages. The goal is
+to determine the best estimate of the colour at each pixel in
+the final spherical image given the 6 cubic texture images.
+The first stage is to calculate the polar coordinates
+corresponding to each pixel in the spherical image. The
+second stage is to use the polar coordinates to form a vector
+and find which face and which pixel on that face the vector (ray)
+strikes. In reality this process is repeated a number of times
+at slightly different positions in each pixel in the spherical image 
+and an average is used in order to avoid aliasing effects.
+</p>
+
+<p align="justify">
+If the coordinates of the spherical image are (i,j) and
+the image has width "w" and height "h" then
+the normalised coordinates (x,y) each ranging from -1 to 1
+are given by:
+</p>
+<center>
+<table><tr><td>
+x = 2 i / w - 1
+<br>
+y = 2 j / h - 1 
+<br>
+or y = 1 - 2 j / h depending on the position of pixel 0
+</td></tr></table>
+</center>
+<p>
+
+<p align="justify">
+The polar coordinates theta and phi are derived from the
+normalised coordinates (x,y) below. theta ranges from 0
+to 2 pi and phi ranges from -pi/2 (south pole) to pi/2
+(north pole). Note there are two vertical relationships
+in common use, linear and spherical. In the former phi
+is linearly related to y, in the later there is a sine
+relationship.
+</p>
+<center>
+<table><tr><td>
+theta = x pi
+<br>
+phi = y pi / 2
+<br>
+or phi = asin(y) for spherical vertical distortion
+</td></tr></table>
+</center>
+
+<p align="justify">
+The polar coordinates (theta,phi) are turned into a unit
+vector (view ray from the camera) as below. This assumes a 
+right hand coordinate system, x to the right, y upwards,
+and z out of the page. The front view of the cubic map
+is looking from the origin along the positive z axis.
+</p>
+<center>
+<table><tr><td>
+x = cos(phi) cos(theta)
+<br>
+y = sin(phi)
+<br>
+z = cos(phi) sin(theta)
+</td></tr></table> 
+</center>
+<p>
+<p align="justify">
+The intersection of this ray is now found with the faces of
+the cube. Once the intersection point is found the coordinate on
+the square face specifies the corresponding pixel and therefore 
+colour associated with the ray.
+</p>
+
+<b>Mapping geometry</b><br>
+<center>
+<table cellspacing=0 cellpadding=0 border=0><tr>
+<td>&nbsp;</td>
+<td><img src="http://paulbourke.net/panorama/cubemaps/t_grid_00000.jpg" width=150 height=150></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr><tr>
+<td><img src="http://paulbourke.net/panorama/cubemaps/l_grid_00000.jpg" width=150 height=150></td>
+<td><img src="http://paulbourke.net/panorama/cubemaps/f_grid_00000.jpg" width=150 height=150></td>
+<td><img src="http://paulbourke.net/panorama/cubemaps/r_grid_00000.jpg" width=150 height=150></td>
+<td><img src="http://paulbourke.net/panorama/cubemaps/b_grid_00000.jpg" width=150 height=150></td>
+</tr><tr>
+<td>&nbsp;</td>
+<td><img src="http://paulbourke.net/panorama/cubemaps/d_grid_00000.jpg" width=150 height=150></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr></table>
+<p><img src="http://paulbourke.net/panorama/cubemaps/grid_00000.jpg" width=500 height=250><p>
+</center>
+
+<b>Usage</b><br>
+
+<pre>
+Usage: cube2sphere [options] filemask
+   filemask should contain %c which will substituted with each of [l,r,t,d,b,f]
+   For example: "blah_%c.tga" or "%c_something.tga"
+Options
+   -w n      sets the output image width, default = 4 * input image width
+   -h n      sets the output image height, default = output image width / 2
+   -x n      tilt angle (degrees), default: 0
+   -y n      roll angle (degrees), default: 0
+   -z n      pan angle (degrees), default: 0
+  -w1 n      sub image position 1, default: 0
+  -w2 n      sub image position 2, default: width
+   -a n      sets antialiasing level, default = 2
+   -raw n n  sets the dimensions for raw images file
+   -e        enable eac (equalangular cubemap), default: off
+   -s        use sine correction for vertical axis, default off
+   -d        enable debug mode, default: off
+</pre>
+<p><br>
+
+<b>Sphere to Cube</b><p>
+<a href="http://paulbourke.net/panorama/cubemaps/cubemapinfo.pdf">Summary of the mathematics (pdf)</a><p>
+
+<p align="justify">
+The reverse operation, namely converting a spherical (equirectangular) image into
+the 6 faces of a cube map is most commonly used for some navigable virtual environment
+solutions, but also to edit the north and south poles of spherical projections.
+</p>
+
+<b>Usage</b><br>
+<pre>
+Usage: sphere2cube [options] spheretexture
+Options
+   -w n      output image size, default: spherewidth/4
+   -a n      antialiasing level, default: 2
+   -x n      tilt angle (degrees), default: 0
+   -y n      roll angle (degrees), default: 0
+   -z n      pan angle (degrees), default: 0
+   -raw n n  spherical image dimensions for raw input file
+   -e        enable equiangular cubic mapping, default: off
+   -d        debug mode, default: off
+</pre>
+<p>
+
+<a name="eac">&nbsp;</a><br>
+<b>Pixel efficiency considerations</b> (EAC: EqualAngular cubemaps)</b><p>
+
+<p align="justify">
+It is fairly obvious that an equirectangular (spherical) projection is not an efficient
+way to store a 360x180 projection. This can be seen in the following image consisting
+of the faces of a cube and various test patterns.
+Note that the spheres and circular rings and all
+the same distance away, that is, they are lying on the surface of a sphere.
+The grid lies all in the same plane.
+Considering the faces with 9 spheres (one in the center, four towards the edges and
+four towards the corners)
+the size of the spheres (number of allocated pixels) increases towards the north
+and south pole. In the extreme case of a sphere at the poles there are many more pixels
+"wasted" representing that sphere.
+</p>
+<center>
+	<a href="http://paulbourke.net/panorama/cubemaps/jellybeans.jpg"><img src="http://paulbourke.net/panorama/cubemaps/jellybeans_s.jpg" width=800 height=400 border=1></a>
+</center><p>
+<p align="justify">
+Cube maps are much better, the following is the representation of the same scene as above
+as a cubemap. The excesses at the poles has been solved and in general this is a much more
+even use of the available pixels.
+</p>
+<center>
+   <a href="http://paulbourke.net/panorama/cubemaps/jellybeans1.jpg"><img src="http://paulbourke.net/panorama/cubemaps/jellybeans1_s.jpg" width=800 height=600 border=1></a>
+</center><p>
+<p align="justify">
+The reason for the stretching towards the corners of the cube can be illustrated in
+the figure below. Since the face of the cube is to be represented by pixels, all the
+same size, the rays into the scene (solid lines) 
+get closer together as one moves from the center of the face towards the edges.
+</p>
+<center>
+   <img src="http://paulbourke.net/panorama/cubemaps/rays1.png" width=400 height=476 border=0>
+</center><p>
+
+<p align="justify">
+But still, it isn't entirely egalitarian. In particular notice that the spheres in the
+center of the faces are smaller that those towards the corners. This arises due to the 
+tan() relationship between angle and distance along the cube faces. In essence more pixels
+are being used to represent the spheres towards the corners than in the center.
+This can be readily corrected for as is shown in the following. In this case instead
+of the sampling along the cube face being regular intervals across the face, the samples
+are spaced at even angle increments.
+</p>
+<center>
+   <a href="http://paulbourke.net/panorama/cubemaps/jellybeans2.jpg"><img src="http://paulbourke.net/panorama/cubemaps/jellybeans2_s.jpg" width=800 height=600 border=1></a>
+</center><p>
+<p align="justify">
+The situation is now a little more difficult to visualise. The solid ray lines in
+the following are now at equal angle steps. The dotted lines show where each ray line
+intersects the pixels, which still need to be equally spaced.
+Note this analysis is along a center line of a cube face, in reality the cube face is in
+2 dimensions and elongation still occurs off this line towards the cube corners.
+</p>
+<center>
+   <img src="http://paulbourke.net/panorama/cubemaps/rays2.png" width=400 height=476 border=0>
+</center><p>
+
+<p align="justify">
+A real world example follows, first image is the equirectangular projection, the
+second the standard non-equalangle cubemaps, and the last the equalangular cubemaps.
+Of course if these are used as the cubemap source then the interactive player
+needs to be aware of the mapping. The tan() and atan() functions required are
+readily added to the image mappings and/or GLSL shader.
+</p>
+<center>
+   <a href="http://paulbourke.net/panorama/cubemaps/canyon.jpg"><img src="http://paulbourke.net/panorama/cubemaps/canyon_s.jpg" width=800 height=400 border=1></a>
+</center><p>
+<center>
+   <a href="http://paulbourke.net/panorama/cubemaps/canyon1.jpg"><img src="http://paulbourke.net/panorama/cubemaps/canyon1_s.jpg" width=800 height=600 border=1></a>
+</center><p>
+<center>
+   <a href="http://paulbourke.net/panorama/cubemaps/canyon2.jpg"><img src="http://paulbourke.net/panorama/cubemaps/canyon2_s.jpg" width=800 height=600 border=1></a>
+</center><p>
+<p align="justify">
+Interesting to download these two examples and overlay with 50% transparency, while
+the images look very different the edges still match perfectly. It can be seen the 
+EAC version has a "zoom" effect on the interior of the cube faces, this results in
+a higher resolution there compared to the standard cube map.
+</p>
+<br>
+
+<b>Implementation for Vuo (March 2020)</b><p>
+
+<center>
+	<a href="http://paulbourke.net/panorama/cubemaps/vuo_cube2sphere.jpg"><img src="http://paulbourke.net/panorama/cubemaps/vuo_cube2sphere_s.jpg" width=800 height=470 border=1></a>
+</center>
+
+<p><br><p>
+
+<a name="4">&nbsp;</a>
+<h3>Extracting a perspective projection from cubemaps</h3>
+
+<p align="justify">
+This utility extracts a perspective projection from a set of 6 cube maps images.
+It is consistent with the conventions here:
+	<a href="../sphere2persp/index.html">Converting an equirectangular image to a perspective projection</a>
+and  here:
+	<a href="index.html#3">Converting to and from 6 cubic environment maps and a spherical projection</a>
+As an example consider the 6 cube faces presented below.
+</p>
+
+<center>
+	<a href="http://paulbourke.net/panorama/cubemaps/cube2persp1.jpg"><img src="http://paulbourke.net/panorama/cubemaps/cube2persp1_s.jpg" width=800 height=600 border=1></a>
+</center><p>
+
+<p align="justify">
+Some extracted mappings along with their corresponding command line options are shown below.
+All perspective views have a horizontal field of view of 100 degrees except the last
+zoomed example which has a 40 degree FOV.
+</p>
+
+<center>
+	<a href="http://paulbourke.net/panorama/cubemaps/forward.jpg"><img src="http://paulbourke.net/panorama/cubemaps/forward_s.jpg" width=800 height=450 border=1></a><br>
+	<smalltext>cube2persp -w 1920 -h 1080 -x -10 giga15_%c.jpg</smalltext>
+</center><p>
+<center>
+   <a href="http://paulbourke.net/panorama/cubemaps/45deg.jpg"><img src="http://paulbourke.net/panorama/cubemaps/45deg_s.jpg" width=800 height=450 border=1></a><br>
+   <smalltext>cube2persp -w 1920 -h 1080 -x -10 -z 45 giga15_%c.jpg</smalltext>
+</center><p>
+<center>
+   <a href="http://paulbourke.net/panorama/cubemaps/behind.jpg"><img src="http://paulbourke.net/panorama/cubemaps/behind_s.jpg" width=800 height=450 border=1></a><br>
+   <smalltext>cube2persp -w 1920 -h 1080 -z 180 giga15_%c.jpg</smalltext>
+</center><p>
+<center>
+   <a href="http://paulbourke.net/panorama/cubemaps/lookup.jpg"><img src="http://paulbourke.net/panorama/cubemaps/lookup_s.jpg" width=800 height=450 border=1></a><br>
+   <smalltext>cube2persp -w 1920 -h 1080 -y -4.5 -x -90 giga15_%c.jpg</smalltext>
+</center><p>
+<center>
+   <a href="http://paulbourke.net/panorama/cubemaps/zoomin.jpg"><img src="http://paulbourke.net/panorama/cubemaps/zoomin_s.jpg" width=800 height=450 border=1></a><br>
+   <smalltext>cube2persp -w 1920 -h 1080 -x -5 -t 40 giga15_%c.jpg</smalltext>
+</center><p>
+
+
+<p align="justify">
+The command line options available are shown below.
+</p>
+<pre>
+Usage: cube2persp [options] filemask
+   filemask should contain %c which will substituted with each of [l,r,t,d,b,f]
+   For example: "blah_%c.tga" or "%c_something.tga"
+Options
+   -w n     sets the output image width, default = 1920
+   -h n     sets the output image height, default = 1080
+   -t n     FOV of perspective (degrees), default = 100
+   -x n     tilt angle (degrees), default: 0
+   -y n     roll angle (degrees), default: 0
+   -z n     pan angle (degrees), default: 0
+   -a n     sets antialiasing level, default = 2
+   -e       enable eac (equalangular cubemap), default: off
+   -d       enable debug mode, default: off
+</pre>
+
+<p><br><p>
+
+<center>
+<h3>CubeRender (Historical interest only)</h3>
+<b>Fast 360 degree 3D model exploration technique using 6 precomputed views
+mapped onto the interior faces of a cube</b><br>
+Written by <a href="../index.html">Paul Bourke</a><br>
+January 1991<p>
+<a href="http://paulbourke.net/panorama/cubemaps/imagesets/">Image sets and other resources</a><br>
+<a href="index.html#opengl">OpenGL</a> -- 
+<a href="index.html#radiance">Radiance</a> --
+<a href="index.html#geomview">GeomView</a> --
+<a href="index.html#macintosh">Macintosh</a> --
+<a href="index.html#vrml">VRML</a> --
+<a href="index.html#povray">PovRay</a>
+</center>
+<p><br><p>
+
+<b>Introduction</b>
+
+<p align="justify">
+This report discusses an interesting technique that makes it possible to
+interactively view a high quality rendered environment from a single position
+using only 6 precomputed renderings. The technique has great potential for
+Architectural presentation of rendered scenes because it combines the ability
+to have fast (interactive) user control over the view direction while at the
+same time presenting very high quality renderings.
+</p>
+
+<b>The problem</b>
+
+<p align="justify">
+The realism now possible with many rendering packages can be very attractive as
+a presentation tool. The considerable time required (often hours) to perform
+such renderings is not a concern because they are performed well ahead of the
+presentation. At the other end of the scale is the user controlled walk through
+experience where the user may choose to explore the environment at their
+leisure. In order to achieve 15 to 20 frames per second, only very simple
+models with crude rendering techniques can be attempted. There simply isn't
+computer hardware fast enough to perform high quality rendering of
+geometrically complicated models. The question then is what solutions exists
+between these two extremes? How can one present a 3D environment so that the
+user can explore it interactively and at the same time view it with a 
+high degree of realism.
+</p>
+
+<b>A previous attempt</b>
+
+<p align="justify">
+One approach, which was the topic of a previous report by myself, is to
+pre-compute many views at many positions within the 3D model. In the example I
+demonstrated, 8 views (45 degree steps) were created for each view position. The
+view positions were all at an average human 
+eye height and lay on a regular grid aligned to fit
+on the interior of the environment, a room in the example. The correct view was
+determined from the database of precomputed views as the user moved from node
+to node and turned between view directions. In this solution both the movement
+between nodes and the changes in view direction at a node are discrete. Because
+of the potentially large number of images necessary both these discrete steps
+were quite large, 45 degrees for turning and 2 meters for movement. Even this
+resulted in weeks of rendering time as well as hundreds of megabytes of disk
+storage.
+</p>
+
+<b>This solution</b>
+
+<p align="justify">
+The approach taken here is to separate the exploration process into two
+activities, that of moving from one position to another in the scene and that
+of turning ones head while remaining at rest. Since an acceptable way of
+exploring an Architectural environment is to move to a position and then look
+around, this solution slows down the rate at which movement between positions
+can be achieved but it greatly speeds up the way the viewer can look about from
+a particular position. It is expected that, in implementations of this
+technique, while the movement between positions remains discrete, the changes
+in view direction can become continuous and unconstrained.
+</p>
+
+<p align="justify">
+Consider a viewing position within a 3D environment and make 6 renderings from
+this position. These 6 renderings are taken along each of the coordinate axes
+(positive and negative), they are each perspective views with a 90 degree
+camera aperture. Another way of imagining these 6 views is as the projection of
+the scene onto each of the faces of a unit cube centered at the view
+position.
+</p>
+
+<p align="justify">
+Once these 6 images have been generated, forget about the original model and
+create a new model which consists of only a unit cube centered at the origin
+with each of the 6 images applied as a texture (image map) to each internal
+face of the cube. The interesting part is that if the inside of the cube is
+viewed from the origin the seams of the cube cannot be seen (given that the
+cube is rendered with ambient light only). Indeed, as the view direction is
+changed what one sees is the same as what one would see with the same view
+direction in the original model.
+</p>
+
+<p align="justify">
+The advantages are that the "rendering" of the cube with textures can be done
+very quickly. Very little is needed in the rendering pipeline since there are
+no light sources, only ambient light and no reflected rays need to be computed.
+In fact many graphical engines have fast inbuilt texture mapping routines ideal
+for exactly this sort of operation.
+</p>
+
+<a name="example1"><b>Example 1</b></a>
+
+<p align="justify">
+As an example, the following shows the 6 precomputed views from a computer 
+based 3D model created by Matiu Carr.
+</p>
+
+<p><center><img src="http://paulbourke.net/panorama/cubemaps/cubeRender1.gif" width="425" height="319">
+</center><br>Figure 1<p>
+
+<p align="justify">
+The views are arranged as if the cube they are applied to is folded out. An
+alternative method of folding out the cube is shown in figure 2 where the top
+and bottom faces are cut into quarters.
+</p>
+
+<p><center><img src="http://paulbourke.net/panorama/cubemaps/cubeRender2.gif" width="425" height="213">
+</center><br>Figure 2<p>
+
+<p align="justify">
+As can be seen there are no "gaps" although there are discontinuities at the
+seams. With some imagination you might believe that the discontinuities go away
+when the cube is folded back together. Two views from the interior of this cube
+are shown below on the left along with the same view on the right but this time
+with the edges of the cube shown.
+<p>
+
+<p><center><img src="http://paulbourke.net/panorama/cubemaps/cubeRender3.gif" width="425" height="212">
+</center><br>Figure 3<p>
+
+<center><img src="http://paulbourke.net/panorama/cubemaps/cubeRender4.gif" width="425" height="213">
+</center><br>Figure 4<p>
+
+<p align="justify">
+Looking at the images on the left, it is hard to imagine that you are viewing
+only the walls of a cube with murals painted on them. It is quite easy to
+imagine the painted walls when the edges of the cube are visible as in the
+images on the right.
+</p>
+
+<p align="justify">
+Here is a <a href="http://paulbourke.net/panorama/cubemaps/spin.mpg">movie</a> generated using the approach 
+described above. (<a href="http://paulbourke.net/panorama/cubemaps/imagesets/01_tiff/">Raw images</a>)
+</p>
+
+<a name="example2"><b>Example 2</b></a>
+
+Model by Bill Rattenbury. (<a href="http://paulbourke.net/panorama/cubemaps/imagesets/02_tiff/">Raw images</a>)
+<p>
+
+<p><center><img src="http://paulbourke.net/panorama/cubemaps/cuberender6.jpeg" width="600" height="450"></center><br>
+Figure 5 - The folded out cube.<p>
+
+<p><center><img src="http://paulbourke.net/panorama/cubemaps/cuberender7.jpeg" width="400" height="400"></center><br>
+Figure 6 - The views on the left have the edges shown.<p>
+
+<p><center><img src="http://paulbourke.net/panorama/cubemaps/cuberender8.jpeg" width="500" height="499"></center><br>
+Figure 7 - Here is the cube viewed from the outside.<p>
+
+<p><br><p>
+
+<a name="geomview"><b>Geomview Viewer</b></a>
+
+<p align="justify">
+If you have Geomview and texture capabilities then the following 
+<a href="http://paulbourke.net/panorama/cubemaps/imagesets/oogl/">6 OOGL files</a> will allow experimentation.
+Be sure to locate the camera at the origin [W]reset and just use
+the [o]rbit tool.
+</p>
+
+<p><br><p>
+
+<a name="macintosh"><b>Macintosh viewer</b></a>
+
+<p align="justify">
+A Macintosh viewer was written for evaluation purposes. 
+It displayed the view from
+any user chosen view direction as well as giving the user control over the
+camera aperture and window size. The camera view direction can be entered
+directly as a vector or the left-right and up-down arrow keys will rotate the
+view direction in the horizontal or vertical plane respectively given an user
+specified angle increment.
+</p>
+
+<p align="justify">
+The viewer can also be used to view user generated environments given that the
+user can create the 6 precomputed views correctly. Examples of six precomputed
+view images are supplied with the Macintosh viewer as PICT files. The
+orientation of the 6 views with respect to each other must match the example in
+figure 1, this orientation is shown explicitly in the following cube 
+mapping diagram.
+</p>
+
+<p><center><img src="http://paulbourke.net/panorama/cubemaps/cubeRender5.gif" width="425" height="319"></center><br>
+Figure 8 (<a href="http://paulbourke.net/panorama/cubemaps/imagesets/04_tiff/">Raw images</a>)<p>
+
+<p align="justify">
+The Macintosh viewer had the additional ability to show where the edges of the
+cube are, this is nice for demonstration purposes and was employed to
+generate the images shown in this document.
+</p>
+
+<p><br><p>
+
+<a name="povray"><b>POVRAY Example</b></a>
+<a href="http://paulbourke.net/panorama/cubemaps/imagesets/03_tiff/">Raw images</a>,
+<a href="http://paulbourke.net/panorama/cubemaps/povray1.pov">POVRAY scene</a>,
+<a href="http://paulbourke.net/panorama/cubemaps/povray1.ini">POVRAY ini</a><p>
+
+<p align="justify">
+The following example was created by 
+<a href="http://www.strout.net/">Joseph Strout</a> and demonstrates
+how the 6 views might be created using POVRAY.
+</p>
+<center><img src="http://paulbourke.net/panorama/cubemaps/cuberender9.gif" width="700" height="525">
+</center><br>Figure 9<p>
+
+<p><br><p>
+
+<a name="radiance"><b>Radiance Example</b></a>
+
+<p align="justify">
+If you are using Radiance then the next two appendices contain the code
+necessary to create the appropriate texture mapped cube from a position within
+your favourite Radiance model. They are also provided with this document as two
+scripts MAKE6 and MAP6. Your use of these for a Radiance model called
+"mymodel.rad" looking from position (x,y,z) might be something like this, of
+course you will need to substitute your favourite or necessary options for the
+first two steps.
+</p>
+<pre>
+	oconv mymodel.rad &gt; mymodel.oct
+	make6 x y z mymodel
+	map6 x y z | oconv - &gt; x_y_z.oct
+	rview	-av 1 1 1 -ab 0 -ps 1 -dr 0 -lr 0 \
+		-vh 90 -vv 90 -vp 0 0 0 x_y_z.oct
+</pre>
+
+<p align="justify">
+The following are the Radiance rpict calls required to create the 6 views from
+one view position. The important thing here are the up vectors for the top and
+bottom views so that the mapping onto the cube works correctly later on.
+</p>
+
+<pre>
+#
+# Call this with four parameters
+# The first three are the camera position coordinates
+# The last is the oct file name (.oct assumed)
+#
+rpict -vp $1 $2 $3 -vd 1 0 0 -vh 90 -vv 90 \
+      -av .1 .1 .1 \
+      -x 300 -y 300 \
+      $4.oct &gt; $1_$2_$3_p+100.pic
+rpict -vp $1 $2 $3 -vd -1 0 0 -vh 90 -vv 90 \
+      -av .1 .1 .1 \
+      -x 300 -y 300 \
+      $4.oct &gt; $1_$2_$3_p-100.pic
+rpict -vp $1 $2 $3 -vd 0 1 0 -vh 90 -vv 90 \
+      -av .1 .1 .1 \
+      -x 300 -y 300 \
+      $4.oct &gt; $1_$2_$3_p0+10.pic
+rpict -vp $1 $2 $3 -vd 0 -1 0 -vh 90 -vv 90 \
+      -av .1 .1 .1 \
+      -x 300 -y 300 \
+      $4.oct &gt; $1_$2_$3_p0-10.pic
+rpict -vp $1 $2 $3 -vd 0 0 1 -vu 0 1 0 -vh 90 -vv 90 \
+      -av .1 .1 .1 \
+      -x 300 -y 300 \
+      $4.oct &gt; $1_$2_$3_p00+1.pic
+rpict -vp $1 $2 $3 -vd 0 0 -1 -vu 0 1 0 -vh 90 -vv 90 \
+      -av .1 .1 .1 \
+      -x 300 -y 300 \
+      $4.oct &gt; $1_$2_$3_p00-1.pic
+</pre>
+
+<p align="justify">
+The following is the Radiance model of a cube with 6 views mapped on as
+colourpicts. Replace $1, $2, and $3 with the coordinates of your view position.
+It is this model which is rendered using rview or rpict, remembering that the
+view position should be (0,0,0) and the ambient light level needs to be high
+since there are no light sources.
+</p>
+
+<pre>
+void plastic flat
+0 0
+5 1 1 1 0 0
+flat colorpict top
+13 red green blue $1_$2_$3_p00+1.pic picture.cal pic_u pic_v 
+   -t -.5 -.5 0 -ry 180
+0 0
+flat colorpict bottom
+11 red green blue $1_$2_$3_p00-1.pic picture.cal pic_u pic_v 
+   -t -.5 -.5 0
+0 0
+flat colorpict left
+15 red green blue $1_$2_$3_p-100.pic picture.cal pic_u pic_v 
+   -t -.5 -.5 0 -rz 90 -ry 90
+0 0
+flat colorpict right
+15 red green blue $1_$2_$3_p+100.pic picture.cal pic_u pic_v 
+   -t -.5 -.5 0 -rz -90 -ry -90
+0 0
+flat colorpict back
+13 red green blue $1_$2_$3_p0+10.pic picture.cal pic_u pic_v 
+   -t -.5 -.5 0 -rx 90
+0 0
+flat colorpict front
+15 red green blue $1_$2_$3_p0-10.pic picture.cal pic_u pic_v 
+   -t -.5 -.5 0 -rz 180 -rx -90
+0 0
+top polygon p1
+0 0 12         -0.5               -0.5                0.5
+               -0.5                0.5                0.5
+                0.5                0.5                0.5
+                0.5               -0.5                0.5
+bottom polygon p2
+0 0 12         -0.5               -0.5               -0.5
+                0.5               -0.5               -0.5
+                0.5                0.5               -0.5
+               -0.5                0.5               -0.5
+back polygon p3
+0 0 12          0.5                0.5               -0.5
+                0.5                0.5                0.5
+               -0.5                0.5                0.5
+               -0.5                0.5               -0.5
+front polygon p4
+0 0 12          0.5               -0.5               -0.5
+               -0.5               -0.5               -0.5
+               -0.5               -0.5                0.5
+                0.5               -0.5                0.5
+left polygon p5
+0 0 12         -0.5               -0.5               -0.5
+               -0.5                0.5               -0.5
+               -0.5                0.5                0.5
+               -0.5               -0.5                0.5
+right polygon p6
+0 0 12          0.5               -0.5               -0.5
+                0.5               -0.5                0.5
+                0.5                0.5                0.5
+                0.5                0.5               -0.5</pre>
+
+<a name="vrml"><b>VRML Example</b></a><p>
+
+<p align="justify">
+A <a href="http://paulbourke.net/panorama/cubemaps/cuberender.wrl">VRML example</a>, 
+a <a href="http://paulbourke.net/panorama/cubemaps/cuberender_wrl.txt">text version</a>,
+the <a href="http://paulbourke.net/panorama/cubemaps/imagesets/01_jpeg/">raw images</a>.
+</p>
+
+For this to function properly your VRML player must support the following
+<br>
+<ul>
+<li>Allow view direction rotation without moving the camera position
+from the origin.
+<li>The surfaces need to totally ignore light position by either
+supporting ambient light only, or by honouring the ambientColor settings
+for the surfaces of the cube.
+<li>Any camera based "headlight" needs to be turned off.
+</ul>
+
+<p><center><img src="http://paulbourke.net/panorama/cubemaps/vrmldemo.jpg" width="600" height="742"></center><p>
+
+
+<a name="opengl"><b>OpenGL Example</a></b><p>
+
+<p align="justify">
+OpenGL is ideally suited to employing this technique as long as your
+OpenGL implementation has good texture mapping support. It is simply
+necessary to create the 6 faces of a cube specifying the texture coordinates
+and map the six images onto the faces appropriately.
+</p>
+
+<p align="justify">
+The source code to a simple OpenGL program that implements this technique
+along with 6 example textures is <a href="http://paulbourke.net/panorama/cubemaps/imagesets/opengl/">provided here</a>.
+To compile it you will need to have the GL libraries as well as the GLUT
+libraries correctly installed.
+</p>
+
+<p align="justify">
+The "usage" for the viewer supplied is as follows, note the construction
+line toggle which is nice for showing people where the edges of the cube
+actually are.
+</p>
+
+<pre>
+Usage:    cuberender -x nnn -y nnn [-h] [-f] [-c]
+      -x nnn   width of the images, required
+      -y nnn   height of the images, required
+          -h   this text
+          -f   full screen
+          -c   show construction lines
+Key Strokes
+  arrow keys   rotate left/right/up/down
+  left mouse   rotate left/right/up/down
+middle mouse   roll
+ right mouse   menus
+         &lt;,&gt;   decrease, increase aperture
+           c   toggle construction lines
+           q   quit
+</pre>
+
+<p align="justify">
+The example images provided <a href="http://paulbourke.net/panorama/cubemaps/imagesets/opengl/">here</a>
+are 512 square, using a 4D51T card in a Dec Alpha this could be rotated at
+around 10 frames per second.
+</p>
+
+<b>Antialising</b><p>
+The code provided above uses GL_NEAREST in the calls<br>
+&nbsp;&nbsp;&nbsp;
+	glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);<br>
+&nbsp;&nbsp;&nbsp;
+	glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);<br>
+<p align="justify">
+This means that the textures are sampled at their centers and this can
+lead to aliasing artefacts. One way around this is to use GL_LINEAR
+instead in which case a 2x2 average is formed, however this leads to
+the need for special handling at the edges. OpenGL provides support for
+this but it means that you need to create textures that have a 1 pixel
+border where the border has the appropriate pixels from the adjacent
+faces.</p>
+
+So the calls would change as follows<br>
+&nbsp;&nbsp;&nbsp;
+glTexImage2D(GL_TEXTURE_2D,0,4,w+2,h+2,0,GL_RGBA,GL_UNSIGNED_BYTE,bottom);<br>
+becomes<br>
+&nbsp;&nbsp;&nbsp;
+glTexImage2D(GL_TEXTURE_2D,0,4,w+2,h+2,1,GL_RGBA,GL_UNSIGNED_BYTE,bottom);<br>
+and<br>
+&nbsp;&nbsp;&nbsp;
+glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);<br>
+&nbsp;&nbsp;&nbsp;
+glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);<br>
+become<br>
+&nbsp;&nbsp;&nbsp;
+glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);<br>
+&nbsp;&nbsp;&nbsp;
+glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+<p>
+
+<b>Comparison between CubeView and Apple QuickTime VR</b><p>
+
+The characteristics are ordered in three sections, those which are clearly
+in CubeViews favour, those for which there is little difference, and finally
+those in QuickTimeVR's favour. Most of the items in QuickTime VR's favour 
+arise simply from a lack of work being done to refine this technique, they
+are not inherent to the technique itself.
+
+<pre>
+Attribute                               CubeView         QuickTime VR
+---------------------------------------------------------------------------
+Full 360 vertical viewing               Yes              No
+Image quality                           Excellent        Lossy compression
+Ease of scene generation                Very easy        More difficult
+Multiplatform scene generation          Yes              Maybe one day
+Distortion                              None             Some
+Full camera attribute control           Yes              Not yet
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Full 360 horizontal viewing             Yes              Yes
+Based on precomputed information        Yes              Yes
+Suitable for computer generated scenes  Yes              Yes
+File sizes                              Similar          Similar
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Multiplatform playback support          Could be         Yes
+Fast playback (interactive)             Needs work       Yes
+Multiple nodes                          Needs work       Yes
+Object nodes and views                  Needs work       Yes
+Suitable for photographic scenes        Difficult        Yes
+---------------------------------------------------------------------------
+</pre>
+<p>
+
+<b>References</b>
+<p>
+Greene, N. (1986).
+Environment Mapping and Other Applications of World Projections.
+IEEE Computer Graphics and Applications, November 1986 (p. 21-29).
+<p>
+
+</td></tr></table></center>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Inverse Panorama, or Object Panorama</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width="800"><tr><td>
+
+<center>
+<h1>Inverse Panorama or Object Panorama</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+November 2018<p>
+
+<a href="http://paulbourke.net/panorama/inversepano/index_bu.html">Bulgarian translation<a> by Zlatan Dimitrov<br>
+<a href="http://paulbourke.net/panorama/inversepano/index_de.html">German translation</a> by Maximilian Neumann<br>
+<a href="http://paulbourke.net/panorama/inversepano/index_uz.html">Uzbec translation</a> by Sherali Niyazova.<br>
+<a href="http://paulbourke.net/panorama/inversepano/index_sw.html">Swedish translation</a> by David Mucchiano.<br>
+<a href="http://paulbourke.net/panorama/inversepano/index_sp.html">Spanish translation</a> by Laura Mancini.<br>
+<a href="http://paulbourke.net/panorama/inversepano/index_fr.html">French translation</a> by Laura Beoschat.<br>
+<a href="http://paulbourke.net/panorama/inversepano/index_du.html">Dutch translation</a> by Justin Watson.<br>
+<a href="http://paulbourke.net/panorama/inversepano/index_az.html">Azerbaijanian translation</a> by Amir Abbasov<br>
+</center>
+<p><br><p>
+
+<p align="justify">
+Cylindrical panoramas are well understood and widely used to capture a limited
+vertical field of view but a full 360 degrees horizontally. They are typically formed 
+by rotating a camera about a single point. While the practical method may vary, conceptually
+each camera position captures a narrow vertical slit, all the slits are aligned one
+after the other.
+</p>
+
+<p align="justify">
+Here I present object panoramas, or because they can be considered as a traditional panorama
+capture but inverted, inverse panoramas. Specifically, instead of a central camera and
+external scene, here we have a camera moving around an object looking inwards. 
+One way to create such object panoramas would be to take a perspective or orthographic
+image while the object rotates. A single vertical slit from each photograph can be 
+placed side-by-side to form a continuous image (assuming correct slit width). This is
+essentially the same as a so called <a href="../../miscellaneous/slitscan/index.html">slit scan photograph.</a>
+</p>
+
+<p align="justify">
+Another way to view this is as a multi-perspective rendering. Each pixel in the image
+corresponds to a camera position, in the case of a cylindrical object panorama all the
+cameras (one for each pixel) are horizontal and are directed to a central axis line.
+</p>
+
+<p align="justify">
+In the examples shown here, a 3D textured model is used to demonstrate the result.
+However real objects can be used by placing them on a motorised turntable and filming
+with a video camera followed by the
+slit scan approach described above for each frame of the video.
+</p>
+
+<center>
+	<a href="http://paulbourke.net/panorama/inversepano/pano_diotima.jpg">
+	<img src="http://paulbourke.net/panorama/inversepano/pano_diotima_s.jpg" width=800 height=778 border=1></a><br>
+	<smalltext>Diotima statue, The University of Western Australia</smalltext>
+</center><p>
+
+<p align="justify">
+Like traditional panoramas, these also wrap in 360 degrees, the left edge is adjacent
+to the right edge.
+</p>
+
+<center>
+   <img src="http://paulbourke.net/panorama/inversepano/pano_NovotelLion.jpg" width=800 height=1040 border=1><br>
+	<smalltext>Lions statues in front of the Duxton hotel in Perth</smalltext>
+</center><p>
+
+<p align="justify">
+The images created here were the authors own code that, for each pixel in the output image,
+the corresponding ray is computed (position and direction). That ray is then intersected
+with all the triangles in the model (OBJ file), once the closest (first) intersection
+is determined the colour is looked up given the uv coordinates and the texture image.
+</p>
+<p align="justify">
+The new (and exciting) "mesh_camera" in PovRay can be used to achieve the same thing. 
+This camera allows one to specify the camera ray position given the triangle in a mesh{},
+the direction of the ray is determine by the normal (so all triangles must be ordered
+consistently) although the ray can be flipped with the sign of the z coordinate in the
+direction directive.
+</p>
+
+<pre>
+object { 
+   #include "teresa.inc"
+}
+camera {
+   mesh_camera {
+      1
+      0
+      #include "themesh.inc"
+   }
+   location <0,0,0>
+   direction <0,0,-1>
+}
+</pre>
+
+<center>
+	<a href="http://paulbourke.net/panorama/inversepano/teresa.jpg">
+   <img src="http://paulbourke.net/panorama/inversepano/teresa_s.jpg" width=800 height=815 border=1></a><br>
+	<smalltext>Mother Teresa in the St Mary's Cathedral Perth</smalltext>
+</center><p>
+
+<p align="justify">
+It should be noted that on the surface one might imagine these could be created with a
+standard cylindrical panorama rendering from the centre of the object.
+But in that case one would be mapping the interior, not the exterior. One difference
+are structures that might be visible from the outside but are occluded by other 
+structures on the interior, for example, concave parts of the model.
+</p>
+
+<center>
+   <a href="http://paulbourke.net/panorama/inversepano/pano_tjanpi.jpg">
+   <img src="http://paulbourke.net/panorama/inversepano/pano_tjanpi_s.jpg" width=800 height=639 border=1></a><br>
+	<smalltext>Tjanpi dolls, indigenous Australian figures</smalltext>
+</center><p>
+<br>
+
+<b>Spherical (Equirectangular) panorama</b><p>
+
+<p align="justify">
+Of course one is not limited to a cylindrical panorama, a full equirectangular panorama
+can equally be generated. Each pixel corresponds to a ray origin on a sphere, the ray
+direction is towards the center of the model.
+</p>
+
+<center>
+   <a href="http://paulbourke.net/panorama/inversepano/diotima_sph.jpg">
+   <img src="http://paulbourke.net/panorama/inversepano/diotima_sph_s.jpg" width=800 height=400 border=1></a>
+</center><p>
+
+<p align="justify">
+These models were created from 3D reconstruction and the base has not been closed.
+The hollow nature is the cause of the apparent defects in the lower part of the image.
+</p>
+
+<center>
+   <a href="http://paulbourke.net/panorama/inversepano/teresa_sph.jpg">
+   <img src="http://paulbourke.net/panorama/inversepano/teresa_sph_s.jpg" width=800 height=400 border=1></a>
+</center><p>
+
+</td></tr></table></center>
+</body>
+</html>
+

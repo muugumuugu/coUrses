@@ -1,0 +1,291 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Point animator</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800 border=0 cellpadding=0 cellspacing=0><tr><td valign="top">
+
+<center>
+<h1>Point Animator</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+December 2000
+</center>
+<p><br><p>
+
+<b>Introduction</b>
+<p align="justify">
+"pointanim" (point animator) is an OpenGL application to visualise,
+in stereo3D, point
+datasets that vary in time. The exact specifications have evolved
+to meet the needs of the local research projects. Two stereo3D modes
+modes are supported, frame sequential that typically runs at 
+120Hz and uses active shutter glasses, and dual display which
+normally uses a two pipe OpenGL card and passive polaroid glasses.
+Various data formats are supported (see later), some are ASCII and
+other binary. The binary formats while less convenient are normally
+used because they can be read significantly faster. 
+The basic element of a data file is
+a series of x,y,z triples, each one is drawn as a point with some
+colour. The colour can either be derived from geometric features
+such as curvature, velocity, etc, or a scalar variable can be specified and
+this will be mapped onto one of a number of colour ramps, 
+or it can be explicitly specified in the data file. 
+</p>
+
+<p align="justify">
+The normal use of "pointanim" involves launching 
+the application with a variety of command line arguments, once loaded
+the point data is repeatedly drawn for each time step. The user may
+control almost all aspects of the camera, position, orientation, etc
+as well as control time (run forward, backwards, stop, jump to
+arbitrary position).
+</p>
+
+<b>Command line arguments</b><br>
+<p align="justify">
+Typing "pointanim" on the command line will present the following
+(since none of the required arguments are provided). 
+</p>
+<pre>
+Usage: pointanim [command line options]
+Required:
+          -np n      number of points to read from each file
+          -f_        read in different formats (currently 0..5)
+          -b s       printf name for files eg: "aa%%04d.dat"
+Optional:
+          -f         full screen
+          -F         full half screen
+          -s         frame sequential stereo
+          -ss        dual screen stereo
+          -l         circular looping (default: off)
+          -dn n      the subsampling rate (1..)
+          -i n       interpolation factor (1..)
+          -da n      draw as symbol (default: 1)
+          -os n      object size (default: 1)
+          -c n       colour ramp (default: 1)
+          -C n       colour attribute (default: -1)
+          -as        start in autospin mode (default: off)
+          -bb        show bounding box (default: off)
+          -ax        show axes (default: off)
+          -gr        show grid (default: off)
+          -sl        show slider (default: off)
+          -fps n     target frame rate (default: 25)
+          -bg sl sr  background images (left and right)
+          -vf s      start with view file
+          -d         debug mode
+          -h         this text
+</pre>
+<p align="justify">
+There are three required arguments, the number of points "-np" in each
+file (it isn't generally stored with the file), the format "-b" for the name
+of the data files, and the format of the files themselves "-f".
+The format for the file name follows standard C format specifications 
+for printf().
+
+<ul>
+<li><p align="justify">
+Example 1<bR>
+If the time steps were stored in files called data0.dat, data1.dat,....
+data100.dat then the command line option would be -b data%d.dat.
+<p>
+<li><p align="justify">
+Example 2<br>
+If the data files were called fcn0000.txt, fcn0000.txt, fcn0000.txt,....
+fcn1120.txt then the option would be -b fcn%04d.txt.
+</ul>
+
+<p align="justify">
+As an example of the minimum command line to run "pointanim", assume 
+the data files are called galaxy000.pnt, galaxy001.pnt,
+galaxy002.pnt, etc, each contains 10,000 points and and each point
+is defined by a vertex and colour then the minimal command line would be
+</p>
+&nbsp;&nbsp;&nbsp;pointanim -np 10000 -f3 -b galaxy%03d.pnt
+<p>
+
+<b>Keyboard commands</b>
+<p align="justify">
+Once the program is running the following keyboard commands are supported.
+</p>
+<pre>
+  arrow keys   rotate left/right/up/down
+  left mouse   rotate left/right/up/down
+middle mouse   roll clockwise/anticlockwise
+           a   toggle autospin
+           h   move the camera to the default position
+           r   toggle automatic progression of time
+     i,j,k,l   translate up,down, left, right
+         [,]   roll clockwise, anticlockwise
+         +,-   move forward or backward
+         <,>   move forward/backwards in time
+          f1   toggle help
+          f2   toggle info
+          f3   toggle boundingbox
+          f4   toggle axes
+          f5   toggle axes grid
+          f6   toggle animation slider
+          f7   toggle colour ramp
+           0   go to the first frame
+         1,2   decrease/increase frame rate
+           w   dump current image to disk as TGA file
+       esc,q   quit
+</pre>
+
+<b>File Formats</b><bR>
+<p align="justify">
+"pointanim" expects each time step to be stored in a separate file.
+The file name must contain an integer from 0 upwards that indicates
+the time sequence order. Otherwise, since "pointanim" is given the 
+C printf() format string for the file names, the file names can be formatted
+however one likes. The following formats specified by the "-f" option
+are currently supported.
+</p>
+<table cellpadding=5>
+<tr>
+<td valign="top">f0</td>
+<td valign="top">binary</td>
+<td valign="top">
+Simplest binary format, 3 floats for each x,y,z triple.
+</td>
+</tr>
+<tr>
+<td valign="top">f1</td>
+<td valign="top">ascii</td>
+<td valign="top">
+Ascii version of the above, triples x y z separated
+by any white space. Read as fscanf(fptr,"%f %f %f",&x,&y,&z);
+</td>
+</tr>
+<tr>
+<td valign="top">f2</td>
+<td valign="top">binary</td>
+<td valign="top">
+Same as -f0 except for two differences. short ints are
+used for each x,y,z and the file starts with an int giving
+the number of points. Note "pointanim" ignores the number of
+points and expects the number given on the command line.
+</td>
+</tr>
+<tr>
+<td valign="top">f3</td>
+<td valign="top">ascii</td>
+<td valign="top">
+Each point is expected to have a coordinate triple and an
+rgb colour triple. These colours will be used for each
+point although they may be overwritten within the application
+by the user (see menus).<br>
+fscanf(fptr,"%f %f %f %f %f %f",&x,&y,&z,&r,&g,&b);
+</td>
+</tr>
+<tr>
+<td valign="top">f4</td>
+<td valign="top">ascii</td>
+<td valign="top">
+Each point is expected to have a x,y,z triple and a scalar
+value. This scalar value will be mapped onto various colour
+maps within the application.<br>
+fscanf(fptr,"%f %f %f %f",&x,&y,&z,&c);
+</td>
+</tr>
+<tr>
+<td valign="top">f5</td>
+<td valign="top">binary</td>
+<td valign="top">
+Same as -f0 but with additional r,g,b colours as floats.
+</td>
+</tr>
+</table>
+<p>
+
+<b>Features</b>
+<ul>
+<li><p align="justify">
+Assuming the n'th point in each file corresponds to the same object
+(although at a different position) then smoother animations can be
+achieved by interpolating between frames, see the "-i" option. So for
+example, "-i 4" will generate 4 frames between every data frame.
+</p>
+<li><p align="justify">
+While "pointanim" is designed as a data investigation tool rather than a
+presentation one, it does allow single images or animation sequences
+to be written to disk, see the "w" or "W" (use with care) keyboard
+commands. The window size menu allows some of the animation standard
+frame sizes to be chosen.
+</p>
+</ul>
+
+<b>Limitations</b><br>
+<ul>
+<li><p align="justify">
+The stereo3D modes are mostly expected to be run in full screen mode.
+</p>
+<li><p align="justify">
+In order to maintain reasonable frame rates all
+the data must be able to reside in RAM.
+</p>
+<li><p align="justify">
+The number of points in each data file must be constant.
+</p>
+<li><p align="justify">
+The interpolation command line option (-i n) assumes the
+points between files match, that is, point 100 in frame 5
+is the same as point 100 in frame 6 and so on. Some of
+the line drawing options also assume this for them to
+make sense.
+</p>
+<li><p align="justify">
+The colour attribute options are destructive, that is, they overwrite
+colour or scalar information that may have been provided in the
+data files.
+</p>
+</ul>
+
+</td><td width=10>
+&nbsp;
+</td><td valign="top" width=230 align="right">
+
+<img border=1 src="http://paulbourke.net/stereographics/pointanim/sample0.gif" width=225 height=300><p>
+<br>
+<br>
+<img border=1 src="http://paulbourke.net/stereographics/pointanim/sample1.gif" width=225 height=300><p>
+<br>
+<br>
+<img border=1 src="http://paulbourke.net/stereographics/pointanim/sample5.gif" width=225 height=300><p>
+<br>
+<br>
+<img border=1 src="http://paulbourke.net/stereographics/pointanim/sample6.gif" width=225 height=300><p>
+<br>
+<br>
+<img border=1 src="http://paulbourke.net/stereographics/pointanim/sample2.gif" width=225 height=300><p>
+<br>
+<br>
+<img border=1 src="http://paulbourke.net/stereographics/pointanim/sample4.gif" width=225 height=300><p>
+<br>
+<br>
+<img border=1 src="http://paulbourke.net/stereographics/pointanim/sample3.gif" width=225 height=300><p>
+<br>
+<br>
+<img border=1 src="http://paulbourke.net/stereographics/pointanim/sample7.gif" width=225 height=300><p>
+<br>
+<br>
+<img border=1 src="http://paulbourke.net/stereographics/pointanim/sample8.gif" width=225 height=300><p>
+
+</td></tr></table>
+</body>
+</html>
+
+
+
+

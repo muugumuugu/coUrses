@@ -1,0 +1,203 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Stereo2 - Stereoscopic geometry viewer</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>STEREO2 - A stereoscopic geometry viewer</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+October 2000
+</center>
+<p><br><p>
+
+<table width=100% cellpadding=0 cellspacing=0><tr>
+<td valign="top">
+<b>Introduction</b><br>
+<p align="justify">
+"stereo2" was designed to project static geometry in a stereoscopic
+projection environment using OpenGL assisted 3D cards. 
+It initially supported frame sequential stereo (active glasses)
+and was subsequently updated to support dual screen stereo (passive
+glasses). It was compiled under various flavours of UNIX including,
+but not limited to, OSF, Linux, and Mac OS-X.
+</p>
+
+<b>Input data</b><br>
+<p align="justify">
+"stereo2" can read two types of data file, GEOM and OFF files. GEOM
+files are the usual way of describing geometry for stereo2, the format
+is described <a href="../../dataformats/geom/index.html">here</a>, they
+can describe basic geometry including points, lines, faces, spheres,
+cylinders, cones, etc. An example of what a GEOM file looks like is
+given below.
+</p>
+<pre>
+# Example geom file, this is a comment
+l 0 0 0 1 0 0 1 0 0 red x axis
+l 0 0 0 0 1 0 0 0.5 0 green y axis
+l 0 0 0 0 0 1 0 0 1 blue z axis
+s 0 0 0 0.5 1.0 0.5 0.5 ball
+f4 -1 -1 -1   
+    1 -1 -1   
+    1 -1  1   
+   -1 -1  1   0.5 0.5 0.5  bottom face of cube
+f4 -1 -1  1  
+   -1 -1 -1  
+   -1  1 -1   
+   -1  1  1   0.5 0.5 0.5  left face
+p 0 0 0 1 0 0
+</pre>
+
+<p align="justify">
+The second format called OFF is a file with
+two sections, the first lists the vertices and the second describes
+the faces in terms of the vertex indices. Each section is preceded with
+the number of items in that section. The vertex section is just a list
+of x,y,z coordinates, normal, and colour starting at index 0. 
+Each line of the face section
+starts with an integer indicating the number of vertices and is followed
+by that many vertex index numbers.
+</p>
+An example OFF file is given below with 1022 vertices and 376 faces.
+he first two faces have 3 vertices, the third 4 vertices, and the
+fourth is a line (2 vertices).
+<pre>
+1022
+1.0 0.5 4.0    1.0 0.0 0.0   1.0 0.0 0.0
+2.3 5.4 1.2    0.0 0.5 0.3   1.0 0.2 0.2
+:   :   :
+:   :   :
+376
+3 1 0 3
+3 5 3 7
+4 2 3 600 601
+2 5 40
+: : :
+: : :
+</pre>
+
+<p align="justify">
+In addition to the above geometry formats, stereo2 can read preset
+camera positions (see the save camera menu item and subsequent file
+for the format) and flight paths.
+</p>
+
+<b>Command line options</b><br>
+<p align="justify">
+The command line options and keystrokes are displayed by typing
+"stereo2 -h", the output is listed below although since this is
+an evolving package the exact options may change in time.
+</p>
+<pre>
+Usage: stereo2 [command line options]
+Command line options    -h         this text
+                        -s         active stereo mode
+                        -ss        dual screen stereo
+                        -f         full screen mode
+                        -fps n     target frame rate
+                        -r [wfds]  render mode
+                        -as        start in autospin mode
+                        -ap fn     start in autopilot mode
+                        -c         show construction lines
+                        -og        open geom file
+                        -oo        open off file
+                        -vf        open view file
+                        -bg r g b  background colour (default=black)
+                        -sh n      change default material shininess
+                        -dm n      delta movement
+                        -bs        background star field (default=off)
+                        -bb        show bounding box (default=off)
+                        -cd        collision detection (default=off)
+                        -cw        clockwise polygons (default=CCW)
+                        -cf        back face culling (default=off)
+                        -fly       start off in fly mode
+                        -walk      start in walking mode
+Key Strokes             h          home position for camera (also "home")
+                        f          focus camera
+                    1...7          standard camera views
+                      i,k          translate camera up, down
+                      j,l          translate camera left, right
+                      -,+          increase/decrease velocity
+             page up/down          zoom in or out
+                      [,]          roll anticlockwise, clockwise
+                      <,>          increase/decrease 3D cursor
+                        w          write the current image to disk
+                        W          write a higher resolution image to disk
+                        c          append camera position to "camera.path"
+                        p          create PovRay rendering
+               left arrow          rotate camera left
+              right arrow          rotate camera right
+               down arrow          rotate camera down
+                 up arrow          rotate camera up
+                        D          delete all geometry
+                        q          quit (also ESC, "end")
+Function keys          f1          toggle screen info
+                       f2          toggle 0 eye separation
+                       f3          toggle frame recording
+                       f4          toggle construction lines
+                       f5          toggle bounding box
+</pre>
+
+<p align="justify">
+The most important options above regarding stereo are "-s" for frame
+sequential stereo or "-ss" for passive side-by-side stereo. In both cases
+it is common to also the '-f" for full screen. The software will make a
+best guess at the correct stereo settings, these will almost always be
+suitable when an object is being viewed from the outside. The focal point
+will be set to the center of the bounding box of the object, the camera will
+be outside the bounding box so the whole object is visible, the eye separation
+will be 1/30 of the zero parallax distance.
+</p>
+
+<b>Navigation</b>
+<p align="justify">
+The most common navigation is performed with the mouse or the arrow keys,
+these move the camera around the environment (they do not move the object).
+If you get lost, the "h" key will return the camera to the default
+position.
+</p>
+
+<b>Saving images</b>
+<p align="justify">
+Images of the current screen contents can be written to disk as TGA files
+by pressing the "w" key. 
+</p>
+
+</td><td width=20>
+&nbsp;
+</td><td valign="top">
+<b>Examples</b><br>
+<p>
+<img src="http://paulbourke.net/stereographics/stereo2/1.gif" width=200 height=150><br><br>
+<img src="http://paulbourke.net/stereographics/stereo2/2.gif" width=200 height=150><br><bR>
+<img src="http://paulbourke.net/stereographics/stereo2/3.gif" width=200 height=150><br><br>
+<img src="http://paulbourke.net/stereographics/stereo2/4.gif" width=200 height=150><br><br>
+<img src="http://paulbourke.net/stereographics/stereo2/5.gif" width=200 height=150><br><br>
+<img src="http://paulbourke.net/stereographics/stereo2/6.gif" width=200 height=150><br><bR>
+<img src="http://paulbourke.net/stereographics/stereo2/7.gif" width=200 height=150><br><br>
+<img src="http://paulbourke.net/stereographics/stereo2/8.gif" width=200 height=150><br><br>
+<img src="http://paulbourke.net/stereographics/stereo2/9.gif" width=200 height=150><br><br>
+<img src="http://paulbourke.net/stereographics/stereo2/10.gif" width=200 height=150><br><bR>
+<img src="http://paulbourke.net/stereographics/stereo2/11.gif" width=200 height=150><br><br>
+<img src="http://paulbourke.net/stereographics/stereo2/13.gif" width=200 height=150><br><br>
+<img src="http://paulbourke.net/stereographics/stereo2/12.gif" width=200 height=150><br><br>
+</td></tr></table>
+
+</td></tr></table></center>
+</body>
+</html>
+

@@ -1,0 +1,224 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Converting an equirectangular image to a perspective projection</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Converting an equirectangular image to a perspective projection</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+November 2016<p>
+See also: <a href="../../dome/2fish/index.html">
+sphere2fish to convert a equirectangular projection to a fisheye</a>
+</center>
+
+<p align="justify">
+<i>The source code implementing the projections below is only available
+on request for a small fee. It includes a demo application and an invitation to
+convert an image of your choice to verify the code does what you seek. 
+For more information please contact the <a href="../../index.html">author</a>.</i>
+</p>
+<p><br><p>
+
+<p align="justify">
+<b>Update (Aug 2017)</b><br>
+Added offaxis perspective projections, also known as a tilt-shift camera/lens
+often used in architectural photography.
+</p>
+
+<p><br><p>
+
+<p align="justify">
+The following describes a tool for extracting an ideal, pinhole camera style
+perspective projection from an equirectangular (also called spherical) projection.
+The real-time way to do this might be to map the equirectangular image onto a
+sphere and using a real-time API (eg: Opengl) view the result with a virtual camera
+located in the center of the sphere. The computational method here has some advantages,
+for example: 
+it can result in higher quality conversions and it can handle unlimited image sizes (both
+input and output).
+</p>
+
+<p align="justify">
+The following image will be used for the examples illustrated on this page.
+</p>
+	
+<center>
+	<a href="http://paulbourke.net/panorama/sphere2persp/pano4.png"><img src="http://paulbourke.net/panorama/sphere2persp/pano4s.png" width=800 height=400 border=1></a>
+</center><p>
+
+<p align="justify">
+The usual approach for such image transformations is to perform the inverse mapping. That
+is, one needs to consider each pixel in the output image (perspective) and map backwards to
+find the best estimate pixel in the input image (spherical). In this way every pixel
+in the output image is found (compared to a forward mapping), it also means
+that the performance is governed by the resolution of the output image
+(and supersampling) irrespective of the size of the input image.
+A key aspect of these mappings is also to perform some sort of antialiasing, the
+solutions here use a simple supersampling approach.
+</p>
+
+<p align="justify">
+The default usage creates an image with a 100 degree horizontal field of view, the vertical 
+field of view is calculated based upon the image dimensions, the default being 1920x1080.
+Zero degrees longitude is 1/4 of the width of the image from the left edge.
+</p>
+
+<center>
+   <a href="http://paulbourke.net/panorama/sphere2persp/example1.jpg"><img src="http://paulbourke.net/panorama/sphere2persp/example1s.jpg" width=800 height=450 border=1></a><br>
+	<smalltext>sphere2persp pano4.tga</smalltext>
+</center><p>
+
+<p align="justify">
+The code here in written in plain vanilla C tested on Unix style operating systems using the
+gcc compilers (specifically Mac and Linux),
+but the algorithms/code can readily be modified for other
+operating systems and programming languages.
+This is not meant to be a final application but rather something you integrate into your code base. 
+Having said that it is wrapped up in a simple TGA image reader/writer for the purposes of algorithm 
+testing, the intent is that one would be implementing the function into ones own pipeline.
+They all operate on a RGB buffer (fisheye image) in memory.
+</p>
+
+<b>Usage string</b><p>
+<pre>
+Usage: sphere2persp [options] sphericalimage
+Options
+   -w n     perspective image width, default = 1920
+   -h n     perspective image height, default = 1080
+   -t n     aperture of perspective (degrees), default = 100
+   -x n     tilt angle (degrees), default: 0
+   -y n     roll angle (degrees), default: 0
+   -z n     pan angle (degrees), default: 0
+   -o n     offset for offaxis perspective (percentage), default: 0
+   -a n     antialiasing level, default = 2
+   -f s     output file name
+</pre>
+
+<p align="justify">
+Tilt, pan and roll are performed with the command line options -x, -y and -z. That is
+the x axis is to the right, the z axis is up and the y axis is forward.
+The following pans the camera 90 degrees and tilts up 40 degrees.
+</p>
+
+<center>
+   <a href="http://paulbourke.net/panorama/sphere2persp/example2.jpg"><img src="http://paulbourke.net/panorama/sphere2persp/example2s.jpg" width=800 height=450 border=1></a><br>
+   <smalltext>sphere2persp -x -40 -z 90 pano4.tga</smalltext>
+</center><p>
+
+<p align="justify">
+If the mapping is performed correctly, and the original equirectangular
+image is correct, all lines in the scene that should be straight will be straight, unlike
+the curvature in the equirectangular image. Any perspective field of view can be chosen,
+smaller fields of view result in zooming in, larger are equivalent to zooming out.
+While perspective views are defined up to, but not including 180 degrees, 
+for practical purposes perspective projections become increasingly inefficient after 
+150 degrees. The following is a 150 degree perspective view.
+</p>
+
+<center>
+   <a href="http://paulbourke.net/panorama/sphere2persp/example3.jpg"><img src="http://paulbourke.net/panorama/sphere2persp/example3s.jpg" width=800 height=450 border=1></a><br>
+   <smalltext>sphere2persp -t 150 -z 180 pano4.tga</smalltext>
+</center><p>
+
+<p align="justify">
+Assuming a correct equirectangular, there should be no distortion looking straight down
+or straight up.
+</p>
+<center>
+   <a href="http://paulbourke.net/panorama/sphere2persp/example4.jpg"><img src="http://paulbourke.net/panorama/sphere2persp/example4s.jpg" width=800 height=450 border=1></a><br>
+   <smalltext>sphere2persp -t 120 -x 90 -z -90 pano4.tga</smalltext>
+</center><p>
+<center>
+   <a href="http://paulbourke.net/panorama/sphere2persp/example5.jpg"><img src="http://paulbourke.net/panorama/sphere2persp/example5s.jpg" width=800 height=450 border=1></a><br>
+   <smalltext>sphere2persp -t 120 -x -90 -z -90 pano4.tga</smalltext>
+</center><p>
+
+<!--
+<br><br>
+<b>Shift-tilt lens support</b> (Added May 2017)<p>
+<p align="justify">
+In architectural photography there is the concept of a shift-tilt lens and indeed
+these can be purchased as real lenses. They effectively allow the projection plane to be
+shifted on the sensor. In practical terms they allow for the correction of the perspective
+effects that occur when one tilts a camera, most notably when photographing buildings.
+For reasons we won't go into here, shift-tilt lenses have interesting depth of focus
+properties which has lead them to often be used to create the miniature world effect.
+The support here implements the "perfect" shifting of the projection plane and does
+not (can not) simulate the depth of focus characteristics of these lenses.
+</p>
+<p align="justify">
+The effect will be illustrated with the following equirectangular image.
+</p>
+<center>
+<a href="panosample.jpg"><img src="panosample_s.jpg" width=800 height=400 border=1></a><br>
+Image courtesy	Jordi Vallverdu
+</center><p>
+
+<p align="justify">
+The following is a standard asymmetric perspective projection with a horizontal field
+of view of 100 degrees.
+</p>
+<center>
+<a href="defaultview.jpg"><img src="defaultview_s.jpg" width=800 height=600 border=1></a>
+</center><p>
+
+<p align="justify">
+In order to capture the top of buildings one might tilt the camera upwards, as follows.
+</p>
+<center>
+<a href="tiltedup.jpg"><img src="tiltedup_s.jpg" width=800 height=600 border=1></a>
+</center><p>
+
+<p align="justify">
+In order to avoid the perspective narrowing (keystone effect) of the buildings one
+can instead not tilt the camera but rather shift the projection plane. The following
+show this for 50% and 75% tilt respectively.
+</p>
+<center>
+<a href="offsetview50pc.jpg"><img src="offsetview50pc_s.jpg" width=800 height=600 border=1></a>
+</center><p>
+<center>
+<a href="offsetview75pc.jpg"><img src="offsetview75pc_s.jpg" width=800 height=600 border=1></a>
+</center><p>
+
+<p align="justify">
+This is supported by a new command line option -o whch is followed by a percentage
+shift of the projection plane relative the height. A shift of 0 refers to no shift
+and results in a symmetric perspective frustum.
+</p>
+<pre>
+Usage: sphere2persp [options] sphericalimage
+Options
+   -w n     perspective image width, default = 1920
+   -h n     perspective image height, default = 1080
+   -t n     aperture of perspective (degrees), default = 100
+   -x n     tilt angle (degrees), default: 0
+   -y n     roll angle (degrees), default: 0
+   -z n     pan angle (degrees), default: 0
+   -o n     offset for offaxis perspective (percentage), default: 0
+   -a n     antialiasing level, default = 2
+   -f s     output file name
+</pre>
+<center>
+<img src="percentage.jpg" width=400 height=891 border=0></a>
+</center><p>
+-->
+
+</td></tr></table></center>
+</body>
+</html>
+

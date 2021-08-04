@@ -1,0 +1,672 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Capturing high resolution stereoscopic panorama images</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Capturing high resolution stereoscopic panorama images</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+In collaboration with Jeffrey Shaw and Sarah Kenderdine<br>
+June 2018
+</center>
+<p><br><p>
+
+<b>Abstract</b><p>
+
+<p align="justify">
+Immersive experiences that leverage the capabilities of the human visual system 
+typically seek to support the following capabilities:
+depth perception through stereopsis, engagement of peripheral vision, high visual 
+acuity. Achieving this within real-time synthetic environments, such as a game 
+engine, involves a means of presenting two rendered views to each eye, tracking 
+the viewer within the space and supplying a sufficiently wide field of view at a 
+high resolution. Presenting real-world photographically derived imagery meeting 
+these requirements is considerably more problematic. For example, a photograph or video only 
+captures a scene from a particular position whereas a computer generated rendering 
+of a scene can be generated at will from any position. 
+</p>
+
+<p align="justify">
+A so called omnidirectional stereoscopic panorama (ODSP) is a well established 
+technique of capturing a 360 degree field of view stereoscopically.
+Strictly speaking the ODSP is only an approximation to the correct 
+stereo pairs that should be presented to the viewer, but it an approximation that 
+has been born out to be acceptable when the correct views cannot be created 
+synthetically. A number of cameras have been proposed and constructed to capture 
+an ODSP, in the following we will present the latest development, an approach 
+due largely to the evolving capabilities of consumer level cameras.
+</p>
+
+<b>Introduction</b><p>
+
+<p align="justify">
+<a href="../stereopanoramic/index.html">Omnidirectional stereoscopic panoramas (ODSP)</a>
+is the term given to a pair 
+of locally correct stereoscopic panoramas spanning 360 degrees in longitude. 
+"Locally correct" because if a limited horizontal 
+field of view of the ODSP is presented to a viewer, there are minimal perceived stereoscopic 
+artefacts irrespective of the part of the panorama being viewed. This is in 
+contrast to more traditional stereoscopic image pairs that require knowledge 
+of the viewers position to be strictly correct. 
+</p>
+
+<p align="justify">
+In practical terms this means that an ODSP can be presented in, say, a 360 
+degree cylinder containing multiple observers all potentially looking in 
+different directions. Similarly an ODSP can be experienced within a 
+virtual reality (VR) headset with no other view dependent computation 
+than selecting the correct portion of the panorama image pair as the 
+viewer turns their head. In contrast, for most VR environments the exact 
+view presented to each eye needs to be computed for all viewer 
+positions and view directions. While this can be achieved for real 
+time rendering, it is not possible for photographically captured 
+imagery or <a href="../../papers/vsmm2006/index.html">computer based rendering</a> or visualisation that cannot be 
+computed in real time.
+</p>
+
+<p align="justify">
+<a href="../ODSPmaths/index.html">The theory behind the ODSP</a>
+was variably introduced in the 1990s by 
+Ishiguro et al and various camera and software designs published by 
+Peleg including an option employing a <a href="../index.html">single camera</a>.
+</p>
+
+<p align="justify">
+Employing an ODSP provides for the presentation of stereoscopic photographic 
+imagery while minimising departures from the exact image pairs that 
+should be presented to each eye. There are two sources of error, the 
+first arises when the viewer is not located in the same position in 
+relation to the viewing apparatus as where the ODSP was captured. For 
+example if the viewer is not located in the center of a cylindrical 
+display environment, or in the context of a VR headset the viewer is 
+not located in the center of the virtual cylinder on which the ODSP 
+is the texture map. The second error is the divergence from the ideal 
+stereoscopic image pairs from their respective vertical centers. 
+That is, the stereoscopic perception is perfectly correct in the center 
+of the view direction and gets increasingly distorted towards the 
+left and right edge of the field of view. Fortunately the effect of 
+this error is rarely an issue. One reason is that the glasses being 
+employed in stereoscopic systems typically limit the horizontal field 
+of view to about 60 degrees. While this may seem like an impediment to 
+immersion through peripheral vision, our depth perception is limited 
+naturally due to occlusion by our nose, and thin frame stereoscopic 
+glasses can still provide peripheral vision in the far field outside 
+the frame of the glasses. Another reason for minimal impact of the 
+stereoscopic error with angle is that humans naturally fixate and 
+align their heads with their view direction.
+</p>
+
+
+
+<b>Approaches</b><p>
+
+<p align="justify">
+Direct implementations of an ODSP camera have been built by Seitz as early as 
+1955. In 1997 they released the "Roundshot Super 70" and based upon that a 
+limited edition of dual camera rigs were constructed that captured true 
+continuous ODSP. Continuous because a pair of film rolls were exposed 
+while the camera shutters remained open and the twin camera rig rotated. 
+Typically the ODSP pairs were drum scanned and the 
+<a href="../tilestereo/index.html">resolution</a> was well in 
+advance of most presentation systems, this is still largely still true today. 
+However, the future of both the film stock and the quality scanners to scan 
+to digital format is increasingly putting pressure to finding a digital alternative. 
+Not to mention this particular camera has been out of production for some time.
+</p>
+
+<center>
+	<a href="http://paulbourke.net/stereographics/hiresODSP/roundshot.jpg"><img src="http://paulbourke.net/stereographics/hiresODSP/roundshot_s.jpg" width=800 height=396 border=1></a><br>
+	<smalltext>Roundshot camera in the field, India.</smalltext>
+</center><p><br><p>
+
+<p align="justify">
+One alternative is to acquire a relatively small number of photographs from two 
+offset cameras and combine them into a panorama using well established monoscopic 
+panorama stitching software tools, see the following figure
+for the top-down view of the camera frustums for an eight camera system.
+</p>
+
+<center>
+<table><tr><td>
+   <img src="http://paulbourke.net/stereographics/hiresODSP/diagram3.png" width=400 height=400 border=0><br>
+   <smalltext>
+	Fundamental source of parallax error and zoom error on multiple camera rigs and 
+	discrete step rotating rigs
+   </smalltext>
+</td></tr></table>
+</center><p><br><p>
+
+
+<p align="justify">
+Note that two cameras necessarily violates the usual rotation about the 
+zero parallax position of the lens. While this approach in practice can 
+often give acceptable results, and it can be extended to video recording 
+by employing multiple video cameras rather than a rotating rig, it does 
+have limitations. The first issue involves parallax error, that is, 
+between the two adjacent camera positions slightly different views of a 
+scene object are recorded. The consequence is that a perfect stitch is 
+not possible, noting that it is possible for a particular depth but not 
+all depths at once. The second issue is that between adjacent camera 
+positions one camera is closer to scene objects than the other resulting 
+in the same effect as a change of zoom across the boundary between the 
+cameras. The consequence as for the parallax issue is a difficulty creating 
+a perfect stitch across the overlap zone, these errors generally reveal
+themselves for close objects in the scene.
+</p>
+
+<p align="justify">
+In practice, with sufficient overlap modern machine 
+vision techniques can identify feature points between the cameras and 
+form two apparently seamless panoramas. However to achieve 
+those results these algorithms often employ local warping, this amounts 
+to a depth distortion in those regions as well as differences between 
+the visible scene objects, both often very noticeable when viewed in a 
+high quality stereoscopic viewing system. The upshot are image 
+discontinuities that are often more apparent when viewed as stereoscopic 
+pairs compared to viewing panoramas monoscopically.
+</p>
+
+<p align="justify">
+Due to the recent resurgence in head mounted displays 
+a wide range of sophisticated algorithms have been developed to address 
+these problems, or to at least hide them. This includes seam line and 
+image cuts along feature curves, shape interpolation, optical 
+flow and many more. While these techniques each find applications 
+in some situations, they are generally designed to hide the obvious 
+image flaws which would inevitable arise. They each have situations in 
+which they fail.
+</p>
+
+<p align="justify">
+The difference between the perfect ODSP and a finite number of cameras 
+is a matter of the degree of discretisation. The authors, and others, 
+have experimented with manual rotations of a camera in ever decreasing 
+small stepping angles between each shot. At some stage for practical 
+purposes one requires a motorised system, even at 3 degrees there are 
+120 individual camera shots per camera and if performed manually the 
+scene is almost certainly going to change over the duration of the capture. 
+</p>
+
+
+
+<center>
+<table width=500><tr><td>
+   <img src="http://paulbourke.net/stereographics/hiresODSP/diagram1.png" width=500 height=347 border=0><br>
+   <smalltext>
+   Narrow strips from each video frame contribute to the final panorama image.
+   </smalltext>
+</td></tr></table>
+</center><p><br><p>
+
+
+<p align="justify">
+The size of the angular stepping depends on the degree to how narrow the 
+parallax zone in figure 2 needs to be, and for the zoom error how close objects 
+can be to the camera. For interior scenes tested by the authors, even 1 degree 
+steps were not small enough. In essence both effects need to result in less 
+than one pixel difference across the edge between adjacent image slits. At 
+this point it was decided that manual discrete stepping was inadequate and a 
+continuous rotating system was required, recording not still photographs but video.
+</p>
+
+<p align="justify">
+While not discussed further here, the possibility of recording from a
+<a href="../siggraphasia2013/index.html">single perpendicular offset camera</a> 
+was explored. It holds some advantages, for 
+example, the ability to choose the interocular separation in post production 
+and the need for a single camera saving costs and possible colour or optical 
+differences between two cameras and lenses. In reality in order to achieve 
+human eye separation the tangentially rotating camera needs to be further 
+off center than for a pair of cameras. This not only introduced mechanical 
+strains on a rotating system, it also exasperates the parallax and zoom 
+issues discussed above.
+</p>
+
+
+<b>Solution</b><p>
+
+<p align="justify">
+The desirable characteristics for a pair of cameras for an ODSP rig are as follows:
+<p>
+<ol>
+<li><p align=justify">
+The camera body and lens should not be significantly more than 6.5cm so that the ODSP can be 
+created at, or close to, typical human eye separation.
+</p>
+<li><p align=justify">
+For the panorama quality sought it was decided that a 4K high panorama was 
+required, so a 4K recording mode is required.
+</p>
+<li><p align=justify">
+The number of discrete steps is largely determined by the capture time and the 
+frame rate of the video. Capture rates of 20fps or greater have proved to be adequate. 
+</p>
+<li><p align=justify">
+Since video modes are required in order to achieve (3) and (4), it is desirable 
+that the movies have the greatest colour depth possible and recorded with minimal 
+compression artifacts.
+</p>
+</ol><p>
+
+<p align="justify">
+In the first quarter or 2017 Panasonic released the Lumix GH5 camera which possessed 
+many of the desirable features listed above and making it a cost effective candidate 
+for a high quality ODSP rig. Specifically, it was able to record at full 4K wide, at 
+acceptable frame rates, at 10 bit and minimally compressed 4:2:2 video.
+</p>
+
+<p align="justify">
+The shooting modes of the Lumix GH5 relevant to this discussion are listed in the
+following table, only the 4K and UHD 10 bit modes with 4:2:2 compression are shown. 
+Noting that these modes are subsequent to the firmware release in late 2017. 
+It is therefore possible to trade-off resolution and slit width (function of 
+frame rate) for dynamic range and image quality. The mode chosen for this work 
+is the third hilighted row, a true 4K high sensor resolution, 24 fps, 10 bit 
+colour and 4:2:2 compression. The next candidate would have been 29.97 fps 
+at 3840 pixels, this would lower the panorama resolution but provide narrower 
+slit widths. Note that the camera does support both higher resolution and 
+higher frame rates but at the price of image depth and compression.
+</p>
+
+<center>
+<table cellpadding=10 cellspacing=0 border=0>
+<tr>
+	<td align="center"><b>Resolution (pixels)</b></td>
+	<td align="center"><b>FPS</b></td>
+	<td align="center"><b>Colour depth (bits)</b></td>
+	<td align="center"><b>Compression</b></td>
+</tr>
+<tr>
+	<td align="center">4096x2160</td>
+	<td align="center">23.98</td>
+	<td align="center">10</td>
+	<td align="center">4:2:2 ALL-I and Long GOP</td>
+</tr>
+<tr>
+	<td align="center">3840x2160</td>
+	<td align="center">23.98</td>
+	<td align="center">10</td>
+	<td align="center">4:2:2 ALL-I and Long GOP</td>
+</tr>
+<tr bgcolor="#cccccc">
+	<td align="center">4096x2160</td>
+	<td align="center">24.00</td>
+	<td align="center">10</td>
+	<td align="center">4:2:2 ALL-I and Long GOP</td>
+</tr>
+<tr>
+	<td align="center">3840x2160</td>
+	<td align="center">24.00</td>
+	<td align="center">10</td>
+	<td align="center">4:2:2 ALL-I and Long GOP</td>
+</tr>
+<tr>
+	<td align="center">3328x2496</td>
+	<td align="center">24.00</td>
+	<td align="center">10</td>
+	<td align="center">4:2:2 ALL-I and Long GOP</td>
+</tr>
+<tr>
+	<td align="center">3840x2160</td>
+	<td align="center">25.00</td>
+	<td align="center">10</td>
+	<td align="center">4:2:2 ALL-I and Long GOP</td>
+</tr>
+<tr>
+	<td align="center">3840x2160</td>
+	<td align="center">29.97</td>
+	<td align="center">10</td>
+	<td align="center">4:2:2 ALL-I and Long GOP</td>
+</tr>
+</table>
+</center><p><br><p>
+
+
+<p align="justify">
+In order to achieve a 4K high panorama the cameras are orientated in portrait mode, 
+a custom lens based clamp was engineered in order to create the minimum interocular 
+distance possible. Consideration was given to orientating the cameras at an angle
+in order to increase the vertical resolution by using a diagonal slit rather than
+a vertical slit. This was not implemented mainly because for the aspect ratios
+used the gain was only a modest 15% and it considerably complicated (and possibly
+compromised the quality of) the post production.
+</p>
+
+
+<b>Implementation</b><p>
+
+<center>
+<table width=100%><tr><td>
+   <a href="http://paulbourke.net/stereographics/hiresODSP/camera1.jpg"><img src="http://paulbourke.net/stereographics/hiresODSP/camera1s.jpg" width=260 height=462 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/stereographics/hiresODSP/camera2.jpg"><img src="http://paulbourke.net/stereographics/hiresODSP/camera2s.jpg" width=260 height=462 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/stereographics/hiresODSP/camera3.jpg"><img src="http://paulbourke.net/stereographics/hiresODSP/camera3s.jpg" width=260 height=462 border=1></a>
+</td></tr>
+<tr><td colspan=3>
+	<smalltext>
+   Different views of the prototype camera rig. Syrp motorised unit, Manfrotto
+   levelling ring, dual GH5 cameras, custom lens mount.
+   </smalltext>
+</td></tr></table>
+</center><p><br><p>
+
+<b>Image processing</b><p>
+
+<p align="justify">
+The straightforward method of forming each of the final panoramas is to 
+simply extract slits from each video frame, assembling them literally as shown in the 
+figure above. In practice a slightly wider slit is chosen and adjacent slits 
+blended together across the overlap region. 
+</p>
+
+<p align="justify">
+The horizontal field of view of a single slit h<sub>fov</sub> is given by
+</p>
+<center>
+   <img src="http://paulbourke.net/stereographics/hiresODSP/equation2.png" width=120 height=47 border=0>
+</center><p>
+<p align="justify">
+Where &phi; is the total rotation angle, T is the rotation duration and f the frames 
+per second of the recording. The slit width w in pixels is given by
+</p>
+<center>
+   <img src="http://paulbourke.net/stereographics/hiresODSP/equation3.png" width=160 height=78 border=0>
+</center><p>
+<p align="justify">
+where v<sub>fov</sub> is the vertical field of view of the lens and H the height in 
+pixels of the frame. 
+The following table lists typical slit widths for a selection of lenses and camera recording modes. 
+Note that the vertical field of view may be different to that predicted theoretically since 
+the different camera modes can use different regions of the available sensor area. This also 
+illustrates the advantage of choosing a lens that is the least required for a particular 
+application in order to maximise the horizontal resolution.
+</p>
+<center>
+<table cellpadding=10 cellspacing=0 border=0>
+<tr>
+	<td align="center"><b>Lens (mm)</b></td>
+	<td align="center"><b>Camera recording mode</b></td>
+	<td align="center"><b>v<sub>fov</sub> (degrees)</b></td>
+	<td align="center"><b>Slit width</b></td>
+</tr><tr>
+   <td align="center">20</td>
+   <td align="center">4096x2160@23.98fps</td>
+   <td align="center">47.6</td>
+   <td align="center">22.6</td>
+</tr><tr>
+   <td align="center">14</td>
+   <td align="center">3840x2160@25fps</td>
+   <td align="center">62</td>
+   <td align="center">16.0</td>
+</tr><tr>
+   <td align="center">10.5</td>
+   <td align="center">4096x2160@23.98fps</td>
+   <td align="center">75.5</td>
+   <td align="center">12.9</td>
+</tr><tr>
+   <td align="center">7</td>
+   <td align="center">3840x2160@25fps</td>
+   <td align="center">95</td>
+   <td align="center">9.0</td>
+</tr>
+<tr><td colspan=4>
+	<smalltext>
+	Example slit widths for a selection of lenses and camera modes.
+	</smalltext>
+</td></tr>
+</table>
+</center><p><br><p>
+
+<p align="justify">
+This direct slit approach has a number of disadvantages, one is that it makes antialiasing 
+problematic when, for example, one wishes to map the input frames to a higher 
+or lower resolution panorama. The other issue is that the ideal number of pixels 
+per slit is generally not an integer, and yet only integer slits can be 
+extracted. While this can be a minor effect for wide slits, in the work here 
+the desire is to approximate the continuous case as much as possible so very 
+narrow slits are used, usually between 5 and 15 pixels.
+</p>
+
+<p align="justify">
+The more elegant solution uses the approach employed in most image mappings, 
+that is, one considers each pixel in the output image and estimates the best 
+pixel from the input images. Using this algorithm antialiasing is 
+straightforward, that is, each output pixel is supersampled with the 
+contributing pixels from the input image averaged together. This 
+additionally serves to increase the dynamic range of the result and naturally 
+handles estimates close to the shared edge of slits from adjacent images.
+</p>
+
+<center>
+<table><tr><td>
+   <img src="http://paulbourke.net/stereographics/hiresODSP/diagram2.png" width=500 height=338 border=0><br>
+   <smalltext>
+   Reverse lookup algorithm. One pixel in the final panorama is supersampled, the RGB value<br>
+   from multiple images and multiple pixels within an image contributing to the final value.
+   </smalltext>
+</td></tr></table>
+</center><p><br><p>
+
+<p align="justify">
+The final resolution of the panorama is a function of the number of 
+pixels vertically and the vertical field of view of the lens. The 
+number of pixels vertically H is fixed depending on the sensor and 
+shooting mode of the camera. The number of pixels horizontally W 
+is given by
+</p>
+<center>
+	<img src="http://paulbourke.net/stereographics/hiresODSP/equation1.png" width=150 height=64 border=0>
+</center><p>
+
+<p align="justify">
+This can seem counterintuitive but the reason the arises is because the vertical 
+field of view of the lens is spread across the 
+available pixels vertically resulting in a certain degrees per pixel. For 
+square pixels this dictates the number of horizontal pixels across the 360 degrees 
+horizontally. As such narrow vertical field of view lenses result in the 
+highest panorama resolution horizontally. This is for a cylindrical panorama, 
+as v<sub>fov</sub> tends to 180 degrees a cylindrical panorama becomes increasing 
+inefficient. In the same way as a perspective projection becomes increasingly
+streched and inefficient as the field of view approaches 180 degrees (actually around 130 degrees).
+For a high vertical field of view ADSP a fisheye lens is more appropriate, 
+this is outside the scope of this discussion.
+</p>
+
+
+<p align="justify">
+The final pipeline is as follows.
+</p>
+
+<ol>
+<li><p align="justify">
+After setting up tripod and careful levelling of the camera rig, video is 
+captured simultaneously on each camera. The rotational angle captured 
+ranges from 400 degrees (provided ample overlap for blending across the 
+0-360 edge of the panorama) to 720 degrees (maximum allowed by current 
+motorised rotator). The reason for 720 degrees (two rotations) is to provide 
+scope to correct for unexpected moving objects, typically people and birds.
+</p>
+<li><p align="justify">
+Each video file is transferred from camera to computer and the sufficient slit width 
+is extracted from each frame to enable sampling into the final panorama. This is largely
+a storage efficiency step, there is not point saving the entire frame
+since only a small fraction of the pixels in each movie frame are required, for
+example 15 pixels out of the available 2180.
+</p>
+<li><p align="justify">
+The two panoramas are assembled by either the forward or reverse mapping method.
+The software requires various parameters relating to the camera, lens and recording
+mode. 
+</p>
+<li><p align="justify">
+Three columns on each of the final two panoramas are identified, they are the 
+left and right edge for wrapping across the 0 and 360 boundary, and a column 
+identifying an object to be at zero parallax. 
+<a href="../pano_align/index.html">A solution</a> outside the scope of 
+this paper is used to perform the clipping, blending and zero parallax alignment. 
+Note that the zero parallax alignment depends on the final viewing environment, 
+for example it depends on the radius of the cylindrical displays for projected 
+environments, it would be set an object at infinity for head mounted displays.
+</p>
+<li><p align="justify">
+Colour grading before reducing the RGB values to 8bit for the final presentation 
+system. All the processes above are conducted in 16bit colour, capturing the 
+10bit colour from the camera footage and any increase in dynamic range from 
+blending and/or antialiasing in the composition of the panoramas. 
+</p>
+</ol><p>
+
+<p align="justify">
+Typically only the outcomes from stage (2) and (3) would be archived as the original source 
+material. (2) so that any subsequent algorithm improvements can be reapplied to the 
+footage. (3) so that any editing (image size, colour, zero parallax) can be reapplied.
+</p>
+
+
+<b>Example</b><p>
+
+<center>
+<table width=100%><tr><td>
+	<a href="http://paulbourke.net/stereographics/hiresODSP/example1_left.jpg"><img src="http://paulbourke.net/stereographics/hiresODSP/example1_left_s.jpg" width=800 height=112 border=1></a>
+</td></tr><tr><td>
+   <a href="http://paulbourke.net/stereographics/hiresODSP/example1_right.jpg"><img src="http://paulbourke.net/stereographics/hiresODSP/example1_right_s.jpg" width=800 height=112 border=1></a>
+</td></tr><tr><td>
+	<smalltext>
+	Example capture with a 20mm lens, vertical FOV of 48 degrees. Final stereo panorama width
+	of 30,000 pixels. Note: zero parallax set for a 5m radius cylindrical display, not a HMD.
+	Top: left eye. Bottom: right eye.
+	</smalltext>
+</td></tr></table>
+</center><p><br><p>
+
+
+<center>
+<table width=100%><tr><td>
+	<a href="http://paulbourke.net/stereographics/hiresODSP/india1.jpg"><img src="http://paulbourke.net/stereographics/hiresODSP/india1s.jpg" width=400 height=225 border=1></a>
+</td><td>
+	<a href="http://paulbourke.net/stereographics/hiresODSP/india2.jpg"><img src="http://paulbourke.net/stereographics/hiresODSP/india2s.jpg" width=400 height=225 border=1></a>
+</td></tr>
+<tr><td colspan=2>
+	<smalltext>
+	Camera in the field in India, note the lens holder slits are not
+	attached since the sun is not in shot.
+	</smalltext>
+</td></tr></table>
+</center><p><br><p>
+
+
+<center>
+<table width=100%><tr><td>
+   <a href="http://paulbourke.net/stereographics/hiresODSP/example2_left.jpg"><img src="http://paulbourke.net/stereographics/hiresODSP/example2_left_s.jpg" width=800 height=197 border=1></a>
+</td></tr><tr><td>
+   <a href="http://paulbourke.net/stereographics/hiresODSP/example2_right.jpg"><img src="http://paulbourke.net/stereographics/hiresODSP/example2_right_s.jpg" width=800 height=197 border=1></a>
+</td></tr><tr><td>
+   <smalltext>
+   Example capture with a 10mm lens, vertical FOV of 75 degrees. Final stereo panorama width
+   of 17,000 pixels. Note: zero parallax set for a 5m radius cylindrical display, not a HMD.
+   Top: left eye. Bottom: right eye.
+   </smalltext>
+</td></tr></table>
+</center><p><br><p>
+
+
+<b>References</b><p>
+<ul>
+<li><p align="justify">
+K. Matzen, M. F. Cohen, B. Evans, J. Kopf, R. Szeliski. 2017. Low-cost 360 stereo 
+photography and video capture. ACM Trans. Graph. 36, 4, Article 148 (July 2017), 
+12 pages. DOI: https://doi.org/10.1145/3072959.3073645
+</p>
+<li><p align="justify">
+H. Ishiguro, M. Yamamoto, and S. Tsuji, Omni-Directional Stereo, IEEE Transactions on 
+Pattern Analysis and Machine Intelligence, Vol. 14, No. 2, pp. 257-262, February 1992.
+</p>
+<li><p align="justify">
+H. C. Huang and Y. P. Hung, Panoramic Stereo Imaging System with Automatic Disparity 
+Warping and Seaming. Graphical Models and Image Processing, Vol. 60, No. 3, pp. 196-208, 
+May 1998.
+</p>
+<li><p align="justify">
+Y. Pritch, M. Ben-Ezra, S. Peleg. Automatic disparity control in stereo panoramas (OmniStereo).
+Proceedings IEEE Workshop on Omnidirectional Vision (Cat. No.PR00704).
+12 June 2000. DOI: 10.1109/OMNVIS.2000.853805. Print ISBN: 0-7695-0704-2.
+</p>
+<li><p align="justify">
+Y. Pritch., M. Ben-Ezra, S. Peleg. (2001) Optics for Omnistereo Imaging. In: Davis L.S. 
+(eds) Foundations of Image Understanding. The Springer International Series in Engineering 
+and Computer Science, vol 628. Springer, Boston, MA.
+</p>
+<li><p align="justify">
+R. Aggarwal, A. Vohra, A. M. Namboodiri. 2016. Panoramic stereo videos with a single camera. 
+In Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition. 
+3755-3763. doi>10.1109/CVPR.2016.408.
+</p>
+<li><p align="justify">
+J. Lee, B. Kim, K. Kim, Y. Kim, J. Noh. 2016. Rich360: optimized spherical representation 
+from structured panoramic camera arrays. ACM Transactions on Graphics (TOG) 35, 4 (2016), 63.
+</p>
+<li><p align="justify">
+C. Richardt, Y. Pritch, H. Zimmer, A. Sorkine-Hornung, 
+Megastereo: Constructing High-Resolution Stereo Panoramas, Proceedings of the 2013 IEEE 
+Conference on Computer Vision and Pattern Recognition, p.1256-1263, June 23-28, 2013 
+doi>10.1109/CVPR.2013.166.
+</p>
+<li><p align="justify">
+S. Peleg and M. Ben-Ezra, Stereo Panorama with a Single Camera. Proc. IEEE Conf. 
+Computer Vision and Pattern Recognition, pp. 395-401, June 1999.
+</p>
+<li><p align="justify">
+S. Peleg, Y. Pritch, M. Ben-Ezra. Cameras for Stereo Panoramic Imaging. 
+Proceedings IEEE Conference on Computer Vision and Pattern Recognition. CVPR 2000 (Cat. No.PR00662)
+15 June 2000. DOI: 10.1109/CVPR.2000.855821. Print ISBN: 0-7695-0662-3
+</p>
+<li><p align="justify">
+S. Peleg, M. Ben-Ezra, and Y. Pritch. Omnistereo: Panoramic Stereo Imaging. IEEE 
+Transactions on Pattern Analysis and Machine Intelligence, Vol. 23, No. 3, pp 279-290, 
+March 2001.
+</p>
+<li><p align="justify">
+Bourke, P.D. Synthetic stereoscopic panoramic images. Lecture Notes in Computer Science 
+(LNCS), Springer, ISBM 978-3-540-46304-7, Volume 4270, 2006, pp 147-155
+</p>
+<li><p align="justify">
+McGinity, M., Shaw, J., Kuchelmeister, V., Hardjono, A. & Del Favero, D. (2007) AVIE: a 
+versatile multi-user stereo 360° interactive VR theatre. In Proceedings of the 2007 
+Workshop on Emerging Displays Technologies: Images and Beyond: the Future of Displays and 
+interaction (San Diego, California, August 4 - 04, 2007). EDT '07, vol. 252. ACM, New York, NY.
+</p>
+<li><p align="justify">
+Alexa M., Cohen-Or D., Levin D. As-Rigid-As-Possible Shape Interpolation; Proceedings of 
+the International Conference on Computer Graphics and Interactive Techniques Conference 
+(SIGGRAPH); New Orleans, LA, USA. 23–28 July 2000; pp. 157–164.
+</p>
+<li><p align="justify">
+Li L., Yao J., Lu X., Tu J., Shan J. Optimal seamline detection for multiple image 
+mosaicking via graph cuts. ISPRS J. Photogramm. Remote Sens. 2016; 113:1 – 16. 
+doi: 10. 1016 / j.isprsjprs .2015.12.007.
+</p>
+<li><p align="justify">
+B. Xu, S. Pathak, H. Fujii, A. Yamashita and H. Asama, "Optical flow-based video 
+completion in spherical image sequences," 2016 IEEE International Conference on 
+Robotics and Biomimetics (ROBIO), Qingdao, 2016, pp. 388-395. doi: 10.1109 / ROBIO.2016.7866353
+</p>
+</ul><p><br><p>
+
+</body>
+</html>
+

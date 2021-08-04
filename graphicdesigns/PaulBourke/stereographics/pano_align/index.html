@@ -1,0 +1,155 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>pano_align: a tool and work flow for editing stereoscopic panorama film</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>pano_align:<br>a tool and work flow for editing stereoscopic panorama film</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 2010<p>
+<a href="http://paulbourke.net/stereographics/pano_align/PanoAlignTutorial.pdf">Updated instructions, October 2020</a>
+</center>
+<p><br><p>
+
+<p align="justify">
+The following describes a software tool (pano_align) and a general procedure for aligning two
+film based stereo panoramas that have been drum scanned. 
+It was written specifically for the RoundShot camera as used in the Place Hampi
+and Place Turkiye exhibitions. The purpose of the software
+is to correct for the angle of the film on the drum scanner and possible stretching of the film.
+It additionally allows one to set a precise point of zero parallax. For information on stereoscopic
+panorama see the <a href="../stereopanoramic/index.html">following</a>.
+</p>
+
+<b>Workflow</b>
+<ol>
+<li><p align="justify">
+Determine which image is from left and right camera. One way to do this is to overlay the two images in Photoshop, set the foreground layer to 50% transparency, and align a foreground object. An object in the distance will be on the right in the right camera image.
+</p>
+<p align="justify">
+The following image will be used to illustrate the process, courtesy Sarah Kenderdine. 
+The first image is the left eye, the second the right eye panorama.
+</p>
+<center>
+<a href="http://paulbourke.net/stereographics/pano_align/0477L.jpg"><img src="http://paulbourke.net/stereographics/pano_align/0477L_small.jpg" width=900 height=274 border=1></a><p>
+<a href="http://paulbourke.net/stereographics/pano_align/0477R.jpg"><img src="http://paulbourke.net/stereographics/pano_align/0477R_small.jpg" width=900 height=274 border=1></a><p>
+</center><p>
+
+<li><p align="justify">
+Rename the images NNNNL.tga and NNNNR.tga. In the sample provided this is image 0477L.tga and 0477R.tga.
+</p>
+
+<li><p align="justify">
+Determine if the images need to be scaled vertically (this is generally due to lens/zoom difference in the camera pair), vertical scaling is not handled by "pano_align". Open in PhotoShop, overlay the two images, set the transparency of the foreground layer to 50%. Align an object near the bottom of the frame and compare with an object near the top of the frame at the same horizontal position. The reason for only doing this comparison at a single horizontal position at a time is the images will generally be rotated with respect to each other. In the 6 cases investigated so far the left image needed to be scaled by 99%. Do this by selecting all, use the menu edit-transform-scale, and enter 99% in the "H" field on the toolbar. See supplied image 0477L.tga and the brown border top and bottom that was added to the frame when scaled vertically.
+</p>
+
+<li><p align="justify">
+Check at this stage that both images are the same size. If this is not the case pad the canvas of the smaller image to the larger image. This is a requirement for the "pano_align" software. In the past this has been part of the specification to the person supplying the images from the scanning.
+</p>
+
+<li><p align="justify">
+In each image identify three points (features in the image), these points must correspond between the images. The first is the zero parallax position, the second and third are positions that correspond not just between the images but also on the left and right of each image (given the intentional overlap in the panorama). My procedure was to operate at 100% in PhotoShop and add guides identifying each point. The images provided with this document should have retained the guides. For example, the left and right points for the 0477L.tga are shown below. One wants to choose alignment points that are structured in such a way as to provide clear positions for the guides. Save the images with the guides, if a mistake is made or you need to revisit for some reasons the guides will be retained. Note that by default the edge blend is 100 pixels wide, this means the second and third points must be more than 100 pixels from the border. Ideally the left and right points are selected from as close to center vertically as possible.
+</p>
+<center><img src="http://paulbourke.net/stereographics/pano_align/image1.jpg" width=450 height=240 border=0></center><p>
+
+<li><p align="justify">
+The position of these three points is the information used by "pano_align". The data is stored in a plain text file, generally called NNNN.dat. As an example see the file 0477.dat supplied and presented below as well. The format simply requires the right number of fields and the data in the right order, the separators can be any white characters (tabs, spaces, newlines, etc). As presented below the file is in two groups, one for each image, the name of the image heads the group. The three points are as discussed above, zero parallax position, left edge, and right edge point. With the guides in PhotoShop it is convenient to use the selection tool which will snap to the guides (if enabled) and the coordinates can be read off from the Info window.
+</p>
+<pre>
+0477L.tga
+11657 4493
+1163 2767
+15293 2779
+0477R.tga
+12314 4136
+1925 2393
+16051 2414
+</pre>
+
+<li><p align="justify">
+The conversion can be manually run as follows, for the example provided this might be
+</p>
+<center>
+./pano_align -a 2 -w 8960 -h 2816 0477.dat
+</center><p.
+<p align="justify">
+That is, antialiasing of 2, width and height as specified, use the information in file 0417.dat. The image pair will be scaled to the width and cropped to the height. The command line arguments can be in any order but the data file must be the last one. If all goes well you will end up with two files, they will have the same name as the input files but with "_w" appended to the name, so in this case they will be called "0477L_w.tga" and "0477R_w.tga".
+</p>
+
+<li><p align="justify">
+A simple script called "doit" is provided that will run the alignment, do a histogram match (requires the "convert" application that is part of ImageMagick), and export as jpg. In order to minimize the complexity at this stage I have commented out the use of "convert". To align a pano simply type "doit NNNN" at the command line, in this case it would be "doit 0477". See the script if you want to change the image size, the variables H and W control the height and width respectively. On a fast machine try using an antialiasing of 3 rather than 2, for slower but better quality results.
+</p>
+
+<pre>
+#!/bin/tcsh
+echo
+echo "***** Processing"
+set H = 2816
+set W = 8960
+#set H = 1408
+#set W = 4480
+if (-e $1.dat) then
+	if (-e $1L.tga) then
+		if (-e $1R.tga) then
+			./pano_align -a 2 -w $W -v $H $1.dat
+			#mv $1R_w.tga $1R_orig.tga
+			#./histmatch.sh -c rgb $1L_w.tga $1R_orig.tga $1R_w.tga
+			#rm $1R_orig.tga
+			#mv $1L_w.tga $1L\_$W\_$H.tga
+			#mv $1R_w.tga $1R\_$W\_$H.tga
+			#./convert -quality 90 $1L\_$W\_$H.tga $1L\_$W\_$H.jpg
+			#./convert -quality 90 $1R\_$W\_$H.tga $1R\_$W\_$H.jpg
+		else
+			echo "***** Failed to find right image"
+		endif
+	else
+		echo "***** Failed to find left image" 
+	endif
+else
+	echo "***** Failed to find datafile"
+endif
+</pre>																																
+
+</ol>
+
+<p align="justify">
+The standard usage string for pano_align is as follows.
+</p>
+
+<pre>
+Usage: pano_align [options] file.txt
+Options:
+   -a n    antialias level, default: 2
+   -e n    width of edge blend zone, default: 100
+   -w n    width of final image, default: autodetermined
+   -v n    height of the final image, default: autodetermined
+   -z      adjust zero parallax, default: on
+   -d      debug mode, default: off
+   -h      this help
+</pre>
+
+<b>Updates: October 2020</b><p>
+<p align="justify">
+The main changes in 2020 weer made to deal with the increased resolution of the stereo-pairs
+captured for the Atlas of Maritime Buddhism project. The most significant was to base all
+image reading and saving on 16 bit TIFF files.
+See the
+<a href="http://paulbourke.net/stereographics/pano_align/PanoAlignTutorial.pdf">updated instructions</a>.
+</p>
+
+</body>
+</html>

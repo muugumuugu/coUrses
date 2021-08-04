@@ -1,0 +1,411 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Using QuickTime to present stereoscopic movies</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Using QuickTime to Present Stereoscopic Movies</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+December 2003
+</center>
+<p><br><p>
+
+<b>Introduction</b>
+<p align="justify">
+Playing back precomputed stereoscopic movies has generally required a custom
+written playback system, this was particularly so when the predominant stereoscopic
+format was frame sequential. A solution written by the author is described below,
+it works well although since it only
+employs relatively simple compression methods (including uncompressed), it requires
+fast disk IO for XGA size (1024x768) frame movies at 25fps. This movie player has
+recently been expanded to support 6 channel audio and was the movie player used
+for the opening shows of the 
+VROOM exhibit at Museum Victoria.
+</p>
+
+<p align=justify">
+What one would really like is to base stereoscopic playback on some standard.
+A number of compression codecs are required so that a range of content types
+can be compressed without undue degradation. For example, MPEG derived compression
+is not generally suited to high resolution computer generated content in 
+visualisation applications. While a standard solution was never on the cards for
+frame sequential stereo, the increasingly popular passive approach is easier.
+The reason for this is passive stereo doesn't need special syncing on each
+left/right eye image. Passive stereoscopic hardware generally employs a dual
+display card, the left eye image is on the left display and the right eye image
+is on the right display. There are (at least) two approaches to playing
+back stereoscopic movies on a passive system, the first is have two 
+separate movies, one on
+each display. The problem with this is synchronising the two movies to 1/60 of a
+second say (authors estimate for stressless stereoscopic viewing). A much easier
+approach, and the one discussed here, is to make a single movie that has the left
+eye on the left half and right eye on the right half of each frame.
+There are still a few details, the stereo pairs still need to be centered on each
+display. The solution is to play the movies full screen and generally create the
+frames so they are at the same resolution as the dual display. For example, an XGA
+size movie would now consist of frames that are 2048x768 pixels.
+</p>
+
+<center>
+<table width=600 cellspacing=0 cellpadding=0><tr><td colspan=2>
+<center>
+<a href="http://paulbourke.net/stereographics/qtplayer/dla300.jpg">
+<img border=1 src="http://paulbourke.net/stereographics/qtplayer/dla300s.gif" height=225 width=600></a>
+</center>
+</td></tr><tr><td>
+<center>Left eye, 1024x768</center>
+</td><td>
+<center>Right eye, 1024x768</center>
+</td></tr></table>
+</center>
+
+<b>QuickTime</b>
+<p align="justify">
+There a number of movie playback options for passive stereoscopic movies
+but the most standard is the QuickTime
+technology and player from Apple Computer. However, the QuickTime codecs have 
+been primarily designed to create very small movie files, this is to support distribution
+over the internet and also to allow movies to playback from relatively slow consumer
+hard disks. The result is that QuickTime (up to recently) wasn't particularly suited
+to playing movies with large frame sizes, the decompression algorithms just weren't fast
+enough. This was particularly so for computer generated movies with fine structure
+where the encoding quality needs to be kept high.
+Indeed the only codec that could manage 2048x768 (at the time of writing)
+at 25fps was the graphics codec and that codec isn't suited to many types of content,
+for example, those with a wide range of colours.
+<p>
+
+<b>PIXLET codec</b>
+<p align="justify">
+Enter PIXLET, this codec was released in the last quarter of 2003 and is designed
+specifically for large frame and high quality movies. In all but it's highest
+quality modes it can readily playback 2048x768 movies with high quality 
+audio on a dual processor G5. While intended for film style movies, it seems to 
+provide sufficiently high 
+quality results when applied to sharp computer generated animations.
+</p>
+
+<b>Full Screen</b>
+<p align="justify">
+The last remaining detail is a deficiency in the QuickTime player from Apple, namely
+that it cannot play full screen across two displays. 
+Unbelievable but true! Since new
+workstation style Macs are all delivered with cards capable of dual displays one
+can only hope that this limitation will soon be relaxed. There are other reasons
+for wanting full screen movies across two displays and that is for driving a two
+projectors for a double width display. Note that the fullscreen option from in the
+Apple player is only available in the registered version.
+This has currently been solved by the local development of a custom QuickTime player.
+</p>
+
+
+<h3>Update and summary: April 2007</h3>
+
+<p align="justify">
+There are three (standard) ways of creating stereo images, these are independent
+of the actual presentation mode whether it is a monitor, active shutter glasses,
+passive polaroid, HMD (not discussed here), or Infitec.
+
+<ul>
+<li> 1. Quad buffer stereo also known as frame sequential stereo .... used
+with stereo enabled cards, there is a left and right buffer that get
+drawn to and the driver interleaves the output at typically 120Hz.
+<p>
+
+<li>2. Same as (1) but there is a "trick" in the nVidia drivers where
+they output the left and right buffers to the two output ports. So
+the software thinks (1) is happening but you can drive 2 projectors
+for passive or infitec stereo.
+<p>
+
+<li>3. With any card that has two output ports you simple write the left
+and right eye to each half of the display, the rest just happens. A
+variation is to use a Matrox dualhead2go card in which case a laptop
+or other single output card to do stereo.
+<p>
+</ul>
+
+<p align="justify">
+I have used all 3 and the software I write supports them all.
+(2) is not available on the Mac, it is supported on MSWindows and Linux only.
+Only (1) works with monitors, Mac Pro supports this with the nVidia FX4500
+card.
+</p>
+
+<b>Discussion</b><p>
+
+<ul>
+<li>I have used all but generally try to avoid (2) since it is a special
+nVidia driver option and they could choose to drop it.
+<p>
+
+<li>The advantage of (3) which is what I usually use on the Mac (but also
+Linux) is that it requires nothing special. Almost any card can be
+used with or without a Matrox dual head box. This includes laptops. Movies are
+just played with Quicktime Pro although I have other dedicated movie players.
+<p>
+
+<li>The disadvantage with (3) vs (2) is that you can't just run the OS
+and not upset the viewers. In (3) the eyes have totally different
+views, in (2) the views in the OS are the same and thus no problem.
+<p>
+
+<li>The other disadvantage with (3) is that it has poorer support by
+existing software, not problem for me since I mostly write my own.
+Most older/evolved packages support (1) and by default work with (2).
+<p>
+
+<li>Note that (1) can be used with the cyviz boxes to achieve passive or
+infitec stereo, a rather expensive option though.
+<p>
+</ul>
+
+<b>Codecs</b><p>
+
+<p align=justify">
+At the time of writing it would seem the Pixlet codec has not lived up to
+the hype. Currently the optimal codecs (at least those preferred by the author) 
+for large frame size and high quality
+movies are PhotoJPEG, MotionJPEG, or the Apple Intermediate codec. 
+</p>
+
+<p align="justify">
+There seems to be a high performance hit on some combinations of hardware, OS, and 
+graphics card when movies hit the 2048 pixel wide
+barrier when played with the QT Pro player. This seems not to occur with ATI cards,
+a comprehensive study of what combinations of nVidia cards and Apple hardware has
+not been performed. An option to solve this is to align the left and right eye
+views to and bottom, a custom movie player is required to split this across the
+two displays.
+</p>
+
+<p align="justify">
+A useful trick is to retain the left and right eye movies as two separate QT streams.
+A third reference movie can be created with both streams and the left eye offset
+by the width of the movies. Saving this as a reference movie gives flexibility between
+left-right or top-bottom orientation. ps: the offset is supported in the QT Pro version
+of the player. This is particularly interesting for large movies played on a twin raid
+disk where the left and right eye segments are split across the disks.
+</p>
+
+<h3>Update: March 2008</h3>
+
+<p align="justify">
+My recommended side-by-side passive stereoscopic movie playback is now the
+<a href="../../dome/warpplayer/index.html">warpplayer</a> application. It can handle all stereo mode
+combinations, across single or dual displays, and movies that are side-by-side or
+arrange top-bottom (this often gives better decompression performance.
+</p>
+
+<p><br><br><br><p>
+
+
+<center>
+<h1>OpenGL Stereo-Pair Movie Player</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+1999/2000
+</center>
+<p><br><p>
+
+<b>Introduction</b><br>
+<p align="justify">
+The goal was to be able to present stereo-pair movies at 20+ frames
+per second. These movies would either be created by rendering packages
+(precomputed) or filmed using two digital cameras mounted on a custom
+built rigging. The playback hardware environment included a Dec
+Alpha (Tur64 Unix) with OpenGL hardware (Powerstorm 4D51T and 350 card), 
+an NEC projector with fast green phosphor (for frame sequential stereo at
+120Hz), and a 5+ meter wide projection screen in a room with seating
+for 30 adults.
+</p>
+
+<b>Software Overview</b><br>
+<p align="justify">
+Two pieces of software were written, a movie encoder and a movie player.
+The encoder takes a collection image files (all the same pixel dimensions
+and colour depth)
+and creates a single movie file, optionally applying various image
+filters. The player takes this movie file and
+presents it as fast as possible up to a maximum of 30 frames per second.
+The player makes standard calls to OpenGL and the associated glut library.
+</p>
+
+<b>Encoder - buildmovie</b><br>
+<pre>
+Usage: buildmovie -x width -y height [-dout format] [-din depth] [-e eyes] [-flip] [-cmap filename] [-
+Where  -dout is the format of the output movie frames
+             It is one of  2 (RLE)
+                           8 (Grey)
+                           9 (YCC compressed, frame order)
+                          90 (YCC compressed, row order)
+                          16 (6,5,5)
+                          24 (8,8,8) [default]
+       -din  is the depth of the input image
+             It is one of  8 (grey)
+                          24 (r,g,b) [default]
+       -o    Specify output file otherwise stdout
+       -flip Flips the image vertically
+       -cmap Use a colour map, only applicable to 8 bit input
+             Expects a file name with ascii colour index + rgb
+       -bgr  Interprets colour as (b,g,r) instead of (r,g,b)
+       -e    Make a mono (1) or stereo movie (2) [Default: 1]
+       -g    Does simple gamma correction [Default: 1]
+             Expects a floating point number. Slow!
+       -q n  Quantises the input image to every nth level
+       -d    For test mode
+The "filename" is a list of image files in either raw,
+ppm, tga, tif, rle, or mtv format. tga is most supported.
+A single column file for -e 1, double column file for -e 2
+</pre>
+<p align="justify">
+buildmovie expects a text file containing an ordered list of image file
+names. This file has a single column if buildmovie is building a non-stereo
+movie, it has two columns for a stereo movie, the columns contain the
+left and right eye image file names. buildmovie knows about a number of
+output formats, the most commonly used is the YCC format that encodes
+24 bit colour frames in what amounts to 9 bits per pixel. For more
+information on this compression mode <a href="../../miscellaneous/colourspace/index.html">see this</a>.
+Other compression modes can readily be implemented by adding the
+encoder to buildmovie and the decoder to playmovie.
+</p>
+
+<center><img src="http://paulbourke.net/stereographics/qtplayer/showinfo.gif" width="400" height="300"></center><p>
+
+<b>Player - playmovie</b><br>
+<pre>
+Usage: playmovie [command line options] moviefile
+Command line options
+                        -h      this text
+                        -s      active stereo mode
+                        -ss     dual screen stereo
+                        -i      show frame information
+                        -f      full screen mode
+                        -b      byte swap for other endian machines
+                        -m      hide mouse
+                        -a      start in play mode
+                      -l n      loop type, 0 = rotate, 1 = circular, 
+                                           2 = stop at end, 3 = exit at end
+                    -fps n      target frames per second
+Key Strokes and Menus:
+                         g      toggle autoplay
+                         l      toggle looping mode
+                         m      toggle mouse display
+                      h,f1      toggle help screen
+                      i,f2      toggle info screen
+                     q,esc      quit
+         left,right arrows      backward, forward frame
+                       -,+      set play direction
+                         1      first frame
+</pre>
+<p align="justify">
+The sole purpose of playmovie is to present movies (stereo or not) to
+the user. The computer being used to play the movie is expected to have
+a reasonably high performing OpenGL hardware option. It is possible to play
+stereo movies in non-stereo, in which case the left eye image is used.
+In full screen the movie area is centered on the screen and the rest 
+of the screen is blacked out.
+</p>
+<center><img src="http://paulbourke.net/stereographics/qtplayer/blackborder.gif" width="400" height="310"></center><p>
+
+<b>Performance</b><br>
+<p align="justify">
+There are a number of factors that determine how fast movies played
+this way can be presented. They are discussed briefly below, all
+numbers quoted relate to the PowerStorm 350 card in a Dec Alpha
+XP1000 running at 667 MHz, all the images were 800x600 pixels.
+</p>
+<ul>
+<li><p align="justify">
+Pixel draw rate of the OpenGL card. For most high performance
+	cards this isn't going to be the bottleneck. playmovie draws
+	all the images using glDrawPixels() directly to either the
+	left and/or right buffers. Our hardware solution achieved
+	52.0 frames per second for non-stereo and 27.5 frames per
+	second for stereo. Note that not all hardware plays non-stereo
+	at half the stereo rate, for example the earlier solution
+ 	from Compaq, the PowerStorm 4D51T, was almost 4 times slower
+	in stereo mode. The PowerStorm 350 wasn't able to achieve the
+	desired 20 frames per second in stereo at the next highest
+	supported stereo resolution, namely 1280x992.
+</p>
+<li><p align="justify">
+How fast data can be transferred from memory to the OpenGL card.
+	This generally relates to the bus speed, in the hardware used
+	for this project the limit was a PCI bus.
+	The frame rates discussed above were derived by copying images
+	across the PCI bus and so this wasn't a limiting factor.
+</p>
+<li><p align="justify">
+How large the images are. This is the simplest issue to understand,
+	the file size is related to the total number of pixels.
+	Unfortunately for a particular aspect ratio the number of
+	pixels is proportional to the square of the width (or height).
+	Since playmovie frames the movie in the center of the screen
+	surrounded by black, the movie image size can be adjusted until
+	the frame rate drops below an acceptable level.
+</p>
+<li><p align="justify">
+How CPU expensive is the conversion of the file representation to the
+	three byte RGB for OpenGL. buildmovie and playmovie don't use
+	any tricky compression schemes and so the decompression didn't
+	impact on the frame rate. For example there was no difference
+	between playing 24bit movies which require no processing and
+	9 bit YCC images which require the most processing.
+</p>
+<li><p align="justify">
+How fast the images can be read from disk. This was by far the most
+	important bottleneck. While the stereo rate of 20 frames per
+	second was easy to achieve once the images were cached in memory
+	(the occurred after playing the movie once through), this obviously
+	only works for movies of limited size. Many of the movies this software
+	was intending to play were many tens of gigabytes and much more than
+	the memory available. For example a digital stereo movie at 800x600
+	at 20 frames per second for 1 minute is typically 
+	800x600x(9/8)x2x20x60 bytes or about 1Gbyte!
+</p>
+</ul>
+<center><img src="http://paulbourke.net/stereographics/qtplayer/burwoodrd.gif" width="600" height="225"></center><p>
+
+<b>Latest modifications</b>
+
+<ul>
+<li>Support for additional compression modes, most noticeably index
+colour 8 bit and RLE (Run Length Encoded) compression.
+<br>
+<li>The crappy handling of RAW, PPM, etc is now supposed to be replaced
+by a better TGA file support, see bitmaplib.
+<br>
+<li>Dual pipe mode for passive stereo environments, see -ss.
+<br>
+<li>Socket support for playback off two separate machines, for passive
+stereo or multiple wall applications.
+<br>
+<li>The code has been generally cleaned up....but has been degraded a
+bit by recent additions.
+<br>
+<li>Added frame rate specification.
+<br>
+<li>Notes to Windows users, you should make sure to change fopen()
+file modes from 'r' and 'w' to 'rb' and 'wb'. You will almost
+certainly have trouble with the socket handling.....if you don't need it
+then just delete all references.
+<p>
+</ul>
+
+</td></tr></table></center>
+</body>
+</html>

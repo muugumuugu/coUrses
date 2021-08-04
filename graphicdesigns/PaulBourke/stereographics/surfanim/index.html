@@ -1,0 +1,262 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Surface Animator</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<table width=100% cellpadding=0 cellspcaing=0 border=0>
+<tr><td valign="top">
+<center>
+<h1>Surface Animator</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+August 2002
+</center>
+<p><br><p>
+
+<b>Introduction</b><br>
+<p align="justify">
+"surfanim" is an OpenGL application that interactively 
+displays time varying height fields distributed on a regular 
+grid, in particular, it does
+so using either frame sequential or dual display stereo3D.
+It allows the user to view the surface as it evolves in 
+time from any view position, change the drawing modes, and 
+adjust many other characteristics of the presentation.
+By default
+the height will be mapped to some colour ramp but support
+is also provided for colour derived from an additional
+scalar value (see file format -f2 and -f12) or provided
+directly (see file format -f1 and -f11).
+</p>
+
+<b>Data files</b>
+<p align="justify">
+"surfanim" reads a sequence of data files that describe the surface at 
+each time step (-b) or a single file containing all the time steps (-bs). 
+The surface is assumed to be a function, that is,
+one-to-one mapping or many-to-one. The plane is taken to be the x-y
+plane and the height the z axis.
+When the time steps are each in a separate file (-b)
+the file names must contain a number ranging from 0 upwards
+(this can be relaxed with the -t command line option, see later). 
+The exact
+naming scheme for the file is presented to "surfanim" with the -b command
+line option which gives a C style printf() format for the files. 
+</p>
+
+<ul>
+<li>Example 1<bR>
+If the time steps were stored in files called data0.dat, data1.dat,....
+data100.dat then the command line option would be -b data%d.dat.
+<p>
+<li>Example 2<br>
+If the data files were called fcn0000.txt, fcn0000.txt, fcn0000.txt,....
+fcn1120.txt then the option would be -b fcn%04d.txt.
+</ul>
+
+<p align="justify">
+There are two required command line arguments, the first is -b or -bs as
+discussed above, the other is -n which indicates the size of the surface
+grid (the data files don't contain the grid dimensions). 
+So -n 100 40 is a grid with 100 elements along the x axis and 40
+samples along the y axis. In this case each file is expected to have
+4000 values, one for each grid node.
+The files are stored with the x axis varying most rapidly, so the 
+loop to write the files might be something line this.
+</p>
+<pre>
+   open the file for current time step
+   for (y=0;y&lt;40;y++) {
+      for (x=0;x&lt;100;x++) {
+         write element data[x][y]
+      }
+   }
+   close file
+</pre>
+<p>
+
+<b>File formats</b><br>
+<p align="justify">
+There are six file formats currently supported, they are specified by the
+command line argument -f0, -f1, -f2 and -f10, -f11, -f12. 
+The first three are ascii files and the last three are their binary
+equivalents. The ascii data files are convenient for human inspection
+while the binary formats can be read significantly faster by computer.
+In each case the grid is assumed
+to be square and so the x and y coordinates of each point need not be
+supplied (See the -x and -y command line options for specifying non
+square grid). By default the grid spacing is 1 in each direction and
+the height field is assumed to be in the same coordinate system (see
+the -z options for height scaling).
+</p>
+<ul>
+<li><p align="justify">-f0<br>
+The file consists of simply a list of z values, one for each node of
+the surface. The colour of the surface is mapped to the height range.
+Each value can be separated by any white space character, eg: space,
+return, tab, etc.
+</p>
+<li><p align="justify">-f10<br>
+This is the binary equivalent to -f0, each height is stored as a 
+4 byte IEEE style float, INTEL cpu byte ordering.
+</p>
+<li><p align="justify">-f1<br>
+Each node of the surface is represented by a height and colour triple.
+This mode allows different variables to be mapped by colour into the
+surface. The red, green, blue component.
+</p>
+<li><p align="justify">-f11<br>
+This is the binary equivalent to -f1, the height and three colour
+components are each stored as 4 byte floats. The r,g,b colour
+components are assumed to range between 0 and 1.
+</p>
+<li><p align="justify">-f2<br>
+Each node is represented by a height and a scalar. "surfanim" uses
+this scalar to control the colour based upon a number of linear colour ramps.
+There are no assumptions made about
+the range of the scalar values, the entire range will be mapped
+to the colour ramp.
+</p>
+<li><p align="justify">-f12<br>
+This is the binary equivalent to -f2, the height and scalar are
+each stored as a 4 byte float. 
+</p>
+</ul>
+
+</td><td width=10>
+&nbsp;
+</td><td valign="top">
+
+<smalltext>Dots</smalltext><br>
+<img src="http://paulbourke.net/stereographics/surfanim/points.gif" width=250 height=250><p>
+<smalltext>Lines (X and Y)</smalltext><br>
+<img src="http://paulbourke.net/stereographics/surfanim/lines.gif" width=250 height=250><p>
+<smalltext>Grid</smalltext><br>
+<img src="http://paulbourke.net/stereographics/surfanim/grid.gif" width=250 height=250><p>
+<smalltext>Coloured</smalltext><br>
+<img src="http://paulbourke.net/stereographics/surfanim/colour.gif" width=250 height=250><p>
+<smalltext>Shaded</smalltext><br>
+<img src="http://paulbourke.net/stereographics/surfanim/shaded.gif" width=250 height=250><p>
+<smalltext>Cylindrical Wrap (X and Y)</smalltext><br>
+<img src="http://paulbourke.net/stereographics/surfanim/cylinder.gif" width=250 height=250><p>
+<smalltext>Toroidal Wrap (X and Y)</smalltext><br>
+<img src="http://paulbourke.net/stereographics/surfanim/torus.gif" width=250 height=250><p>
+
+</td></tr></table>
+<p>
+
+<b>Command line options</b><br>
+<p align="justify">
+Command line arguments are listed if the program is run without 
+any arguments, or if incorrect command arguments are supplied.
+</p>
+<pre>
+Usage: surfanim [command line options]
+Required:
+          -n nx ny   grid dimensions
+          -b s       name for data file sequence eg: "aa%%04d.dat"
+          -bs s      name for single data file
+Optional:
+          -f_        data format (default: 0)
+          -t n0 n1   start frame number [default: 0 to all]
+          -st n      frame skipping [default: 1]
+          -f         full screen
+          -F         full half screen
+          -s         frame sequential stereo
+          -ss        dual screen stereo
+          -x         x axis grid spacing (default: 1)
+          -y         y axis grid spacing (default: 1)
+          -z         height scale factor (default: 1)
+          -l         enable circular looping (default: off)
+          -i n       time interpolation factor (default: 1)
+          -xy n      subsample in x and y axis
+          -dm n      drawing method (default: xlines)
+          -c n       colour ramp type (default: 1)
+          -lc        local colour ramp (default: global)
+          -as        start in autospin mode (default: off)
+          -bb        show bounding box (default: on)
+          -ax        show axes (default: on)
+          -gr        show grid (default: on)
+          -sl        show slider (default: on)
+          -fps n     target frame rate (default: 25)
+          -bg sl sr  background images (left and right)
+          -vf s      start with view file
+          -d         debug mode (default: off)
+          -h         this text
+</pre>
+
+<b>Keystrokes</b>
+<p align="justify">
+While the program is running the following keyboard commands
+are in effect. Note that menus are presented by using the right
+mouse button.
+</p>
+<pre>
+  arrow keys   rotate left/right/up/down
+  left mouse   rotate left/right/up/down
+middle mouse   roll clockwise/anticlockwise
+ right mouse   menus
+           r   toggle the automatic time progression
+           a   toggle autospin mode
+           h   reset the camera to home position
+ 1,2,3,4,5,6   move camera to an axis aligned view
+           w   dump current image to disk as TGA file
+           W   turn on continual image dumping
+     i,j,k,l   translate camera up, down, left, right
+         [,]   roll camera clockwise, anticlockwise
+         +,-   move camera forward or backward
+          f1   toggle help
+          f2   toggle info
+          f3   toggle boundingbox
+          f4   toggle axes
+          f5   toggle axes grid
+          f6   toggle animation slider
+          f7   toggle colour ramp
+         <,>   move forward/backwards in time
+           0   go to start of time series
+       esc,q   quit
+</pre>
+
+<b>Notes</b>
+<ul>
+<li><p align="justify">
+While "surfanim" was designed primarily as an investigative
+tool rather than a presentation one, it does allow images
+to be written to disk singly or as part of an animation.
+"w" will write the current image as a tga file, "W" (use
+with care) will continually write images to disk allowing
+an animation to be created.
+</p>
+<li><p align="justify">
+If the time steps between frames are too coarse and the animation
+therefore plays very quickly there are two ways to slow it down.
+The first is to use the -fps (frames per second) command line
+option to set a maximum frame rate.The second is to interpolate
+between time steps using the -i option. For example -i 4 will
+linearly interpolate 4 frames between each given frame.
+</p>
+<li><p align="justify">
+If the animation runs too slowly for large grids then the -xy
+options will set a subsamnpling interval, for example, -xy 3
+will only display every 3rd grid cell. In addition the -i
+option can be used with a number less than 1 to play every
+n'th frame. For example -xy 0.25 will play every 4'th time frame.
+</p>
+</ul>
+
+</td></tr></table></center>
+</body>
+</html>

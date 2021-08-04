@@ -1,0 +1,283 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Stereo pair image format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Stereo Pair Image File Format</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 2000<p>
+See original pdf specification by VRex Inc:
+   <a href="http://paulbourke.net/stereographics/stereoimage/spec.pdf">spec.pdf</a>.
+</center>
+<p><br><p>
+
+<p align="justify">
+There isn't at the time of writing a standard way to store stereo pair images
+that meets everyone's requirements.
+Sure, the left and right eye can be simply stored as two individual files
+in any graphics format along with a naming convention to indicate which
+is the left and which is the right eye. In addition, many groups have
+designed their own way of storing stereo pairs in a single file. For
+example one might simply adopt a convention where the left and right
+eye images are formed into one image side-by-side, any software that
+reads this image will separate the left and right images. Of course
+there are a number of different ways two images can be combined, it
+would be useful to be able to exchange stereo pair images between
+systems. This document summarises one such format proposed by VRex Inc.
+</p>
+
+<p align="justify">
+The basic idea is to define a standard that describes the
+details of how the stereo pair is stored. Depending on the underlying
+format this might be a header, the data part of a TIFF tag type, or 
+part of a JPEG marker. 
+</p>
+
+<p align="justify">
+This has been applied primarily to JPEG by VRex, they use a file 
+extension of ".jps". The JPEG marker consists of an eight bit
+identifier "_JPSJPS_", a 16 bit length byte, and a 32 bit  
+stereoscopic descriptor defined below. Following this is an optional
+comment block, itself consisting of a 16 bit length and ascii string of
+characters.
+</p>
+
+<p align="justify">
+The description of the how the stereo pairs are stored is specified
+in the bitwise positions of a 32 bit quantity, from now on referred to
+as the "stereoscopic descriptor". This descriptor is split into two
+pieces, the first 8 bits indicates the media type and the remaining
+24 bits indicate options. There are only two media types currently
+defined, mono (Ox00) and stereo (Ox01).
+</p>
+
+<b>Media type: mono</b>
+<p align="justify">
+The contents of the remainder of the stereoscopic descriptor (3 bytes) are
+as follows.
+</p>
+<ul>
+<li><p align="justify">
+    Bits 8 to 15 indicate which eye should receive the image. 0x00 for
+    both, 0x01 for left, and 0x02 for right.
+    </p>
+<li><p align="justify">
+    Bits 16 to 23 consist of flags. The only two flags currently
+    supported are in bit position 16 and 17, they refer to the height and width
+    respectively. 0 indicates the image is full height or width, 1
+    indicates half height or width.
+    </p>
+<li><p align="justify">
+    Bits 24 to 31 are currently undefined and reserved for future use.
+    To avoid future problems they should be set to 0x00.
+    </p>
+</ul>
+<p>
+
+<p align="justify">
+For example, a descriptor for a full size mono image to be displayed
+on both eyes would have a descriptor as follows:
+</p>
+<center>
+0x00 0x00 0x00 0x00
+</center>
+<p>
+
+
+<b>Media type: stereo</b>
+<p align="justify">
+The contents of the remainder of the stereoscopic descriptor (3 bytes) are
+as follows.
+</p>
+<ul>
+<li><p align="justify">
+    Bits 8 to 15 indicate the layout. Currently there are 4 layout
+    methods using bits 8 and 9. 0x01 indicates a interleaved format,
+    0x02 is for side-by-side, 0x03 for over-under, 0x04 is for anaglyph
+    (a single image).
+    </p>
+<li><p align="justify">
+    Bits 16 to 32 contain flags. Bits 16 and 17 are defined as for 
+    mono images types. Bit 18 defines the field order, 0 for right
+    (or top) field first, 1 for left (or bottom) first. For anaglyph
+    0 refers to which eye is the red field, 0 for right, 1 for left.
+    </p>
+<li><p align="justify">
+    Bits 24 to 31 is the pixel separation between the left and right fields.
+    This will normally be 0x00 but a non zero separation can be applicable
+    for some media types, namely side-by-side and over-under.
+    </p>
+</ul>
+<p>
+
+<p align="justify">
+So for example, a descriptor for a full size stereo pair, arranged
+over-under with the left eye image first then the right eye image
+might have a descriptor as follows:
+</p>
+<center>
+0x01 0x03 0x08 0x00
+</center>
+<p>
+
+<b>Header file</b><p>
+The field naming conventions, masks, and flags suggested by VRex are;
+<br>
+<pre>
+#ifndef __SDFLAGS_H__
+#define __SDFLAGS_H__
+
+/* sdflags.h -- general purpose stereoscopic descriptor */
+
+/* Media Types */
+#define SD_MTYPE_MONOSCOPIC_IMAGE 0x00
+#define SD_MTYPE_STEREOSCOPIC_IMAGE 0x01
+
+/* layout Options */
+#define SD_LAYOUT_INTERLEAVED 0x0100
+#define SD_LAYOUT_SIDEBYSIDE 0x0200
+#define SD_LAYOUT_OVERUNDER 0x0300
+#define SD_LAYOUT_ANAGLYPH 0x0400
+
+/* Misc Flags Bits */
+#define SD_FULL_HEIGHT 0x000000
+#define SD_HALF_HEIGHT 0x010000
+#define SD_FULL_WIDTH 0x000000
+#define SD_HALF_WIDTH 0x020000
+#define SD_RIGHT_FIELD_FIRST 0x000000
+#define SD_LEFT_FIELD_FIRST 0x040000
+
+/* Handy macros */
+#define LAYOUT(f) f & 0x0000FF00
+#define IS_FULL_HEIGHT(f) f & SD_HALF_HEIGHT
+#define IS_HALF_HEIGHT(f) !(f & SD_HALF_HEIGHT)
+#define IS_LEFT_FIRST(f) f & SD_LEFT_FIELD_FIRST
+#define IS_RIGHT_FIRST(f) !(f & SD_LEFT_FIELD_FIRST)
+#define FIELD_SEPARATION(f) f & 0xFF000000
+
+/* Defaults */
+#define SD_JPS_DEFAULT SD_MTYPE_STEREOSCOPIC_IMAGE |
+SD_LAYOUT_SIDEBYSIDE |
+SD_FULL_HEIGHT |
+SD_RIGHT_FIELD_FIRST
+
+/* Defines for SD_MTYPE_MONOSCOPIC_IMAGE */
+#define SD_EYE_BOTH 0x0000
+#define SD_EYE_LEFT 0x0100
+#define SD_EYE_RIGHT 0x0200
+
+#endif /* __SDFLAGS_H__ */
+</pre>
+
+<b>Comments from the author</b>
+
+<ul>
+<li><p align="justify">
+It isn't obvious how or if this format will be extended to multiple
+stereo wall environments such as the "Wedge" or "Cave".
+Along similar lines it would be nice to support multiple stereo pairs
+as occur in lenticular prints or displays.
+</p>
+<li><p align="justify">
+The use of "red" in the field order bit should be avoided, no
+all anaglyphs use red.
+</p>
+</ul>
+
+
+<p><br><br><br><p>
+
+
+<center>
+<h1>Interleaved Stereo Images</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+March 2002
+</center>
+<p><br><p>
+
+<p align="justify">
+Interleaving two stereo-pair images has been a often used image
+format for presenting stereographics. The main reason for its
+spread has been in relation to interleaved video standards (PAL
+and NTSC television) which allowed stereo pairs to be transmitted
+using existing hardware. As higher definition stereographic
+image presentation is becoming the norm and as these other solutions
+become more accessible, interleaved stereographics is becoming
+less attractive.
+</p>
+
+<p align="justify">
+There are two main methods used to extract the stereo pairs from
+an interleaved image/signal and present them to the correct eye.
+The first which is mostly used in television and computer presentation
+is to wear some active glasses that alternatively switch between opaque 
+and transparent. When the odd scan-lines are being drawn (which might
+correspond to the right eye image say) then the right eye of the
+glasses are transparent and the left eye opaque. When the even
+scan-lines are being drawn the opposite occurs. This does require
+a CRT operating is a slightly different mode from usual where the
+persistence of the phosphor helps to blend together the even and
+odd scanline images. For this mode of stereo presentation one wants 
+a fast phosphor tube.
+</p>
+
+<p align="justify">
+A much more common use of an interleaved stereo pair system is for
+devices such as head mounted displays where there is a separate
+CRT tube or LCD panel for each eye. In this case the odd lines are simply
+sent to the tube/panel for the right eye say and the even lines to
+the left eye tube/panel.
+</p>
+
+<center><table border=0><tr><td>
+Left image<br>
+<img src="http://paulbourke.net/stereographics/stereoimage/L_0000.gif" width=800 height=300>
+</td></tr><tr><td>
+Right image<br>
+<img src="http://paulbourke.net/stereographics/stereoimage/R_0000.gif" width=800 height=300>
+</td></tr><tr><td>
+Interleaved image<br>
+<img src="http://paulbourke.net/stereographics/stereoimage/example2.gif" width=800 height=600>
+</td></tr><tr><td>
+Zoom in of white rectangle region above<br>
+<img src="http://paulbourke.net/stereographics/stereoimage/zoom2.gif" width=422 height=328>
+</td></tr></table><p></center>
+
+<p align="justify">
+Obviously, a major issue with interleaved stereo pairs is the
+loss of vertical resolution. As this applies to television
+projection it is more of a problem since the number of
+vertical lines is limited in the first place.
+Depending on how the image is being presented the left
+and right eye images might need to be scaled vertically
+so they appear in the correct proportion when presented.
+this is illustrated below.
+<p>
+
+<p align="justify">
+Another problem is flicker from the halving of typically an
+already borderline frame rate for PAL and NTSC. The situation
+is less severe for some computer based presentation where
+the frames rate can be increased. Of course as one approaches
+rates above 100 fps then frame sequential stereo becomes more
+attractive.
+</p>
+
+</td></tr></table></center>
+</body>
+</html>

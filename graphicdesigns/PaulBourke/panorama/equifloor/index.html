@@ -1,0 +1,149 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Converting an equirectangular image to a cylindrical panoramic projection</title>
+</head>
+<body>
+<Center><table width=800><tr><Td>
+
+<center>
+<h1>Replacing a rooms floor in an equirectangular</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+February 2019
+</center>
+<p><br><p>
+
+<p align="justify">
+The following outlines one possible pipeline to replace a floor plane within an
+equirectangular image. The goal here is to present the approach rather than necessarily
+create the highest quality result. The main achievement is to create the correct
+projection of the fake floor, otherwise attempting the replacement with purely 2D
+editing is unlikely to be successful.
+</p>
+
+<p align="justify">
+The example image is shown below.
+</p>
+
+<center>
+	<a href="http://paulbourke.net/panorama/equifloor/main_0.jpg"><img src="http://paulbourke.net/panorama/equifloor/main_0s.jpg" width=800 height=400 border=1></a><br>
+	<smalltext>Image courtesy Hashim Kahily</smalltext>
+</center><p><br><p>
+
+<p align="justify">
+The first stage is to remove the floor from the equirectangular.
+This is fairly straightforward with most image editing packages.
+</p>
+
+<center>
+   <a href="http://paulbourke.net/panorama/equifloor/floor0.png"><img src="http://paulbourke.net/panorama/equifloor/floor0s.png" width=800 height=400 border=1></a><br>
+	<A href="http://paulbourke.net/panorama/equifloor/Hashim0.html">Navigable version</a>
+</center><p><br><p>
+
+<p align="justify">
+In the example here the equirectangular image, with the floor transparent is mapped
+onto a sphere in PovRay and rendered with the so called spherical camera.
+</p>
+
+<pre>
+camera {
+   spherical
+   location <0,0,0>
+   up y
+   right image_width*x/image_height
+   angle 360
+   sky <0,0,1>
+   look_at <0,1,0>
+}
+</pre>
+
+<p align="justify">
+A checker floor pigment is applied to a plane that represents the floor.
+</p>
+
+<pre>
+#declare H = -52.5; // Depth, the largest value that doesn't clip image features
+plane {
+   <0,0,1>, 0
+   texture {
+      pigment {
+         checker
+         color rgb <0.8,0.2,0.2>
+         color rgb <0.2,0.2,0.8>
+      }
+      finish { diffuse 1 ambient 0.2 specular 0 }
+      normal { granite 0.2 scale 1 }
+      scale 10
+   }
+   translate <0,0,H>
+}
+</pre>
+
+<center>
+   <a href="http://paulbourke.net/panorama/equifloor/floor1.png"><img src="http://paulbourke.net/panorama/equifloor/floor1s.png" width=800 height=400 border=1></a><br>
+   <A href="http://paulbourke.net/panorama/equifloor/Hashim1.html">Navigable version</a>
+</center><p><br><p>
+
+<p align="justify">
+Similarly a tiling texture can be applied to the plane to represent a more realistic 
+ground cover.
+</p>
+
+<center>
+   <img src="http://paulbourke.net/panorama/equifloor/tex3.png" width=300 height=300 border=1><br>
+   <smalltext>The floor texture: tex3.png</smalltext>
+</center><p>
+
+<pre>
+plane {
+   <0,0,1>, 0
+   texture {
+      pigment {
+         image_map {
+              png "tex3.png" interpolate 2
+              map_type 0
+           }
+      }
+      finish { diffuse 0 ambient 1 specular 0 }
+      scale 10
+   }
+   translate <0,0,H>
+}
+</pre>
+
+<center>
+   <a href="http://paulbourke.net/panorama/equifloor/floor2.png"><img src="http://paulbourke.net/panorama/equifloor/floor2s.png" width=800 height=400 border=1></a><br>
+   <A href="http://paulbourke.net/panorama/equifloor/Hashim2.html">Navigable version</a>
+</center><p><br><p>
+
+<p align="justify">
+The final stage is lighting. Lights can be placed in the locations matching the 
+light sources in the scene.
+In the following example no attempt has been made here for a matching representation
+of the light positions as found in the original, area lights for the windows for example.
+</p>
+
+<center>
+   <a href="http://paulbourke.net/panorama/equifloor/floor3.png"><img src="http://paulbourke.net/panorama/equifloor/floor3s.png" width=800 height=400 border=1></a><br>
+   <A href="http://paulbourke.net/panorama/equifloor/Hashim3.html">Navigable version</a>
+</center><p><br><p>
+
+<p align="justify">
+Where things get a bit more complicated is if there are shadows cast by objects in
+the scene. In order to replicate those one can create simple representations of
+those objects and perform a rendering that only casts the shadows.
+</p>
+
+<p align="justify">
+The PovRay scene used to create the examples above
+is provided here: <a href="http://paulbourke.net/panorama/equifloor/floor.pov">floor.pov</a>.
+It should be rendered as a 4 frame animation, one frame for each stage above, see:
+<a href="http://paulbourke.net/panorama/equifloor/floor.ini">floor.ini</a>.
+</p>
+
+<br><br><br>
+</td></tr></table></center>
+</body>
+</html>
+
+

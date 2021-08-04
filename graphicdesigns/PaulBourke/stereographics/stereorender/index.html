@@ -1,0 +1,1149 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Calculating Stereo Pairs</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Calculating Stereo Pairs</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+July 1999
+</center>
+<p>
+
+<h3>Introduction</h3>
+
+<p align="justify">
+The following discusses computer based generation of stereo pairs as
+used to create a perception of depth. Such depth perception can be useful
+in many fields, for example, scientific visualisation, entertainment,
+games, appreciation of architectural spaces, etc.
+</p>
+
+<h3>Depth cues</h3>
+
+<p align="justify">
+There are a number of cues that the human visual system uses
+that result in a perception of depth. Some of these are present
+even in two dimensional images, for example:
+</p>
+<ul>
+<li>Perspective.<br>
+	 Objects get smaller the further away they are and
+    parallel line converge in distance.
+    <p>
+<li>Sizes of known objects.<br>
+    We expect certain object to be smaller than
+    others. If an elephant and a tea cup appear the same size then we
+    expect the elephant to be further away.
+    <p>
+<li>Detail.<br>
+    Close objects appear in more detail, distant objects less.
+    <p>
+<li>Occlusion.<br>
+    An object that blocks another is assumed to be in the foreground.
+	 <p>
+<li>Lighting, shadows.<br>
+    Closer objects are brighter, distant ones dimmer.
+    There a number of other more subtle cues implied by lighting,
+    the way a curved surface reflects light suggests the rate of curvature,
+    shadows are a form of occlusion.
+    <p>
+<li>Relative motion.<br>
+    Objects further away seem to move more slowly than objects
+    in the foreground.
+    <p>
+</ul>
+
+<p align="justify">
+There are other cues that are not present in 2D images, they are:
+</p>
+
+<ul>
+<li>Binocular disparity.<br>
+    This is the difference in the images projected onto
+	 the back the eye (and then onto the visual cortex) because the eyes are
+	 separated horizontally by the interocular distance.
+    <p>
+<li>Accommodation.<br>
+    This is the muscle tension needed to change the focal
+	 length of the eye lens in order to focus at a particular depth.
+    <p>
+<li>Convergence.<br>
+    This is the muscle tension required to rotate each eye
+	 so that it is facing the focal point.
+    <p>
+</ul>
+
+<p align="justify">
+While binocular disparity is considered the dominant depth cue in most people,
+if the other cues are presented incorrectly they can have a strong detrimental
+effect. In order to render a stereo pair one needs to create two images,
+one for each eye in such a way that when independently viewed they will present
+an acceptable image to the visual cortex and it will fuse the images and extract
+the depth information as it does in normal viewing. If stereo pairs are created
+with a conflict of depth cues then one of a number of things may occur:
+one cue may become dominant and it may not be the correct/intended one,
+the depth perception will be exaggerated or reduced, the image will be
+uncomfortable to watch, the stereo pairs may not fuse at all and the viewer
+will see two separate images.
+</p>
+
+<p align="justify">
+Stereographics using stereo pairs is only one of the major stereo3D
+dimensional display technologies, others include holographic and lenticular
+(barrier strip) systems both of which are autostereoscopic.
+Stereo pairs create a "virtual" three
+dimensional image, binocular disparity and convergence cues are correct but
+accommodation cues are inconsistent because each eye is looking at a
+flat image. The visual system will tolerate this conflicting accommodation
+to a certain extent, the classical measure is normally quoted as a
+maximum separation on the display of 1/30 of the distance of the viewer
+to the display.
+</p>
+
+<p align="justify">
+The case where the object is behind the projection plane 
+is illustrated below. The projection for the left eye is
+on the left and the projection for the right eye is on the right, the
+distance between the left and right eye projections is called the horizontal
+parallax. Since the projections are on the same side 
+as the respective eyes, it is called a positive parallax.
+Note that the maximum positive parallax occurs when the object is
+at infinity, at this point the horizontal parallax is equal to the
+interocular distance.
+</p>
+<center><img src="http://paulbourke.net/stereographics/stereorender/positive.gif" width="435" height="232"></center><p>
+
+<p align="justify">
+If an object is located in front of the projection plane then the
+projection for the left eye is on the right and the projection for the
+right eye is on the left. This is known as negative horizontal parallax.
+Note that a negative horizontal parallax equal to the interocular
+distance occurs when the object is half way between the projection plane
+and the center of the eyes. As the object moves closer to the viewer
+the negative horizontal parallax increases to infinity.
+</p>
+<center><img src="http://paulbourke.net/stereographics/stereorender/negative.gif" width="393" height="221" ></center><p>
+
+<p align="justify">
+If an object lies at the projection plane then its projection onto the 
+focal plane is coincident for both the left and right eye, hence zero parallax.
+</p>
+<center><img src="http://paulbourke.net/stereographics/stereorender/zero.gif" width="389" height="203"></center><p>
+
+<h3>Rendering</h3>
+
+<p align="justify">
+There are a couple of methods of setting up a virtual camera and rendering
+two stereo pairs, many methods are strictly incorrect since they introduce
+vertical parallax. An example of this is called the "Toe-in" method, while
+incorrect it is still often used because the correct "off axis" method
+requires features not always supported by rendering packages. Toe-in is
+usually identical to methods that involve a rotation of the scene. The
+toe-in method is still popular for the lower cost filming because
+offset cameras are uncommon and it is easier than using parallel
+cameras which requires a subsequent trimming of the stereo pairs.
+</p>
+
+<b>Toe-in (Incorrect)</b><p>
+<p align="justify">
+In this projection the camera has a fixed and symmetric aperture,
+each camera is pointed at a single focal point. Images
+created using the "toe-in" method will still appear stereoscopic but the
+vertical parallax it introduces will cause increased discomfort levels.
+The introduced vertical parallax increases out from the center of the
+projection plane and is more important as the camera aperture increases.
+</p>
+<center><img src="http://paulbourke.net/stereographics/stereorender/toein.gif" height="294" width="445"></center><p>
+
+<b>Off-axis (Correct)</b><p>
+<p align="justify">
+This is the correct way to create stereo pairs. It introduces no vertical
+parallax and is therefore creates the less stressful stereo pairs.
+Note that it requires a non symmetric camera frustum, this is supported
+by some rendering packages, in particular, OpenGL.
+</p>
+<center><img src="http://paulbourke.net/stereographics/stereorender/offaxis.gif" width="443" height="297"></center><p>
+
+<p align="justify">
+Objects that lie in front of the projection plane will appear to be in front
+of the computer screen, objects that are behind the projection plane will
+appear to be "into" the screen. It is generally easier to view stereo
+pairs of objects that recede into the screen, to achieve this one would
+place the focal point closer to the camera than the objects of interest.
+Note, this doesn't lead to as dramatic an effect as objects that pop
+out of the screen.
+</p>
+
+<p align="justify">
+The degree of the stereo effect depends on both the distance of the camera
+to the projection plane and the separation of the left and right camera. Too
+large a separation can be hard to resolve and is known as hyper-stereo.
+A good ballpark separation of the cameras is 1/20 of the distance to the
+projection plane, 
+this is generally the maximum separation for comfortable viewing.
+Another constraint in general practice is to ensure the negative
+parallax (projection plane behind the object) 
+does not exceed the eye separation.
+</p>
+
+<p align="justify">
+A common measure is the parallax angle defined as
+theta = 2 atan(DX / 2D) where DX is the horizontal separation of a 
+projected point between the two eyes and d is the distance of the eye from
+the projection plane. For easy fusing by the majority of people, the absolute
+value of theta should not exceed 1.5 degrees for all points in the scene.
+Note theta is positive for points behind the scene and negative for points
+in front of the screen. It is not uncommon to restrict the negative value
+of theta to some value closer to zero since negative parallax is more difficult
+to fuse especially when objects cut the boundary of the projection plane.
+</p>
+
+<center><img src="http://paulbourke.net/stereographics/stereorender/equation.gif" width="507" height="244"><p></center>
+
+<b>Rule of thumb for rendering software</b>
+<p align="justify">
+Getting started with ones first stereo rendering can be a hit and miss
+affair, the following approach should ensure success. First choose the
+camera aperture, this should match the "sweet spot" for your viewing
+setup, typically between 45 and 60 degrees). 
+Next choose a focal length, the distance at which objects in
+the scene will appear to be at zero parallax. Objects closer than this
+will appear in front of the screen, objects further than the focal
+length will appear behind the screen. How close objects can come to
+the camera depends somewhat on how good the projection system is but
+closer than half the focal length should be avoided. Finally, choose
+the eye separation to be 1/30 of the focal length.
+</p>
+
+<h3>References</h3>
+Bailey, M, Clark D<br>
+Using ChromaDepth to Obtain Inexpensive Single-image Stereovision
+for Scientific Visualisation<br>
+Journal of Graphics Tools, ACM, Vol 3 No 3 pp1-9
+<p>
+
+Baker, J.<br>
+Generating images for a time multiplexed stereoscopic computer graphics
+system.<br> True 3D imaging techniques and display technologies<br>
+McAllister, D.F. and Robbins, W.E. (Editors)<br>
+SPIE Proc 761, 1987.
+<p>
+
+Bos, P. et al<br>
+High performance 3D viewing system using passive glasses<br>
+1988 SID Digest of technical papers, vol 19<br>
+<p>
+
+Bos, P. et al<br>
+A liquid crystal optical switching device (pi cell)<br>
+1983 SID Digest of technical papers, vol 15<br>
+<p>
+
+Grotch, S.L.<br>
+Three dimensional and stereoscopic graphics for scientific data
+display and analysis<br>
+IEEE Computer Graphics and Applications 3,8, Nov 1983, 31-34<br>
+<p>
+
+Hodges, L.F. and McAllister, D.F.<br>
+Stereo and alternating pair techniques for display of computer generated images
+<br>IEEE Computer Graphics and Applications 5,9, September 1985, 38-45<bR>
+<p>
+
+Lipton, L, Meyer, L<br>
+A flicker free field sequential stereoscopic video system<br>
+SMPTE Journal, November 1984, pp1047.
+<p>
+
+Lipton, L., Ackerman.,M<br>
+Liquid crystal shutter system for stereoscopic and other applications<br>
+US Patent No 4,967,268, Oct 30, 1990
+<p>
+
+Nakagawa, K., Tsubota, K., Yamamoto, K<br>
+Virtual Stereoscopic display system<br>
+US Patent No. 4,870,486, Sept 26, 1989
+<p>
+
+Roese, J.A. and McCleary, L.E.<br>
+Stereoscopic computer graphics for simulation and modeling<br>
+Proc SIGGRAPH 13, 2, 1979, 41-47<br>
+<p>
+
+Southard, D.A<br>
+Transformations for Stereoscopic Visual Simulation<br>
+Computer and Graphics, Vol 16, No 4 pp 401-410, 1992
+<p>
+
+Course notes, #24<br>
+Stereographics<br>
+ACM SIGGRAPH, 1989<br>
+<p>
+
+Weissman, M.<br>
+3D Measurements from Video Stereo Pairs<br>
+SPIE Three Dimensional Imaging and Remote Sensing Imaging, Vol 902, pp 85<br>
+<p>
+
+<center>
+<img src="http://paulbourke.net/stereographics/stereorender/diagram2.gif" width=549 height=813>
+</center><p>
+
+
+<p><br><br><br><p>
+
+
+<center><h1>Creating correct stereo pairs from any raytracer</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+February 2001<p>
+Contribution by Chris Gray:
+<a href="http://paulbourke.net/stereographics/stereorender/AutoXidMary.mcr">AutoXidMary.mcr</a>, a camera configuration 
+for 3DStudioMax that uses the XidMary Camera.
+</center>
+<p>
+
+<b>Introduction</b><br>
+
+<p align="justify">
+Many rendering packages provide the necessary tools to create correct
+stereo pairs (eg: OpenGL), other packages can transform their geometry
+appropriately (translations and shears) so that stereo pairs can be 
+directly created,
+many rendering packages only provide straightforward perspective
+projections. The following describes a method of creating stereo pairs
+using such packages. While it is possible to create stereo pairs using
+PovRay with shear transformations, PovRay will be used to illustrate this
+technique which can be applied to any rendering
+software that supports only perspective projections (this method is often
+easier than the translate/shear matrix method).
+</p>
+
+<b>Basic idea</b><br>
+<p align="justify">
+Creating stereo pairs 
+involves rendering the left and right eye views from two
+positions separated by a chosen eye spacing. The eye (camera) 
+looks along parallel vectors. The frustum from each eye to each
+corner of the projection plane is asymmetric.
+The solution to creating correct stereo pairs using only symmetric
+frustums is to extend the 
+frustum (horizontally) for each eye (camera) making it symmetric.
+After rendering, those parts of the image resulting from the extended
+frustum are trimmed off. 
+The camera
+geometry is illustrated below, the relevant details can be translated
+into the camera specification for your favourite rendering package.
+</p>
+
+<center><img src="http://paulbourke.net/stereographics/stereorender/raystereo2.gif" width=339 height=321></center><p>
+
+<p align="justify">
+All that remains is to calculate the amount of trimming required
+for a given focal length and eye separation. 
+Since one normally has a target image width it is usual to
+render the image larger so that after the trim the image is the desired
+size. The amount of offset depends on the desired focal length, that is,
+the distance at which there is no vertical parallax. The amount  by which
+the images are extended and then
+trimmed (working not given) is given by the following:
+</p>
+
+<center>
+<img src="http://paulbourke.net/stereographics/stereorender/equation1.png" width=190 height=50 border=0>
+</center>
+
+<p align="justify">
+Where "w" is the image width, "fo" the focal length (zero parallax), 
+"e" the eye separation,
+and "a" the intended horizontal aperture. 
+In order to get the final aperture "a" after the image is trimmed,
+the actual aperture "a'" needs to be modified as follows.
+</p>
+
+<center>
+<img src="http://paulbourke.net/stereographics/stereorender/equation2.png" width=300 height=63 border=0>
+</center>
+
+<p align="justify">
+Note that not all rendering packages use
+the horizontal aperture but rather a vertical aperture eg: OpenGL.
+As expected as the focal length tends to infinity the amount by which
+the images are trimmed tends to 0, similarly as the eye separation tends to 0.
+</p>
+
+<p align="justify">
+To combine the images, delta is trimmed off the left of the left image
+and delta pixels are trimmed off the right of the right image.
+</p>
+
+<b>Example 1</b><p>
+
+<p align="justify">
+Consider a PovRay model scene file for stereo pair rendering where
+the eye separation is 0.2, the focal length (zero parallax) is 3, 
+the aperture 60 degrees, and the final
+image size is supposed to be 800 by 600....delta comes to 46.
+Example PovRay model files are given for each camera. 
+Note that one could ask PovRay to render just the intended regions
+of each image by setting a start and end column. 
+</p>
+
+<center>
+<table width=80%>
+<tr><td valign="top">
+asteroid_l.pov
+<pre>
+#declare WIDTH  = 846;
+#declare HEIGHT = 600;
+#declare EYESEP = 0.2;
+camera {
+   location &lt;-EYESEP/2,0,-3&gt;
+   up y
+   right WIDTH*x/HEIGHT
+   angle 62.932538
+   sky &lt;0,1,0&gt;
+   look_at &lt;-EYESEP/2,0,0&gt;
+}
+#include "material.inc"
+#include "lighting.inc"
+#include "geometry.inc"
+</pre>
+</td><td valign="top">
+asteroid_r.pov
+<pre>
+#declare WIDTH  = 846;
+#declare HEIGHT = 600;
+#declare EYESEP = 0.2;
+camera {
+   location &lt;EYESEP/2,0,-3&gt;
+   up y
+   right WIDTH*x/HEIGHT
+   angle 62.932538
+   sky &lt;0,1,0&gt;
+   look_at &lt;EYESEP/2,0,0&gt;
+}
+#include "material.inc"
+#include "lighting.inc"
+#include "geometry.inc"
+</pre>
+</td></tr>
+</table></center>
+<p>
+
+<b>Example 2</b><p>
+<center>
+<img src="http://paulbourke.net/stereographics/stereorender/diagram.gif" width=517 height=552><p>
+</center>
+
+
+<p><br><br><br><p>
+
+
+<center>
+<h1>Creating stereoscopic images that are easy on the eyes</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+February 2003
+</center>
+<p>
+
+<p align="justify">
+There are some unique considerations when creating effective stereoscopic images 
+whether as still images, interactive environments, or animations/movies. 
+In the discussion of these given below it will be assumed that the correct
+stereo-pairs have been created, that is, perspective projection with parallel
+cameras resulting is the so called off-axis projection.
+It should be noted that not all of these are hard and fast rules and they
+may be inherent in the type of image content being created.
+</p>
+
+<ul>
+<li><b>Ghosting</b><br><p align="justify">
+Stereoscopic projection is never perfect, that is, there is some leakage
+of the left eye image into the right eye and visa-versa. Being aware of the
+degree of ghosting in the particular system being used and limiting the
+parallax so that the human visual system doesn't reject the pairs as
+belonging to the one object is critical. The most common limitation this
+places on the content is how close objects can be brought to the viewer, it is
+this negative parallax region where the separation can go to infinity 
+(compared to objects in positive parallax, behind the plane, where the separation is at most
+the same as the eye separation in world coordinates).
+</p>
+
+<li><b>High contrast</b><br><p align="justify">
+Ghosting is most obvious in regions of high contrast.
+This isn't usually an issue for filmed or photo-realistic computer generated
+images but is very common in cartoon or visualisation applications. It is common
+in these applications to have a black background say, the
+simplest solution is often simply to use a grey background.
+Of course this isn't always desirable since it may impact on
+the subject matter, for example, stars on the blackness of outer space.
+Be aware that the degree of ghosting varies between people, the level of
+separation that can be supported should be tested by using a range of people.
+</p>
+
+<li><b>Screen border</b><br><p align="justify">
+Objects in the negative parallax region (in front of the screen) will present
+conflicting cues to the visual system if they are cut by the border of screen,
+a region that is clearly at zero parallax. This is the primary reason why
+individual objects can be brought out in front of the screen while larger
+objects (eg: buildings) that cannot be contained need to be behind the
+screen (positive parallax). Of course this is most serious on a single
+stereo wall and less of a problem on wider displays.
+For example, in the image below on the right it would be possible to bring
+the planet in front of the screen while in the situation on the right it would
+be significantly less effective.
+</p>
+<center><table><tr><td>
+<img src="http://paulbourke.net/stereographics/stereorender/cut1.jpg" width=300 height=225>
+</td><td>
+<img src="http://paulbourke.net/stereographics/stereorender/cut2.jpg" width=300 height=225>
+</td></tr></table></center><p>
+
+<li><b>Occlusion by other audience members</b><br><p align="justify">
+The effect of the line of site being blocked by other members of the audience
+can lead to conflicting cue if the blocking object is at similar or greater
+depths than the stereo content. 
+For this reason it is normally more important for stereoscopic theatres to
+have included seating compared to traditional theatres.
+</p>
+
+<li><b>Motion cues</b><br><p align="justify">
+After parallax motion cues are perhaps the next strongest cue for depth
+perception even stronger perhaps than occlusion. It is usually easily noticeable
+that the depth perception is enhanced when objects at different depths are moving
+with respect to the viewer. This can be put to good use during preview and
+evaluation stages of a production, if a still frame from an animated sequence
+has good depth cues then it will be even better when the scene is animated.
+</p>
+
+<li><b>Vertical structure</b><br><p align="justify">
+The parallax information requires vertical structure. 
+For example, a plane with a constant colour will not convey nearly the
+same sense of depth than one with a textured surface.
+</p>
+<center><img src="http://paulbourke.net/stereographics/stereorender/texture.gif" width=600 height=143></center>
+<p align="justify">
+Similarly horizontal lines don't contain much parallax information. In
+the case of stereoscopic illustration or visualisation it is therefore common to
+use dashed lines (for example on the right below) rather than the solid line on the left.
+</p>
+<center><img src="http://paulbourke.net/stereographics/stereorender/lines.gif" width=405 height=31></center><p>
+<p align="justify">
+At other times it isn't so easy to introduce vertical parallax, one obvious
+example is the presentation of fuzzy/blurred objects such as clouds. As a result
+these often don't convey a strong sense of depth by themselves.
+</p>
+<center><img src="http://paulbourke.net/stereographics/stereorender/cloud.jpg" width=250 height=250></center><p>
+
+<li><b>Parallax/structure interference</b><br><p align="justify">
+It is possible for the frequency of geometry or texture detail to exactly
+match the parallax separation, this can lead to disturbing ambiguous images
+and increased eye strain. For example, in the scene below what if the parallax
+separation of the vertical red lines matched the spacing of the lines. In that
+case how does the visual system choose to interpret the depth as from the
+actual parallax or the equally valid 0 parallax.
+</p>
+<center><img src="http://paulbourke.net/stereographics/stereorender/regularlines.gif" width=399 height=134></center><p>
+<p align="justify">
+Such ambiguous cases are normally naturally resolved by the parallax of the surrounding
+geometry. However, this isn't always the case for synthetic or data visualisation
+based renderings. 
+</p>
+
+<li><b>Noisy Texture</b><br><p align="justify">
+Noisy textures on surfaces will result in poor depth perception if the frequency
+is so high that there effectively isn't matching visual information between
+the stereo pairs. For example, the image below on the left would have matching
+structure between two stereo pairs while the one on the right probably wouldn't.
+This is similar to high frequency textures "shimmering" in animation
+sequences, it can be helped by high levels of antialiasing but never
+completely cured.
+</p>
+<center><table><tr><td>
+<img src="http://paulbourke.net/stereographics/stereorender/noise1.gif" width=200 height=200>
+</td><td>
+<img src="http://paulbourke.net/stereographics/stereorender/noise2.gif" width=200 height=200>
+</td></tr></table></center><p>
+
+<li><b>Mirror reflections</b><br><p align="justify">
+Correctly generated reflections will work correctly in stereo pairs.
+However many packages support features which mean that the reflections
+are not correct but only approximations, while this isn't normally an
+issue in non-stereo it can give very disturbing results in stereo. Two
+cases where this can arise are when perturbed normals are used to create
+surface texture or when normals are used to give simple faceted geometry
+the appearance of being smooth. In either case the reflections are often
+based upon the underlying geometry which is different to the perceived
+geometry (perturbed or smoothed by surface normals)....
+the result is conflicting reflections between the stereo pairs.
+</p>
+
+<li><b>Specular highlights</b><p align="justify">
+It is possible, usually in rendered content, for a specular highlight to result
+in a bright highlight in one eye and not the other. This is because the model for specular
+takes into account the relative angle between the light AND the camera, unlike
+diffuse reflection that is only a function of the light position and the surface
+normal. This can also occur simply with highly reflective surfaces.
+</p>
+<center><img src="http://paulbourke.net/stereographics/stereorender/reflect.jpg" width=600 height=148></center><p>
+
+<li><b>Positive parallax</b><br><p align="justify">
+Positive parallax (objects behind the screen) is in general easier to
+look at and minimises eye strain.
+</p>
+
+<li><b>Focal distance changes</b><br><p align="justify">
+Frequent cuts in stereo movie/animation forces the viewer to adjust to
+the different focal lengths. Frequent cuts to scene with very different
+content and focal length will quickly introduce stress on the visual system.
+</p>
+</ul>
+
+
+<p><br><br><br><p>
+
+
+<center>
+<h1>3D Stereo Rendering <br>Using OpenGL (and GLUT)</h1>
+Source code for the incorrect (but close) <a href="http://paulbourke.net/stereographics/stereorender/pulsar.toein.c">"Toe-in" stereo</a>,<br> 
+and the correct <a href="http://paulbourke.net/stereographics/stereorender/pulsar.c">Off-axis stereo</a><p>
+Written by <a href="../index.html">Paul Bourke</a><br>
+November 1999<br>
+Updated May 2002
+</center>
+
+<p>
+
+<h3>Introduction</h3>
+
+<p align="justify">
+The following is intended to get someone started creating 3D stereo
+applications using OpenGL and the associated GLUT library. 
+It is assumed that the reader is both familiar with how to create
+the appropriate eye positions for comfortable stereo viewing (see
+link in the title of the page) and the reader has an OpenGL card
+(or software implementation) and any associated hardware (eg: glasses)
+needed to support stereo graphic viewing. 
+</p>
+
+<table width=100% cellpadding=0 cellspacing=0>
+<tr><td valign="top">
+<p align="justify">
+The description of the code presented here will concentrate on the 
+stereo aspects, the example does however create a real, time varying 
+OpenGL object, namely the pulsar model shown on the right. The example
+also contains examples of mouse and keyboard controls of the camera
+position. The example is not intended to illustrate more advanced
+OpenGL techniques and indeed it does not do things particularly efficiently,
+in particular it should, but does not, use display lists. The example
+does not use textures as that is a large separate topic and would only confuse
+the task at hand.
+</p>
+</td><td valign="top" width="160" align="right">
+<a href="http://paulbourke.net/stereographics/stereorender/pulsar.html">
+<img src="http://paulbourke.net/stereographics/stereorender/pulsarsmall.gif" width="125" height="120"></a>
+</td></tr></table>
+
+<h3>Conventions</h3>
+
+<p align="justify">
+The <a href="http://paulbourke.net/stereographics/stereorender/pulsar.c">example code</a> conforms to a couple of local
+conventions. The first is that it can be run in a window or full screen
+(arcade game) mode. By convention the application runs in a window
+unless the "-f" command line option is specified.
+Full screen mode is supported in the most recent
+versions of the GLUT library. The decision to use full screen mode
+is made with the following snippet.
+</p>
+<font color="#ff0000">
+<pre>
+   glutCreateWindow("Pulsar model");
+   glutReshapeWindow(600,400);
+   if (fullscreen)
+      glutFullScreen();
+</pre>
+</font>
+</p>
+
+<p align="justify">
+It is also useful to be able to run the application in stereo mode or
+mono mode, the convention is to run in mono unless the command line 
+switch "-s" is supplied. The full usage help information in the
+example presented here is available by running the application with
+the "-h" command line option, for example:
+</p>
+<pre>
+>pulsar -h
+Usage: pulsar [-h] [-f] [-s] [-c] 
+          -h   this text
+          -f   full screen
+          -s   stereo
+          -c   show construction lines
+Key Strokes
+  arrow keys   rotate left/right/up/down
+  left mouse   rotate
+middle mouse   roll
+           c   toggle construction lines
+           i   translate up
+           k   translate down
+           j   translate left
+           l   translate right
+           [   roll clockwise
+           ]   roll anti clockwise
+           q   quit
+</pre>
+
+<h3>Stereo</h3>
+
+<p align="justify">
+The first thing that needs to be done to support stereo is to initialise 
+the GLUT library
+for stereo operation. If your card/driver combination don't support stereo
+this will fail.
+</p>
+<font color="#ff0000">
+<pre>
+   glutInit(&argc,argv);
+   if (!stereo)
+      glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+   else
+      glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH | GLUT_STEREO);
+</pre>
+</font>
+
+<p align="justify">
+In stereo mode this defines two buffers namely GL_BACK_LEFT and GL_BACK_RIGHT.
+The appropriate buffer is selected before operations that would affect it
+are performed, this is using the routine glDrawBuffer(). So for example to
+clear the two buffers:
+</p>
+<font color="#ff0000">
+<pre>
+   glDrawBuffer(GL_BACK_LEFT);
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   if (stereo) {
+      glDrawBuffer(GL_BACK_RIGHT);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   }
+</pre>
+</font>
+
+<p align="justify">
+Note that some cards are optimised to clear both left and 
+right buffers if GL_BACK is cleared, this can be significantly faster.
+In these cases one clears the buffers as follows.
+</p>
+<font color="#ff0000">
+<pre>
+   glDrawBuffer(GL_BACK);
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+</pre>
+</font>
+
+<h3>Projection</h3>
+<p align="justify">
+All that's left now is to render the geometry into the appropriate buffer.
+There are many ways this can be organised depending on the way the particular
+application is written, in this example see the Display() handler.
+Essentially the idea is to select the appropriate buffer and render the
+scene with the appropriate projection.
+</p>
+
+<table width=100%><tr><td valign="top">
+<b>Toe-in Method</b><p>
+<p align="justify">
+A common approach is the so called "toe-in" method where the camera for
+the left and right eye is pointed towards a single focal point and
+gluPerspective() is used. 
+</p>
+</td><td valign="top">
+<img src="http://paulbourke.net/stereographics/stereorender/toein.gif" width="445" height="294">
+</td></tr></table><p>
+
+<font color="#ff0000">
+<pre>
+   glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
+   gluPerspective(camera.aperture,screenwidth/(double)screenheight,0.1,10000.0);
+
+   if (stereo) {
+
+      CROSSPROD(camera.vd,camera.vu,right);
+      Normalise(&right);
+      right.x *= camera.eyesep / 2.0;
+      right.y *= camera.eyesep / 2.0;
+      right.z *= camera.eyesep / 2.0;
+
+      glMatrixMode(GL_MODELVIEW);
+      glDrawBuffer(GL_BACK_RIGHT);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glLoadIdentity();
+      gluLookAt(camera.vp.x + right.x,
+                camera.vp.y + right.y,
+                camera.vp.z + right.z,
+                focus.x,focus.y,focus.z,
+                camera.vu.x,camera.vu.y,camera.vu.z);
+      MakeLighting();
+      MakeGeometry();
+
+      glMatrixMode(GL_MODELVIEW);
+      glDrawBuffer(GL_BACK_LEFT);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glLoadIdentity();
+      gluLookAt(camera.vp.x - right.x,
+                camera.vp.y - right.y,
+                camera.vp.z - right.z,
+                focus.x,focus.y,focus.z,
+                camera.vu.x,camera.vu.y,camera.vu.z);
+      MakeLighting();
+      MakeGeometry();
+
+   } else {
+
+      glMatrixMode(GL_MODELVIEW);
+      glDrawBuffer(GL_BACK);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glLoadIdentity();
+      gluLookAt(camera.vp.x,
+                camera.vp.y,
+                camera.vp.z,
+                focus.x,focus.y,focus.z,
+                camera.vu.x,camera.vu.y,camera.vu.z);
+      MakeLighting();
+      MakeGeometry();
+   }
+
+   /* glFlush(); This isn't necessary for double buffers */
+   glutSwapBuffers();
+</pre>
+</font><p>
+
+<table width=100%><tr><td valign="top">
+<b>Correct method</b><p>
+<p align="justify">
+The Toe-in method while giving workable stereo pairs is not correct,
+it also introduces vertical parallax which is most noticeable for
+objects in the outer field of view. The correct method is to use what
+is sometimes known as the "parallel axis asymmetric frustum
+perspective projection". In this case the view vectors for each
+camera remain parallel and a glFrustum() is used to describe the
+perspective projection.
+</p>
+</td><td valign="top">
+<img src="http://paulbourke.net/stereographics/stereorender/offaxis.gif" width="443" height="297">
+</td></tr></table><p>
+
+<font color="#ff0000">
+<pre>
+   /* Misc stuff */
+   ratio  = camera.screenwidth / (double)camera.screenheight;
+   radians = DTOR * camera.aperture / 2;
+   wd2     = near * tan(radians);
+   ndfl    = near / camera.focallength;
+
+   if (stereo) {
+
+      /* Derive the two eye positions */
+      CROSSPROD(camera.vd,camera.vu,r);
+      Normalise(&r);
+      r.x *= camera.eyesep / 2.0;
+      r.y *= camera.eyesep / 2.0;
+      r.z *= camera.eyesep / 2.0;
+
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      left  = - ratio * wd2 - 0.5 * camera.eyesep * ndfl;
+      right =   ratio * wd2 - 0.5 * camera.eyesep * ndfl;
+      top    =   wd2;
+      bottom = - wd2;
+      glFrustum(left,right,bottom,top,near,far);
+
+      glMatrixMode(GL_MODELVIEW);
+      glDrawBuffer(GL_BACK_RIGHT);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glLoadIdentity();
+      gluLookAt(camera.vp.x + r.x,camera.vp.y + r.y,camera.vp.z + r.z,
+                camera.vp.x + r.x + camera.vd.x,
+                camera.vp.y + r.y + camera.vd.y,
+                camera.vp.z + r.z + camera.vd.z,
+                camera.vu.x,camera.vu.y,camera.vu.z);
+      MakeLighting();
+      MakeGeometry();
+
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      left  = - ratio * wd2 + 0.5 * camera.eyesep * ndfl;
+      right =   ratio * wd2 + 0.5 * camera.eyesep * ndfl;
+      top    =   wd2;
+      bottom = - wd2;
+      glFrustum(left,right,bottom,top,near,far);
+
+      glMatrixMode(GL_MODELVIEW);
+      glDrawBuffer(GL_BACK_LEFT);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glLoadIdentity();
+      gluLookAt(camera.vp.x - r.x,camera.vp.y - r.y,camera.vp.z - r.z,
+                camera.vp.x - r.x + camera.vd.x,
+                camera.vp.y - r.y + camera.vd.y,
+                camera.vp.z - r.z + camera.vd.z,
+                camera.vu.x,camera.vu.y,camera.vu.z);
+      MakeLighting();
+      MakeGeometry();
+
+   } else {
+
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      left  = - ratio * wd2;
+      right =   ratio * wd2;
+      top    =   wd2;
+      bottom = - wd2;
+      glFrustum(left,right,bottom,top,near,far);
+
+      glMatrixMode(GL_MODELVIEW);
+      glDrawBuffer(GL_BACK);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glLoadIdentity();
+      gluLookAt(camera.vp.x,camera.vp.y,camera.vp.z,
+                camera.vp.x + camera.vd.x,
+                camera.vp.y + camera.vd.y,
+                camera.vp.z + camera.vd.z,
+                camera.vu.x,camera.vu.y,camera.vu.z);
+      MakeLighting();
+      MakeGeometry();
+   }
+
+   /* glFlush(); This isn't necessary for double buffers */
+   glutSwapBuffers();
+</pre>
+</font>
+
+<p align="justify">
+Note that sometimes it is appropriate to use the left eye position when
+not in stereo mode in which case the above code can be simplified. It
+seems more elegant and consistent when moving between mono and stereo 
+if the point between the eyes is used when in mono.
+</p>
+
+<p align="justify">
+On the off chance that you want to write the code differently and
+would like to test the correctness of the glFrustum() parameters,
+here's an explicit example.
+</p>
+
+<center>
+<img src="http://paulbourke.net/stereographics/stereorender/testing.gif" width=706 height=487>
+</center>
+<p>
+
+<b>Passive stereo</b>
+
+<p align="justify">
+Updated in May 2002: sample code to deal with passive stereo,
+that is, drawing the left eye to the left half of a dual display
+OpenGL card and the right eye to the right half.
+<a href="http://paulbourke.net/stereographics/stereorender/pulsar2.c">pulsar2.c</a> and
+<a href="http://paulbourke.net/stereographics/stereorender/pulsar2.h">pulsar2.h</a>
+</p>
+
+<b>Macintosh OS-X example</b>
+
+<p align="justify">
+<a href="http://paulbourke.net/stereographics/stereorender/pulsar_jhc14.c">Source code</a> and 
+<a href="http://paulbourke.net/stereographics/stereorender/Makefile">Makefile</a> illustrating stereo under Mac OS-X
+using "blue line" syncing, contributed by Jamie Cate.
+</p>
+
+<p align="justify">
+Demonstration stereo application for Mac OS-X from the Apple development site
+based upon the method and code described above: 
+<a href="http://paulbourke.net/stereographics/stereorender/GLUTStereo/">GLUTStereo</a>. (Also uses blue line syncing)
+</p>
+
+<b>Python Example</b> contributed by Peter Roesch<br>
+<a href="http://paulbourke.net/stereographics/stereorender/python.zip">python.zip</a>
+<p>
+
+<b>Cross-eye stereo modification</b> contributed by Todd Marshall<br>
+<a href="http://paulbourke.net/stereographics/stereorender/pulsar_cross.c">pulsar_cross.c</a>
+
+<br>
+<br>
+<br>
+
+<center>
+<h1>Off-axis frustums - OpenGL</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+July 2007
+</center>
+<p>
+
+<p align="justify">
+The following describes one (there are are a number of alternatives) system for create
+perspective offset frustums for stereoscopic projection using OpenGL. This is convenient
+for non observer tracked viewing on a single stereoscopic panel
+in these cases there is no clear relationship between the model dimensions
+and the screen. Note that for multi-wall immersive displays the following is not the
+best approach, the appropriate method requires a knowledge of the screen geometry and
+the observer position and generally the model is scaled into real world coordinates.
+</p>
+
+<p align="justify">
+Camera is defined by its position, view direction, up vector, eye separation, distance
+to zero parallax (see fo below) and the near and far cutting planes.
+Position, eye separation, zero parallax distance, and cutting planes are most conveniently 
+specified in model coordinates, direction
+and up vector are orthonormal vectors. With regard to parameters for adjusting stereoscopic
+viewing I would argue that the distance to zero parallax is the most natural, not only does
+it relate directly to the scale of the model and the relative position of the camera, it also
+has a direct bearing on the stereoscopic result ... namely that objects at that distance will
+appear to be at the depth of the screen. In order not to burden the operators with multiple
+stereo controls one can usually just internally set the eye separation to 1/30 of the
+zero parallax distance (camera.eyesep = camera.fo / 30), this will give acceptable stereoscopic
+viewing in almost all situations and is independent of model scale.
+</p>
+
+<center>
+<img src="http://paulbourke.net/stereographics/stereorender/diagram3.gif" width=800 height=363 border=0>
+</center>
+
+<p align=justify">
+The above diagram (view from above the two cameras) is intended to illustrate
+how the amount by which to offset the frustums is calculated. Note there is only
+horizontal parallax. This is intended to be a guide for OpenGL programmers, as such there
+are some assumptions that relate to OpenGL that may not be appropriate to other APIs. The
+eye separation is exaggerated in order to make the diagram clearer.
+</p>
+
+<p align=justify">
+The half width on the projection plane is given by
+</p>
+<center>
+widthdiv2 =  camera.near * tan(camera.aperture/2)
+</center><p>
+
+<p align=justify">
+This is related to world coordinates by similar triangles, the amount D by which
+to offset the view frustum horizontally is given by
+</p>
+<center>
+D = 0.5 * camera.eyesep * camera.near / camera.fo
+</center><p>
+
+<pre>
+aspectratio = windowwidth / (double)windowheight;         // Divide by 2 for side-by-side stereo
+widthdiv2   = camera.near * tan(camera.aperture / 2); // aperture in radians
+cameraright = crossproduct(camera.dir,camera.up);         // Each unit vectors
+right.x *= camera.eyesep / 2.0;
+right.y *= camera.eyesep / 2.0;
+right.z *= camera.eyesep / 2.0;
+</pre>
+
+<b>Symmetric - non stereo camera</b><p>
+<pre>
+   glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
+   glViewport(0,0,windowwidth,windowheight);
+   top    =   widthdiv2;
+   bottom = - widthdiv2;
+   left   = - aspectratio * widthdiv2;
+   right  =   aspectratio * widthdiv2;
+   glFrustum(left,right,bottom,top,camera.near,camera.far);
+   glMatrixMode(GL_MODELVIEW);
+   glLoadIdentity();
+   gluLookAt(camera.pos.x,camera.pos.y,camera.pos.z,
+             camera.pos.x + camera.dir.x,
+             camera.pos.y + camera.dir.y,
+             camera.pos.z + camera.dir.z,
+             camera.up.x,camera.up.y,camera.up.z);
+   // Create geometry here in convenient model coordinates
+</pre>
+
+<b>Asymmetric frustum - stereoscopic</b><p>
+<pre>
+   // Right eye
+   glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
+   // For frame sequential, earlier use glDrawBuffer(GL_BACK_RIGHT);
+   glViewport(0,0,windowwidth,windowheight);
+   // For side by side stereo
+   //glViewport(windowwidth/2,0,windowwidth/2,windowheight);
+   top    =   widthdiv2;
+   bottom = - widthdiv2;
+   left   = - aspectratio * widthdiv2 - 0.5 * camera.eyesep * camera.near / camera.fo;
+   right  =   aspectratio * widthdiv2 - 0.5 * camera.eyesep * camera.near / camera.fo;
+   glFrustum(left,right,bottom,top,camera.near,camera.far);
+   glMatrixMode(GL_MODELVIEW);
+   glLoadIdentity();
+   gluLookAt(camera.pos.x + right.x,camera.pos.y + right.y,camera.pos.z + right.z,
+             camera.pos.x + right.x + camera.dir.x,
+             camera.pos.y + right.y + camera.dir.y,
+             camera.pos.z + right.z + camera.dir.z,
+             camera.up.x,camera.up.y,camera.up.z);
+   // Create geometry here in convenient model coordinates
+
+   // Left eye
+   glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
+   // For frame sequential, earlier use glDrawBuffer(GL_BACK_LEFT);
+   glViewport(0,0,windowwidth,windowheight);
+   // For side by side stereo
+   //glViewport(0,0,windowidth/2,windowheight);
+   top    =   widthdiv2;
+   bottom = - widthdiv2;
+   left   = - aspectratio * widthdiv2 + 0.5 * camera.eyesep * camera.near / camera.fo;
+   right  =   aspectratio * widthdiv2 + 0.5 * camera.eyesep * camera.near / camera.fo;
+   glFrustum(left,right,bottom,top,camera.near,camera.far);
+   glMatrixMode(GL_MODELVIEW);
+   glLoadIdentity();
+   gluLookAt(camera.pos.x - right.x,camera.pos.y - right.y,camera.pos.z - right.z,
+             camera.pos.x - right.x + camera.dir.x,
+             camera.pos.y - right.y + camera.dir.y,
+             camera.pos.z - right.z + camera.dir.z,
+             camera.up.x,camera.up.y,camera.up.z);
+   // Create geometry here in convenient model coordinates
+</pre>
+
+<b>Notes</b><p>
+<ul>
+<li><p align="justify">
+Due to the possibility of extreme negative parallax separation as objects come closer
+to the camera than the zero parallax distance, it is common practice to link the near
+cutting plane to the zero parallax distance. The exact relationship depends on the degree
+of ghosting of the projection system but camera.near = camera.fo / 5 is usually appropriate. 
+</p>
+<li><p align="justify">
+When the camera is adjusted, for example during a flight path, it is important to ensure the
+direction and up vectors remain orthonormal. This follows naturally when using quaternions and
+there are ways of ensuring this when using other systems for camera navigation.
+</p>
+<li><p align="justify">
+Developers are encouraged to support both side-by-side stereo as well as frame sequential (also
+called quad buffer stereo). The only difference is the viewport parameters, setting the drawing
+buffer to either the back buffer or the left/right back buffers, and when to clear the back buffer(s).
+</p>
+<li><p align="justify">
+The camera aperture above is the horizontal field of view not the more usual vertical
+field of view that is more conventional in OpenGL. Most end users think in terms of horizontal
+FOV than vertical FOV.
+</p>
+</ul>
+</td></tr></table></center>
+</body>
+</html>
+

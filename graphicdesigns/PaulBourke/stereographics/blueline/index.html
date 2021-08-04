@@ -1,0 +1,143 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Blue line, frame sequential stereo</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><Td>
+
+<table width=100% cellpadding=0 cellspacing=0><tr><td valign="top">
+<center>
+<h1>Blue line, frame sequential stereo</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+August 2003
+</center>
+<p><br><p>
+
+<b>Introduction</b><p>
+<p align="justify">
+So called "blue line" stereo is also often called the poor mans stereo
+is a technique for supporting frame sequential stereo on cards without
+specific stereo support. Cards designed for stereo normally have an
+additional plug on the card that provides signals for synchronising
+shutter glasses, emitters, or other hardware. Cards that don't have this
+synchronisation signal can be still be used if the driver manufacturer
+supports blue line stereo (or one of the many variants). The most common
+implementation is for the content creator to draw a blue line on the 
+last row of the display, the driver for the card (it can be done at other
+places on some systems) generates the syncing voltages on one of the 
+unused pins on the DVI or VGA cable depending on whether the blue line
+exists or not. A special cable is used to extract the sync signal from
+the VGA cable.
+</p>
+
+<center>
+<img src="http://paulbourke.net/stereographics/blueline/blueline1.gif" width=495 height=210>
+</center><p>
+
+</td><td width=10>&nbsp;</td><td width=173 valign="top">
+<img src="http://paulbourke.net/stereographics/blueline/cable.gif" width=173 height=500
+</td></tr></table><p>
+
+<p align="justify">
+The most common sync signal is a simple square wave at around 3 volts
+peak to peak and running at the same frequency as the frame sequential
+stereo, usually 120Hz for a flicker free effect. NVidia were perhaps the
+first card supplier to incorporate this into their drivers, they use
+pin 12 on the VGA connector for the sync signal.
+</p>
+<center>
+<img src="http://paulbourke.net/stereographics/blueline/wiring.gif" width=400 height=381>
+</center>
+<p>
+
+<b>Source</b><p>
+<pre>
+/* 
+   Draw a blue line on the last pixel row for poor mans stereo syncing
+*/ 
+void DrawBlueLine(int width,int height)
+{     
+   GLint i;
+   unsigned long buffer;
+      
+   glPushAttrib(GL_ALL_ATTRIB_BITS);
+
+   glDisable(GL_ALPHA_TEST);
+   glDisable(GL_BLEND);
+   for (i=0;i&lt;6;i++) 
+      glDisable(GL_CLIP_PLANE0 + i);
+   glDisable(GL_COLOR_LOGIC_OP);
+   glDisable(GL_COLOR_MATERIAL);
+   glDisable(GL_DEPTH_TEST);
+   glDisable(GL_DITHER);
+   glDisable(GL_FOG);
+   glDisable(GL_LIGHTING);
+   glDisable(GL_LINE_SMOOTH);
+   glDisable(GL_LINE_STIPPLE);
+   glDisable(GL_SCISSOR_TEST);
+   glDisable(GL_STENCIL_TEST);
+   glDisable(GL_TEXTURE_1D);
+   glDisable(GL_TEXTURE_2D);
+   glDisable(GL_TEXTURE_3D);
+   glDisable(GL_TEXTURE_CUBE_MAP);
+
+   for (buffer=GL_BACK_LEFT; buffer&lt;=GL_BACK_RIGHT; buffer++) {
+
+      /* Will affect the last row on each buffer, left and right */
+      glDrawBuffer(buffer);
+
+      /* Set the viewport to the entire window */
+      glViewport(0,0,width,height);
+
+      glMatrixMode(GL_PROJECTION);
+      glPushMatrix();
+      glLoadIdentity();
+      glOrtho(0,glutGet(GLUT_WINDOW_WIDTH),0,glutGet(GLUT_WINDOW_HEIGHT),-1,1);
+      glMatrixMode(GL_MODELVIEW);
+      glPushMatrix();
+      glLoadIdentity();
+
+      /* Erase the last pixel row to black */
+      glColor3d(0.0,0.0,0.0);
+      glBegin(GL_LINES);
+      glVertex2i(0,0);
+      glVertex2i(width,0);
+      glEnd();
+
+      /*
+         Draw a line of the correct length
+         the cross over is about 40% across the screen from the left
+      */
+      glColor3d(0.0,0.0,1.0);
+      glBegin(GL_LINES);
+      glVertex2i(0,0);
+      if (buffer == GL_BACK_LEFT)
+         glVertex2i(width/4,0);
+      else
+         glVertex2i(3*width/4,0);
+      glEnd();
+
+      glPopMatrix();
+      glMatrixMode(GL_PROJECTION);
+      glPopMatrix();
+   }
+
+   glPopAttrib();
+}
+</pre>
+
+</td></tr></table></center>
+</body>
+</html>

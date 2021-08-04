@@ -1,0 +1,324 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Creating unwrapped icosahedral maps</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Creating unwrapped icosahedral maps</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+September 2020<p>
+</center>
+<p><br><p>
+
+<p align="justify">
+The concept of a projection plane in a perspective projection can be extended to a projection sphere
+when capturing a 360x180 degree image. The position on the sphere that an object in the
+world is projected to is determine by the intersection of a straight line with the sphere
+from the camera position to the world object.
+The problem of representing such an image on a flat plane without apparent distortion
+is well known and is historically the subject of cartography. The most common method
+is the equirectangular projection which is just a mapping with longitude
+and latitude being the two 2D axes. This projection has only one cut (left and right edge) but the
+appearance of the scene is stretched towards the top and bottom edge of the projection. The
+ultimate stretching occurs at the north and south pole were a single vector into the scene
+is stretched across the entire top and bottom edge.
+</p>
+
+<br>
+<center>
+   <a href="http://paulbourke.net/panorama/icosahedral/example5.jpg"><img src="http://paulbourke.net/panorama/icosahedral/example5s.jpg" width=800 height=400 border=1></a><br>
+	<smalltext>Equirectangular projection</smalltext>
+</center><p><br>
+
+<p align="justify">
+Another popular representation is the so called <a href="../cubemaps/index.html">cubemap</a>. In this case
+the projection sphere is mapped onto the 6 faces of a cube (the projection planes), 
+each face being a 90 degree by
+90 degree perspective projection. The extreme stretching of the equirectangular is now
+reduced to modest stretching towards the edges of the perspective projection, the price to
+be paid is that there are multiple cuts, 7 in total. The perspective stretching can be further reduced
+by employing the <a href="../cubemaps/index.html#eac">equiangular cubemap</a>.
+</p>
+
+<br>
+<center>
+   <a href="http://paulbourke.net/panorama/icosahedral/example6.jpg"><img src="http://paulbourke.net/panorama/icosahedral/example6s.jpg" width=800 height=600 border=1></a><br>
+	<smalltext>Unwrapped cubemap projection</smalltext>
+</center><p><br>
+
+<p align="justify">
+While each face of an unfolded cubic projection is a familiar perspective projection, and
+the front-top-bottom faces of the unfolded cube make sense, the relationship between the
+left-right-back faces and the top and bottom faces is by no means clear.
+</p>
+
+<p align="justify">
+There is nothing special about projecting the projection sphere onto a cube, the main attraction
+being that the sides are square and can therefore each be efficiently represented by six square images.
+But there is nothing stopping one from projecting onto any closed (preferably convex so a single valued
+function of longitude and latitude) polyhedron
+and then unwrapping that so it lies on a plane.
+In the following an icosahedron is used, it has 20 triangular faces and 12 vertices, compared to
+a cube which has 6 rectangular faces and 8 vertices.
+</p>
+
+<br>
+<center>
+   <a href="http://paulbourke.net/panorama/icosahedral/diagram3.jpg"><img src="http://paulbourke.net/panorama/icosahedral/diagram3s.jpg" width=800 height=384 border=1></a><br>
+	<smalltext>Unfolded icosahedron showing layout and conventions.</smalltext>
+</center><p><br>
+
+<p align="justify">
+To get a sense of what this looks like consider the following equirectangular projection
+showing lines of longitude and latitude.
+</p>
+
+<br>
+<center>
+   <a href="http://paulbourke.net/panorama/icosahedral/example7.jpg"><img src="http://paulbourke.net/panorama/icosahedral/example7s.jpg" width=800 height=400 border=1></a><br>
+	<smalltext>Longitude/latitude mesh</smalltext>
+</center><p><br>
+
+<p align="justify">
+The corresponding unfolded icosahedron projection is shown below.
+</p>
+
+<br>
+<center>
+   <a href="http://paulbourke.net/panorama/icosahedral/example3.jpg"><img src="http://paulbourke.net/panorama/icosahedral/example3s.jpg" width=800 height=378 border=1></a><br>
+	<smalltext>Icosahedral mapping of a longitude/latitude mesh</smalltext>
+</center><p><br>
+
+<p align="justify">
+Another example using the same equirectangular that was used for the unfolded cube above
+is shown below.
+</p>
+
+<br>
+<center>
+   <a href="http://paulbourke.net/panorama/icosahedral/example1.jpg"><img src="http://paulbourke.net/panorama/icosahedral/example1s.jpg" width=800 height=378 border=1></a>
+</center><p><br>
+
+<p align="justify">
+Each triangle of the icosahedron is of base width 1 and height sqrt(3)/2. There are 5.5 triangles
+horizontally and 3 triangles vertically so the aspect ratio of the image is
+5.5/(1.5*sqrt(3)) = 2.11695.
+</p>
+
+<br>
+<center>
+   <a href="http://paulbourke.net/panorama/icosahedral/example2.jpg"><img src="http://paulbourke.net/panorama/icosahedral/example2s.jpg" width=800 height=378 border=1></a>
+</center><p><br>
+
+<p align="justify">
+While the above have the triangular faces of the icosahedron intact, it does lead to an
+asymmetric layout. An alternative is to split two of the faces for the layout shown below.
+Aspect ratio is now 5/(1.5*sqrt(3)) = 1.9245
+</p>
+
+<br>
+<center>
+   <a href="http://paulbourke.net/panorama/icosahedral/example4.jpg"><img src="http://paulbourke.net/panorama/icosahedral/example4s.jpg" width=800 height=415 border=1></a>
+</center><p><br>
+
+<p align="justify">
+There are some advantages of using this unfolded icosahedral mapping.
+</p>
+<ul>
+<li><p align="justify">
+There is a better connection between the central horizontal view and the upper and lower
+thirds, at least in comparison to unfolded cube maps.
+</p>
+<li><p align="justify">
+In comparison to equirectangular projections there is no extreme stretching,
+each triangle is a perspective projection, and even less stretching
+than in the corners of cube maps. For example an edge on one face spans 60 degrees
+compared to 90 degrees for a face of a cube.
+</p>
+<li><p align="justify">
+Defects at the north and south poles (sky stitch or tripod)
+are less pronounced than with cubemaps or equirectangular projections.
+</p>
+</ul><p>
+
+<p align="justify">
+Software has been developed that transforms an equirectangular into the two unwrapped icosahedral
+formats shown above. It is a simple command line utility, usage string is given below. It allows the
+output image size to be adjusted (-w) and rotation of the equirectangular with respect to the icosahedron (-x,-y,-z).
+It performs simple supersampling antialiasing (-a) and optionally creates remap filters (-f) for ffmpeg to facilitate
+the conversion of movies, removing the need to extract frame first, process and then rebuild the movie.
+</p>
+<pre>
+Usage: sphere2icosa [options] sphericalimagename
+Options
+   -d      Enable debug mode, default: off
+   -a n    Level of antialising, default: 2
+   -w n    Output image width, default: 4092
+   -f      Create ffmpeg remap filter pgm files, default: off
+   -s      Create a symmetric unfolding, default: off
+   -x n    Tilt angle (degrees), default: 0
+   -y n    Roll angle (degrees), default: 0
+   -z n    Pan angle (degrees), default: 0
+</pre>
+
+<br>
+<center>
+   <a href="http://paulbourke.net/panorama/icosahedral/diagram1.jpg"><img src="http://paulbourke.net/panorama/icosahedral/diagram1s.jpg" width=800 height=443 border=1></a>
+</center><p><br>
+
+<p align="justify">
+The mapping involves finding the best pixel in the equirectangular for each pixel in
+the output image. The triangular face containing each pixel is determined followed by
+the two triangular coordinates u<sub>1</sub> and u<sub>2</sub>, this is simple matrix
+solution as shown below. These two coordinates are then used to index the matching
+3D icosahedron triangle defining a vector in 3D.
+From this, one determines the longitude and latitude and therefore the pixel
+value in the input image. Of course all this is done as continuous points rather than
+pixels in order to implement the supersampling antialising.
+</p>
+
+<br>
+<center>
+   <a href="http://paulbourke.net/panorama/icosahedral/diagram2.jpg"><img src="http://paulbourke.net/panorama/icosahedral/diagram2s.jpg" width=600 height=495 border=1></a>
+</center><p><br>
+
+<p align="justify">
+The three projections discussed here are illustrated below in 3D.
+Please note that if the camera were at the center of each one, and only ambient light were used
+then the internal views would all be identical.
+</p>
+<br>
+<center>
+	<a href="https://vimeo.com/462045161"><img src="http://paulbourke.net/panorama/icosahedral/vimeo_s.jpg" width=800 height=269 border=1></a><br>
+	<smalltext>Vimeo movie</smalltext>
+</center><p><br>
+
+<b>Variation</b><p>
+
+<p align="justify">
+Each face in the versions above is a single triangular projection plane. As such, adjacent 
+faces are different plane and can give a dog-leg style effect for straight lines that cross
+the boundary between two faces. This effect can be reduced by tessellating each triangular
+face. This is most conveniently done by repeatedly splitting each face into 4 triangles
+by bisecting each edge.
+</p>
+
+<br>
+<center>
+   <img src="http://paulbourke.net/panorama/icosahedral/diagram4.jpg" width=600 height=298 border=0><br>
+   <smalltext>Faces split through 3 iterations into a total of 1280 faces</smalltext>
+</center><p><br>
+
+<p align="justify">
+Some of the visual artefacts in the earlier versions have been removed.
+</p>
+
+<br>
+<center>
+   <a href="http://paulbourke.net/panorama/icosahedral/example8.jpg"><img src="http://paulbourke.net/panorama/icosahedral/example8_s.jpg" width=800 height=378 border=1></a><br>
+	<smalltext>Faces split through 3 iterations into a total of 1280 faces</smalltext>
+</center><p><br>
+
+<p align ="justify">
+For a little history, the unfolding of the icosahedron and polyhedra in general is attributed
+to Albrecht Dürer (1471-1528), the following from one of his publications.
+</p>
+<center>
+   <a href="http://paulbourke.net/panorama/icosahedral/durer.jpg"><img src="http://paulbourke.net/panorama/icosahedral/durer_s.jpg" width=600 height=711 border=1></a><br>
+</center><p><br>
+
+<p><br><br><p>
+
+<center>
+<h1>Creating dodecahedral maps</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+September 2020<p>
+</center>
+<p><br><p>
+
+<p align="justify">
+The following is similar although there are some important differences. Here, instead of creating
+a single texture map, a separate texture map is created for each pentagonal face of the dodecahedron.
+When creating the OBJ file each face is created separately as 5 triangular faces with the correct
+texture coordinates.
+</p>
+
+<center>
+	<a href="http://paulbourke.net/panorama/icosahedral/geometry.png"><img src="http://paulbourke.net/panorama/icosahedral/geometry_s.png" width=800 height=400 border=1></a><br>
+	<smalltext>The faces of the dodecahedron in equirectangular space</smalltext>
+</center><p>
+
+<p align="justify">
+The other difference is that unlike the icosahedral map which forms a relatively efficient
+coverage on a rectangular image, the dodecahedron does not "unwrap" without large gaps and
+discontinuities.
+</p>
+
+<center>
+   <a href="http://paulbourke.net/panorama/icosahedral/layout.png"><img src="http://paulbourke.net/panorama/icosahedral/layout_s.png" width=800 height=1311 border=1></a>
+</center><p>
+
+<pre>
+Usage: sphere2dodec [options] spherefilename
+Options
+   -w n   Image width (and height), default: 2048
+   -a n   Degree of antialiasing, default: 2
+   -c     Crop to pentagon, default: disabled
+</pre>
+
+<p align="justify">
+The 12 pentagonal texture maps are shown below.
+</p>
+<center>
+<table>
+<tr><td>
+	<a href="http://paulbourke.net/panorama/icosahedral/00.jpg"><img src="http://paulbourke.net/panorama/icosahedral/00_s.jpg" width=400 height=400 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/panorama/icosahedral/01.jpg"><img src="http://paulbourke.net/panorama/icosahedral/01_s.jpg" width=400 height=400 border=1></a>
+</td></tr>
+<tr><td>
+   <a href="http://paulbourke.net/panorama/icosahedral/02.jpg"><img src="http://paulbourke.net/panorama/icosahedral/02_s.jpg" width=400 height=400 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/panorama/icosahedral/03.jpg"><img src="http://paulbourke.net/panorama/icosahedral/03_s.jpg" width=400 height=400 border=1></a>
+</td></tr>
+<tr><td>
+   <a href="http://paulbourke.net/panorama/icosahedral/04.jpg"><img src="http://paulbourke.net/panorama/icosahedral/04_s.jpg" width=400 height=400 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/panorama/icosahedral/05.jpg"><img src="http://paulbourke.net/panorama/icosahedral/05_s.jpg" width=400 height=400 border=1></a>
+</td></tr>
+<tr><td>
+   <a href="http://paulbourke.net/panorama/icosahedral/06.jpg"><img src="http://paulbourke.net/panorama/icosahedral/06_s.jpg" width=400 height=400 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/panorama/icosahedral/07.jpg"><img src="http://paulbourke.net/panorama/icosahedral/07_s.jpg" width=400 height=400 border=1></a>
+</td></tr>
+<tr><td>
+   <a href="http://paulbourke.net/panorama/icosahedral/08.jpg"><img src="http://paulbourke.net/panorama/icosahedral/08_s.jpg" width=400 height=400 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/panorama/icosahedral/09.jpg"><img src="http://paulbourke.net/panorama/icosahedral/09_s.jpg" width=400 height=400 border=1></a>
+</td></tr>
+<tr><td>
+   <a href="http://paulbourke.net/panorama/icosahedral/10.jpg"><img src="http://paulbourke.net/panorama/icosahedral/10_s.jpg" width=400 height=400 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/panorama/icosahedral/11.jpg"><img src="http://paulbourke.net/panorama/icosahedral/11_s.jpg" width=400 height=400 border=1></a>
+</td></tr>
+</table>
+</center><p>
+
+</td></tr></table></center>
+</body>
+</html>
+

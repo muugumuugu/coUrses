@@ -1,0 +1,217 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Workflow for creating 360 spherical (Equirectangular) panoramas</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800 cellpadding=0 cellspacing=0 border=0><tr><td>
+
+<center>
+<h3>Workflow for creating 360 spherical (equirectangular) panoramas</h3>
+<a href="../index.html">Paul Bourke</a><br>
+December 2013
+</center>
+
+<p align="justify">
+The following describes a work flow for processing 360x180 degree panoramic images captured
+with a SLR camera and 180 degree fisheye lens. While there are higher resolution options
+involving more camera shots and motorised rigs, the process described here is
+suited to cases where a large number of panoramas need to be captured in a short time frame.
+The hardware used here, only one of many options, is a Canon 5D MK III and Canon 8-15mm
+fisheye lens. This configuration can be used in two ways, three shots with the camera
+in landscape mode or for higher resolution 4 shots with the camera in portrait mode and the
+fisheye zoomed to fit vertically. The former uses the height of the camera sensor and the
+later the width, for the Canon 5D the former results in a spherical image approximately
+8000 pixels across, the later in a 12000 pixel wide image.
+The three shot option will be used in this document.
+</p>
+
+<table width=800><tr><td>
+<center>
+<a href="http://paulbourke.net/panorama/sphericalpano/IVEC8465.JPG"><img src="http://paulbourke.net/panorama/sphericalpano/IVEC8465s.jpg" width=250 height=176 border=1></a>
+</center>
+</td><td>
+<center>
+<a href="http://paulbourke.net/panorama/sphericalpano/IVEC8466.JPG"><img src="http://paulbourke.net/panorama/sphericalpano/IVEC8466s.jpg" width=250 height=176 border=1></a>
+</center>
+</td><td>
+<center>
+<a href="http://paulbourke.net/panorama/sphericalpano/IVEC8467.JPG"><img src="http://paulbourke.net/panorama/sphericalpano/IVEC8467s.jpg" width=250 height=176 border=1></a>
+</center>
+</td></tr></table><p>
+
+<b>Stitch with AutoPano Pro</b><p>
+<p align="justify">
+A document such as this can age quickly as software versions change or new/better software
+comes on the market. The intent here is to document one solution, the reader can hopefully
+adopt this to changing circumstances in the future. As such, the optimal settings for 
+AutoPano Pro will not be discussed, the reader should read the manual and explore whichever
+stitching software they choose.
+</p>
+<center>
+<a href="http://paulbourke.net/panorama/sphericalpano/image1.jpg"><img src="http://paulbourke.net/panorama/sphericalpano/image1_s.jpg" width=800 height=561 border=1></a><br>
+</center>
+<p>
+<p align="justify">
+Check the lens focal length and fisheye has been detected properly. If using a lens that
+does not reflect the specifications in the EXIF data (such as the Sunex 5.6mm fisheye), enter
+the information manually.
+</p>
+<center>
+<a href="http://paulbourke.net/panorama/sphericalpano/image3.jpg"><img src="http://paulbourke.net/panorama/sphericalpano/image3_s.jpg" width=800 height=562 border=1></a><br>
+</center>
+<p>
+<p align="justify">
+Check circular detection of the fisheye, it can sometimes get confused by lens
+flares and internal reflections from the lens ring. Adjust the circle using the
+yellow circle and generally apply to the other fisheye images.
+</p>
+<center>
+<a href="http://paulbourke.net/panorama/sphericalpano/image4.jpg"><img src="http://paulbourke.net/panorama/sphericalpano/image4_s.jpg" width=800 height=563 border=1></a><br>
+</center>
+<p align="justify">
+Generally render as 16 bit psd files, this will give maximum scope for image adjustment
+in the next step
+without quantisation errors. A typical stitched image as shown below will have artefacts at the
+top and bottom, it is these regions where lens non-linearity's have an effect. They will
+also occur where the lens is rotating about other than the nodal point.
+</p>
+<center>
+	<img src="http://paulbourke.net/panorama/sphericalpano/image2_s.jpg" width=800 height=388 border=1><br>
+</center>
+<p>
+
+<b>Editing</b><p>
+<p align="justify">
+Common editing functions include shadow/highlight adjustment, vibrance, and possibly sharpening.
+While the author uses Adobe Photoshop there are other alternatives such as GIMP that
+for the most part has the same tools.
+The colour graded result is exported as 8 bit TGA, in this case called "pano.tga".
+</p>
+<center>
+<img src="http://paulbourke.net/panorama/sphericalpano/photoshop.jpg" width=800 height=388 border=1></a><br>
+</center>
+<p>
+
+<b>Create cube maps</b><p>
+<p align="justify">
+Editing the spherical panorama is next to impossible due to the most common regions
+needing editing being at the north and south poles of the image where there is maximum
+distortion. The solution developed by the author is to render out cube maps, 6 x 90 degree field of view
+standard perspective projections for editing followed by recombining them into a
+spherical projection (if necessary). The following command line 
+(<a href="../cubemaps/index.html">authors software</a>)
+create cube maps that are each 2048 pixels square with a 3x3 supersampling.
+</p>
+<pre>
+   sphere2cube -w 2048 -a 3 pano.tga
+</pre>
+<p align="justify">
+The result are 6 TGA files with names "l_pano.tga", "r_pano.tga", "t_pano.tga",
+"d_pano.tga", "f_pano.tga", and "b_pano.tga". The prefix is fairly obvious:
+left, right, top, down, front, back. As with the spherical panorama, the combined
+cube maps represent a complete recording of the scene.
+Note the holes in the centre of the top and bottom faces of the folded out cube.
+</p>
+<center><table cellpadding=0 cellspacing=0><tr>
+<td>&nbsp;</td>
+<td><a href="http://paulbourke.net/panorama/sphericalpano/t_pano.jpg"><img src="http://paulbourke.net/panorama/sphericalpano/t_pano_s.jpg" width=200 height=200 border=1></a></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr><tr>
+<td><a href="http://paulbourke.net/panorama/sphericalpano/l_pano.jpg"><img src="http://paulbourke.net/panorama/sphericalpano/l_pano_s.jpg" width=200 height=200 border=1></a></td>
+<td><a href="http://paulbourke.net/panorama/sphericalpano/f_pano.jpg"><img src="http://paulbourke.net/panorama/sphericalpano/f_pano_s.jpg" width=200 height=200 border=1></a></td>
+<td><a href="http://paulbourke.net/panorama/sphericalpano/r_pano.jpg"><img src="http://paulbourke.net/panorama/sphericalpano/r_pano_s.jpg" width=200 height=200 border=1></a></td>
+<td><a href="http://paulbourke.net/panorama/sphericalpano/b_pano.jpg"><img src="http://paulbourke.net/panorama/sphericalpano/b_pano_s.jpg" width=200 height=200 border=1></a></td>
+</tr><tr>
+<td>&nbsp;</td>
+<td><a href="http://paulbourke.net/panorama/sphericalpano/d_pano.jpg"><img src="http://paulbourke.net/panorama/sphericalpano/d_pano_s.jpg" width=200 height=200 border=1></a></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr></table></center>
+<p>
+
+<b>Edit cube faces in PhotoShop</b><p>
+<p align="justify">
+In general the top and bottom images need to be edited, note that in this case the camera
+was hand held and as such the edit zones are quite large. With a tripod and careful
+alignment of the nodal point of the camera/lens the edit regions will be significantly smaller.
+The only time the left, front, right, and back images need editing is if the photographers
+shadow strays into those zones.
+</p>
+<center><table  cellpadding=0 cellspacing=0><tr>
+<td>&nbsp;</td>
+<td><a href="http://paulbourke.net/panorama/sphericalpano/t2_pano.jpg"><img src="http://paulbourke.net/panorama/sphericalpano/t2_pano_s.jpg" width=200 height=200 border=1></a></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr><tr>
+<td><a href="http://paulbourke.net/panorama/sphericalpano/l_pano.jpg"><img src="http://paulbourke.net/panorama/sphericalpano/l_pano_s.jpg" width=200 height=200 border=1></a></td>
+<td><a href="http://paulbourke.net/panorama/sphericalpano/f_pano.jpg"><img src="http://paulbourke.net/panorama/sphericalpano/f_pano_s.jpg" width=200 height=200 border=1></a></td>
+<td><a href="http://paulbourke.net/panorama/sphericalpano/r_pano.jpg"><img src="http://paulbourke.net/panorama/sphericalpano/r_pano_s.jpg" width=200 height=200 border=1></a></td>
+<td><a href="http://paulbourke.net/panorama/sphericalpano/b_pano.jpg"><img src="http://paulbourke.net/panorama/sphericalpano/b_pano_s.jpg" width=200 height=200 border=1></a></td>
+</tr><tr>
+<td>&nbsp;</td>
+<td><a href="http://paulbourke.net/panorama/sphericalpano/d2_pano.jpg"><img src="http://paulbourke.net/panorama/sphericalpano/d2_pano_s.jpg" width=200 height=200 border=1></a></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr></table></center>
+<p>
+<p align="justify">
+Editing generally involves use of the rubber stamp tool, copying pixels from a similar
+nearby portion of the image to cover the hole or shadow. If there is a constant colour
+sky a large circular selection and Gaussian blur can hide pinching effects at the
+north pole. Otherwise it is left up to the reader to develop his/her skills.
+Care must be taken when editing across a cube face boundary since that edge needs to
+match with another cube face edge.
+</p>
+
+<b>Create spherical projection from cube maps</b><p>
+<p align="justify">
+The reverse operation is applied to turning the cube maps back into a spherical
+(equirectangular) projection but now with no artefacts at the poles. 
+The following creates a 8192 wide pixel image with 3x3
+supersampling antialiasing, again using the authors
+<a href="../../geometry/transformationprojection/index.html">command line software</a>.
+The resulting file will be prefixed with "s", so "s_pano.tga".
+</p>
+<pre>
+   cube2sphere -w 8192 -a 3 %c_pano.tga
+</pre>
+<center>
+<a href="http://paulbourke.net/panorama/sphericalpano/image5.jpg"><img src="http://paulbourke.net/panorama/sphericalpano/image5_s.jpg" width=800 height=400 border=1></a><br>
+</center><p>
+
+<b>Addendum</b><p>
+<p align="justify">
+It goes without saying that the camera should be set to automatic in order to get a
+consisted colour/exposure across the three images. This equally applies to things like
+white balance. If a variation does occur a strategy that works well is to use histogram
+matching between two of the photos and a third. The matched histogram is generally the
+most colour rich (master.png). The tool used by the author is the "bcmatch" script that
+uses the Image Magick" tools. If the two images to be histogram matched to the master
+are a.png and b.png then the command line conversion might be as follows.
+</p>
+<pre>
+bcmatch -c rgb master.png a.png a2.png
+bcmatch -c rgb master.png b.png b2.png
+</pre>
+<p align="justify">
+This obviously is the very first step being applied to the original fisheye images. In
+order for the large area of black around the fisheye not to bias the results the images
+should be circularly selected and the region outside the fisheye circle set to transparent.
+</p>
+
+</td></tr></table></center>
+</body>
+</html>

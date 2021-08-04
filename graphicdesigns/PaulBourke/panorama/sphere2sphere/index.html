@@ -1,0 +1,380 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Converting an equirectangular image into another equirectangular image, and other projections</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Converting an equirectangular image into another equirectangular image, and other projections</h1>
+<h3>Includes Mollweide, Tobler, Hammer, Aitoff, Wagner, Eckert IV, 
+    Bottomley, Sinusoidal, Werner, Bonne projections</h3>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 2017, updated September 2020<p>
+</center>
+<p><br><p>
+
+<p align="justify">
+<i>The source code implementing the projections below is only available
+on request for a small fee. It includes a demo application and an invitation to
+convert an image of your choice to verify the code does what you seek. 
+For more information please contact the <a href="../../index.html">author</a>.</i>
+</p>
+<p><br><p>
+
+<p align="justify">
+The following describes a utility to convert an equirectangular image into another
+equirectangular image. Why you might ask would one want to do that? There are at
+least 3 possible reasons.
+</p>
+<ul>
+<li><p align="justify">
+When scaling images that wrap around horizontally (the 0 to 360 degree transition),
+such as cylindrical panoramas or equirectangular projections (spherical panoramas),
+one needs to be careful that the wrap-around seam is handled correctly. A standard
+scaling in image editing software that does not know about the wrap-around can result in hair-line
+defects on the left and right edge. While these may not be noticed when viewing the
+equirectangular image flat, they can be obvious when interactively navigating within
+the image or when the equirectangular is reprocessed to create other outputs (for
+example creating <a href="../littleplanet/index.html">little planet images</a>).
+</p>
+<li><p align="justify">
+While equirectangular images have no natural "forward", there are occasions when
+presenting the equirectangular as a flat image that one wants subject matter in the
+image to be located in a particular location. In the terminology used below this is
+panning the camera, also known as changing the camera heading.
+</p>
+<li><p align="justify">
+There are manual methods for both the above, but more difficult is levelling an
+equirectangular image captured with the camera not perfectly level. While in the past
+photographers capturing images that will be stitched/blended into an equirectangular
+would pay particular attention to levelling the tripod, today there are any number
+of one click hand held 360x180 degree cameras. This will be illustrated below in
+the case of the Ricoh 360 camera that conveniently stores the camera orientation
+as meta data in the image (exif data).
+</p>
+</ul>
+
+<p align="justify">
+The usage string for the utility, called sphere2sphere, is given below. It employs
+a straightforward super-sampling antialiasing to avoid the usual effects that can
+arise from discrete sampling. It functions internally by considering each pixel
+(and subpixels) in the output image and finding the best estimate of the new pixel
+value in the input image. As such the performance is related to the size of the
+output image and supersampling level, it does not depend on the size of the input
+image except for the image reading time.
+</p>
+
+<b>Usage string</b><p>
+<pre>
+Usage: sphere2sphere [options] sphericalimage
+Options
+   -w n                 output image width, default = input image width
+   -h n                 output image height, default = half image width
+   -x n                 tilt angle (degrees), default: 0
+   -y n                 roll angle (degrees), default: 0
+   -z n                 pan angle (degrees), default: 0
+   -a n                 antialiasing level, default = 2
+   -cp x y              center on specified pixel, default: disabled
+   -l2 pa1 pa2 pb1 pb2  straighten to specified pair of lines, default: disabled
+   -c                   clip to bounds, default: disabled
+   -eqi                 create the Equirectangular projection, default = on
+   -ham                 create the Hammer projection, default = off
+   -mol                 create the Mollweide projection, default = off
+   -tob                 create the Tobler projection, default = off
+   -bot                 create the Bottomley projection, default = off
+   -sin                 create the Sinusoidal projection, default = off
+   -bon                 create the Bonne projection, default = off
+   -wer                 create the Werner projection, default = off
+   -ait                 create the Aitoff projection, default = off
+   -wag                 create the Wagner projection, default = off
+   -eiv                 create the Eckert IV projection, default = off
+   -f s                 output file name, default: derived from input file name
+</pre>
+
+<p align="justify">
+Critical in any such process is the order in which the rotation operations are
+performed, transforming in the order of roll-tilt-pan will not in general give the same
+results than if the rotations were performed in a different sequence. This will become
+clear later in the example using a Ricoh 360 camera.
+When specifying the rotation on the command line, because the image mapping is
+performed in reverse (output to input) the rotations are applied in reverse order.
+So for example
+</p>
+<pre>
+sphere2sphere -x 20 -z 30 -y 40 imagename.jpg
+</pre>
+<p align="justify">
+will perform the
+rotations in the order roll (-y), followed by a pan (-x), and lastly tilting (-x). The coordinate
+axis has z pointing up, y pointing forward and x to the right, a right handed
+coordinate system.
+</p>
+
+
+<b>Example</b><p>
+<p align="justify">
+The following image is captured using a Ricoh 360 camera "randomly" orientated.
+</p>
+<center>
+	<image src="example1.jpg" width=800 height=400 border=1>
+</center><p>
+<p align="justify">
+In general if the rotations involve more than a single axis, for example a tilt
+which would cause the horizon to be curved, finding the correction angles would
+be very difficult. In this case the exif data stored in the image by this particular camera
+can be used to immediately level it.
+There are many ways of possibly extracting this information, one method is
+to use a tool such as "exiftool", this gives the following.
+</p>
+<pre>
+>exiftool boathouse.jpg | grep Pose
+Pose Heading Degrees            : 60
+Pose Pitch Degrees              : -20
+Pose Roll Degrees               : -5
+</pre>
+<p align="justify">
+Running sphere2sphere as follows
+</p>
+<pre>
+sphere2sphere -z 60 -x -20 -y -5 boathouse.jpg
+</pre>
+<p align="justify">
+gives the following. Note that at the time of writing the axes and meaning of positive
+and negative angles has been set to correspond to the conventions used by this
+camera, others may vary.
+</p>
+<center>
+   <image src="example2.jpg" width=800 height=400 border=1>
+</center><p>
+<br><br>
+
+<b>Example</b><p>
+<p align="justify">
+A simpler example of reorientating an existing level equirectangular by rotation about up vector.
+Noting of course that this only applies to the presentation as a normal image, or perhaps as
+the initial view direction for the normal interactive viewing of such images.
+</p>
+<center>
+   <image src="example3.jpg" width=800 height=400 border=1>
+</center><p>
+<p align="justify">
+Rotating by -60 degrees aligns the equirectangular image to the wool packing machine (yellow) and
+places the doors symmetrically about the center.
+</p>
+<pre>
+sphere2sphere -z -60 shearing.jpg
+</pre>
+<center>
+   <image src="example4.jpg" width=800 height=400 border=1>
+</center><p>
+<br><br>
+
+<b>Example</b>
+<p align="justify">
+The Samsung dual fisheye 360 camera also stores the pitch and roll angles as exif data
+in the jpeg image. Note they don't bother with the "heading" since in reality with these
+image there is no "front". The axes and rotation angles are different to the Ricoh but
+readily supported by this utility.
+</p>
+<pre>
+>exiftool samsung.JPG | grep "Angle"
+Pitch Angle                     : 29.8
+Roll Angle                      : -141.3
+</pre>
+<br>
+
+<h3>Additional projections</h3>
+
+<b>Hammer</b><p>
+<p align="justify">
+Credited to Ernst Hammer circa 1882.
+Boundary is 2:1 ellipse.
+Equal-area.
+</p>
+<center>
+	<a href="http://paulbourke.net/panorama/sphere2sphere/hammer.jpg">
+	<img src="http://paulbourke.net/panorama/sphere2sphere/hammer_s.jpg" width=800 height=400 border=1></a><br>
+	<smalltext>Hammer projection</smalltext>
+</center><p>
+<center>
+   <a href="http://paulbourke.net/panorama/sphere2sphere/hammer_noclip.jpg">
+   <img src="http://paulbourke.net/panorama/sphere2sphere/hammer_noclip_s.jpg" width=800 height=400 border=1></a><br>
+   <smalltext>Hammer projection without clipping</smalltext>
+</center><p>
+
+<p><br><p>
+
+<b>Mollweide</b><p>
+<p align="justify">
+Attributed to Karl Brandan Mollweide, circa 1805.
+Equal area and meridians are ellipses.
+Also known variously as elliptical, Babinet or homolographic projections.
+</p>
+<center>
+	<a href="http://paulbourke.net/panorama/sphere2sphere/Mollweide.jpg">
+   <img src="http://paulbourke.net/panorama/sphere2sphere/Mollweide_s.jpg" width=800 height=400 border=1></a><br>
+	<smalltext>Mollweide projection</smalltext>
+</center><p>
+<center>
+   <a href="http://paulbourke.net/panorama/sphere2sphere/Mollweide_noclip.jpg">
+   <img src="http://paulbourke.net/panorama/sphere2sphere/Mollweide_noclip_s.jpg" width=800 height=400 border=1></a><br>
+   <smalltext>Mollweide projection without clipping</smalltext>
+</center><p>
+
+<p><br><p>
+
+<b>Tobler</b><p>
+<p align="justify">
+Also known as Tobler hyperelliptical, credited to Waldo Tobler circa 1973.
+Equal area.
+</p>
+<center>
+   <a href="http://paulbourke.net/panorama/sphere2sphere/Tobler.jpg">
+   <img src="http://paulbourke.net/panorama/sphere2sphere/Tobler_s.jpg" width=800 height=400 border=1></a><br>
+   <smalltext>Tobler projection</smalltext>
+</center><p>
+
+<p><br><p>
+
+<b>Sinusoidal</b><p>
+<p align="justify">
+Also known as Sanson–Flamsteed or Mercator equal-area, first references circa 1600.
+Both equal-area and equidistant.
+Meridians are sinusoids, parallels are equally spaced and
+distances along parallels are conserved.
+Very similar in concept and distortion to the Quartic authalic projection.
+</p>
+<center>
+   <a href="http://paulbourke.net/panorama/sphere2sphere/sinusoidal.jpg">
+   <img src="http://paulbourke.net/panorama/sphere2sphere/sinusoidal_s.jpg" width=800 height=400 border=1></a><br>
+   <smalltext>Sinusoidal projection</smalltext>
+</center><p>
+<center>
+   <a href="http://paulbourke.net/panorama/sphere2sphere/sinusoidal_noclip.jpg">
+   <img src="http://paulbourke.net/panorama/sphere2sphere/sinusoidal_noclip_s.jpg" width=800 height=400 border=1></a><br>
+   <smalltext>Sinusoidal projection without clipping</smalltext>
+</center><p>
+
+<p><br><p>
+
+<b>Bottomley</b><p>
+<p align="justify">
+Credited to Henry Bottomley circa 2003.
+Equal-area. Parallels are elliptical arcs.
+Exact shape controlled by a reference latitude.
+</p>
+<center>
+   <a href="http://paulbourke.net/panorama/sphere2sphere/Bottomley.jpg">
+   <img src="http://paulbourke.net/panorama/sphere2sphere/Bottomley_s.jpg" width=800 height=400 border=1></a><br>
+   <smalltext>Bottomley projection, reference latitude = 30 degrees</smalltext>
+</center><p>
+<center>
+   <a href="http://paulbourke.net/panorama/sphere2sphere/Bottomley_noclip.jpg">
+   <img src="http://paulbourke.net/panorama/sphere2sphere/Bottomley_noclip_s.jpg" width=800 height=400 border=1></a><br>
+   <smalltext>Bottomley projection without clipping, reference latitude = 30 degrees</smalltext>
+</center><p>
+
+<p><br><p>
+
+<b>Bonne</b><p>
+<p align="justify">
+Credited to Bernardus Sylvanus circa 1510.
+Equal-area.
+Parallels are equally spaced concentric circular arcs and standard lines.
+Exact shape controlled by a reference latitude.
+</p>
+<center>
+   <a href="http://paulbourke.net/panorama/sphere2sphere/bonne.jpg">
+   <img src="http://paulbourke.net/panorama/sphere2sphere/bonne_s.jpg" width=800 height=400 border=1></a><br>
+   <smalltext>Bonne projection, reference latitude = 40 degrees</smalltext>
+</center><p>
+<center>
+   <a href="http://paulbourke.net/panorama/sphere2sphere/bonne_noclip.jpg">
+   <img src="http://paulbourke.net/panorama/sphere2sphere/bonne_noclip_s.jpg" width=800 height=400 border=1></a><br>
+   <smalltext>Bonne projection without clipping, reference latitude = 40 degrees</smalltext>
+</center><p>
+
+<p><br><p>
+
+<b>Werner</b><p>
+<p align="justify">
+Credited to Johannes Stabius circa 1500.
+Parallels are equally spaced concentric circular arcs.
+Equal-area and equidistant.
+</p>
+<center>
+   <a href="http://paulbourke.net/panorama/sphere2sphere/werner.jpg">
+   <img src="http://paulbourke.net/panorama/sphere2sphere/werner_s.jpg" width=800 height=400 border=1></a><br>
+   <smalltext>Werner projection</smalltext>
+</center><p>
+<center>
+   <a href="http://paulbourke.net/panorama/sphere2sphere/werner_noclip.jpg">
+   <img src="http://paulbourke.net/panorama/sphere2sphere/werner_noclip_s.jpg" width=800 height=400 border=1></a><br>
+   <smalltext>Werner projection without clipping</smalltext>
+</center><p>
+
+<b>Aitoff</b><p>
+<p align="justify">
+Credited to David Aitoff curca 1890.
+</p>
+<center>
+   <a href="http://paulbourke.net/panorama/sphere2sphere/aitoff.jpg">
+   <img src="http://paulbourke.net/panorama/sphere2sphere/aitoff_s.jpg" width=800 height=400 border=1></a><br>
+   <smalltext>Aitoff projection</smalltext>
+</center><p>
+<center>
+   <a href="http://paulbourke.net/panorama/sphere2sphere/aitoff_noclip.jpg">
+   <img src="http://paulbourke.net/panorama/sphere2sphere/aitoff_noclip_s.jpg" width=800 height=400 border=1></a><br>
+   <smalltext>Aitoff projection without clipping</smalltext>
+</center><p>
+
+<b>Wagner</b><p>
+<p align="justify">
+Credited to K. H. Wagner (first names unknown) circa 1932.
+Identical to the  Kavrayskiy VII projection except for a vertical scaling factor of 1.5.
+</p>
+<center>
+   <a href="http://paulbourke.net/panorama/sphere2sphere/wagner.jpg">
+   <img src="http://paulbourke.net/panorama/sphere2sphere/wagner_s.jpg" width=800 height=400 border=1></a><br>
+   <smalltext>Wagner projection</smalltext>
+</center><p>
+<center>
+   <a href="http://paulbourke.net/panorama/sphere2sphere/wagner_noclip.jpg">
+   <img src="http://paulbourke.net/panorama/sphere2sphere/wagner_noclip_s.jpg" width=800 height=400 border=1></a><br>
+   <smalltext>Wagner projection without clipping</smalltext>
+</center><p>
+
+<b>Eckert IV</b><p>
+<p align="justify">
+Credited to Max Eckert-Greifendorff circa 1906.
+Equal area.
+Outer meridians are semicircles, other meridians are semiellipses.
+</p>
+<center>
+   <a href="http://paulbourke.net/panorama/sphere2sphere/eckertiv.jpg">
+   <img src="http://paulbourke.net/panorama/sphere2sphere/eckertiv_s.jpg" width=800 height=400 border=1></a><br>
+   <smalltext>Eckert IV projection</smalltext>
+</center><p>
+<center>
+   <a href="http://paulbourke.net/panorama/sphere2sphere/eckertiv_noclip.jpg">
+   <img src="http://paulbourke.net/panorama/sphere2sphere/eckertiv_noclip_s.jpg" width=800 height=400 border=1></a><br>
+   <smalltext>Eckert IV projection without clipping</smalltext>
+</center><p>
+
+</td></tr></table></center>
+</body>
+</html>
+

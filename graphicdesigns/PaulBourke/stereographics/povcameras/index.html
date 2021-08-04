@@ -1,0 +1,648 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Additional cameras, mostly stereoscopic, for PovRay</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center>
+<table width=800><tr><td>
+
+<center>
+<h1>Additional cameras, mostly stereoscopic, for PovRay</h1>
+<h3>
+	<a href="index.html#perspective">Perspective stereoscopic</a> - 
+	<a href="index.html#stereopano">Stereoscopic cylindrical panorama</a><br>
+	<a href="index.html#spherical">Stereoscopic spherical projection</a> -
+	<a href="index.html#offsetfish">Offset fisheye</a> -
+	<a href="index.html#stereofish">Stereoscopic fisheye</a>
+</h3>
+<b>Alternative title</b>: Example of creating a special camera for PovRay</b><p>
+Written by <a href="../index.html">Paul Bourke</a><br>
+October 2007<p>
+</center>
+<p><br><p>
+
+
+
+<!-- ********************************************************************** -->
+<a name="perspective"><h3>Perspective stereoscopic</h3></a>
+
+<p align="justify">
+The following documents some new camera types added to the PovRay source code to support
+stereoscopic rendering. While there are a number of ways to create stereo pairs with
+PovRay, the approach here has some particular characteristics:
+</p>
+
+<ul>
+<li><p align="justify">
+It is intended to be easy to use, implemented as a new camera type and two new camera
+attributes. Of course it does require that the source code is modified and built for
+your favourite platform.
+</p>
+<li><p align="justify">
+It creates optimal quality stereo pairs intended to give minimal eye strain for projected
+stereo images, for example, sequences for computer generated movies. This is in contrast
+to much of the stereo that is generated that can only be tolerated by using eye
+tricks or viewed for short periods.
+</p>
+<li><p align="justify">
+The stereo camera is defined the same as a perspective camera with two additional
+attributes, namely the distance to zero parallax and the eye separation. Compared to
+the many ways one can define a stereo camera, these are the most intuitive and natural
+ways for a stereo content developer to think about stereo composition.
+</p>
+</ul>
+
+<center>
+	<img src="http://paulbourke.net/stereographics/povcameras/offaxis.gif" width=443 height=297>
+</center>
+
+<p align="justify">
+The stereoscopic camera here implements an off-axis frustum camera, see figure above.
+The view direction of the cameras are parallel, as such there is no vertical parallax.
+Implementing the stereoscopic camera for each eye is as straightforward as creating
+a camera definition as follows. 
+</p>
+
+<pre>
+#local VP = <0,0,1>;
+#local ZEROP = 2;              // Distance to zero parallax
+#local EYESEP = ZEROP / 30;    // Distance between eyes
+camera {
+   stereoscopic                // New camera type
+   location VP
+   up y
+   right image_width*x/image_height
+   angle 60
+   sky <0,0,1>
+   look_at VP + <1,0,0>
+   zeroparallax ZEROP          // Distance to zero parallax
+   eyeoffset -0.5*EYESEP       // Use +'ve fpr the right eye
+}
+</pre>
+
+<p align="justify">
+Normally the scene would be rendered twice, one for
+each eye corresponding to the "eyeoffset" value, negative for the left eye and
+positive for the right eye. Note the eye offset is defined as how far along the "right"
+vector to move the camera, as such it is half the eye separation.
+The zero parallax distance defines the distance away from the camera at which objects
+will appear to be at zero parallax. 
+If the eyeoffset is set to zero then the result will be the same as a perspective
+camera.
+If the reader is unfamiliar with this and other
+aspects of stereoscopic composition there is more information
+<a href="../stereorender/index.html">here</a> as well as notes on stereoscopic
+projection/viewing/generation given <a href="../../papers/vsmm2007/index.html">here</a>.
+</p>
+
+<b>Technical PovRay information</b><p>
+<p align="justify">
+This section is mainly for my own reference but may also be helpful for other
+who wish to add another camera type. 
+</p>
+
+<p align="justify">
+The basic idea is to shift the camera to the left and right for each eye and then
+add a offset to each camera ray such that the two projection planes are coincident.
+In order to achieve this a new camera type needs to be added, along with support
+for the new parameters, and of course the camera implementation itself. The source files
+from the 3.6.1 UNIX distribution that have been modified are included here:
+<a href="http://paulbourke.net/stereographics/povcameras/source.zip">source.zip</a>, in each case the changes made have been commented with
+the string "pdb", so search for this to see the only changes made.
+More detail on what is changed is listed below. If you are running this version and
+want to use this camera then it should simply be a matter of replacing these files
+in the PovRay distribution source directory and recompiling PovRay.
+</p>
+
+<ul>
+<li><p align="justify">
+Define another camera type in "camera.h" and add additional parameters to the definition
+of "Camera_Struct".
+</p>
+<li><p align="justify">
+Add token names for the camera type and additional parameters in "parse.h".
+In this case three new tokens.
+</p>
+<li><p align="justify">
+Add new tokens to the "Reserved_Words" list in "tokenize.cpp".
+</p>
+<li><p align="justify">
+Add appropriate support for the tokens in "parse.cpp".
+</p>
+<li><p align="justify">
+And finally, the real work is performed in "render.cpp" where the primary ray is
+defined for any position (x,y) on the image plane. In this case since the camera is
+offset the primary ray is defined by a modified position "Ray->Initial" and direction
+"Ray->Direction". Note that the ray is shifted in the opposite direction to the
+direction the camera is shifted.
+</p>
+</ul>
+<pre>
+    /* 
+     * pdb - Stereoscopic perspective camera
+     */
+    case STEREOSCOPIC_CAMERA:
+
+       // Normalised projection plane coordinates from -0.5 to 0.5.
+       x0 = x / (DBL)Frame.Screen_Width - 0.5;
+       y0 = ((DBL)(Frame.Screen_Height - 1) - y) / (DBL)Frame.Screen_Height - 0.5;
+ 
+       // Offset ray length
+       x0 -= Frame.Camera->Eye_Offset / (2 * Frame.Camera->Zero_Parallax * tan(Frame.Camera->Angle * M_PI_360));
+ 
+       // Create primary ray
+       VLinComb3(Ray->Direction, 1.0, FCD, x0, FCR, y0, FCU);
+ 
+       // Offset the camera
+       VNormalize(tempv,FCR);
+       VAddScaled(Ray->Initial,Frame.Camera->Location,Frame.Camera->Eye_Offset,tempv);
+       
+       break;
+</pre>
+
+<p align="justify">
+A very precisely created test scene has been created to test this and other cameras.
+It is a cube (sides 1 unit) placed 2 units (same as 
+the distance to zero parallax) from the camera. There are three small spheres, the green
+sphere is 2 unit away so should have no parallax. The blue sphere is 1 unit away so
+should have parallax equal to the camera separation which is also the same as the
+parallax at infinity but opposite sign. The white sphere is 10 units away and approximates
+parallax at infinity.
+</p>
+
+<center><table><tr><td>
+	<a href="http://paulbourke.net/stereographics/povcameras/persp_left.jpg"><img src="http://paulbourke.net/stereographics/povcameras/persp_left_s.jpg" width=400 height=300 border=1></a><br>
+	<smalltext>Left camera</smalltext>
+</td><td width=20>
+	&nbsp;
+</td><td>
+   <a href="http://paulbourke.net/stereographics/povcameras/persp_right.jpg"><img src="http://paulbourke.net/stereographics/povcameras/persp_right_s.jpg" width=400 height=300 border=1></a><br>
+	<smalltext>Right camera</smalltext>
+</td></tr></table></center>
+
+<p align="justify">
+Alternatively by overlaying the images with a 50% transparency one should be able to
+verify the correct stereoscopic relationships, for example, the correct positive and negative
+parallax for each component.
+</p>
+
+<center>
+	<img src="http://paulbourke.net/stereographics/povcameras/persp_combined.jpg" width=800 height=600 border=1>
+</center><p>
+
+
+
+<!-- ********************************************************************** -->
+<a name="stereopano"><h3>Stereoscopic cylindrical panorama</h3></name>
+
+<p align="justify">
+A stereoscopic panoramic image is a very precise projection intended for full or partial
+cylindrical projection environments, such as the AVIE.
+They have the benefit over most surround stereoscopic
+displays in that the viewer may look in any direction and the stereoscopic effect is achieved
+without any head tracking. To a close approximation it also means that multiple people can
+inhabit a full 360 degree stereoscopic display, each looking in a different direction, 
+something that is not possible with standard flat wall surround stereoscopic displays.
+For more information see <a href="../stereopanoramic/index.html">this page</a>.
+</p>
+
+<p align="justify">
+There are two ways of creating a stereoscopic panoramic pair, they are almost (but not quite) 
+identical. The difference is a slightly different camera separation ... a difference that
+becomes smaller as the ratio of the zero parallax to eye separation becomes large. 
+Using parallel cameras results in zero parallax
+at infinity, a particular parallax can be achieved by circularly translating the panoramic
+images horizontally. The second is to encode a particular zero parallax distance into the 
+panoramic at render time by using the so called "toe-in" cameras. While this is incorrect
+for perspective projections it is identical to the parallel camera case but with a different
+effective eye separation. The expression can be derived from the diagram on the right, namely:
+</p>
+<center>
+e' = e f<sub>o</sub> / sqrt(f<sub>o</sub><sup>2</sup> - e<sup>2</sup>).
+</center><p>
+
+<center><table><tr><td><center>
+	<img src="http://paulbourke.net/stereographics/povcameras/rig.gif" width=520 height=434 border=0>
+<center></td><td><center>
+	<img src="http://paulbourke.net/stereographics/povcameras/eyeadjust.gif" width=386 height=471 border=0>
+</center></td></tr></table></center><p>
+
+<p align="justify">
+The conventions for using this camera are similar to those for the perspective stereoscopic
+camera defined above. There are the same two new keywords "zero parallax" which indicates
+the distance to zero parallax (could be very large if infinity is required), and "eyeoffset"
+which is half the eye separation. Typically the scene would be rendered twice, once for the
+left eye (negative eyeoffset) and once for the right eye (positive eyeoffset).
+Since this is a very precise camera type, many of the other camera parameters are not
+used. In particular, only square pixels are supported and the magnitude of the right vector
+is ignored. Also, the vertical field of view is derived from the image width and height
+(assuming square pixels). The vertical field of view phimax is given by:
+</p>
+<center>
+phimax = atan(imageheight pi / imagewidth).
+</center><p>
+
+<center>
+	<img src="http://paulbourke.net/stereographics/povcameras/pano_diagram.jpg" width=412 height=399><p>
+</center>
+
+<pre>
+#declare VP = <0,0,2>;
+#declare EYESEP = 0.1;
+#declare ZEROP = 2.0;
+camera {
+   stereopanorama
+   location VP
+   up y
+   // The length of the this right vector is actually ignored
+   right -x
+   angle 360
+   sky <0,0,1>
+   look_at VP + <0,1,0>
+   // Distance to zero parallax
+   zeroparallax ZEROP
+   // Use -'ve for left eye and +'ve fpr the right eye
+   eyeoffset -0.5*EYESEP + clock*EYESEP
+}
+</pre>
+
+<p align="justify">
+Most of the comments for the stereoscopic perspective discussion also apply here
+so won't be repeated.
+As for the stereoscopic perspective case, another very precise scene is designed
+that results in the following images.
+The small spheres around the middle of the image should appear exactly at zero parallax.
+When viewed correctly the spheres should all appear round.
+</p>
+
+<center><table><tr><td>
+	<a href="http://paulbourke.net/stereographics/povcameras/pano_left.jpg"><img src="http://paulbourke.net/stereographics/povcameras/pano_left_s.jpg" width=800 height=400 border=1></a><br>
+	<smalltext>Left eye</smalltext>
+</td></tr><tr><td>
+	<a href="http://paulbourke.net/stereographics/povcameras/pano_left.jpg"><img src="http://paulbourke.net/stereographics/povcameras/pano_left_s.jpg" width=800 height=400 border=1></a><br>
+	<smalltext>Right eye</smalltext>
+</td></tr></table></center><p>
+
+<pre>
+    /*
+     * pdb - Stereoscopic panoramic camera
+     * Assume 360 degrees longitude
+     * The vertical FOV (for square pixels) is derived from the ratio of the image width and height
+     */
+    case STEREOPANORAMA_CAMERA:
+
+      // Normalise projection plane coordinates
+      x0 = x / (DBL)Frame.Screen_Width; // 0 .. 1
+      y0 = 2.0 * ((DBL)(Frame.Screen_Height - 1) - y) / (DBL)Frame.Screen_Height - 1.0; // -1 ..1
+
+      // Angle to align zero parallax
+      dtheta = atan(Frame.Camera->Eye_Offset / Frame.Camera->Zero_Parallax);
+
+      // Get polar coordinates for ray
+      theta = x0 * TWO_M_PI;
+      phi = atan(y0 * Frame.Screen_Height * M_PI / Frame.Screen_Width);
+
+      // My own unit vector versions
+      VNormalize(vd,Frame.Camera->Direction);
+      VNormalize(vr,Frame.Camera->Right);
+      VNormalize(vu,Frame.Camera->Up);
+
+      // Primary ray source
+      VLinComb3(Ray->Initial,Frame.Camera->Eye_Offset*cos(theta),vr,0.0,vu,-Frame.Camera->Eye_Offset*sin(theta), vd);
+      Ray->Initial[0] += Frame.Camera->Location[0];
+      Ray->Initial[1] += Frame.Camera->Location[1];
+      Ray->Initial[2] += Frame.Camera->Location[2];
+
+      // Create primary ray direction
+      theta -= dtheta;
+      VLinComb3(Ray->Direction, sin(theta), vr, tan(phi), vu, cos(theta), vd);
+
+      initialize_ray_container_state(Ray, true);
+      break;
+</pre>
+
+
+
+<!-- ********************************************************************** -->
+
+<a name="spherical"><h3>Stereoscopic spherical projection</h3></a>
+
+<center>
+   <img src="http://paulbourke.net/stereographics/povcameras/sph_diagram.jpg" width=362 height=446><p>
+</center>
+
+<pre>
+#declare VP = <0,0,2>;
+#declare EYESEP = 0.1;
+#declare ZEROP = 2.0;
+camera {
+   stereospherical
+   location VP
+   up y
+   // The length of the this right vector is ignored
+   // The image width should equal twice the image height
+   right -x
+   // Only 360 x 180 (full) spherical projection supported
+   angle 360
+   sky <0,0,1>
+   look_at VP + <0,1,0>
+   // Distance to zero parallax
+   zeroparallax ZEROP
+   // Use -'ve for left eye and +'ve fpr the right eye
+   eyeoffset -0.5*EYESEP + clock*EYESEP
+}
+</pre>
+
+<p align="justify">
+When viewed correctly the spheres should all appear round.
+The small spheres along the horizon should be at zero parallax.
+</p>
+
+<center><table><tr><td>
+   <a href="http://paulbourke.net/stereographics/povcameras/spherical_left.jpg"><img src="http://paulbourke.net/stereographics/povcameras/spherical_left_s.jpg" width=800 height=400 border=1></a><br>
+   <smalltext>Left eye</smalltext>
+</td></tr><tr><td>
+   <a href="http://paulbourke.net/stereographics/povcameras/spherical_right.jpg"><img src="http://paulbourke.net/stereographics/povcameras/spherical_right_s.jpg" width=800 height=400 border=1></a><br>
+   <smalltext>Right eye</smalltext>
+</td></tr></table></center><p>
+
+<pre>
+    /*
+     * pdb - Stereoscopic spherical camera
+     * Assumes a full 360 by 180 spherical projection
+     * imagewidth should equal 2 * imageheight for correct proportions
+     */
+    case STEREOSPHERICAL_CAMERA:
+
+      // Normalise projection plane coordinates
+      x0 = x / (DBL)Frame.Screen_Width; // 0 .. 1
+      y0 = 2.0 * ((DBL)(Frame.Screen_Height - 1) - y) / (DBL)Frame.Screen_Height - 1.0; // -1 ..1
+
+      // Angle to align zero parallax
+      dtheta = atan(Frame.Camera->Eye_Offset / Frame.Camera->Zero_Parallax);
+
+      // Get polar coordinates for ray
+      theta = x0 * TWO_M_PI;
+      phi = y0 * M_PI_2;
+
+      // My own unit vector versions
+      VNormalize(vd,Frame.Camera->Direction);
+      VNormalize(vr,Frame.Camera->Right);
+      VNormalize(vu,Frame.Camera->Up);
+
+      // Primary ray source
+      VLinComb3(Ray->Initial, Frame.Camera->Eye_Offset*cos(theta), vr, 0.0, vu, -Frame.Camera->Eye_Offset*sin(theta), vd);
+      Ray->Initial[0] += Frame.Camera->Location[0];
+      Ray->Initial[1] += Frame.Camera->Location[1];
+      Ray->Initial[2] += Frame.Camera->Location[2];
+
+      // Create primary ray direction
+      vt1[0] = 0;
+      vt1[1] = 0;
+      vt1[2] = 1;
+      VRotateX(vt2,vt1,phi);
+      VRotateY(vt1,vt2,-theta+dtheta);
+      VLinComb3(Ray->Direction, vt1[0], vr, vt1[1], vu, vt1[2], vd);
+
+      initialize_ray_container_state(Ray, true);
+      break;
+</pre>
+
+<a name="offsetfish">
+<h3>Offset fisheye</h3>
+</a>
+<p align="justify">
+There are two situations where a so called offset fisheye projection is required.
+One arises when projecting using a fisheye lens on a data projector into a hemispherical
+display and one wishes to place the projector at a location other than the center
+of the hemisphere. This can simply be achieved with an image warping at projection
+time and does not require a different rendering.
+<br>
+The other situation is when the viewer is not at the center of the dome, while this
+can also be approximated by a image warping process, for strictly correct results
+it requires a different rendering in order to capture the true parallax information.
+</p>
+
+<center>
+<img src="http://paulbourke.net/stereographics/povcameras/diagram.gif" width=280 height=360>
+</center>
+
+<pre>
+#declare CAMHEIGHT = 2;
+#declare VP = <0,0,CAMHEIGHT>;
+camera {
+   offsetfisheye
+   location VP
+   up y
+   right -x
+   angle 180
+   sky <0,0,1>
+   look_at VP + <0,1,0>
+
+   // Offset, each should between -1 and 1
+   fishxoffset 0.5
+   fishyoffset 0
+}
+</pre>
+
+<b>Example</b>
+<center><table><tr><td>
+<a href="http://paulbourke.net/stereographics/povcameras/xmfish.jpg"><img src="http://paulbourke.net/stereographics/povcameras/xmfish_s.jpg" width=300 height=300></a><br>
+<smalltext>xoffset = 0.5, yoffset = 0</smalltext>
+</td><td>
+<a href="http://paulbourke.net/stereographics/povcameras/x0fish.jpg"><img src="http://paulbourke.net/stereographics/povcameras/x0fish_s.jpg" width=300 height=300></a><br>
+<smalltext>xoffset = 0, yoffset = 0</smalltext>
+</td><td>
+<a href="http://paulbourke.net/stereographics/povcameras/xpfish.jpg"><img src="http://paulbourke.net/stereographics/povcameras/xpfish_s.jpg" width=300 height=300></a><br>
+<smalltext>xoffset = -0.5, yoffset = 0</smalltext>
+</td><tr><tr><td>
+<a href="http://paulbourke.net/stereographics/povcameras/ymfish.jpg"><img src="http://paulbourke.net/stereographics/povcameras/ymfish_s.jpg" width=300 height=300></a><br>
+<smalltext>xoffset = 0, yoffset = 0.5</smalltext>
+</td><td>
+<a href="http://paulbourke.net/stereographics/povcameras/ypfish.jpg"><img src="http://paulbourke.net/stereographics/povcameras/ypfish_s.jpg" width=300 height=300></a><br>
+<smalltext>xoffset = 0, yoffset = -0.5</smalltext>
+</td><td>
+<a href="http://paulbourke.net/stereographics/povcameras/xyfish.jpg"><img src="http://paulbourke.net/stereographics/povcameras/xyfish_s.jpg" width=300 height=300></a><br>
+<smalltext>xoffset = -0.5, yoffset = -0.5</smalltext>
+</td></tr></table></center><p>
+
+<b>Implementation</b>
+<pre>
+    /*
+       pdb - Offset fisheye for planetariums with a shifted sweet spot.
+       Essentially just translates the view vector in the plane of the hemisphere.
+    */
+    case OFFSETFISHEYE_CAMERA:
+ 
+      // Normalised coodinates
+      x0 = 2.0 * x / (DBL)Frame.Screen_Width - 1.0;
+      y0 = 2.0 * ((DBL)(Frame.Screen_Height - 1) - y) / (DBL)Frame.Screen_Height - 1.0;
+ 
+      // If the pixel lies outside the unit circle no ray is traced.
+      if ((rad = sqrt(x0 * x0 + y0 * y0)) > 1.0) 
+        return(false);
+ 
+      // Fisheye polar coordinates
+      theta = atan2(y0,x0); // -pi .. pi
+      phi = 0.5 * rad * Frame.Camera->Angle * M_PI_180;  // 0 .. aperture/2
+ 
+      // My own unit vector versions
+      VNormalize(vd,Frame.Camera->Direction);
+      VNormalize(vr,Frame.Camera->Right);
+      VNormalize(vu,Frame.Camera->Up);
+
+      V1[0] = sin(phi)*cos(theta) - Frame.Camera->Fish_XOffset;
+      V1[1] = sin(phi)*sin(theta) - Frame.Camera->Fish_YOffset;
+      V1[2] = cos(phi);
+      VLinComb3(Ray->Direction,V1[0],vr,V1[1],vu,V1[2],vd);
+
+      initialize_ray_container_state(Ray, true);
+      break;
+</pre>
+
+<a name="stereofish">
+<h3>Stereoscopic Fisheye</h3>
+</a>
+
+<p align="justify">
+There are a number of ways one may imagine creating a stereoscopic fisheye
+pair. Perhaps the first idea would be take two normal fisheye projections
+and toe them in such that zero parallax is positioned correctly along the
+view direction.
+</p>
+<table width=100%><tr><td valign="top">
+<center><img src="http://paulbourke.net/stereographics/povcameras/stereofish1.jpg" width=338 height=413 border=0><center>
+</td><td valign="top">
+For example
+<pre>
+#declare VP = <0,1,4.5>;
+#declare VD = <1,0,0>;
+#declare VU = <0,1,0>;
+#declare VR = vnormalize(vcross(VD,VU));
+#declare EYESEP = 0.07; // Human
+#declare ZEROP = 1.5; // Dome radius
+camera {
+   fisheye
+   location VP + 0.5*clock*EYESEP*VR
+   up y
+   right -x
+   angle 180
+   sky VU
+   look_at VP + VD * ZEROP
+}
+</pre>
+</td></tr></table><p>
+<center><img src="http://paulbourke.net/stereographics/povcameras/stereofish1image.jpg" width=800 height=800 border=1></center><p>
+<p align="justify">
+This leads to incorrect parallax estimation in a number of regions, particularly
+at the north and south pole, but there is also a mismatch at the edges.
+</p>
+
+
+
+<p align="justify">
+The next approach might be to imagine the eyes fixed and the fisheye projection
+surfaces coincident but the view vector is modified for each camera, similar to
+an offset fisheye. This is the first stereo fisheye projection implemented as
+a new camera "stereofisheye1".
+</p> 
+<table width=100%><tr><td valign="top">
+<center><img src="http://paulbourke.net/stereographics/povcameras/stereofish2.jpg" width=322 height=386 border=0><center>
+</td><td valign="top">
+For example
+<pre>
+#declare VP = <0,1,4.5>;
+#declare VD = <1,0,0>;
+#declare VU = <0,1,0>;
+#declare VR = vnormalize(vcross(VD,VU));
+#declare EYESEP = 0.07; // Human
+#declare ZEROP = 1.5; // Dome radius
+camera {
+   stereofisheye1
+   location VP
+   up y
+   right -x
+   angle 180
+   sky VU
+   look_at VP + VD
+   zeroparallax ZEROP 
+   eyeoffset 0.5 * clock * EYESEP 
+      // clock is -1 for left eye, 1 for right eye
+}
+</pre>
+</td></tr></table><p>
+<center><img src="http://paulbourke.net/stereographics/povcameras/stereofish2image.jpg" width=800 height=800 border=1></center><p>
+<p align="justify">
+As it happens this is appropriate if the viewer is largely looking forward along
+a vertical line. The parallax information does disappear towards the sides of
+the dome. For many applications this may not be a problem, as long as one is
+using the sides for peripheral vision support and not for depth cues.
+</p>
+
+
+<p align="justify">
+The last approach presented here is called an omni-directional stereoscopic
+fisheye pair. Omni-directional because it allows the observer to look in
+any direction (as long as there is a constant "up" vector) and get correct
+parallax information. This has been implemented as a new camera type called
+"stereofisheye2".
+</p>
+<table width=100%><tr><td valign="top">
+<center><img src="http://paulbourke.net/stereographics/povcameras/stereofish3.jpg" width=319 height=410 border=0><center>
+</td><td valign="top">
+For example
+<pre>
+#declare VP = <0,1,4.5>;
+#declare VD = <1,0,0>;
+#declare VU = <0,1,0>;
+#declare VR = vnormalize(vcross(VD,VU));
+#declare EYESEP = 0.07; // Human
+#declare ZEROP = 1.5; // Dome radius
+camera {
+   stereofisheye2
+   location VP
+   up y
+   right -x
+   angle 180
+   sky VU
+   look_at VP + VD
+   zeroparallax ZEROP
+   eyeoffset 0.5 * clock * EYESEP
+      // clock is -1 for left eye, 1 for right eye
+}
+</pre>
+</td></tr></table><p>
+<center><img src="http://paulbourke.net/stereographics/povcameras/stereofish3image.jpg" width=800 height=800 border=1></center><p>
+<p align="justify">
+This is very similar in principle to <a href="../../papers/vsmm2006/index.html">
+omni-directional stereoscopic panoramic images</a> as well as to the stereoscopic
+spherical projections discussed earlier. Note that if stereoscopic spherical
+projections are created then stereoscopic fisheye projections can be derived from
+for any view direction, this provides the opportunity for interactive panning
+within a dome environment.
+</p>
+
+<p align="justify">
+Note that while the tests above have been designed for an upright dome, modifying
+the projections is straightforward for an inclined or perfectly horizontal dome.
+</p>
+<center>
+	<img src="http://paulbourke.net/stereographics/povcameras/domephoto.jpg" width=800 height=600 border=1>
+</center>
+
+</td></tr></table></center>
+</body>
+</html>
+
