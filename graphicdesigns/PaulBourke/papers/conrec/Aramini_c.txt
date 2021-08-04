@@ -1,0 +1,973 @@
+/* CONTOUR PLOTTING SUBROUTINE WRITTEN BY MICHAEL J. ARAMINI */
+/* THIS VERSION USES INTERIOR POINT TO DECIDE 4 EDGE CELLS */
+/* THIS VERSION WILL CONDITIONALLY PRINT A GRID */
+
+/* Aramini.c */
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+
+#define Mv     100
+#define Nv     100
+#define Nm     490
+#define Nl      10
+#define Np      11
+#define Nd     ((Nv + 1) * (Mv + 1))
+#define BOUND2 (2.0 * BOUND)
+
+#define WID     5.0
+#define IWID    5
+#define HEI     5.0
+#define IHEI    5
+#define HPIX  100.0
+#define IHPIX 100
+#define VPIX  100.0
+#define IVPIX 100
+
+/* Common Block Declarations */
+
+struct {
+  double xlow, ylow, delx, dely, v, fold[Nv], fnew[Nv];
+} ctrcom;
+
+/* Table of constant values */
+
+static int c_0 = 0;
+static int c_1 = 1;
+static int c_3 = 25;
+static int c_M = Mv;
+static int c_N = Nv;
+
+static double c_10  = - Ten;
+static double c_12  =   Ten;
+static double c_b11 =   0.0;
+
+void draw_contour();
+
+/* Subroutine */ 
+
+void cntr(numx, numy, xmin, xmax, ymin, ymax, val, nvals, nchars, title, gridp)
+     int *numx, *numy, *nvals, *nchars, *gridp;
+     double *xmin, *xmax, *ymin, *ymax, *val, *title;
+{
+  /* System generated locals */
+    
+  int i_1, i_2, i_3, i_4, i_5;
+  double r_1, r_2, r_3, r_4;
+
+  /* Local variables */
+  
+  /* Subroutine */ 
+
+  extern void draw_line();
+  extern double aleft(), right(), bot(), top();
+  extern double funct(), xx(), yy(), ainter();
+
+  static double f;
+  static int i, j, k, l;
+  static double x, y;
+  static double chars;
+  static double xxmax, yymax, x0, x1, x2, y1, y2, y0, height;
+  static double bslope;
+  
+  /* INITIALIZE PLOTTER, SET UP WINDOW, ETC. */
+  
+  /* Parameter adjustments */
+  
+  --val;
+  --title;
+  
+  /* Function Body */
+  
+  /* FIGURE OUT IF X OR Y LIMITS THE WINDOW (ALLOW LOWER BORDER OF */
+  /* 1/8 OF PLOT HEIGHT FOR TITLE) */
+    
+  bslope = (y2 - y1) / (x2 - x1);
+  
+  if(((*ymax - *ymin) * 1.125) / (*xmax - *xmin) < bslope) {
+    goto L999;
+  }
+
+  /* Y IS LIMITING DIMENSION */
+    
+  yymax = *ymax;
+  xxmax = ((*ymax - *ymin) * 1.125) / bslope + *xmin;
+  
+  goto L990;
+  
+  /* X IS LIMITING DIMENSION */
+
+ L999:
+  
+  xxmax = *xmax;
+  yymax = (*xmax - *xmin) * bslope + *ymin - (*ymax - *ymin) * 0.125;
+ 
+ L990:
+  
+  r_1 = *ymin - (*ymax - *ymin) * 0.125;
+
+  // setlim(xmin, &xxmax, &r_1, &yymax, &c_false);
+  
+  /* PLOT TITLE */
+   
+  if(*nchars <= 0) {
+    goto L34;
+  }
+    
+  chars = (double) (*nchars);
+  height = (*xmax - *xmin) / chars;
+
+  x0 = 0.0;
+
+  if(height <= (*ymax - *ymin) * 0.0625) {
+    goto L37;
+  }
+
+  height = (*ymax - *ymin) * 0.0625;
+
+  x0 = (*xmax - *xmin - height * chars) * 0.5 + *xmin;
+ 
+ L37:
+
+  r_1 = *ymin * 1.0625 - *ymax * 0.0625 - height * 0.5;
+  r_2 = (height * 100.0) / (yymax - *ymin + (*ymax - *ymin) * 0.125);
+
+  // string_c(&x0, &r_1, &r_2, &c_b11, &title[1], &c_b11);
+
+  /* SET UP SOME GLOBAL VARIABLES */
+
+ L34:
+  
+  /*
+
+  ctrcom.xlow = *xmin;
+  ctrcom.ylow = *ymin;
+  ctrcom.delx = (*xmax - *xmin) / (*numx - 1);
+  ctrcom.dely = (*ymax - *ymin) / (*numy - 1);
+
+  **/
+
+  ctrcom.xlow = *xmin;
+  ctrcom.ylow = *ymin;
+  ctrcom.delx = (*xmax - *xmin) / *numx;
+  ctrcom.dely = (*ymax - *ymin) / *numy;
+
+  /* CONDITIONALLY DRAW GRID */
+   
+  if(!(*gridp)) {
+    goto L52;
+  }
+  
+  i_1 = *numx;
+   
+  for(i = 1; i <= i_1; ++i) {
+    /* L50: */
+    
+    r_1 = xx(&i);
+    r_2 = yy(&c_1);
+    r_3 = xx(&i);
+    r_4 = yy(numy);
+
+    draw_line(r_1, r_2, r_3, r_4);
+  }
+  
+  i_1 = *numy;
+  
+  for(j = 1; j <= i_1; ++j) {
+    /* L51: */
+    
+    r_1 = xx(&c_1);
+    r_2 = yy(&j);
+    r_3 = xx(numx);
+    r_4 = yy(&j);
+    
+    draw_line(r_1, r_2, r_3, r_4);
+  }
+  
+ L52:
+
+  /* SET UP OLD VALUES */
+  
+  i_1 = *numx;
+  
+  for(i = 1; i <= i_1; ++i) {
+    /* L21: */
+    
+    r_1 = xx(&i);
+    r_2 = yy(&c_1);
+    
+    ctrcom.fold[i - 1] = funct(r_1, r_2);
+
+    // printf("F = %g \n", funct(r_1, r_2));
+  }
+
+  /* LOOP FOR Y DIRECTION */
+    
+  i_1 = *numy;
+  
+  for(j = 2; j <= i_1; ++j) {
+    r_1 = xx(&c_1);
+    r_2 = yy(&j);
+    
+    ctrcom.fnew[0] = funct(r_1, r_2);
+    
+    // printf("F = %g \n", funct(r_1, r_2));
+
+    /* LOOP FOR X DIRECTION */
+    
+    i_2 = *numx;
+    
+    for(i = 2; i <= i_2; ++i) {
+      r_1 = xx(&i);
+      r_2 = yy(&j);
+      
+      ctrcom.fnew[i - 1] = funct(r_1, r_2);
+      
+      // printf("F = %g \n", funct(r_1, r_2));
+
+      /* LOOP FOR CONTOUR VALUES TO BE PLOTTED */
+	    
+      i_3 = *nvals;
+	
+      for(k = 1; k <= i_3; ++k) {
+	/* EXTRACT THE CURRENT VALUE */
+	
+	ctrcom.v = val[k];
+	
+	/* COMPUTE THE MAGIC NUMBER (INDICATING THE KIND OF CELL) */
+	
+	l = 0;
+	
+	if(ctrcom.fold[i - 1] >= ctrcom.v) {
+	  ++l;
+	}
+	
+	if(ctrcom.fold[i - 2] >= ctrcom.v) {
+	  l += 2;
+	}
+	
+	if(ctrcom.fnew[i - 1] >= ctrcom.v) {
+	  l += 4;
+	}
+	
+	if(ctrcom.fnew[i - 2] >= ctrcom.v) {
+	  l += 8;
+	}
+
+	/* PSEUDO-CASE STATEMENT TO DO APPROPRIATE ACTION FOR CELL */
+		
+	switch((int)(l + 1)) {
+	case  1:  goto L23;
+	case  2:  goto L1;
+	case  3:  goto L2;
+	case  4:  goto L3;
+	case  5:  goto L4;
+	case  6:  goto L5;
+	case  7:  goto L6;
+	case  8:  goto L7;
+	case  9:  goto L8;
+	case 10:  goto L9;
+	case 11:  goto L10;
+	case 12:  goto L11;
+	case 13:  goto L12;
+	case 14:  goto L13;
+	case 15:  goto L14;
+	case 16:  goto L23;
+	}
+      
+      L7:
+      L8:
+	
+	i_4 = i - 1;
+	r_1 = xx(&i_4);
+	r_2 = aleft(&i, &j);
+	r_3 = top(&i);
+	r_4 = yy(&j);
+
+	// printf("r_1 = %g, r_2 = %g, r_3 = %g, r_4 = %g \n", 
+	//       r_1, r_2, r_3, r_4);
+
+	draw_line(r_1, r_2, r_3, r_4);
+	
+	goto L23;
+
+      L5:
+      L10:
+		
+	r_1 = bot(&i);
+	i_4 = j - 1;
+	r_2 = yy(&i_4);
+	r_3 = top(&i);
+	r_4 = yy(&j);
+
+	// printf("r_1 = %g, r_2 = %g, r_3 = %g, r_4 = %g \n", 
+	//       r_1, r_2, r_3, r_4);
+
+	draw_line(r_1, r_2, r_3, r_4);
+	
+	goto L23;
+      
+      L2:
+      L13:
+	
+	i_4 = i - 1;
+	r_1 = xx(&i_4);
+	r_2 = aleft(&i, &j);
+	r_3 = bot(&i);
+	i_5 = j - 1;
+	r_4 = yy(&i_5);
+
+	// printf("r_1 = %g, r_2 = %g, r_3 = %g, r_4 = %g \n", 
+	//       r_1, r_2, r_3, r_4);
+
+	draw_line(r_1, r_2, r_3, r_4);
+	
+	goto L23;
+
+      L4:
+      L11:
+	
+	r_1 = top(&i);
+	r_2 = yy(&j);
+	r_3 = xx(&i);
+	r_4 = right(&i, &j);
+	
+	// printf("r_1 = %g, r_2 = %g, r_3 = %g, r_4 = %g \n", 
+	//       r_1, r_2, r_3, r_4);
+
+	draw_line(r_1, r_2, r_3, r_4);
+	
+	goto L23;
+
+      L3:
+      L12:
+		
+	i_4 = i - 1;
+	r_1 = xx(&i_4);
+	r_2 = aleft(&i, &j);
+	r_3 = xx(&i);
+	r_4 = right(&i, &j);
+	
+	// printf("r_1 = %g, r_2 = %g, r_3 = %g, r_4 = %g \n", 
+	//       r_1, r_2, r_3, r_4);
+	
+	draw_line(r_1, r_2, r_3, r_4);
+	
+	goto L23;
+
+      L1:
+      L14:
+	
+	r_1 = bot(&i);
+	i_4 = j - 1;
+	r_2 = yy(&i_4);
+	r_3 = xx(&i);
+	r_4 = right(&i, &j);
+	
+	// printf("r_1 = %g, r_2 = %g, r_3 = %g, r_4 = %g \n", 
+	//        r_1, r_2, r_3, r_4);
+
+	draw_line(r_1, r_2, r_3, r_4);
+	
+	goto L23;
+
+	/* HANDLE 4 EDGE CELLS */
+
+      L6:
+      L9:
+		
+	x0 = ainter(&ctrcom.fold[i - 2], &ctrcom.fold[i - 1]);
+	x1 = ainter(&ctrcom.fnew[i - 2], &ctrcom.fnew[i - 1]);
+	y0 = ainter(&ctrcom.fold[i - 2], &ctrcom.fnew[i - 2]);
+	y1 = ainter(&ctrcom.fold[i - 1], &ctrcom.fnew[i - 1]);
+	
+	/* COMPUTE COORDINATES FOR INTERSECTION POINT */
+		
+	y = (x0 * (y1 - y0) + y0) / (1.0 - (x1 - x0) * (y1 - y0));
+	x = y * (x1 - x0) + x0;
+
+	/* COMPUTE FUNCTION VALUE FOR INTERSECTION POINT */
+		
+	i_4 = i - 1;
+	r_1 = xx(&i_4) + ctrcom.delx * x;
+	i_5 = j - 1;
+	r_2 = yy(&i_5) + ctrcom.dely * y;
+	
+	f = funct(r_1, r_2);
+	
+	// printf("F = %g \n", funct(r_1, r_2));
+
+	/* FIGURE OUT WHAT ACTION TO TAKE */
+	
+	if(f == ctrcom.v) {
+	  goto L31;
+	}
+	
+	if((f > ctrcom.v && ctrcom.fnew[i - 1] >= ctrcom.v) || 
+	   (f < ctrcom.v && ctrcom.fnew[i - 1] < ctrcom.v)) {
+	  goto L32;
+	}
+	
+	/* L30: */
+	
+	i_4 = i - 1;
+	r_1 = xx(&i_4);
+	r_2 = aleft(&i, &j);
+	r_3 = bot(&i);
+	i_5 = j - 1;
+	r_4 = yy(&i_5);
+	
+	// printf("r_1 = %g, r_2 = %g, r_3 = %g, r_4 = %g \n", 
+	//        r_1, r_2, r_3, r_4);
+
+	draw_line(r_1, r_2, r_3, r_4);
+	
+	r_1 = top(&i);
+	r_2 = yy(&j);
+	r_3 = xx(&i);
+	r_4 = right(&i, &j);
+	
+	// printf("r_1 = %g, r_2 = %g, r_3 = %g, r_4 = %g \n", 
+	//        r_1, r_2, r_3, r_4);
+	
+	draw_line(r_1, r_2, r_3, r_4);
+	
+	goto L23;
+
+      L31:
+	
+	r_1 = bot(&i);
+	i_4 = j - 1;
+	r_2 = yy(&i_4);
+	r_3 = top(&i);
+	r_4 = yy(&j);
+	
+	// printf("r_1 = %g, r_2 = %g, r_3 = %g, r_4 = %g \n", 
+	//        r_1, r_2, r_3, r_4);
+	
+	draw_line(r_1, r_2, r_3, r_4);
+	
+	i_4 = i - 1;
+	r_1 = xx(&i_4);
+	r_2 = aleft(&i, &j);
+	r_3 = xx(&i);
+	r_4 = right(&i, &j);
+	
+	// printf("r_1 = %g, r_2 = %g, r_3 = %g, r_4 = %g \n", 
+	//       r_1, r_2, r_3, r_4);
+	
+	draw_line(r_1, r_2, r_3, r_4);
+	
+	goto L23;
+
+      L32:
+
+	i_4 = i - 1;
+	r_1 = xx(&i_4);
+	r_2 = aleft(&i, &j);
+	r_3 = top(&i);
+	r_4 = yy(&j);
+	
+	// printf("r_1 = %g, r_2 = %g, r_3 = %g, r_4 = %g \n", 
+	//        r_1, r_2, r_3, r_4);
+
+	draw_line(r_1, r_2, r_3, r_4);
+	
+	r_1 = bot(&i);
+	i_4 = j - 1;
+	r_2 = yy(&i_4);
+	r_3 = xx(&i);
+	r_4 = right(&i, &j);
+	
+	// printf("r_1 = %g, r_2 = %g, r_3 = %g, r_4 = %g \n", 
+	//       r_1, r_2, r_3, r_4);
+
+	draw_line(r_1, r_2, r_3, r_4);
+
+      L23:
+	;
+      }
+      
+      /* L24: */
+    }
+
+    /* PUSH BACK NEW VALUES TO OLD VALUES */
+	
+    i_2 = *numx;
+	
+    for(i = 1; i <= i_2; ++i) {
+      /* L25: */
+     
+      ctrcom.fold[i - 1] = ctrcom.fnew[i - 1];
+    }
+
+    /* L22: */
+  }
+
+  /* TERMINATE THE PLOT */
+  
+  /*
+
+  devoff();
+  wait_c();
+
+  **/
+} /* cntr */
+
+/* ROUTINE TO COMPUTE X COORDINATE CORRESPONDING TO COLUMN I */
+
+double xx(i)
+     int *i;
+{
+  /* System generated locals */
+  
+  double ret_val;
+    
+  ret_val = ctrcom.xlow + ctrcom.delx * (*i - 1);
+  
+  return ret_val;
+} /* xx */
+
+/* ROUTINE TO COMPUTE Y COORDINATE CORRESPONDING TO ROW J */
+
+double yy(j)
+     int *j;
+{
+  /* System generated locals */
+  
+  double ret_val;
+
+  ret_val = ctrcom.ylow + ctrcom.dely * (*j - 1);
+  
+  return ret_val;
+} /* yy */
+
+/* ROUTINE TO COMPUTE THE INTERSECTION COORDINATE AT TOP OF CELL */
+
+double top(i)
+     int *i;
+{
+  /* System generated locals */
+  
+  double ret_val;
+  
+  /* Local variables */
+  
+  extern double ainter();
+  
+  ret_val = ctrcom.delx 
+    * (*i - 2 + ainter(&ctrcom.fnew[*i - 2], &ctrcom.fnew[*i - 1])) 
+    + ctrcom.xlow;
+  
+  return ret_val;
+} /* top */
+
+/* ROUTINE TO COMPUTE THE INTERSECTION COORDINATE AT BOTTOM OF CELL */
+
+double bot(i)
+     int *i;
+{
+  /* System generated locals */
+  
+  double ret_val;
+  
+  /* Local variables */
+  
+  extern double ainter();
+  
+  ret_val = ctrcom.delx 
+    * (*i - 2 + ainter(&ctrcom.fold[*i - 2], &ctrcom.fold[*i - 1])) 
+    + ctrcom.xlow;
+  
+  return ret_val;
+} /* bot */
+
+/* ROUTINE TO COMPUTE THE INTERSECTION COORDINATE AT LEFT SIDE OF CELL */
+
+double aleft(i, j)
+     int *i, *j;
+{
+  /* System generated locals */
+    
+  double ret_val;
+  
+  /* Local variables */
+  
+  extern double ainter();
+
+  ret_val = ctrcom.dely 
+    * (*j - 2 + ainter(&ctrcom.fold[*i - 2], &ctrcom.fnew[*i - 2])) 
+    + ctrcom.ylow;
+  
+  return ret_val;
+} /* aleft */
+
+/* ROUTINE TO COMPUTE THE INTERSECTION COORDINATE AT RIGHT SIDE OF CELL */
+
+double right(i, j)
+     int *i, *j;
+{
+  /* System generated locals */
+    
+  double ret_val;
+  
+  /* Local variables */
+  
+  extern double ainter();
+
+  ret_val = ctrcom.dely 
+    * (*j - 2 + ainter(&ctrcom.fold[*i - 1], &ctrcom.fnew[*i - 1])) 
+    + ctrcom.ylow;
+
+  return ret_val;
+} /* right */
+
+/* ROUTINE TO DO LINEAR INTERPOLATION (RETURNS THE FRACTION ALONG THE */
+/* LENGTH BETWEEN THE POINT OF VALUES A AND B THAT THE CONTOUR FOR THE */
+/* CURRENT VALUE SHOULD BE PLACED */
+
+double ainter(a, b)
+     double *a, *b;
+{
+  /* System generated locals */
+  
+  double ret_val;
+  
+  ret_val = (ctrcom.v - *a) / (*b - *a);
+  
+  return ret_val;
+} /* ainter */
+
+double funct(double x, double y)
+{
+  double fnct1, fnct2, Funct2;
+  double func1, func2, func3, funchb, funcnis, funcrl, funcs, functs;
+  double poly1, poly2, poly3, poly4, poly5, poly6, poly7;
+  double dipolm1, dipolm2, quadrupolm1, quadrupolm2; 
+  double rbeta, s2, rs12, radius_E4;  
+  double B1, B2, D2, yp1, yp2, rd2, xd1, xd2, Mkaprp, Mkapto;  
+  double alpha0 = 0.0, alpha1 = 0.0;
+  double hubble_factor =  2.0;    
+  double ring_factor   = 10.0;
+  double Epsilon1 = 1.0 - parms[P_EPSILON];
+  double Epsilon2 = 1.0 + parms[P_EPSILON];
+  double delta  = 1.0 - parms[P_ALPHA];
+  
+  // double delta2 = 2.0 * parms[P_ALPHA];  
+  
+  double xbar0 = 0.0, xbar1 = 0.0;  
+  double radius_E2, radius_E;
+
+  //  double radius_E2 = (xbar0 * xbar0 + xbar1 * xbar1) / R_E2;
+
+  /*
+
+  xl = source_position.x;
+  yl = source_position.y;
+
+  **/
+
+  xl = 0.0;
+  yl = 0.0;
+
+  xbar0 =   (x - xl) * cs + (y - yl) * ss;
+  xbar1 = - (x - xl) * ss + (y - yl) * cs;  
+
+  radius_E2 = (xbar0 * xbar0 + xbar1 * xbar1) / R_E2;
+  radius_E  = sqrt(radius_E2);
+  
+  switch(current_model) {
+  case M_MODEL_MENU:
+    break;
+  case M_CHANG_REFSDAL:
+    alpha0 = xbar0 / radius_E2;
+    alpha1 = xbar1 / radius_E2;
+  
+    break;
+  case M_SECOND:
+    
+    break;      
+  case M_SING_ISOT_SPHERE:
+    rbeta = pow(radius_E2, parms[P_EXP] / 2.0 - 1.0);
+    
+    alpha0 = rbeta * xbar0;
+    alpha1 = rbeta * xbar1;  
+  
+    break;      
+  case M_DE_VAUCOULEUR:
+    poly1 = 720.0 / tau8 + (720.0 * pow(radius_E, (1.0 / 4.0))) / tau7;
+    poly2 = poly1 + pow(radius_E, (3.0 / 2.0)) / tau2;
+    poly3 = poly2 + (6.0 * pow(radius_E, (5.0 / 4.0))) / tau3;
+    poly4 = poly3 + (30.0 * radius_E) / tau4;
+    poly5 = poly4 + (120.0 * pow(radius_E, (3.0 / 4.0))) / tau5;
+    poly6 = poly5 + (360.0 * sqrt(radius_E)) / tau6;
+    poly7 = 7.0 * poly6 + pow(radius_E, (7.0 / 4.0)) / tau;
+
+    func1 = poly7 * exp(- tau * (pow(radius_E, (1.0 / 4.0)) - 1.0));
+    func2 = func1 - (5040.0 * Ftau) / tau8;
+
+    alpha0 = - (8.0 * parms[P_KAPPA] * xbar0 * func2) / radius_E2;
+    alpha1 = - (8.0 * parms[P_KAPPA] * xbar1 * func2) / radius_E2;
+  
+    break;      
+  case M_KING: 
+    /* log1p(x) = log(1.0 + x) */
+  
+    alpha0 = (parms[P_KAPPA] * xbar0 * log1p(radius_E2)) / radius_E2;
+    alpha1 = (parms[P_KAPPA] * xbar1 * log1p(radius_E2)) / radius_E2;
+  
+    break;      
+  case M_HUBBLE:
+    funchb = log1p(radius_E) - radius_E / (1.0 + radius_E);
+
+    alpha0 = (hubble_factor * parms[P_KAPPA] * xbar0 * funchb) / radius_E2;
+    alpha1 = (hubble_factor * parms[P_KAPPA] * xbar1 * funchb) / radius_E2;  
+
+    break;      
+  case M_SPIRAL:
+    funcs = 2.0 * parms[P_KAPPA] * (1.0 - exp(- parms[P_ALPHA2] * radius_E)
+                                    * (parms[P_ALPHA2] * radius_E + 1.0));
+    
+    alpha0 = (funcs * xbar0) / (parms[P_ALPHA2] * parms[P_ALPHA2] * radius_E2);
+    alpha1 = (funcs * xbar1) / (parms[P_ALPHA2] * parms[P_ALPHA2] * radius_E2);
+    
+    break;      
+  case M_TRUNC_KING:
+    /* hypot(x, y) = sqrt(x * x + y * y) */
+
+    func1 = log1p(radius_E2) + radius_E2 / (1.0 + xc2); 
+    func2 = (4.0 * (hypot(1.0, radius_E) - 1.0)) / hypot(1.0, xc);
+    func3 = func1 - func2;
+  
+    alpha0 = (parms[P_KAPPA2] * xbar0 * func3) / radius_E2; 
+    alpha1 = (parms[P_KAPPA2] * xbar1 * func3) / radius_E2;
+
+    break;      
+  case M_NSING_ISOT_SPHERE:
+     s2 = xc2 + radius_E2;
+    
+     funcnis = sqrt(s2) - xc;
+
+     alpha0 = (parms[P_KAPPA] * funcnis * xbar0) / radius_E2;
+     alpha1 = (parms[P_KAPPA] * funcnis * xbar1) / radius_E2;
+  
+     break;      
+  case M_TRANSP_SPHERE:
+    if(parms[P_C] > parms[P_E] * radius_E){
+      s2 = 1.0 - radius_E2 * (R_E2 / R_C2);
+
+      functs = 1.0 - pow(s2, (3.0 / 2.0));
+
+      alpha0 = (functs * xbar0) / radius_E2;
+      alpha1 = (functs * xbar1) / radius_E2;    
+    } else {
+      alpha0 = xbar0 / radius_E2;
+      alpha1 = xbar1 / radius_E2; 
+    }   
+
+    break;
+  case M_ELLIPTICAL:
+    s2 = xc2 + (Epsilon1 * xbar0 * xbar0 + Epsilon2 * xbar1 * xbar1) / R_E2;
+  
+    /*
+
+    s2 = parms[P_C] * parms[P_C] 
+      + Epsilon1 * xbar0 * xbar0 + Epsilon2 * xbar1 * xbar1;
+      
+    alpha0 = (parms[P_KAPPA] * Epsilon1 
+	      * xbar0) / (pow(s2, delta) * pow(xc, delta2));
+    alpha1 = (parms[P_KAPPA] * Epsilon2 
+	      * xbar1) / (pow(s2, delta) * pow(xc, delta2));
+
+    alpha0 = (parms[P_KAPPA] * Epsilon1 
+	      * xbar0 * R_E2) / (pow(s2, delta) * pow(parms[P_C], delta2));
+    alpha1 = (parms[P_KAPPA] * Epsilon2 
+	      * xbar1 * R_E2) / (pow(s2, delta) * pow(parms[P_C], delta2));
+
+    **/
+
+    alpha0 = (parms[P_KAPPA] * Epsilon1 * xbar0) / pow(s2, delta);
+    alpha1 = (parms[P_KAPPA] * Epsilon2 * xbar1) / pow(s2, delta);
+
+    break;      
+  case M_MULTIPOLE:
+    dipolm1 =   R_E3 * (parms[P_DX_QP] * (xbar1 * xbar1 - xbar0 * xbar0)
+                        - 2.0 * parms[P_DY_QP] * xbar0 *
+                        xbar1) / pow((xbar0 * xbar0 + xbar1 * xbar1), 2.0);
+    
+    dipolm2 = - R_E3 * (parms[P_DY_QP] * (xbar1 * xbar1 - xbar0 * xbar0)
+                        + 2.0 * parms[P_DX_QP] * xbar0 *
+                        xbar1) / pow((xbar0 * xbar0 + xbar1 * xbar1), 2.0);
+
+    quadrupolm1 = 2.0 * R_E4 * (parms[P_QXX] * xbar0 *
+                                (3.0 * xbar1 * xbar1 - xbar0 * xbar0)
+                                + parms[P_QXY] * xbar1 *
+                                (xbar1 * xbar1 - 3.0 * xbar0 * xbar0)) /
+      pow((xbar0 * xbar0 + xbar1 * xbar1), 3.0);
+
+    quadrupolm2 = 2.0 * R_E4 * (parms[P_QYY] * xbar1 *
+                                (3.0 * xbar0 * xbar0 - xbar1 * xbar1)
+                                + parms[P_QXY] * xbar0 *
+                                (xbar0 * xbar0 - 3.0 * xbar1 * xbar1)) /
+      pow((xbar0 * xbar0 + xbar1 * xbar1), 3.0);
+    
+    alpha0 = (parms[P_KAPPA0] * xbar0) / radius_E2 + dipolm1 + quadrupolm1; 
+    alpha1 = (parms[P_KAPPA0] * xbar1) / radius_E2 + dipolm2 + quadrupolm2;
+
+    break;
+  case M_ROTATION_LENS:
+    funcrl = (parms[P_SX] * xbar1 - parms[P_SY] * xbar0) / parms[P_E];
+
+    radius_E2 = (xbar0 * xbar0 + xbar1 * xbar1) / R_E2;
+    radius_E4 = radius_E2 * radius_E2;
+
+    alpha0 = xbar0 / radius_E2 + (2.0 * funcrl * xbar0) / radius_E4
+      + parms[P_SY] / (parms[P_E] * radius_E2);
+    alpha1 = xbar1 / radius_E2 + (2.0 * funcrl * xbar1) / radius_E4
+      - parms[P_SX] / (parms[P_E] * radius_E2);
+  
+    break;
+  case M_DOUBLE_LENS:
+    rs12 = ((xbar0 - parms[P_X_1]) * (xbar0 - parms[P_X_1]) + 
+            (xbar1 - parms[P_Y_1]) * (xbar1 - parms[P_Y_1])) / R_E2;
+
+    B1 = 1.0 - parms[P_SIGMA2] - parms[P_GAMMA2] * cos(parms[P_PHI2]);
+    B2 = 1.0 - parms[P_SIGMA2] + parms[P_GAMMA2] * cos(parms[P_PHI2]);
+    D2 =                       - parms[P_GAMMA2] * sin(parms[P_PHI2]);
+
+    yp1 = B1 * xbar0 + D2 * xbar1;
+    yp2 = B2 * xbar1 + D2 * xbar0; 
+  
+    xd1 = yp1 - parms[P_M_1] * parms[P_BETA] * (xbar0 - parms[P_X_1]) / rs12; 
+    xd2 = yp2 - parms[P_M_1] * parms[P_BETA] * (xbar1 - parms[P_Y_1]) / rs12; 
+
+    rd2 = ((xd1 - parms[P_X_2]) * (xd1 - parms[P_X_2]) + 
+                  (xd2 - parms[P_Y_2]) * (xd2 - parms[P_Y_2])) / R_E2;
+
+    alpha0 = parms[P_M_1] * (xbar0 - parms[P_X_1]) / rs12
+      + parms[P_M_2] * (xd1 - parms[P_X_2]) / rd2;  
+    alpha1 = parms[P_M_1] * (xbar1 - parms[P_Y_1]) / rs12
+      + parms[P_M_2] * (xd2 - parms[P_Y_2]) / rd2;          
+    
+    break;
+  case M_UNIFORM_RING:
+    Mkaprp = ring_factor * parms[P_KAPPA] * (radius_E2 - Ri_E2);
+    Mkapto = ring_factor * parms[P_KAPPA] * (Ro_E2 - Ri_E2);
+
+    if(radius_E >= Ro_E / parms[P_E]) {
+      alpha0 = (Mkapto * xbar0) / radius_E2;
+      alpha1 = (Mkapto * xbar1) / radius_E2; 	     
+    } else {
+      if(radius_E >= Ri_E / parms[P_E]) {
+        alpha0 = (Mkaprp * xbar0) / radius_E2;
+        alpha1 = (Mkaprp * xbar1) / radius_E2; 	
+      } else {
+        alpha0 = 0.0;
+        alpha1 = 0.0; 
+      }   
+    }
+          
+    break;
+  default:
+    break;
+  }  
+
+  /*
+
+  z1 = source_position.x;
+  z2 = source_position.y;
+
+  **/
+
+  fnct1 = z1 - A1 * xbar0 - D * xbar1 + alpha0;
+  fnct2 = z2 - A2 * xbar1 - D * xbar0 + alpha1;
+
+  Funct2 = (fnct1 * fnct1 + fnct2 * fnct2) / 2.0;
+
+  // printf("f1 = %g, f2 = %g \n", fnct1, fnct2);
+
+  // Funct2 = sqrt(f1 * f1 + f2 * f2);
+
+  return(Funct2);
+} /* funct */
+
+void draw_line(x1, y1, x2, y2)
+     double x1, x2, y1, y2;
+{
+  double x1n, x2n, y1n, y2n;
+
+  // glLoadIdentity();
+
+  /* Yellow */
+
+  // glColor3f(1.0, 1.0, 0.0);
+
+  /* Blue */
+
+  glColor3f(0.0, 0.0, 1.0);
+
+  // glTranslatef(- 2.5, - 2.5, 0.0); 
+
+  // glTranslatef(250.0, 250.0, 0.0); 
+
+  // Draw filtered lines
+
+  // glEnable(GL_LINE_SMOOTH);
+
+  // Set the line width
+
+  glLineWidth(1.0);
+
+  // Stippled line
+
+  // glEnable(GL_LINE_STIPPLE);
+  
+  // glLineStipple(1, 0x0101); /* Dotted Line */
+
+  // printf("(x1, y1) = (%g, %g) \n", x1, y1);
+  // printf("(x2, y2) = (%g, %g) \n", x2, y2);
+
+  // glScalef(2.0, 2.0, 0.0);
+
+  /*
+
+  x1n = parms[P_E] * (((double) x1) / HPIX - 2.0);
+  y1n = parms[P_E] * (((double) y1) / VPIX - 2.0);
+  x2n = parms[P_E] * (((double) x2) / HPIX - 2.0);
+  y2n = parms[P_E] * (((double) y2) / VPIX - 2.0);
+
+  **/
+
+  x1n = x1;
+  y1n = y1;
+  x2n = x2;
+  y2n = y2;
+
+  glBegin(GL_LINES);
+  glVertex2d(x1n, y1n);   
+  glVertex2d(x2n, y2n);   
+  glEnd();
+
+  // Flush the buffer to force drawing of all objects thus far
+
+  glFlush();
+} /* draw_line */
+
+void draw_contour()
+{
+  int i, j, kc = 50;
+  double x, y, d[Nd];
+
+  for(i = 0; i < kc; ++i) {
+    for(j = 0; j < kc; ++j) {
+      x = ((double) i);
+      y = ((double) j);
+
+      d[i + j * Np] = funct(x, y);
+    }
+  }
+
+  cntr(&c_M, &c_N, &c_10, &c_12, &c_10, &c_12, 
+       &d[0], &c_3, &c_0, &c_b11, &c_0);  
+}

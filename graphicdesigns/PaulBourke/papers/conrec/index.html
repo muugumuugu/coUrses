@@ -1,0 +1,417 @@
+<html> 
+<head> 
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>CONREC - A Contouring Subroutine</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center><table width=100%><tr><td>
+<center>
+<h1>CONREC<br>A Contouring Subroutine</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+July 1987<p>
+</center>
+
+<table width=100%><tr><td valign="top">
+<b>Source code</b><p>
+<ul>
+<li>By the author (Paul Bourke):
+<a href="conrec.c">C</a>,
+<a href="conrec_bas.txt">Basic</a>,
+<a href="conrec_for.txt">FORTRAN-77</a> (the original) <br>
+<li>Java version: <a href="Render.java">Render.java</a> and
+    <a href="Conrec.java">Conrec.java</a> by Bradley White.<br>
+<li>JavaScript by Jason Davies: <a href="conrec.js">conrec.js</a>, and
+	<a href="conrec_js.txt">conrec_js.txt</a>.<br>
+<li><a href="conrec_cxx.txt">Adapted to C++</a> by Nicholas Yue.<br>
+<li><a href="cpp/index.html">cpp.c version</a> by Bjorn Harpe.<br>
+<li><a href="ada/index.html">Ada version</a> by Gautier de Montmollin.<br>
+<li><a href="conrec_vb.txt">Visual Basic</a> by James Craig.<br>
+<li><a href="ConRecVBDemo.zip">Visual Basic version</a> by Michelle Smith.<br>
+<li><a href="coreconrect.dpr">Delphi translation</a> courtesy of Alexander Weidauer</a>.<br>
+<li>Actionscript3 version: <a href="ConRec.as">ConRec.as</a> by Jonathan Vanderspek.<br>
+<li>C# : <a href="conrec.cs">conrec.cs</a> as part of OxyPlot.<br>
+<li>C# version for AutoCAD: <a href="autocad.zip">autocad.zip</a> by John Nichols</a>.<br>
+<li>FORTRAN version: <a href="Aramini_c.txt">Aramini_c.txt</a> by Francisco Frutos Alfaro.<br>
+<li>FORTRAN version: <a href="nncntr_c.txt">nncntr_c.txt</a> by Michael Aramini.<br>
+<li>PHP version: <a href="conrec.php_">conrec.php</a> and <a href="test.php_">test.php</a> by Ashley Norris.<br>
+<li>GO version: <a href="conrec.go">conrec.go</a> by Dan Kortschak.<br>
+<!--
+<li>Component as part of GLScene is an OpenGL based 3D library for Delphi, C++Builder and Lazarus:
+	<a href="IsolinesSF.zip">IsolinesSF.zip</a> by Sergio Feitoza Costa.<br>
+-->
+<li>Converted to <a href="conrec.ts">TypeScript<a> by Erik Vullings
+</ul>
+
+</td><td width=260 align="right">
+<a href="byte1.gif"><img width=250 height=357 src="bytesmall.gif"></a><br>
+<smalltext>
+The famous BYTE magazine,<br>
+in which the algorithm appeared.<br>
+At least the algorithm survived.
+</smalltext>
+</td></tr></table>
+<p>
+
+<b>Introduction</b><p>
+
+<p align="justify">
+This article introduces a straightforward method of contouring some surface
+represented as a regular triangular mesh.<br>
+Contouring aids in visualizing three dimensional surfaces on a two dimensional
+medium (on paper or in this case a computer graphics screen). Two most common
+applications are displaying topological features of an area on a map or the air
+pressure on a weather map. In all cases some parameter is plotted as a function
+of two variables, the longitude and latitude or x and y axis. One problem with
+computer contouring is the process is usually CPU intensive and the algorithms
+often use advanced mathematical techniques making them susceptible to error.
+</p>
+
+<b>CONREC</b><p>
+
+<p align="justify">
+To do contouring in software you need to describe the data surface and the
+contour levels you want to have drawn. The software given this information must
+call the algorithm that calculates the line segments that make up a contour
+curve and then plot these line segments on whatever graphics device is
+available. 
+</p>
+<p align="justify">
+CONREC satisfies the above description, it is relatively simple to implement,
+very reliable, and does not require sophisticated programming techniques or a
+high level of mathematics to understand how it works. 
+</p>
+The input parameters to the CONREC subroutine are as follows :<p>
+<ul>
+<li><p align="justify">
+The number of horizontal and vertical data points designated iub and jub.
+</p>
+<li><p align="justify">
+The number of contouring levels, nc.
+</p>
+<li><p align="justify">
+A one dimensional array z(0:nc-1) that saves as a list of the contour levels
+in increasing order. (The order of  course can be relaxed if the program will
+sort the levels)
+</p>
+<li><p align="justify">
+A two dimensional array d(0:iub,0:jub) that contains the description of the
+data array to be contoured. Each element of the array is a sample of the
+surface being studied at a point (x,y)
+</p>
+<li><p align="justify">
+Two, one dimensional arrays x(0:iub) and y(0:jub) which contain the
+horizontal and vertical coordinates of each sample point. This allows for a
+rectangular grid of samples.
+</p>
+</ul>
+
+<p align="justify">
+<center><IMG SRC="conrec1.gif" width=388 height=205></center><br>
+<smalltext>
+<b>Figure 1</b> 
+Illustrates some of the above input parameters.
+</p></smalltext>
+
+<p align="justify">
+The contouring subroutine CONREC does not assume anything about the device that
+will be used to plot the contours. It instead expects a user written subroutine
+called VECOUT. CONREC calls VECOUT with the horizontal and vertical coordinates
+of the start and end coordinates of a line segment along with the contour level
+for that line segment. In the simplest case this is very similar the the usual
+LINE (x1,y1)-(x2,y2) command in BASIC. See the source code listing below.
+</p>
+
+<b>Algorithm</b><p>
+
+<p align="justify">
+As already mentioned the samples of the three dimensional surface are stored in
+a two dimensional real array. This rectangular grid is considered four points
+at a time, namely the rectangle d(i,j), d(i+1,j), d(i,j+1), and d(i+1,j+1). The
+centre of each rectangle is assigned a value corresponding to the average
+values of each of the four vertices. Each rectangle is in turn divided into
+four triangular regions by cutting along the diagonals. Each of these
+triangular planes may be bisected by horizontal contour plane. The intersection
+of these two planes is a straight line segment, part of the the contour curve
+at that contour height.
+</p>
+<p align="justify">
+Depending on the value of a contour level with respect to the height at the
+vertices of a triangle, certain types of contour lines are drawn. The 10
+possible cases which may occur are summarised below <p>
+<ul>
+a) All the vertices lie below the contour level.<br>
+b) Two vertices lie below and one on the contour level.<br>
+c) Two vertices lie below and one above the contour level.<br>
+d) One vertex lies below and two on the contour level.<br>
+e) One vertex lies below, one on and one above the contour level.<br>
+f) One vertex lies below and two above  the contour level.<br>
+g) Three vertices lie on the contour level.<br>
+h) Two vertices lie on and one above the contour level.<br>
+i) One vertex lies on and two above the contour level.<br>
+j) All the vertices lie above the contour level.<br>
+</ul>
+<p>
+<p align="justify">
+In cases a, b, i and j the two planes do not intersect, ie: no line need be
+drawn. For cases d and h the two planes intersect along an edge of the triangle
+and therefore line is drawn between the two vertices that lie on the contour
+level. Case e requires that a line be drawn from the vertex on the contour
+level to a point on the opposite edge. This point is determined by the
+intersection of the contour level with the straight line between the other two
+vertices. Cases c and f are the most common situations where the line is drawn
+from one edge to another edge of the triangle. The last possibility or case g
+above has no really satisfactory solution and fortunately will occur rarely
+with real arithmetic. 
+</p>
+
+<center><IMG SRC="conrec3.gif" width=337 height=229></center><br>
+<smalltext><b>Figure 2</b></smalltext><p>
+
+<b>Example</b><p>
+
+<p align="justify">
+As a simple example consider one triangle with vertices labelled m1,m2 and m3
+with heights 0, 2 and 3 respectively
+</p>
+
+<center><IMG SRC="conrec2.gif" width=208 height=153></center><br>
+<smalltext><b>Figure 3</b> Summary of the possible line orientations.</smalltext><p>
+
+<p align="justify">
+To calculate where a contour line at a height of 1 should be drawn, it can be
+seen that this is case f described earlier. Level 1 intersects line segment
+m1-m2 half the way along and it intersects line segment m1-m3 one third of the
+way along. A line segment is drawn between these two points. Each rectangular
+mesh cell is treated this way.
+</p>
+
+<b>Subroutine</b><p>
+
+<p align="justify">
+In summary, CONREC takes each rectangle of adjacent data points and splits it
+into 4 triangles after choosing the height at the centre of the rectangle. For
+each of the triangles the line segment resulting from the intersection with
+each contour plane. A routine is then called with the starting and stopping
+coordinates of the line segment.
+</p>
+
+<p align="justify">
+<center><IMG SRC="conrec4.gif" width=345 height=204></center><br>
+<smalltext><b>Figure 4</b></smalltext></p>
+
+<p align="justify">
+An attempt is made at optimization by checking first to
+see if there are any contour levels within the present rectangle and second
+that there are some contour levels within the present triangle. The indices i
+and j are used to step through each rectangle in turn, k refers to each contour
+level and m to the four triangles in each rectangle. 
+</p>
+
+<center><IMG SRC="conrec5.gif" width=282 height=203></center><br>
+<p align="justify"><smalltext>
+<b>Figure 5</b>
+Some of the notation used for identifying the rectangles and
+triangles in the subroutine.
+</smalltext></p>
+
+<p align="justify">
+Note that for large arrays the whole data array need not be stored in memory .
+Since the algorithm is a local one only requiring 4 points at a time, the data
+for each rectangle could be read from disk as required.
+</p>
+
+<b>Example 1</b><p>
+Contour map and the following function
+<center><IMG SRC="conrec6.gif" width=421 height=49></center>
+<center><IMG SRC="conrec7.gif" width=425 height=260></center>
+<p>
+
+<b>Example 2</b><p> 
+Contour map and the following function
+<center><IMG SRC="conrec8.gif" width=338 height=54></center>
+<center><IMG SRC="conrec9.gif" width=426 height=263></center>
+<p>
+
+<b><a href="example/index.html">Example 3</a></b><p>
+<p align="justify">
+This is a more "real life" example where a C version of CONREC has been
+used to contour a piece of landscape, the result is given below.
+</p>
+<center><img src="example3.gif" width=441 height=761 border=1></center>
+<p>
+
+<b>Images from the BYTE magazine version</b><p>
+
+<center>
+<img src="figure2.gif" width=500 height=645><p>
+<img src="figure3.gif" width=500 height=640><p>
+</center>
+
+<b>Note</b><p>
+<p align="justify">
+On occasion users have reported gaps in their contour lines, this should
+of course never happen. There is however a pathological case that all
+local contouring algorithms suffer from (local meaning that they only
+use information in the immediate vicinity to determine the contour lines).
+The problem arises when all four vertices of a grid cell have the
+same value as the contour level under consideration. There are a number
+of strategies that can be employed to overcome this special event,
+the correct way is to consider a larger region in order to join up the
+contours on either side of the problem cell. CONREC doesn't do this
+and just leaves the cell without any contour lines thus resulting in
+a gap. This special case essentially never happens for real values data,
+it is most commonly associated with integer height datasets. The simplest
+solution is to offset the contour levels being drawn by a very small amount.
+</p>
+</td></tr></table></center><p>
+
+
+<p><br><br><br><p>
+
+
+
+<center>
+<h1>Contouring Facet Based Models</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+February 1997
+</center>
+
+<p align="justify">
+This is a short note describing a method for contouring a facet based
+model, that is, drawing line segments along the intersection of the
+facets with the contouring plane(s). It is not assumed that the contour
+plane is parallel to the x-y plane, indeed a totally general contour
+plane description is employed.
+</p>
+
+<p align="justify">
+The facet is described by its three vertices, 
+P<sub>0</sub>, P<sub>1</sub>, P<sub>2</sub>. 
+The plane is described
+by its normal n and a point on the plane P. The routine given below
+returns 0 if there is no intersection of the facet with the contour
+plane. It returns 2 and the two vertices of the intersection line
+if the facet does intersect the contour plane.
+</p>
+
+<p align="justify">
+As reflected in the source below, there are 5 basic cases to consider.
+The first two are when all the vertices of the facet are on one side
+of the contour plane. The other 3 cases involve finding out which of the 
+three facets is on a side by itself.
+</p>
+
+<p><center><img src="contour2.gif"></center><p>
+
+<b>Notes</b><p>
+
+<ul>
+<li>
+<p align="justify">
+If the polygons making up the model are more complex than the simple
+3 facet ones considered here then they need to be split into simpler ones
+before using this algorithm, there are "standard" ways of doing this.
+For example 4 vertex facets can be split into 2 triangular facets by
+dividing along any two apposite vertices. Similarly, convex polygons
+can be triangulated by forming triangular facets with each edge and the
+centroid of the polygon. It gets a bit more difficult with complicated
+convex polygons.....
+</p>
+
+<li>
+<p align="justify">
+The most common height contours are achieved by simple setting
+the contour plane normal <b>n</b> to (0,0,1) and the point on the
+contour plane <b>p0</b> to (0,0,contourlevel).
+</p>
+
+</ul>
+
+<b>Examples</b><p>
+
+<p align="justify">
+The following examples result from contouring a 2D Gaussian with a range
+of different orientated contour planes.
+</p>
+
+<p><center><img src="contour1.gif"></center><p>
+
+<p align="justify">
+The technique is obviously not limited to traditional contouring of
+"height surfaces". Closed forms can equally be contoured. The following
+is a rhombic cubeoctahedron with contours perpendicular to the x axis
+and y axis.
+</p>
+
+<p><center><img src="contour3.gif"></center><p>
+
+<a href="source1.c"><b>Source Code</b></a>
+
+<p align="justify">
+The way the above code might be called in order to draw contour lines
+at multiple levels through a model containing a large number of polygons
+might be as follows
+</p>
+<pre>
+   Determine and create the contour plane "n"
+	For each contour level 
+		Set the value of p0 appropriately
+		For each polygon in the model
+			Possibly triangulate the polygon if it has more than 3 vertices
+			For each triangular polygon
+				Call ContourFacet()
+				If there were 2 vertices returned draw the line segment
+			End for
+		End for
+	End for
+</pre>
+
+For the simpler case of height contours: <a href="source2.c">source code</a><p>
+
+<b>Practical example</b><br>
+
+<p align="justify">
+Many rapid prototyping machines build models from a number of contour
+slices, additionally there is a standard file format called 
+<a href="../../dataformats/stl/index.html">stl</a> for that sort of work which
+consists of simply triangular polygons. Creating instructions for a 
+contour based rapid prototyping machine requires that the triangles
+representing the objects to be constructed are contoured, possibly along
+an arbitrary axis.
+</p>
+
+<p align="justify">
+In this example the model is built in miniature in a photonics laboratory
+(Swinburne University).
+The model was built in AutoCAD, exported in the STL format, and sliced
+(129 slices) using software based on the above techniques. 
+The more challenging aspect of this project is dealing with the less
+than perfect data from AutoCAD, such as the removal of duplicate
+edges and closing of contour loops.
+</p>
+
+<center><img src="wireframe.gif" width=806 height=669 border=1></center><p>
+
+<p align="justify">
+The resulting physical model viewed through a microscope 
+is shown below, the white bar at the bottom is
+10 microns (1/100 mm) long making the total length of the model about 0.08mm.
+</p>
+<center><img src="operahouse.gif" width=700 height=474 border=1></center><p>
+
+</td></tr></table></center><p>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<?php
+  // ------------------------------------------------
+  // ------------------------------------------------
+  // Include the CONREC library - this assumes the two scripts are side by side on the server.
+  // ------------------------------------------------
+  include('conrec.inc.php');
+  // ------------------------------------------------
+
+  // ------------------------------------------------
+  // Show a couple of examples
+  // ------------------------------------------------
+  // Use of the 'eval' function here is for convenience - general use can not be recommended.
+  // ------------------------------------------------
+  
+  $examples = array();
+  // ------------------------------------------------
+  $examples[] = array('nc' => 10,
+                      'x_min' => -3 * pi(),
+                      'x_range' => 6 * pi(),
+                      'y_min' => -3 * pi(),
+                      'y_range' => 6 * pi(),
+                      'string' => 'f = X.(sin(X) + sin(Y))',
+                      'eval' => '$val = $x_val * (sin($x_val) + sin($y_val));');
+  // ------------------------------------------------
+  $examples[] = array('nc' => 10,
+                      'x_min' => -1 * pi(),
+                      'x_range' => 4 * pi(),
+                      'y_min' => -2 * pi(),
+                      'y_range' => 4 * pi(),
+                      'string' => 'f =  sin((X^2 + Y^2)^0.5)',
+                      'eval' => '$val = sin(pow($x_val*$x_val + $y_val*$y_val,0.5));');
+  // ------------------------------------------------
+  $examples[] = array('nc' => 15,
+                      'x_min' => -5,
+                      'x_range' => 15,
+                      'y_min' => -2 * pi(),
+                      'y_range' => 4 * pi(),
+                      'string' => 'f =  ContouringPaper[Figure18.6]',
+                      'eval' => '$val = sin(pow($x_val*$x_val + $y_val*$y_val,0.5)) + (1 / (pow(pow($x_val - 5,2) + $y_val*$y_val,0.5)));');
+  // ------------------------------------------------
+  $examples[] = array('nc' => 6,
+                      'x_min' => 0,
+                      'x_range' => 10,
+                      'y_min' => 0,
+                      'y_range' => 10,
+                      'string' => 'f = random(0,100)',
+                      'eval' => '$val = rand(0,100);');
+  // ------------------------------------------------
+                      
+  // ------------------------------------------------
+  // ------------------------------------------------
+  
+  $N = 100;
+  $img_size = 900;  // The pixel size of the outputted image: be aware of reduced contour quality due to oversampling, keep $N <= ($img_size / 3)
+
+  // ------------------------------------------------
+  // ------------------------------------------------
+    
+  foreach($examples as $ex) {
+  
+    $d = array();
+    $x = array();
+    $y = array();
+    
+    $x_min = $ex['x_min'];
+    $y_min = $ex['y_min'];
+    
+    $x_range = $ex['x_range'];
+    $y_range = $ex['y_range'];
+    
+    // ------------------------------------------------
+    // ------------------------------------------------
+    // Create the sampled data based on the function chosen
+    
+    for($i = 0;$i < $N;$i++) {
+      for($j = 0;$j < $N ;$j++) {
+        // x
+        $x_val = $x_min + ($x_range * $i / ($N - 1));
+        // y
+        $y_val = $y_min + ($y_range * $j / ($N - 1));
+        
+        // val (from eval)        
+        $val = 0;
+        eval($ex['eval']);
+        $error = error_get_last();
+        print_r($error);
+    
+        // Null or NaN check (crude!)
+        if (!$val) { $val = 0; }
+        
+        $x[$i] = $x_val;
+        $y[$j] = $y_val;
+        $d[$i][$j] = $val;
+      }
+    }
+    // ------------------------------------------------
+  
+    // ------------------------------------------------
+    // ------------------------------------------------
+    // INVOKE CONREC
+    // ------------------------------------------------
+    $contours = CONREC_contour($d,$x,$y,$ex['nc']);
+    // ------------------------------------------------ 
+    // ------------------------------------------------
+      
+    // ------------------------------------------------
+    // ------------------------------------------------
+    // Create output image using GD
+    // ------------------------------------------------
+    
+    if (!function_exists('imagecreatetruecolor')) { die('Fatal error: no GD module support. Please enable this in php.ini to use this script.'); }
+      
+    $img = imagecreatetruecolor($img_size,$img_size);
+    $white = imagecolorallocate($img,255,255,255);
+    $black = imagecolorallocate($img,0,0,0);
+    imagefilledrectangle($img,0,0,$img_size,$img_size,$white);
+      
+    // ------------------------------------------------
+    $num_contours = count($contours);
+    
+    $R_base = rand(0,255);
+    $G_base = rand(0,255);
+    $B_base = rand(0,255);
+    
+    foreach($contours as $index=>$c) {
+      // make a colour
+      $R = $R_base + ((255 - $R_base) * ($index / $num_contours));
+      $G = $G_base * ($index / $num_contours);
+      $B = $B_base - ($B_base * ($index / $num_contours));
+      
+      $this_contour = imagecolorallocate($img,$R,$G,$B);
+      
+      // ---
+      foreach($c['segments'] as $sgm) {
+        // Convert X and Y to pixels
+        $x1 = (($sgm['x1'] - $x_min) / $x_range) * $img_size;
+        $x2 = (($sgm['x2'] - $x_min) / $x_range) * $img_size;
+        
+        $y1 = $img_size - (($sgm['y1'] - $y_min) / $y_range) * $img_size;
+        $y2 = $img_size - (($sgm['y2'] - $y_min) / $y_range) * $img_size;
+        
+        imageline($img,$x1,$y1,$x2,$y2,$this_contour);
+        
+      }
+      // ---
+      
+      imagefilledrectangle($img,0,($index + 1) * 20,20,($index+2)*20,$this_contour);
+      
+      imagerectangle($img,0,($index + 1)*20,20,($index + 2)*20,$black);
+      imagestring($img,2,25,(($index + 1) * 20)+3,round($c['value'],3),$black);
+      
+    }
+    // ------------------------------------------------
+    // Label the function
+    imagefilledrectangle($img,0,0,300,19,$white);
+    imagestring($img,2,3,3,$ex['string'],$black);
+    // ------------------------------------------------
+    
+    
+    // ------------------------------------------------
+    // Output PNG file to browser
+    // ------------------------------------------------
+    ob_start();
+    imagepng($img);
+    $image_data = ob_get_contents();
+    ob_end_clean();
+    imagedestroy($img);
+
+    // Base64 encode (for embedded URI scheme)
+    $image_data = base64_encode($image_data);
+    
+    print('<hr />');
+    print('<h1>'.$ex['string'].'</h1>');
+    print('<img style="border:1px solid #555;text-align:padding:1em;" src="data:image/png;base64,'.$image_data.'" />');
+    print('<p>X Axis: '.round($x_min,3).' to '.round($x_min + $x_range,3).', Y Axis: '.round($y_min,3).' to '.round($y_min + $y_range,3).'</p>');
+
+    // ------------------------------------------------
+  } // end of major example loop
+?>
+<hr />
+<p><i>End of CONREC demonstrations.</i></P>
+<hr />
+
+<hr />
+<h1>CONREC PHP File</h1>
+<p>The library code is shown below.</p>
+<hr />
+<pre>
+<?php
+  $file = str_replace(array('<','>'),array('<','>'),file_get_contents('conrec.inc.php'));
+  print($file);
+?>
+</pre>
+
+<hr />
+<h1>Test PHP File (This File)</h1>
+<p>The test generation code (this file) is shown below.</p>
+<hr />
+<pre>
+<?php
+  $file = str_replace(array('<','>'),array('<','>'),file_get_contents('index.php'));
+  print($file);
+?>
+

@@ -1,0 +1,189 @@
+<html>
+<head><link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+
+<title>Instructions</title>
+</head>
+<body>
+<pre>
+*********************************************
+*                                           *
+*             CONSCRIPT                     *   
+* A program for generating electron density *
+* isosurfaces for display in Molscript      *
+*                                           *
+*********************************************
+
+by 
+
+Michael Lawrence, Biomolecular Research Institute,
+343 Royal Parade, Parkville, Victoria 3052, Australia.
+
+email: mike.lawrence@bioresi.com.au
+
+& 
+
+Paul Bourke, Department of Astrophysics and Supercomputing, 
+Swinburne Univeristy of Technology, PO Box 218, Hawthorn,
+Victoria 3122, Australia.
+
+Introduction
+------------
+CONSCRIPT generates electron density isosurfaces from CCP4 / X-PLOR
+/ CNS electron density maps suitable for display in MOLSCRIPT (Kraulis,
+1991). Conditions of use are detailed in the accompanying README file.
+
+Input
+-----
+Input to CONSCRIPT is via keyworded commands provided on the standard
+input stream. All commands are compulsory unless indicated otherwise.
+
+MAPFILE &lt;input-map-file-name&gt;
+
+provides the name of the electron density map file from which the
+surfaces is to be generated. Map sampling should be on a fine grid for
+best results.
+
+MAPTYPE &lt; CCP4 | XPLU | XPLF &gt;
+
+defines the type of map file being provided:
+	
+   CCP4: - standard CCP4 map
+   XPLU: - unformatted map produced by X-PLOR or CNS
+   XPLF: - formatted map produced by X-PLOR or CNS
+
+OBJECT &lt; output-object-file-name &gt;
+
+provides the name of the output file containing the triangulated
+isosurface.
+
+CENTRE &lt;x&gt; &lt;y&gt; &lt;z&gt;
+
+defines the coordinates of the centre of the volume within the map
+which is considered for surface generation. These coordinates are
+provided in orthogonal Angstroms.
+
+BOX &lt;nu&gt; &lt;nv&gt; &lt;nw&gt;
+
+defines the size of the volume within the map which is considered for
+surface generation. These sizes are provided in grid units along the
+fast, medium and slow axes. It is usually not necessary to fine tune
+these numbers, as final clipping of the rendered volume can be done
+within MOLSCRIPT. If the box provided extends beyond the map volume,
+it is truncated back to the map boundaries.
+
+CONTOUR &lt;rho&gt;
+
+defines the electron density level of the isosurface.
+
+&lt;SURFACE | CHICKEN&gt;
+
+defines the type of surface to be generated, either triangulated or
+standard chicken-wire representation.
+
+GOURAUD (optional)
+
+implements Gouraud shading of triangulated surfaces.
+
+INVERT (optional)
+
+inverts the direction of all surface normals. i.e. interchanges back
+and front face.
+
+Memory allocation
+-----------------
+CONSCRIPT allocates memory dynamically. As CONSCRIPT cannot calculate
+in advance the number of vertices that will be passed to the sort
+routine required for Gouraud shading, it may be necessary to increase
+the allocation via the environment variable CONVERT, e.g.
+
+setenv CONVERT 1000000
+
+The program will alert the user to the need to increase CONVERT.
+
+Output
+------
+the output file can be read directly into MOLSCRIPT as an object file
+using the following command within MOLSCRIPT:
+
+object &lt; filename &gt; ;
+
+Example of isosurface generation via CONSCRIPT, MOLSCRIPT and Raster3D
+----------------------------------------------------------------------
+1. Generate a Gouraud-shaded surface from X-plor unformatted map file:
+
+conscript &lt;&lt; EOF
+mapfile /tmp/2fofc.map
+maptype XPLU
+object mymol.surface
+centre 29. 17. 62.
+box 70 70 70
+contour 1.2
+surface
+gouraud
+EOF
+
+2. Pipe this to MOLSCRIPT:
+
+molscript -r &lt;&lt; EOF &gt; picture.render
+plot
+window 11.;
+slab 11.;
+read mol "mymol.pdb";
+transform atom * by centre 26.275  18.090  62.623 ;
+set colourparts off ;
+set coilradius 0.3 ;
+set atomcolour atom C* green ;
+set atomcolour atom C** green ;
+set planecolour white ;
+ball-and-stick require sphere 0. 0. 0. 15. and not atom H* ;
+set transparency 0.6;
+set planecolour rgb 1. 0.7 0.2 ;
+object mymol.surface ;
+end_plot
+EOF
+
+3. Unfortunately the following has to be done manually:
+
+Insert the following backface command manually into file
+picture.render immediately before the Type 1 and 7 records decribing
+the the triangulated surface :
+
+8
+15 -1 1 1 1 0.6 1 0 0 1
+BACKFACE 1. 0.2 0.01 0 0
+
+NB: remove the original Type 8 record inserted by MOLSCRIPT. The
+colours etc. set here are chosen to blend with those given in
+MOLSCRIPT input file, the user is of course free to choose his/her own
+colours.
+
+4. Run Raster3D program render:
+
+render -sgi output.rgb &lt; picture.render
+
+5. Enjoy the picture!!
+
+Note
+----
+The colour scheme for the isosurface, its level of transparency, its
+lighting options as well as the distinguishing between front and
+back faces have to be done within MOLSCRIPT and/or Raster3D. They are
+not controlled by CONSCRIPT.
+
+Known Bugs
+----------
+There are some bugs which have yet to be resolved. 
+
+1. If the electron density map is not finely sampled some small
+triangles viewed nearly edge-on in the final output may be coloured in
+the BACKFACE colour rather than the frontface colour. No fix is
+currently available for this problem, I suspect it a result of the way
+in which the Gouraud shading is implemented.
+
+2. The convention for front and back face appears to differ between
+the GL and Raster3d output forms of MOLSCRIPT. Use the INVERT command
+in CONSCRIPT to get this right.
+</pre>
+
+</body>
+</html>

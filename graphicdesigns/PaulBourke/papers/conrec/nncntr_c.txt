@@ -1,0 +1,431 @@
+/* nncntr.c */
+/* revised to make more efficient use of memory by re-using columns in the
+ * fnct_data array which are no longer needed */
+/* also no longer uses quadtrees */
+#include <stdlib.h>
+#include <stdio.h>
+#define STATS
+
+#ifdef STATS
+#define LINE(a,b,c,d) { line(a, b, c, d); nline++; }
+#else
+#define LINE(a,b,c,d) line(a, b, c, d)
+#endif
+
+#define WID 8.0
+#define IWID 8
+#define HEI 8.0
+#define IHEI 8
+
+#define HPIX 60.0
+#define IHPIX 60
+#define VPIX 72.0
+#define IVPIX 72
+
+#define ROWS (IHEI * IVPIX + 1)
+#define COLS (IWID * IHPIX + 1)
+
+static struct fnct_stru {
+  double fnct_val;
+  short  left_len;
+  short  right_len;
+  short  top_len;
+  short  bot_len;
+} *fnct_data[COLS];
+#define FNCT_DATA(i,j) (*(fnct_data[i] + (j)))
+
+extern double funct(double x,
+                    double y);
+extern void iniplt(void);
+extern void line(int x1,
+                 int y1,
+                 int x2,
+                 int y2);
+extern int finplt(const char *file);
+
+static void cntr1(int x1,
+                  int x2,
+                  int y1,
+                  int y2);
+static void pass2(int x1,
+                  int x2,
+                  int y1,
+                  int y2);
+static double fnct(int x,
+                   int y);
+
+static const double *val;
+static double delx, dely, xoff, yoff;
+static int numval;
+#ifdef STATS
+static int nline, nfunct;
+#endif
+
+
+void newcntr(double        xmin,
+             double        xmax,
+             double        ymin,
+             double        ymax,
+             int           m,
+             int           n,
+             const double *v,
+             int           nv,
+             const char   *file)
+{
+  int i, j;
+  int x3, x4, y3, y4, x, y, oldx3, xlow;
+
+#ifdef STATS
+  nline = 0;
+  nfunct = 0;
+#endif
+  val = v;
+  numval = nv;
+  delx = (xmax - xmin) / (WID * HPIX);
+  xoff = xmin;
+  dely = (ymax - ymin) / (HEI * VPIX);
+  yoff = ymin;
+  iniplt();
+  xlow = 0;
+  oldx3 = 0;
+  x3 = (COLS - 1) / m;
+  x4 = (2 * (COLS - 1)) / m;
+  for (x = oldx3; x <= x4; x++) {     /* allocate new columns needed */
+    if (x >= COLS)
+      break;
+    fnct_data[x] = (struct fnct_stru *)calloc(ROWS, sizeof(struct fnct_stru));
+    for (y = 0; y < ROWS; y++)
+      FNCT_DATA(x, y).top_len = -1;
+  }
+  y4 = 0;
+  for (j = 0; j < n; j++) {
+    y3 = y4;
+    y4 = ((j + 1) * (ROWS - 1)) / n;
+    cntr1(oldx3, x3, y3, y4);
+  }
+  for (i = 1; i < m; i++) {
+    y4 = 0;
+    for (j = 0; j < n; j++) {
+      y3 = y4;
+      y4 = ((j + 1) * (ROWS - 1)) / n;
+      cntr1(x3, x4, y3, y4);
+    }
+    y4 = 0;
+    for (j = 0; j < n; j++) {
+      y3 = y4;
+      y4 = ((j + 1) * (ROWS - 1)) / n;
+      pass2(oldx3, x3, y3, y4);
+    }
+    if (i < m - 1) {    /* re-use columns no longer needed */
+      oldx3 = x3;
+      x3 = x4;
+      x4 = ((i + 2) * (COLS - 1)) / m;
+      for (x = x3 + 1; x <= x4; x++) {
+        if (xlow < oldx3) {
+          fnct_data[x] = fnct_data[xlow];
+          fnct_data[ xlow++ ] = NULL;
+        }
+        else {
+          fnct_data[x] = (struct fnct_stru *)calloc(ROWS,
+                                                    sizeof(struct fnct_stru));
+        }
+        for (y = 0; y < ROWS; y++)
+          FNCT_DATA(x, y).top_len = -1;
+      }
+    }
+  }
+  y4 = 0;
+  for (j = 0; j < n; j++) {
+    y3 = y4;
+    y4 = ((j + 1) * (ROWS - 1)) / n;
+    pass2(x3, x4, y3, y4);
+  }
+  if (finplt(file) == 0)    /* try to write out graph file */
+    fprintf(stderr, "Can't create `%s'\n", file);
+  /* clean up rest of dynamically allocated memory */
+  for (x = xlow; x < COLS; x++)
+    free(fnct_data[x]);
+#ifdef STATS
+  printf("Number of calls to line :  %d\n", nline);
+  printf("Number of calls to funct :  %d\n", nfunct);
+#endif
+}
+
+
+static void cntr1(int x1,
+                  int x2,
+                  int y1,
+                  int y2)
+{
+  double f11, f12, f21, f22, f33;
+  int x3, y3, i, j;
+
+  if ((x1 == x2) || (y1 == y2))   /* if not a real cell, punt */
+    return;
+  f11 = fnct(x1, y1);
+  f12 = fnct(x1, y2);
+  f21 = fnct(x2, y1);
+  f22 = fnct(x2, y2);
+  if ((x2 > x1 + 1) || (y2 > y1 + 1)) {   /* is cell divisible? */
+    x3 = (x1 + x2) / 2;
+    y3 = (y1 + y2) / 2;
+    f33 = fnct(x3, y3);
+    i = 0;
+    j = 0;
+    if (f33 < f11)
+      i++;
+    else if (f33 > f11)
+      j++;
+    if (f33 < f12)
+      i++;
+    else if (f33 > f12)
+      j++;
+    if (f33 < f21)
+      i++;
+    else if (f33 > f21)
+      j++;
+    if (f33 < f22)
+      i++;
+    else if (f33 > f22)
+      j++;
+    if ((i > 2) || (j > 2)) {   /* should we divide cell? */
+      /* subdivide cell */
+      cntr1(x1, x3, y1, y3);
+      cntr1(x3, x2, y1, y3);
+      cntr1(x1, x3, y3, y2);
+      cntr1(x3, x2, y3, y2);
+      return;
+    }
+  }
+  /* install cell in array */
+  FNCT_DATA(x1, y2).bot_len = x2 - x1;
+  FNCT_DATA(x1, y1).top_len = x2 - x1;
+  FNCT_DATA(x2, y1).left_len = y2 - y1;
+  FNCT_DATA(x1, y1).right_len = y2 - y1;
+}
+
+
+static void pass2(int x1,    /* draws the contour lines */
+                  int x2,
+                  int y1,
+                  int y2)
+{
+  int left, right, top, bot, old, neu, i, j, x3, y3;
+  double yy0, yy1, xx0, xx1, xx3, yy3;
+  double v, f11, f12, f21, f22, f33, fold, fnew, f;
+
+  if ((x1 == x2) || (y1 == y2))   /* if not a real cell, punt */
+    return;
+  f11 = FNCT_DATA(x1, y1).fnct_val;
+  f12 = FNCT_DATA(x1, y2).fnct_val;
+  f21 = FNCT_DATA(x2, y1).fnct_val;
+  f22 = FNCT_DATA(x2, y2).fnct_val;
+  if ((x2 > x1 + 1) || (y2 > y1 + 1)) {   /* is cell divisible? */
+    x3 = (x1 + x2) / 2;
+    y3 = (y1 + y2) / 2;
+    f33 = FNCT_DATA(x3, y3).fnct_val;
+    i = 0;
+    j = 0;
+    if (f33 < f11)
+      i++;
+    else if (f33 > f11)
+      j++;
+    if (f33 < f12)
+      i++;
+    else if (f33 > f12)
+      j++;
+    if (f33 < f21)
+      i++;
+    else if (f33 > f21)
+      j++;
+    if (f33 < f22)
+      i++;
+    else if (f33 > f22)
+      j++;
+    if ((i > 2) || (j > 2)) {   /* should we divide cell? */
+      /* subdivide cell */
+      pass2(x1, x3, y1, y3);
+      pass2(x3, x2, y1, y3);
+      pass2(x1, x3, y3, y2);
+      pass2(x3, x2, y3, y2);
+      return;
+    }
+  }
+  for (i = 0; i < numval; i++) {
+    v = val[i];
+    j = 0;
+    if (f21 > v)
+      j++;
+    if (f11 > v)
+      j |= 2;
+    if (f22 > v)
+      j |= 4;
+    if (f12 > v)
+      j |= 010;
+    if ((f11 > v) ^ (f12 > v)) {
+      if ((FNCT_DATA(x1, y1).left_len != 0) &&
+          (FNCT_DATA(x1, y1).left_len < FNCT_DATA(x1, y1).right_len)) {
+        old = y1;
+        fold = f11;
+        while (1) {
+          neu = old + FNCT_DATA(x1, old).left_len;
+          fnew = FNCT_DATA(x1, neu).fnct_val;
+          if ((fnew > v) ^ (fold > v))
+            break;
+          old = neu;
+          fold = fnew;
+        }
+        yy0 = ((old - y1) + (neu - old) * (v - fold) / (fnew - fold)) /
+              (y2 - y1);
+      }
+      else
+        yy0 = (v - f11) / (f12 - f11);
+      left = (int)(y1 + (y2 - y1) * yy0 + 0.5);
+    }
+    if ((f21 > v) ^ (f22 > v)) {
+      if ((FNCT_DATA(x2, y1).right_len != 0) &&
+          (FNCT_DATA(x2, y1).right_len < FNCT_DATA(x2, y1).left_len)) {
+        old = y1;
+        fold = f21;
+        while (1) {
+          neu = old + FNCT_DATA(x2, old).right_len;
+          fnew = FNCT_DATA(x2, neu).fnct_val;
+          if ((fnew > v) ^ (fold > v))
+            break;
+          old = neu;
+          fold = fnew;
+        }
+        yy1 = ((old - y1) + (neu - old) * (v - fold) / (fnew - fold)) /
+              (y2 - y1);
+      }
+      else
+        yy1 = (v - f21) / (f22 - f21);
+      right = (int)(y1 + (y2 - y1) * yy1 + 0.5);
+    }
+    if ((f21 > v) ^ (f11 > v)) {
+      if ((FNCT_DATA(x1, y1).bot_len != 0) &&
+          (FNCT_DATA(x1, y1).bot_len < FNCT_DATA(x1, y1).top_len)) {
+        old = x1;
+        fold = f11;
+        while (1) {
+          neu = old + FNCT_DATA(old, y1).bot_len;
+          fnew = FNCT_DATA(neu, y1).fnct_val;
+          if ((fnew > v) ^ (fold > v))
+            break;
+          old = neu;
+          fold = fnew;
+        }
+        xx0 = ((old - x1) + (neu - old) * (v - fold) / (fnew - fold)) /
+              (x2 - x1);
+      }
+      else
+        xx0 = (v - f11) / (f21 - f11);
+      bot = (int)(x1 + (x2 - x1) * xx0 + 0.5);
+    }
+    if ((f22 > v) ^ (f12 > v)) {
+      if ((FNCT_DATA(x1, y2).top_len != 0) &&
+          (FNCT_DATA(x1, y2).top_len < FNCT_DATA(x1, y2).bot_len)) {
+        old = x1;
+        fold = f12;
+        while (1) {
+          neu = old + FNCT_DATA(old, y2).top_len;
+          fnew = FNCT_DATA(neu, y2).fnct_val;
+          if ((fnew > v) ^ (fold > v))
+            break;
+          old = neu;
+          fold = fnew;
+        }
+        xx1 = ((old - x1) + (neu - old) * (v - fold) / (fnew - fold)) /
+              (x2 - x1);
+      }
+      else
+        xx1 = (v - f12) / (f22 - f12);
+      top = (int)(x1 + (x2 - x1) * xx1 + 0.5);
+    }
+    switch (j) {
+    case 7:
+    case 010:
+      LINE(x1, left, top, y2);
+      break;
+
+    case 5:
+    case 012:
+      LINE(bot, y1, top, y2);
+      break;
+
+    case 2:
+    case 015:
+      LINE(x1, left, bot, y1);
+      break;
+
+    case 4:
+    case 013:
+      LINE(top, y2, x2, right);
+      break;
+
+    case 3:
+    case 014:
+      LINE(x1, left, x2, right);
+      break;
+
+    case 1:
+    case 016:
+      LINE(bot, y1, x2, right);
+      break;
+
+    case 0:
+    case 017:
+      break;
+
+    case 6:
+    case 011:
+      yy3 = (xx0 * (yy1 - yy0) + yy0) / (1.0 - (xx1 - xx0) * (yy1 - yy0));
+      xx3 = yy3 * (xx1 - xx0) + xx0;
+      xx3 = x1 + xx3 * (x2 - x1);
+      yy3 = y1 + yy3 * (y2 - y1);
+      xx3 = xoff + xx3 * delx;
+      yy3 = yoff + yy3 * dely;
+      f = funct(xx3, yy3);
+#ifdef STATS
+      nfunct++;
+#endif
+      if (f == v) {
+        LINE(bot, y1, top, y2);
+        LINE(x1, left, x2, right);
+      }
+      else {
+        if (((f > v) && (f22 > v)) || ((f < v) && (f22 < v))) {
+          LINE(x1, left, top, y2);
+          LINE(bot, y1, x2, right);
+        }
+        else {
+          LINE(x1, left, bot, y1);
+          LINE(top, y2, x2, right);
+        }
+      }
+      break;
+    }
+  }
+}
+
+
+static double fnct(int x,    /* evaluate funct if we must,  */
+                   int y)    /* otherwise use array element */
+{
+  double x1, y1;
+
+  if (FNCT_DATA(x, y).top_len == -1) {  /* is it already in the array? */
+    /* not in the array, create new array element */
+#ifdef STATS
+    nfunct++;
+#endif
+    x1 = xoff + delx * x;
+    y1 = yoff + dely * y;
+    FNCT_DATA(x, y).top_len = 0;
+    FNCT_DATA(x, y).bot_len = 0;
+    FNCT_DATA(x, y).right_len = 0;
+    FNCT_DATA(x, y).left_len = 0;
+    FNCT_DATA(x, y).fnct_val = funct(x1, y1);
+  }
+  return FNCT_DATA(x, y).fnct_val;
+}

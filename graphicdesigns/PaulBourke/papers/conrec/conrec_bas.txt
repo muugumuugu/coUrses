@@ -1,0 +1,128 @@
+REM ===============================================================
+REM    Documentation
+REM    =============
+REM    CONREC performs contouring of a rectangular grid of data points.
+REM                 Any number of contour levels are possible but they must
+REM                 be provided in increasing order..
+REM                 The routine calls a user defined subroutine VECOUT with
+REM                 the start and stop coordinates of each line segment and 
+REM                 the contour level for that line segment.
+
+REM    History
+REM        Modified from CONREC routine written in FORTRAN-77
+REM    by Dr M.D.Johns for a PDP-11 at Auckland University Physics
+REM    Department. (25-Nov-83)
+
+REM    Input variables to CONREC
+REM    d(0:iub,0:jub)    '    matrix for the data surface
+REM    iub, jub    '    index bounds of the data array
+REM    x(0:iub)    '    data array for column coordinates
+REM    y(0:jub)    '    data array for row coordinates
+REM    nc    '    number of contour levels
+REM    z(0:nc-1)    '    contour levels in increasing order
+REM    VECOUT    '    An external subroutine to plot the contour lines
+REM    False and true boolean values
+
+conrec:
+REM    Local declarations for CONREC
+REM    ===========================
+DIM h(4)    '    relative heights of the box above contour
+DIM ish(4)    '    sign of h()
+DIM xh(4)    '    x coordinates of box
+DIM yh(4)    '    y coordinates of box
+DIM im(3)    '    mapping from vertex numbers to x offsets
+im(0)=0 : im(1)=1 : im(2)=1 : im(3)=0
+DIM jm(3)    '    mapping from vertex numbers to y offsets
+jm(0)=0 : jm(1)=0 : jm(2)=1 : jm(3)=1
+DIM castab(2,2,2)    '    case switch table
+DATA     0,0,8,0,2,5,7,6,9,0,3,4,1,3,1,4,3,0,9 ,6,7,5,2,0,8,0,0
+FOR k=0 TO 2 : FOR j=0 TO 2 : FOR i=0 TO 2
+    READ castab(k,j,i)
+NEXT i : NEXT j : NEXT k
+
+REM    Check the input parameters for validity
+REM    ===================================
+prmerr=false
+IF (iub<=0 OR jub<=0) THEN prmerr=true
+IF (nc<=0) THEN prmerr=true
+FOR k=1 TO nc-1 : IF (z(k)<=z(k-1)) THEN prmerr=true : NEXT k
+IF (prmerr) THEN msg$="Error in input parameters" : RETURN
+
+REM    Scan the array, top down, left to right
+REM    ==================================
+FOR j=jub-1 TO 0 STEP -1
+FOR i=0 TO iub-1
+REM    Find the lowest vertex
+IF (d(i,j)<d(i,j+1)) THEN dmin=d(i,j) ELSE dmin=d(i,j+1)
+IF (d(i+1,j)<dmin) THEN dmin=d(i+1,j)
+IF (d(i+1,j+1)<dmin) THEN dmin=d(i+1,j+1)
+REM    Find the highest vertex
+IF (d(i,j)>d(i,j+1)) THEN dmax=d(i,j) ELSE dmax=d(i,j+1)
+IF (d(i+1,j)>dmax) THEN dmax=d(i+1,j)
+IF (d(i+1,j+1)>dmax) THEN dmax=d(i+1,j+1)
+IF (dmax<z(0) OR dmin>z(nc-1)) THEN GOTO noneinbox
+REM    Draw each contour within this box
+FOR k=0 TO nc-1
+IF ((z(k)<dmin) OR (z(k)>dmax)) THEN GOTO noneintri
+FOR m=4 TO 0 STEP -1
+IF m>0 THEN h(m)=d(i+im(m-1),j+jm(m-1))-z(k) : xh(m)=x(i+im(m-1)) :
+yh(m)=y(j+jm(m-1))
+IF m=0 THEN h(0)=(h(1)+h(2)+h(3)+h(4))/4 : xh(0)=(x(i)+x(i+1))/2 :
+yh(0)=(y(j)+y(j+1))/2
+IF h(m)>0 THEN ish(m)=2 : ELSE IF (h(m)<0) THEN ish(m)=0 : ELSE
+ish(m)=1
+NEXT m
+REM    Scan each triangle in the box
+FOR m=1 TO 4
+m1=m : m2=0 : m3=m+1 : IF (m3=5) THEN m3=1
+case=CINT(castab(ish(m1),ish(m2),ish(m3)))
+IF (case=0) THEN GOTO case0
+ON case GOTO case1,case2,case3,case4,case5,case6,case7,case8,case9
+REM    Line between vertices m1 and m2
+case1: x1=xh(m1) : y1=yh(m1) : x2=xh(m2) : y2=yh(m2)
+           GOTO drawit
+REM   Line between vertices m2 and m3
+case2: x1=xh(m2) : y1=yh(m2) : x2=xh(m3) :y2=yh(m3)
+           GOTO drawit
+REM    Line between vertices m3 and m1
+case3: x1=xh(m3) : y1=yh(m3) : x2=xh(m1) : y2=yh(m1)
+           GOTO drawit
+REM    Line between vertex m1 and side m2-m3
+case4: x1=xh(m1) : y1=yh(m1)
+           x2=(h(m3)*xh(m2)-h(m2)*xh(m3))/(h(m3)-h(m2))
+           y2=(h(m3)*yh(m2)-h(m2)*yh(m3))/(h(m3)-h(m2))
+           GOTO drawit
+REM    Line between vertex m2 and side m3-m1
+case5: x1=xh(m2) : y1=yh(m2)
+          x2=(h(m1)*xh(m3)-h(m3)*xh(m1))/(h(m1)-h(m3))
+          y2=(h(m1)*yh(m3)-h(m3)*yh(m1))/(h(m1)-h(m3))
+          GOTO drawit
+REM    Line between vertex m3 and side m1-m2
+case6: x1=xh(m3) : y1=yh(m3)
+          x2=(h(m2)*xh(m1)-h(m1)*xh(m2))/(h(m2)-h(m1))
+          y2=(h(m2)*yh(m1)-h(m1)*yh(m2))/(h(m2)-h(m1))
+          GOTO drawit
+REM    Line between sides m1-m2 and m2-m3
+case7: x1=(h(m2)*xh(m1)-h(m1)*xh(m2))/(h(m2)-h(m1))
+           y1=(h(m2)*yh(m1)-h(m1)*yh(m2))/(h(m2)-h(m1))
+           x2=(h(m3)*xh(m2)-h(m2)*xh(m3))/(h(m3)-h(m2))
+           y2=(h(m3)*yh(m2)-h(m2)*yh(m3))/(h(m3)-h(m2))
+           GOTO drawit
+REM    Line between sides m2-m3 and m3-m1
+case8: x1=(h(m3)*xh(m2)-h(m2)*xh(m3))/(h(m3)-h(m2))
+           y1=(h(m3)*yh(m2)-h(m2)*yh(m3))/(h(m3)-h(m2))
+           x2=(h(m1)*xh(m3)-h(m3)*xh(m1))/(h(m1)-h(m3))
+           y2=(h(m1)*yh(m3)-h(m3)*yh(m1))/(h(m1)-h(m3))
+           GOTO drawit
+REM    Line between sides m3-m1 and m1-m2
+case9: x1=(h(m1)*xh(m3)-h(m3)*xh(m1))/(h(m1)-h(m3))
+           y1=(h(m1)*yh(m3)-h(m3)*yh(m1))/(h(m1)-h(m3))
+           x2=(h(m2)*xh(m1)-h(m1)*xh(m2))/(h(m2)-h(m1))
+           y2=(h(m2)*yh(m1)-h(m1)*yh(m2))/(h(m2)-h(m1))
+drawit:
+           CALL vecout(x1,y1,x2,y2,z(k))
+case0: NEXT m
+noneintri: NEXT k
+noneinbox: NEXT i : NEXT j
+RETURN
+REM ===============================================================
