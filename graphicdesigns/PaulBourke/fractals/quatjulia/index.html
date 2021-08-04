@@ -1,0 +1,518 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Quaternion Julia Fractals</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+
+<center><table width=800><tr><td>
+
+
+<table width=100% cellspacing=0 cellpadding=0>
+<tr><td valign="top" align="left">
+
+<center>
+<h1>Quaternion Julia Fractals</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+July 2001<p>
+<a href="google.html">Googleblatted and slashdotted</a><br>
+What happened on the 3rd February 2004, the birthday of Gaston Julia?
+</center><p>
+
+<center>
+<a href="q2big.gif"><img src="q2medium.gif" width=400 height=356></a>
+</center>
+<p>
+
+<b>Introduction</b>
+<p align="justify">
+Quaternion Julia fractals are created by the same principle as the
+more traditional Julia set except that it uses 4 dimensional complex
+numbers instead of 2 dimensional complex numbers. A 2D complex number
+is written as z = r + a i where i<sup>2</sup> = -1. A quaternion has
+two more complex components and might be written as
+q = r + a i + b j + c k where r, a, b, and c are real numbers. There
+are slightly more complicated relationships between i, j, and k<br>
+<center>
+<table width=50% border=0 callspacing=0 cellpadding=0>
+<tr>
+<td colspan=3 align="center">
+i<sup>2</sup> = j<sup>2</sup> = k<sup>2</sup> = -1
+</td>
+</tr>
+<tr>
+<td align="center">i j = k</td>
+<td align="center">j k = i</td>
+<td align="center">k i = j</td>
+</tr>
+<tr>
+<td align="center">j i = -k</td>
+<td align="center">k j = -i</td>
+<td align="center">i k = -j</td>
+</tr>
+</table>
+</center>
+<br>
+For more details on quaternion maths (how to add and multiple) 
+see the reference given in the header above.
+</p>
+
+<p align="justify">
+To generate a quaternion fractal a function
+is iterated z<sub>n+1</sub> = f(z<sub>n</sub>) and if it tends to
+infinity then it is outside the Julia set, if it is bounded then it
+is inside the set. Non linear functions are by far the more interesting,
+in what follows we use the simplest non linear function 
+z<sub>n+1</sub> = z<sub>n</sub><sup>2</sup> + c where c and z are
+both quaternions. z<sub>0</sub> is the point in quaternion space
+being considered and c is a constant that identifies the particular
+quaternion. Another function that is often used is a cubic, namely
+z<sub>n+1</sub> = z<sub>n</sub><sup>3</sup> + c.
+</p>
+
+<p align="justify"> 
+Just as with 2D traditional Julia fractals which are either connected
+or not depending on the constant c, the same applies to quaternion
+Julia sets. Some examples of the range of Julia set shapes is given 
+in the column on the right. The disconnected sets aren't represented 
+because they are hard to visualise in 2D, they really require a stereoscopic
+3D display and/or projection system. The images created here were rendered
+using custom software distributed on N separate machines. The goal was
+to create interactive quaternion sets, at the time of writing 16 machines
+could render a typical set at about 1 frame every 2 seconds.
+</p>
+
+<b>Practical matters</b>
+<p align="justify">
+The fundamental issue is whether the series "escapes" or not. This cannot
+always be determined without generating the series to an infinite length,
+something undesirable in practice. There are two criteria that if they
+are met allow one to make a decision in a finite time. The first is to
+assume that if the modulus (length) of a term in the series is larger than
+some value then the series will escape. This is typically taken to be 4.
+Another criteria is to limit the number of iterations and if the series
+hasn't escaped by then, then the point is considered to be inside the
+set. This maximum number of iterations is often as low as 50, the higher
+it is the longer the fractal takes to create but the more accurate it is.
+</p>
+<p align="justify">
+Another approximation is the precision at which the 4D quaternion space
+is sampled. One approach is to relate the pixel resolution of the image
+to quaternion space
+and sample one or two times per pixel. Too coarse a sampling
+risks missing parts of the fractal, a very fine sampling results in a 
+very long compute time. Since these are fractal objects there are good
+reasons to sample them very finely, this raises interesting questions
+when one tries to antialias rendering of quaternions by supersampling.
+Because these are fractal in nature, instead of supersampling generating 
+less noisy surface it can generate more noisy surfaces since there is
+variation at infinitely small scales.
+</p>
+
+<b>Dimension reduction</b>
+<p align="justify">
+Since it is rather hard to draw 4 dimensional objects one needs a 
+way of rendering 4D quaternion fractals on a 2D screen. The approach 
+used here is to intersect the 4D solid with a plane, in essence this
+makes one of the quaternion components dependent on the other three.
+To get a feel for the true nature of the quaternion fractal one needs
+create a whole series of slices along an axis perpendicular to the slice
+plane. This is the same as what one does when drawing contour lines
+to visualise a landscape, each contour represents a slice
+of the landscape by a plane perpendicular to the vertical axis. By
+"stacking" the contours together we gain an appreciation of the surface.
+Unfortunately in the case of a 4D object we need to "stack" 3D solid
+objects along a 4th axis 
+which is a little more difficult for our limited 3D visual system.
+<br>
+The following shows 6 slices moving the cutting plane along one of the
+quaternion axes from the origin in steps of 0.1, c = (-0.08,0.0,-0.8,-0.03).
+</p>
+<center>
+<table cellpadding=0 cellspacing=0>
+<tr>
+<td><img src="slice0.gif" width=200 height=200></td>
+<td><img src="slice1.gif" width=200 height=200></td>
+</tr>
+<tr>
+<td><img src="slice2.gif" width=200 height=200></td>
+<td><img src="slice3.gif" width=200 height=200></td>
+</tr>
+<tr>
+<td><img src="slice4.gif" width=200 height=200></td>
+<td><img src="slice5.gif" width=200 height=200></td>
+</tr>
+</table>
+</center>
+<p align="justify">
+Smoothly changing the slice plane results in very
+attractive animation sequences.
+</p>
+
+<b>PovRay</b>
+<p align="justify">
+If you wish to experiment with quaternion Julia fractals 
+without writing your own code then there is perhaps
+no better way than by using PovRay, a raytracing rendering program that
+contains quaternion Julia fractals as a primitive. As a starting point
+<a href="q.pov">this PovRay scene file</a> may be helpful.
+</p>
+
+<center>
+<a href="q3big.gif"><img src="q3medium.gif" width=400 height=553></a>
+</center>
+<p>
+
+</td>
+<td width="10">&nbsp;</td>
+<td valign="top" nowrap>
+<center>
+<font size=-1>
+c = (-1,0.2,0,0)<br>
+<img src="q0076.gif" width=200 height=200><br><br>
+
+c = (-0.291,-0.399,0.339,0.437)<br>
+<img src="Q_000015.gif" width=200 height=200><br><br>
+
+c = (-0.2,0.4,-0.4,-0.4)<br>
+<img src="q1237.gif" width=200 height=200><br><br>
+
+c = (-0.213,-0.0410,-0.563,-0.560)<br>
+<img src="Q_000025.gif" width=200 height=200><br><br>
+
+c = (-0.2,0.6,0.2,0.2)<br>
+<img src="q1291.gif" width=200 height=200><br><br>
+
+c = (-0.162,0.163,0.560,-0.599)<br>
+<img src="Q_000095.gif" width=200 height=200><br><br>
+
+c = (-0.2,0.8,0,0)<br>
+<img src="q1329.gif" width=200 height=200><br><br>
+
+c = (-0.445,0.339,-0.0889,-0.562)<br>
+<img src="Q_000169.gif" width=200 height=200><br><br>
+
+c = (0.185,0.478,0.125,-0.392)<br>
+<img src="Q_000504.gif" width=200 height=200><br><br>
+
+c = (-0.450,-0.447,0.181,0.306)<br>
+<img src="Q_000332.gif" width=200 height=200><br><br>
+
+c = (-0.218,-0.113,-0.181,-0.496)<br>
+<img src="Q_000156.gif" width=200 height=200><br><br>
+
+c = (-0.137,-0.630,-0.475,-0.046)<br>
+<img src="Q_000203.gif" width=200 height=200><br><br>
+
+c = (-0.125,-0.256,0.847,0.0895)<br>
+<img src="Q_000214.gif" width=200 height=200><br><br>
+</font>
+</center>
+</td></tr></table></center><p>
+
+<p><br><br><br><p>
+
+<center>
+<h1>Quaternion Maths</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 2001<p>
+</center>
+
+<p align="justify">
+Most students of algebra are familiar with complex numbers, that is,
+numbers that have two components called real and imaginary that can
+often be interpreted as 2 dimensions. A complex number is normally
+written as a + ib where i<sup>2</sup> = -1 and a and b are two
+real values quantities. This idea can be extended to higher dimensions
+but it turns out that 4 components have useful properties. These are
+called quaternions and are attributed to Sir William Rowan Hamilton who
+published a major analysis in 1844 called "On a Species of Imaginary
+Quantities Connected with a Theory of Quaternions" in the Proceedings
+of the Royal Irish Academ (2, pp 424-434)
+</p>
+
+<p align="justify">
+In this discussion we will write a quaternion "Q" as<br>
+<center>Q = r + a i + b j + c k</center>
+<br>
+Where "r" might be considered the real component and 
+"a", "b", "c"
+real valued. The 4 vector (r,a,b,c) might be considered
+to be a vector in the 4D quaternion space.
+</p>
+
+<p align="justify">
+When performing operations on complex numbers whenever 
+one encounters i<sup>2</sup> then one knows that is equal 
+to the simpler -1. There are similar but slightly more 
+complicated relationships between i,j,k in
+quaternion space. They are as follows:
+</p>
+<center>
+<table width=50% border=0 callspacing=0 cellpadding=0>
+<tr>
+<td colspan=3 align="center">
+i<sup>2</sup> = j<sup>2</sup> = k<sup>2</sup> = -1
+</td>
+</tr>
+<tr>
+<td align="center">i j = k</td>
+<td align="center">j k = i</td>
+<td align="center">k i = j</td>
+</tr>
+<tr>
+<td align="center">j i = -k</td>
+<td align="center">k j = -i</td>
+<td align="center">i k = -j</td>
+</tr>
+</table>
+</center>
+<p align="justify">
+Note that the order in which i,j,k appears in an expression 
+is important.
+Also note that there is no linear relationship between i,j,k.
+</p>
+
+<b>Addition</b>
+<p align="justify">
+Addition (or subtraction) of two quaternions 
+Q<sub>1</sub> = r<sub>1</sub> + a<sub>1</sub> i + 
+b<sub>1</sub> j + c<sub>1</sub> k and 
+Q<sub>2</sub> = r<sub>2</sub> + a<sub>2</sub> i + 
+b<sub>2</sub> j + c<sub>2</sub> k
+is performed as follows.
+</p>
+<center>
+Q<sub>1</sub> + Q<sub>2</sub> = 
+r<sub>1</sub>+r<sub>2</sub> + (a<sub>1</sub>+a<sub>2</sub>) i + 
+(b<sub>1</sub>+b<sub>2</sub>) j + (c<sub>1</sub> + c<sub>2</sub>) k
+</center>
+
+
+<b>Conjugate</b>
+<p align="justify">
+The conjugate of Q = Q<sup>*</sup> = r - a i - b j - c k.
+</p>
+
+
+<b>Multiplication</b>
+<p align="justify">
+Multiplication of two quaternions is somewhat involved but follows
+directly from the relationships above.<br>
+</p>
+<center>
+<table border=0 callspacing=0 cellpadding=0>
+<tr><td valign="top" align="right">
+Q<sub>1</sub> Q<sub>2</sub> =
+</td><td valign="top" align="left">
+[ r<sub>1</sub> r<sub>2</sub> - a<sub>1</sub> a<sub>2</sub> - 
+b<sub>1</sub> b<sub>2</sub> - c<sub>1</sub> c<sub>2</sub> ] +<br>
+[ r<sub>1</sub> a<sub>2</sub> + a<sub>1</sub> r<sub>2</sub> + 
+b<sub>1</sub> c<sub>2</sub> - c<sub>1</sub> b<sub>2</sub> ] i +<br>
+[ r<sub>1</sub> b<sub>2</sub> + b<sub>1</sub> r<sub>2</sub> + 
+c<sub>1</sub> a<sub>2</sub> - a<sub>1</sub> c<sub>2</sub> ] j +<br>
+[ r<sub>1</sub> c<sub>2</sub> + c<sub>1</sub> r<sub>2</sub> + 
+a<sub>1</sub> b<sub>2</sub> - b<sub>1</sub> a<sub>2</sub> ] k
+</td>
+</tr>
+</table>
+</center>
+<p align="justify">
+Note that quaternion multiplication is not commutative, that is,
+Q<sub>1</sub> Q<sub>2</sub> is NOT the same as
+Q<sub>2</sub> Q<sub>1</sub>
+</p>
+
+<b>Length (modulus)</b>
+<p align="justify">
+The length (magnitude) of a quaternion is the familiar coordinate length in
+4 dimensional space.
+</p>
+<center>
+|Q| = sqrt( Q Q* )
+</center>
+<p align="justify">
+where Q* is the conjugate (see later) which expands to
+</p>
+<center>
+|Q| = sqrt(r<sup>2</sup> + a<sup>2</sup> + b<sup>2</sup> + c<sup>2</sup>)
+</center>
+<p align="justify">
+and
+</p>
+<center>
+|Q<sub>1</sub> Q<sub>2</sub>| = |Q<sub>1</sub>| |Q<sub>2</sub>|
+</center>
+<p>
+
+<b>Inverse</b>
+<p align="justify">
+The inverse of a quaternion Q<sup>-1</sup> such that 
+Q Q<sup>-1</sup> = 1 is given by<br>
+<center>
+<table callspacing=0 cellpadding=0 border=0>
+<tr>
+<td>&nbsp;</td>
+<td align="center">r - a i - b j - c k</td>
+</tr>
+<tr>
+<td align="right">Q<sup>-1</sup> = </td>
+<td align="center">------------------------</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td align="center">|Q|<sup>2</sup></td>
+</tr>
+</table>
+</center>
+</p>
+<p align="justify">
+The inverse of a normalised quaternion is simply the conjugate, otherwise the
+magnitude of the inverse is 1/|Q|. So the above expression normalises the quaternion
+and then scales by 1/|Q|.
+</p>
+
+<b>Division</b>
+<p align="justify">
+Division of Q<sub>1</sub> by Q<sub>2</sub> is as follows
+</p>
+<center>
+<table callspacing=0 cellpadding=0 border=0>
+<tr>
+<td align="center">Q<sub>1</sub></td>
+<td>&nbsp;</td>
+<td align="center">Q<sub>1</sub> (2 r<sub>2</sub> - Q<sub>2</sub>)</td>
+</tr>
+<tr>
+<td align="center">--------</td>
+<td> = </td>
+<td align="center">-------------------</td>
+</tr>
+<tr>
+<td align="center">Q<sub>2</sub></td>
+<td>&nbsp;</td>
+<td align="center">|Q<sub>2</sub>|<sup>2</sup></td>
+</tr>
+</table>
+</center>
+
+<b>Exponential</b>
+<p align="justify">
+If m = sqrt(a<sup>2</sup> + b<sup>2</sup> + c<sup>2</sup>)
+and v is the unit vector (a,b,c) / m then the exponential of the quaternion Q is
+</p>
+<center>
+exp(Q) = exp(r) [ cos(m), v sin(m) ]
+</center>
+
+<b>Polar Coordinates</b>
+<p align="justify">
+The equivalent to polar coordinates in quaternion space are
+</p>
+<ul>
+r = |Q| cos(theta1)
+<br>
+a = |Q| sin(theta1) cos(theta2)
+<bR>
+b = |Q| sin(theta1) sin(theta2) cos(theta3)
+<br>
+c = |Q| sin(theta1) sin(theta2) sin(theta3)
+</ul>
+<p align="justify">
+theta1 is known as the amplitude of the quaternion, theta2
+and theta3 are the latitude (or co-latitude) and longitude
+respectively.
+The representative point of a quaternion is the normalised vector
+(a,b,c), that is, where (a,b,c) intersects the unit sphere centered
+at the origin.
+</p>
+
+<b>Rotation of a vector about another vector</b>
+<p align="justify">
+To rotate a 3D vector "p" by angle theta about a (unit) axis "r" one forms the
+quaternion 
+</p>
+<center>
+Q<sub>1</sub> = (0,p<sub>x</sub>,p<sub>y</sub>,p<sub>z</sub>) 
+</center>
+<p align="justify">
+and the rotation quaternion 
+</p>
+<center>
+Q<sub>2</sub> = (cos(theta/2), r<sub>x</sub> sin(theta/2), 
+r<sub>y</sub> sin(theta/2), r<sub>z</sub> sin(theta/2)). 
+</center>
+<p align="justify">
+The rotated vector is the last three components of the quaternion 
+</p>
+<center>
+Q<sub>3</sub> = Q<sub>2</sub> Q<sub>1</sub> Q<sub>2</sub><sup>*</sup>
+</center>
+<p align="justify">
+It is easy to see that rotation in the opposite direction (-theta) can be
+achieved by reversing the order of the multiplication.
+</p>
+<center>
+Q<sub>3</sub> = Q<sub>2</sub><sup>*</sup> Q<sub>1</sub> Q<sub>2</sub>
+</center>
+<p align="justify">
+Note also that the quaternion Q<sub>2</sub> is of unit magnitude, and needs
+to be in order to be a valid rotation.
+<p>
+
+<b>Converting a quaternion to a matrix</b>
+<p align="justify">
+Given a quaternion rotation the corresponding 3x3 rotation matrix M is given by
+</p>
+<center><table>
+<tr><td>
+	M = 
+</td><td>
+	<img src="lbracket.gif">
+</td><td>
+	<table cellpadding=4>
+	<tr><td valign="bottom">
+	1 - 2 b<sup>2</sup> - 2 c<sup>2</sup>
+	</td><td valign="bottom">
+	2 a b - 2 r c
+	</td><td valign="bottom">
+	2 a c + 2 r b
+	</td></tr>
+	
+   <tr><td valign="bottom">
+   2 a b + 2 r c
+   </td><td valign="bottom">
+   1 - 2 a<sup>2</sup> - 2 c<sup>2</sup>
+   </td><td valign="bottom">
+   2 b c - 2 r c <!-- or ra -->
+   </td></tr>
+
+   <tr><td valign="bottom">
+   2 a c - 2 r b
+   </td><td valign="bottom">
+   2 b c + 2 r c <!-- or ra -->
+   </td><td valign="bottom">
+   1 - 2 a<sup>2</sup> - 2 b<sup>2</sup>
+   </td></tr>
+	</table>
+</td><td>
+	<img src="rbracket.gif">
+</td></tr>
+</table></center>
+
+
+</td></tr></table></center><p>
+</body>
+</html>
+

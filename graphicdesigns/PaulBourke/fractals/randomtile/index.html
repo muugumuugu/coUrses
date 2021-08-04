@@ -1,0 +1,515 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle2.css" type="text/css" media=all>
+<title>Random space filling of the plane</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800 border=0><tr><td>
+
+<center>
+<h1>Random space filling of the plane</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+July 2011<p>
+Initial concept and inspiration by <a href="http://john-art.com/">John Shier</a>.<br>
+Additional examples by John Shier:
+<a href="statistical_geometry_examples.pdf">statistical_geometry_examples.pdf</a>
+</center>
+<br>
+
+<p align="justify">
+The following illustrates a technique of iteratively tiling the plane with non-overlapping
+shapes where, on each iteration, the position
+is determined randomly and the area is some decreasing function. 
+Note that the shapes, when circles, are not added as "Soddy" circles as in Apollonian [3]
+space filling fractals, nor do they even need to touch at a single point of another shape [4].
+If the area of the
+initial shape is A<sub>0</sub> and the decreasing function at iteration i is g(i) then
+the area at each iteration is :
+</p>
+
+<center>
+A<sub>0</sub>, 
+A<sub>0</sub> g(1),
+A<sub>0</sub> g(2),
+ .... A<sub>0</sub> g(n)
+</center><p>
+
+<p align="justify">
+The total area at the n'th iteration is given by the following, and it is this area that
+needs to match the bounded area of the plane being filled.
+</p>
+
+<center>
+<table>
+<tr><td>
+   &nbsp;
+</td><td valign="bottom">
+	n-1
+</td><td>
+   &nbsp;
+</td></tr>
+
+<tr><td>
+	A<sub>n</sub> = A<sub>0</sub>
+</td><td>
+	<img src="sum.gif" width=25 height=38 border=0>
+</td><td>
+	g(i)
+</td></tr>
+
+<tr><td>
+   &nbsp;
+</td><td valign="top">
+	i=0
+</td><td>
+	&nbsp;
+</td></tr>
+</table>
+</center><p>
+
+<p align="justify">
+There are many possible choices for g(i), but choices that are space filling are possibly
+very few [1]. The choice here is as follows where "c" is some constant.
+</p>
+
+<center>
+<table border=0>
+<tr><td>
+	&nbsp;
+</td><td align="center">
+	1
+</td></tr>
+<tr><td>
+	g(i) = 
+</td><td align="center">
+	<img src="line.gif" width=30 height=6 border=0>
+</td></tr>
+<tr><td>
+	&nbsp;
+</td><td align="center">
+	i<sup> c</sup>
+</td></tr>
+</table>
+</center><p>
+
+<p align="justify">
+If the function g(i) decrease too fast the space cannot be filled (left image below), 
+if it doesn't decrease
+fast enough there isn't enough space to add the next shape (right image below)
+and satisfy the non-overlapping criteria.
+</p>
+
+<center><table><tr><td valign="top">
+	<center>
+   <a href="example1.jpg"><img src="example1s.jpg" width=400 height=320 border=1></a><br>
+	<font size=-1>g(i) decreases too fast</font>
+	</center>
+</td><td width=30>&nbsp</td><td valign="top">
+	<center>
+   <a href="example2.jpg"><img src="example2s.jpg" width=400 height=320 border=1></a><br>
+	<font size=-1>g(i) decreases too slowely</font>
+	</center>
+</td></tr></table></center><p>
+
+<p align="justify">
+The total area for the infinite series is then given by :
+</p>
+
+<center>
+<table>
+<tr><td>
+   &nbsp;
+</td><td valign="bottom">
+   <img src="infinity.gif" width=20 height=12 border=0>
+</td><td>
+   &nbsp;
+</td></tr>
+
+<tr><td>
+   A<sub>total</sub> = A<sub>0</sub>
+</td><td>
+   <img src="sum.gif" width=25 height=38 border=0>
+</td><td>
+   i<sup> -c</sup>
+</td></tr>
+
+<tr><td>
+   &nbsp;
+</td><td valign="top">
+   i=0
+</td><td>
+   &nbsp;
+</td></tr>
+</table>
+</center><p>
+
+<p align="justify">
+Which is known as the Riemann zeta function [2] which converges for c > 1. 
+So, for space filling one can choose a value
+of "c" which then dictates the value of A<sub>0</sub>. 
+If one chooses a value of "c" that is greater than around 1.5 then the area of the
+first shape usually becomes too large for "interesting" tilings.
+</p>
+
+<p align="justify">
+The algorithm used to create the images on this page
+involves choosing a value of "c" and then calculating the value of A<sub>0</sub>.
+A potential placement for the next (i'th) shape is made randomly (uniform distribution).
+If this candidate
+position results in an overlap with a shape already on the plane 
+then another potential random placement is tried. This process
+is repeated until a non overlapping position is found at which point the shape is placed on
+the plane.
+</p>
+
+<center><table><tr><td valign="top">
+   <a href="example3.jpg"><img src="example3s.jpg" width=400 height=320 border=1></a>
+</td><td width=30>&nbsp</td><td valign="top">
+   <a href="example4.jpg"><img src="example4s.jpg" width=400 height=320 border=1></a>
+</td></tr></table></center><p>
+
+<p align="justify">
+Pseudo-code might be as follows
+</p>
+<center><table><tr><td nowrap>
+<font color="#aaaaff">
+<pre>
+choose value of c
+calculate initial area from Riemann zeta relationship
+initiate random number generator
+repeat for i=0 to some chosen number of iterations n
+   area of new object = initial area multiplied by pow(i,-c)
+   calculate the dimensions of the new object given the area of the new object
+   repeat
+      choose a random position in the region of the plane being filled
+      check for intersection of the new object at this position with all other objects
+      if the new object does not intersect exit the repeat loop
+   end repeat
+   add the new new object to the plane
+end repeat
+</pre>
+</font>
+</td></tr></table></center>
+
+<p align="justify">
+Periodic, also known as toroidal bounds, results in a rectangular region that can
+seamlessly tile the entire plane. This is implemented by checking if the boundary of
+the shape to be added extends past the bounds of the rectangular region, if it does then
+additional objects are added +- the width and/or +- the height of the rectangle.
+</p>
+
+<center><table><tr><td valign="top">
+	<img src="triangle1s.jpg" width=400 height=320 border=0>
+</td><td width=30>&nbsp</td><td valign="top">
+	<a href="triangle2.jpg"><img src="triangle2s.jpg" width=400 height=320 border=1></a>
+</td></tr></table></center><p>
+
+<p align="justify">
+Any geometric primitive can be used as long as one can calculate the area and perform a test
+whether two primitives intersect. This test is straightforward for some shapes (eg: circle,
+rectangle) and a little more involved for other shapes. The intersection tests for polygons
+involves testing whether any vertex of one polygon is inside the other and whether any
+edges intersect. While there are special (simpler) tests for triangles and rectangles
+using the general polygon intersection test is used here for rotated versions of the
+triangle and rectangle.
+</p>
+
+<center><table><tr><td valign="top">
+	<a href="triangle3.jpg"><img src="triangle3s.jpg" width=400 height=320 border=1></a>
+</td><td width=30>&nbsp</td><td valign="top">
+   <a href="triangle4.jpg"><img src="triangle4s.jpg" width=400 height=320 border=1></a>
+</td></tr></table></center><p>
+
+<p align="justify">
+When comparing any two objects for intersection the first test is to see if the bounding
+circles intersect, this is a simple comparison of the sum of the two radii and the
+distance between the two objects.
+</p>
+<pre>
+int Separated(XY p1,XY p2,double r1,double r2)
+{
+   double dx,dy,dr;
+
+   dx = p1.x - p2.x;
+   dy = p1.y - p2.y;
+   dr = sqrt(dx*dx + dy*dy);
+   if (dr &gt; r1 + r2)
+      return(TRUE);
+   else
+      return(FALSE);
+}
+</pre>
+<p align="justify">
+The general intersection test between two polygons is as follows:
+</p>
+<pre>
+/*
+   Return FALSE if two polygon intersect.
+   Polygon p1[] is of length n1 and polygon p2[] is of length n2.
+   Polygons are define with vertices ordered clockwise.
+*/
+int PolygonPolygon(XY *p1,XY *p2,int n1,int n2)
+{
+   int i,j;
+
+   // Reject if a vertex of p1 is inside p2, And visa versa
+   for (i=0;i&lt;n2;i++) {
+      if (InsidePolygon(p1,n1,p2[i]))
+         return(FALSE);
+   }
+   for (i=0;i&lt;n1;i++) {
+      if (InsidePolygon(p2,n2,p1[i]))
+         return(FALSE);
+   }
+
+   // Reject any intersecting edges
+   for (j=0;j&lt;n1;j++) {
+      for (i=0;i&lt;n2;i++) {
+         if (LineIntersect(p1[j].x,p1[j].y,p1[(j+1)%n1].x,p1[(j+1)%n1].y,
+                           p2[i].x,p2[i].y,p2[(i+1)%n2].x,p2[(i+1)%n2].y))
+            return(FALSE);
+      }
+   }
+
+   return(TRUE);
+}
+</pre>
+
+<p align="justify">
+The supporting functions for these tests are given here:
+<a href="LineIntersect.c">LineIntersect.c</a> and here:
+<a href="InsidePolygon.c">InsidePolygon.c</a>.
+</p>
+
+<center><table><tr><td valign="top">
+	<a href="square1.jpg"><img src="square1s.jpg" width=400 height=320 border=1></a>
+</td><td width=30>&nbsp</td><td valign="top">
+   <a href="square2.jpg"><img src="square2s.jpg" width=400 height=320 border=1></a>
+</td></tr></table></center><p>
+
+<center><table><tr><td valign="top">
+   <a href="square3.jpg"><img src="square3s.jpg" width=400 height=320 border=1></a>
+</td><td width=30>&nbsp</td><td valign="top">
+   <a href="square4.jpg"><img src="square4s.jpg" width=400 height=320 border=1></a>
+</td></tr></table></center><p>
+
+<p align="justify">
+The following is an estimate for the fractal dimension of the negative space from 
+the circular object case.
+This has been calculated for two cases, a 90% fill and the first 10000 disks.
+The algorithm used employed offset origins in order to calculate the minimum coverage,
+this results in a much higher quality estimate of fractal dimension
+and described <a href="../fracdim/index.html">here</a>.
+</p>
+<center><img src="2dfracdim.png" width=800 height=620 border=0></center><p>
+
+<p align="justify">
+The extension into 3D is relatively straightforward but it then becomes a challenge
+to visualise. A simpler extension which might be called 2.5D is to use 3D objects that
+have the same cross-section as the 2D shape being tiled. It additionally helps if the
+cross-sections in height are decreasing functions in radius.
+</p>
+
+<center><table><tr><td valign="top">
+   <a href="torus1.jpg"><img src="torus1s.jpg" width=400 height=320 border=1></a>
+</td><td width=30>&nbsp</td><td valign="top">
+   <a href="torus2.jpg"><img src="torus2s.jpg" width=400 height=320 border=1></a>
+</td></tr></table></center><p>
+
+<center><table><tr><td valign="top">
+   <a href="sphere1.jpg"><img src="sphere1s.jpg" width=400 height=320 border=1></a>
+</td><td width=30>&nbsp</td><td valign="top">
+   <a href="sphere2.jpg"><img src="sphere2s.jpg" width=400 height=320 border=1></a>
+</td></tr></table></center><p>
+
+<b>References</b><p>
+<ul>
+<ll>1. John Shier. Hyperseeing, summer 2011 issue, pp. 131-140, published by ISAMA
+(International Society of the Arts, Mathematics, and Architecture).
+<a href="paper.pdf">Filling Space with Random Fractal Non-Overlapping Simple Shapes</a><p>
+<ll>2. Abramowitz and Stegun. Handbook of Mathematical Functions.<p>
+<ll>3. Paul Bourke. <a href="../../papers/apollony/index.html">Apollony fractal</a>. 
+Computers and Graphics, Vol 30, Issue 1, January 2006, pages 134-136.<p>
+<ll>4. S.S. Manna. Space filling tiling by random packing of discs. 
+Physica A: Statistical Mechanics and its Applications
+Volume 187, Issues 3-4, 15 September 1992, Pages 373-377.<p>
+<ll>5. Andrew F. Siegel. Random Space Filling and Moments of Coverage
+in Geometrical Probability. J. Appl. Prob. 15, pp340-355, 1978.<p>
+<ll>6. R. Mahmoodi Baram, Hans J. Herrmann. Random Bearings and their Stability.
+Physical Review Letters, Vol.95, 224303 (2005).<p>
+<ll>7. John Shier. Statistical Geometry. http://www.john-art.com<p>
+<ll>8. Clifford A, Pickover. Cleopatra's necklace and the aesthetics of oscilatory growth.
+The Visual Computer, Vol 9, No 3 pp 166-169.
+</ul>
+<p>
+<br>
+
+<center><table><tr><td valign="top">
+   <a href="extra1.jpg"><img src="extra1s.jpg" width=400 height=320 border=1></a>
+</td><td width=30>&nbsp</td><td valign="top">
+   <a href="extra2.jpg"><img src="extra2s.jpg" width=400 height=320 border=1></a>
+</td></tr></table></center><p>
+
+<a name="FP">&nbsp;</a>
+
+<center><table><tr><td valign="top">
+   <a href="extra4.jpg"><img src="extra4s.jpg" width=400 height=320 border=1></a><br>
+	&nbsp;
+</td><td width=30>&nbsp</td><td valign="top">
+   <a href="extra3.jpg"><img src="extra3s.jpg" width=400 height=320 border=1></a><br>
+	<font size=-1>Voronoi diagram</font>
+</td></tr></table></center><p>
+
+<center><table><tr><td valign="top">
+   <a href="gasket.jpg"><img src="gaskets.jpg" width=800 height=640 border=1></a><br>
+</td></tr></table></center><p>
+
+<center><table><tr><td valign="top">
+   <a href="donut.jpg"><img src="donuts.jpg" width=800 height=800 border=0></a><br>
+</td></tr></table></center><p>
+
+<br><br>
+
+<h3>Extension to 3D</h3>
+
+<p align="justify">
+While in some of the examples above a 3D primitive was used, it was only the cross section
+through the plane that contributed to the tiling. Extending this to packing in 3D is straightforward,
+the main difference is that it is harder to present and visualise the results. With regard to
+the theory discussed at the start of this document, one simply replaces areas with volumes, the
+same function g(i) is used to determine the volume of the object added at iteration i. As discussed
+earlier for whichever shape one is using for the volume filling, one needs to be able to perform
+an intersection test between the position of the proposed object and all the current objects.
+As before, this test is the simplest for a sphere and simple for axis aligned boxes.
+</p>
+
+<center><table><tr><td valign="top">
+   <a href="sphere3d1.jpg"><img src="sphere3d1s.jpg" width=250 height=250 border=1></a><br>
+	<font size=-1>10 spheres</font>
+</td><td width=30>&nbsp</td><td valign="top">
+   <a href="sphere3d2.jpg"><img src="sphere3d2s.jpg" width=250 height=250 border=1></a><br>
+	<font size=-1>100 spheres</font>
+</td><td width=30>&nbsp</td><td valign="top">
+   <a href="sphere3d3.jpg"><img src="sphere3d3s.jpg" width=250 height=250 border=1></a><br>
+	<font size=-1>10,000 spheres</font>
+</td></tr></table></center><p>
+
+<p align="justify">
+For objects formed by facets (mesh), the intersection test is more involved. The comparison
+between two objects starts with the test of whether their bounding spheres intersect.
+Each vertex of one shape is then tested to see if it lies within the other shape. For
+convex shapes this can be achieved by testing if the vertex is always on the same side
+of the facets (assuming they are ordered consistently). For more general shapes one can
+count the intersections of a line from the vertex being tested to infinity on the x axis.
+If this count is even then the vertex is on the exterior, if odd it is on the interior.
+And finally one tests to see if the edges of each shape intersect the facets of the other shape.
+</p>
+
+<center><table><tr><td valign="top">
+   <a href="cube3d1.jpg"><img src="cube3d1s.jpg" width=250 height=250 border=1></a><br>
+	<font size=-1>100 cubes</font>
+</td><td width=30>&nbsp</td><td valign="top">
+   <a href="cube3d2.jpg"><img src="cube3d2s.jpg" width=250 height=250 border=1></a><br>
+	<font size=-1>1,000 cubes</font>
+</td><td width=30>&nbsp</td><td valign="top">
+   <a href="cube3d3.jpg"><img src="cube3d3s.jpg" width=250 height=250 border=1></a><br>
+	<font size=-1>35,000 cubes</font>
+</td></tr></table></center><p>
+
+<center><table><tr><td valign="top">
+   <a href="tetra3d1.jpg"><img src="tetra3d1s.jpg" width=250 height=250 border=1></a><br>
+</td><td width=30>&nbsp</td><td valign="top">
+   <a href="tetra3d2.jpg"><img src="tetra3d2s.jpg" width=250 height=250 border=1></a><br>
+</td><td width=30>&nbsp</td><td valign="top">
+   <a href="tetra3d3.jpg"><img src="tetra3d3s.jpg" width=250 height=250 border=1></a><br>
+</td></tr></table></center><p>
+
+<center><table><tr><td valign="top">
+   <a href="gasket3d1.jpg"><img src="gasket3d1s.jpg" width=250 height=250 border=1></a><br>
+</td><td width=30>&nbsp</td><td valign="top">
+   <a href="gasket3d2.jpg"><img src="gasket3d2s.jpg" width=250 height=250 border=1></a><br>
+</td><td width=30>&nbsp</td><td valign="top">
+   <a href="gasket3d3.jpg"><img src="gasket3d3s.jpg" width=250 height=250 border=1></a><br>
+</td></tr></table></center><p>
+
+<center><table><tr><td valign="top">
+   <a href="torus3d1.jpg"><img src="torus3d1s.jpg" width=250 height=250 border=1></a><br>
+</td><td width=30>&nbsp</td><td valign="top">
+   <a href="torus3d2.jpg"><img src="torus3d2s.jpg" width=250 height=250 border=1></a><br>
+</td><td width=30>&nbsp</td><td valign="top">
+   <a href="torus3d3.jpg"><img src="torus3d3s.jpg" width=250 height=250 border=1></a><br>
+</td></tr></table></center><p>
+
+<p align="justify">
+The algorithm is not limited to filling rectangular regions, the value of "c" only depends on
+the total area to be filled, not the shape.
+</p>
+<center><table><tr><td valign="top">
+   <a href="bsphere1.jpg"><img src="bsphere1s.jpg" width=250 height=250 border=1></a><br>
+	<font size=-1>Spherical boundary conditions</font>
+</td><td width=30>&nbsp</td><td valign="top">
+   <a href="bsphere2.jpg"><img src="bsphere2s.jpg" width=250 height=250 border=1></a><br>
+</td><td width=30>&nbsp</td><td valign="top">
+   <a href="bsphere3.jpg"><img src="bsphere3s.jpg" width=250 height=250 border=1></a><br>
+	<font size=-1>10,000 cubes</font>
+</td></tr></table></center><p>
+
+<center><table><tr><td valign="top">
+   <a href="tsphere1.jpg"><img src="tsphere1s.jpg" width=250 height=250 border=1></a><br>
+</td><td width=30>&nbsp</td><td valign="top">
+   <a href="tsphere2.jpg"><img src="tsphere2s.jpg" width=250 height=250 border=1></a><br>
+</td><td width=30>&nbsp</td><td valign="top">
+   <a href="tsphere3.jpg"><img src="tsphere3s.jpg" width=250 height=250 border=1></a><br>
+</td></tr></table></center><p>
+
+<h3>1 dimension</h3>
+<center>
+<a href="1d1.jpg"><img src="1d1s.jpg" width=800 height=160 border=1></a><p>
+<a href="1d2.jpg"><img src="1d2s.jpg" width=800 height=160 border=1></a><p>
+<a href="zoom.png"><img src="zoom_small.png" width=800 height=560 border=1></a><p>
+</center>
+
+<p align="justify">
+Estimates of fractal dimension of the dust (holes in the above figures)
+as a function of "c" are shown below. The four curves
+give estimates for two different fill percentages and two different segment counts.
+These are computed by the 1 dimensional equivalent to 2D box counting, finding the 
+minimum coverage count N across a range of ruler lengths "s" and then taking the
+slope of the log(N) and log(1/s) graph.
+</p>
+<center><img src="1dgraph.png" width=800 height=620 border=0></center><p>
+
+
+<b>Zoom in 2 Dimensions based upon 1 million spheres</b><p>
+<center>
+	<a href="zoom2d.png"><img src="zoom2d_s.png" width=800 height=1154 border=1></a>
+</center><p>
+
+<b>Pawsey Supercomputer Centre Entrance</b><p>
+<center>
+	<a href="panelframes.png"><img src="panelframes_s.png" width=800 height=561 border=1></a>
+</center><p>
+<center>
+   <a href="panelframes2.png"><img src="panelframes2_s.png" width=800 height=582 border=1></a>
+</center><p>
+
+<b>Flow disgram</b><br>
+<center>
+	<img src="flowdiagram.png" width=500 height=714 border=0>
+</center><p>
+
+</td></tr></table></center><p>
+</body>
+</html>
+

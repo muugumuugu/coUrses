@@ -1,0 +1,56 @@
+()
+{
+   static cols[1024][1024][4]; setcol(0xffffff);
+   enum{PTS=12000000} cls(0); ip=1/(2*PI);
+   sc=100; m=2*PI; n=PI; tx=(xres-1024)/2; ty=(yres-1024)/2;
+   do
+   {
+      a=rnd*m-n; b=rnd*m-n; x=0; y=0;
+      c=rnd*m-n; d=rnd*m-n; good=1;
+      if (abs(a)<1) continue; if (abs(b)<1) continue;
+      if (abs(c)<1) continue; if (abs(d)<1) continue;
+      for (good=100,i=0;i<100;i++)
+      {
+         nx=sin(a*y)-cos(b*x);
+         ny=sin(c*x)-cos(d*y);
+         v=((x-nx)^2 + (y-ny)^2);
+         x=nx; y=ny; if (v<1e-7) good--;
+      }
+      if (good>0) break;
+   }
+   while(1);
+   cr=0; cg=0; cb=0; ar=0; ag=0; ab=0; maxz=1;
+   for (p=0,i=0;i<PTS;i++,p--)
+   {
+      nx=sin(a*y)-cos(b*x); ny=sin(c*x)-cos(d*y);
+      v=sqrt((x-nx)^2+(y-ny)^2)*atan2(ny,nx)*ip;
+      ar=(ar+abs(sin(v*PI*3.2-PI*.2)))*.5;
+      ag=(ag+abs(sin(v*PI*12.3+PI*1.5)*.5+.5))*.5;
+      ab=(ab+(sin(v*PI*3.84+PI/2-.6)*.5+.5))*.5;
+      x=nx; y=ny; nx=nx*sc+512; ny=ny*sc+512;
+      if (nx<0 || ny<0 || nx>=1024 || ny>=1024) continue;
+      cols[ny][nx][0]+=ar; cols[ny][nx][1]+=ag;
+      cols[ny][nx][2]+=ab; cols[ny][nx][3]++;
+      maxz=max(maxz,cols[ny][nx][3]);
+      if (p<=0)
+      {
+         cls(0); setcol(0xffffff); z=100*i/PTS;
+         moveto(xres/2-14*4,yres/2-8); printf("= Generating =");
+         moveto(xres/2-13*4,yres/2+8); printf("Go take a nap");
+         moveto(xres/2- 6*4,yres/2+24); printf("(%3.0f%%)",z);
+         refresh(); p+=500000;
+      }
+   }
+   for (maxz=24/maxz,i=0;i<1024;i++)
+   {
+      for (j=0;j<1024;j++)
+      {
+         nz=cols[i][j][3]; g=256/nz; cr=cols[i][j][0]*g;
+         cg=cols[i][j][1]*g; cb=cols[i][j][2]*g;
+         nz=2*(1-1/(nz*maxz+1)); setcol(cr*nz,cg*nz,cb*nz); setpix(tx+j,ty+i);
+      }
+   }
+   setcol(0xffffff); moveto(0,0);
+   printf("A:%g\nB:%g\nC:%g\nD:%g",a,b,c,d);
+   while(1) refresh();
+}

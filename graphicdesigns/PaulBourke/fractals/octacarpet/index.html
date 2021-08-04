@@ -1,0 +1,169 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle2.css" type="text/css" media=all>
+<title>Octahedral Sierpinski Carpet</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Octahedral Sierpinski Carpet</h1>
+or<p>
+<h3>Using Tachyon to render large numbers of spheres</h3>
+Based on work by Roger Bagula<br>
+March 2001
+</center>
+<p><br><p>
+
+<table width=100%"><tr><td valign="top">
+<p align="justify">
+This document has two purposes, firstly to explore a fractal object
+brought to my attention by Roger Bagula, the second to test the ability
+of a new rendering package called Tachyon to handle large numbers of
+spheres. 
+</p>
+
+<p align="justify">
+The object in question is created as a 3 dimensional IFS 
+(Iterated Function System). In essence one moves 
+from the current position towards a randomly chosen
+point from a set of points, on each move a "marker" is deposited at the
+current position. In this case the set of points lie at the vertices of an
+octahedron, the resulting form is similar in appearance
+to the Sierpinski carpet. Such geometry is often hard to visualise. Using
+non shaded techniques such as OpenGL tends to result in confusing masses
+of "dots" because there isn't enough occlusion. Sampling onto a 3D grid
+for use with a volume renderer isn't satisfactory because the voxel
+cells can't be made small enough to reflect the fractal structure.
+</p>
+
+<p align="justify">
+The problem if one wishes to raytrace these objects is that they
+take a long time to
+evolve and therefore whichever primitive is drawn at each point needs
+to be able to be rendered efficiently. For a raytracer a sphere is
+normally chosen. For all the examples shown on the right one million
+spheres were used. On average these took in the order on 30 seconds to
+5 minutes to render depending on the level of antialiasing, ray depth,
+and image size. These timings are for
+a Dec Alpha ES40 (4 processor machine but only one processor was used
+unless indicated otherwise).
+</p>
+
+The Tachyon scene file follows.
+<font color="#aaffaa">
+<pre>
+begin_scene
+   resolution 1000 1000
+
+camera
+   zoom 1
+   aspectratio 1
+   antialiasing 4
+   raydepth 6
+   center    5  0  0
+   viewdir  -5  0  0
+   updir     0  1  0
+end_camera
+
+texdef themat
+   ambient 0.2
+   diffuse 0.8
+   specular 0.5
+   opacity 1
+   color 1 0.4 0.4
+   texfunc 0
+
+light
+   center 0 4 -4
+   rad    0.01
+   color  1 1 1
+light
+   center 0 4 4
+   rad    0.01
+   color  1 1 1
+light
+   center 0 0 0
+   rad    0.01
+   color  1 1 1
+
+# This is the output from create.c
+include 1000000.inc
+
+end_scene
+</pre>
+</font>
+
+<p align="justify">
+For details on the file "1000000.inc" see the create.c program below,
+it basically creates a file consisting of a large number of "sphere"
+primitives. For example:
+</p>
+<font color="#aaffaa">
+<pre>
+sphere center -0.7276 0.3077 -0.0040 
+       rad 0.001 
+       themat
+</pre>
+</font>
+
+<p align="justify">
+C Source to create the points from the IFS:
+<a href="create.c">create.c</a>. These are represented as sphere
+primitives for Tachyon. 
+
+<p><br><p>
+
+<p align="justify">
+The example below with the colour ramp will be left
+up to the reader to create. The models here simply mapped z axes
+depth onto a colour ramp. They were rendered with spheres half the
+radius as before (0.001) 
+but there were twice as many (2 million) of them, the images
+were also created at 2K by 2K pixels, with antialiasing of 4 and
+raydepth of 6. 
+Each sphere now needs it's own material specification, for example:
+</p>
+<font color="#aaffaa">
+<pre>
+sphere center -0.72765 0.307711 -0.00406442 
+       rad 0.001
+       texture ambient 0.2 diffuse 1
+               specular 0.75 opacity 1
+               color 0.99 0.005 0 texfunc 0
+</pre>
+</font>
+
+<p align="justify">
+Using the threaded version 0.93.1 of Tachyon on a 4 processor Dec Alpha
+ES40 this rendering took 90 seconds, 915 MB RAM. 
+</p>
+
+<a href="octa4.html"><img src="octa4s.gif" width="300" height="360"></a>
+
+</td><td valign="top">
+&nbsp;&nbsp;
+</td><td valign="top">
+<a href="octa0.html"><img src="octa0s.gif" width="300" height="449"></a>
+<br>"Side" view<p>
+<a href="octa1.html"><img src="octa1s.gif" width="300" height="297"></a>
+<br>"Front" view<p>
+<a href="octa2.html"><img src="octa2s.gif" width="300" height="356"></a>
+<br>"Isometric" view<p>
+<a href="octa3.html"><img src="octa3s.gif" width="300" height="347"></a><p>
+</td></tr></table>
+
+</td></tr></table><center>
+</body>
+</html>
