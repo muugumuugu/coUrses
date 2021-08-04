@@ -1,0 +1,118 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle2.css" type="text/css" media=all>
+<title>Circular Infinity</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Circular Infinity</h1>
+Written by <a href="../index.html">Paul Bourke</a><p>
+August 2003<p>
+Based upon work (and named) by Eep<sup>2</sup>
+</center>
+<p><br><p>
+
+<p align="justify">
+The "trivially" self similar object shown here bears a resemblance to many
+other forms including in particular the Cantor dust set. On each iteration
+each circle is filled with two circles of half the radius, these two circles
+are mutually tangential to each other as well to the circle they are within.
+As such this form seems related to the 
+<a href="../apollony/index.html">Apollony fractal</a> except we now
+need an extra constraint, namely that the filling circles are align on one
+axis.
+</p>
+
+<center>
+<img src="circ1.gif" width=800 height=800>
+</center><p>
+
+<p align="justify">
+The above image was created using a very simple PovRay macro as given below.
+</p>
+
+<font color="#aaffaa"><pre>
+// Define the macro that creates a single circle
+// SCx and SCy is the center
+// SCr is the radius
+// SCd is the angle resolution in degrees, should be an integer divisor of 360
+#macro SingleCircle(SCx,SCy,SCr,SCd)
+   #declare i = 0;
+   #while (i &lt;= 360)
+      #declare xnext = SCx+SCr*cos(radians(i));
+      #declare ynext = SCy+SCr*sin(radians(i));
+      #if (i &lt; 360)
+         sphere { &lt;xnext,ynext,0&gt;, loopthickness texture { looptexture } }
+      #end
+      #if (i > 0)
+         cylinder { &lt;xlast,ylast,0&gt;, &lt;xnext,ynext,0&gt;, loopthickness texture { looptexture } }
+      #end
+      #declare xlast = xnext;
+      #declare ylast = ynext;
+      #declare i = i + SCd;
+   #end // while
+#end // macro
+</pre></font>
+
+<p align="justify">
+This might be called within a PovRay model file as follows,
+indeed this is exactly the version used to create the above image to 8
+levels. Note the main magic below is getting the spacing correct for
+each iteration depth.
+</p>
+
+<font color="#aaffaa"><pre>
+#declare loopthickness = 0.003;
+#declare loopradius = 1;
+union { SingleCircle(0,0,loopradius,1) } // Outer circle
+
+#declare nn = 1;
+#declare iterations = 1;
+#while (iterations &lt; 8)
+   #declare loopradius = loopradius / 2; // Radius is halved at each iteration
+   #declare nn = 2 * nn;
+   #declare n = -(nn - 1);
+   #declare resol = 10; // Create smaller circles more coarsely
+   #if (iterations &lt; 3) #declare resol = 2; #end
+   #if (iterations &lt; 5) #declare resol = 5; #end
+   #while (n &lt;= nn - 1)
+      union { SingleCircle(-n/nn,0,loopradius,resol) }
+      #declare n = n + 2;
+   #end
+   #declare iterations = iterations + 1;
+#end // iterations
+</pre></font>
+
+<p align="justify">
+Since this is now a 3D model we can obviously look at from different angles
+and do various other transformations which can of course be animated.
+</p>
+
+<center>
+<img src="circ2.gif" width=800 height=268>
+</center><p>
+
+<center>
+<img src="circ4.gif" width=800 height=800>
+</center><p>
+
+<center>
+<img src="circ3.gif" width=800 height=480>
+</center><p>
+
+</td></tr></table></center>
+</body>
+</html>

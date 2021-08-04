@@ -1,0 +1,145 @@
+<html>
+<head><link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Gauss Map tetrahedron 3D IFS</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Gauss Map tetrahedron 3D IFS</h1>
+<h3>Alternative title: Rendering IFS (Iterated Function System) in a volume renderer</h3>
+Written by <a href="../index.html">Paul Bourke</a><br>
+Submitted by Roger Bagula<br>
+May 2014<p>
+See also: <a href="../../papers/joc2017/index.html">Visualising volumetric fractals</a>
+</center>
+<p><br>
+
+<p align="justify">
+An Iterated Function System (IFS) is a series where the next point in the series is
+a function of the last point. 
+</p>
+<center>
+p<sub>0</sub>, p<sub>1</sub>, p<sub>2</sub>, ... p<sub>i</sub>, ... p<sub>n</sub>
+</center>
+<p>where<p>
+<center>
+p<sub>i+1</sub> = f(p<sub>i</sub>)
+</center>
+<p align="justify">
+In two
+dimensions the points are represented visually by pixels on the image plane, a very
+well known example is the <a href="../ifs/index.html">IFS fern</a>. Colour can be added
+in a number of ways. One is to treat the discrete image plane as a histogram and 
+points falling within the bounds of a pixel are accumulated, the resulting height field
+can be colour coded. An example of this can be seen in the <a href="../popcorn/index.html">
+IFS popcorn fractal</a>. Many IFS are made up from a number of functions one of which
+is chosen at random to determine the next point in the series.
+These functions may be selected each with a different probability. The
+<a href="../ifs/index.html">IFS dragon</a> is an example where there are two
+equations for determining the next point in the series and they are chosen with probability 0.8 and 0.2.
+</p>
+
+<p align="justify">
+In 3 dimensions the point nature of IFS makes direct graphical representations
+more difficult. In short, a few million points drawn as little dots or spheres is generally
+an unattractive and uninformative image. An example of a million points as small
+spheres for the IFS demonstrated here is shown below.
+</p>
+
+<center>
+   <img src="gauss3.png" width=800 height=774 border=0>
+</center><p>
+
+<p align="justify">
+The approach used here is to map the IFS points into a discrete regular volume
+and use a volume renderer, in this case Drishti, to visualise the IFS attractor.
+In essence leveraging the rich history and software for volume visualisation.
+The particular IFS used to illustrate this approach
+is defined by the following 5 equations, on each iteration one function is chosen
+at random with equal probability. The resulting "surface" is the attractor of the system.
+</p>
+
+p<sub>n+1</sub> = (
+2 p<sub>n</sub>.x / (1 + p<sub>n</sub><sup>2</sup>.x + p<sub>n</sub><sup>2</sup>.y),
+2 p<sub>n</sub>.y / (1 + p<sub>n</sub><sup>2</sup>.x + p<sub>n</sub><sup>2</sup>.y),
+(1 - p<sub>n</sub><sup>2</sup>.x - p<sub>n</sub><sup>2</sup>.y) / (1 + p<sub>n</sub><sup>2</sup>.x + p<sub>n</sub><sup>2</sup>.y)
+) + (-1,-1,0)
+<p>
+p<sub>n+1</sub> = (
+(1 - p<sub>n</sub><sup>2</sup>.z - p<sub>n</sub><sup>2</sup>.y) / (1 + p<sub>n</sub><sup>2</sup>.z + p<sub>n</sub><sup>2</sup>.y),
+2 p<sub>n</sub>.y / (1 + p<sub>n</sub><sup>2</sup>.z + p<sub>n</sub><sup>2</sup>.y),
+2 p<sub>n</sub>.z / (1 + p<sub>n</sub><sup>2</sup>.z + p<sub>n</sub><sup>2</sup>.y)
+) + (0,-1,-1)
+<p>
+p<sub>n+1</sub> = (
+2 p<sub>n</sub>.x / (1 + p<sub>n</sub><sup>2</sup>.z + p<sub>n</sub><sup>2</sup>.x),
+(1 - p<sub>n</sub><sup>2</sup>.z - p<sub>n</sub><sup>2</sup>.x / (1 + p<sub>n</sub><sup>2</sup>.z + p<sub>n</sub><sup>2</sup>.x),
+2 p<sub>n</sub>.z / (1 + p<sub>n</sub><sup>2</sup>.z + p<sub>n</sub><sup>2</sup>.x)
+) + (-1,0,-1)
+<p>
+p<sub>n+1</sub> = p<sub>n</sub> / 2
+<p>
+p<sub>n+1</sub> = p<sub>n</sub> / 2 + (1,1,1)
+<p>
+
+<p align="justify">
+The rendering below is 500 million points sampled into a 512<sup>3</sup> volume.
+The points falling within a voxel are accumulated and the volume visualisation can shade
+the more frequently traversed points on the attractor. The discrete voxel nature of the rendering
+is clear, while this can be reduced by increasing the volume resolution the gains are modest when
+compared to the effect on data size and interactivity. In particular, to just double the resolution
+incurs a 8 fold penalty.
+</p>
+<center>
+   <img src="gauss2.png" width=800 height=799 border=0>
+</center><p>
+
+<p align="justify">
+One way to smooth the edges of the attractor boundary is to add points to the volume with
+a point spread function, that is, when a point is added it also makes a contribution not only to
+the voxel containing the point but also to the neighbouring voxels. The addition to the
+surrounding voxels is some monotonically decreasing function of radius. The following is an example where
+the radial weighting is 1 / (1 + di<sup>2</sup> + dj<sup>2</sup> + dk<sup>2</sup>) where (di,dj,dk) is
+the voxel distance from the (i,j,k) voxel containing the point being added. The range of (di,dj,dk)
+in this case is -2 <= (di,dj,dk) <= 2.
+Note this is different to just smoothing the attractor voxels as a post production process.
+</p>
+<center>
+	<img src="gauss1.png" width=800 height=521 border=0>
+</center><p>
+
+<p align="justify">
+Other renderings follow from different sides and applying different transfer functions.
+</p>
+<center>
+   <img src="gauss4.png" width=800 height=753 border=0>
+</center><p>
+<center>
+   <img src="gauss5.png" width=800 height=468 border=0>
+</center><p>
+<center>
+   <img src="gauss8.png" width=800 height=494 border=0>
+</center><p>
+<center>
+   <img src="gauss7.png" width=600 height=600 border=0>
+</center><p>
+<center>
+   <img src="gauss9.png" width=800 height=437 border=0>
+</center><p>
+
+</td></tr></table></center><p>
+</body>
+</html>
+

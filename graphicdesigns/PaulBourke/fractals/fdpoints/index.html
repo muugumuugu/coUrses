@@ -1,0 +1,231 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Estimating fractal dimension of point datasets</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Estimating fractal dimension of point datasets</h1>
+Created by <a href="../index.html">Paul Bourke</a><br>
+July 2018<p>
+See also: <a href="../cubecount/index.html">Box counting fractal dimension of volumetric data</a>
+</center>
+<p><br><p>
+
+<b>Introduction</b>
+
+<p align="justify">
+The following documents a utility the
+implements a box counting estimate of fractal dimension for 3D point sampled
+datasets. The points are read as a simple text file, typically one 3D vertex per line,
+the x,y,z components separated by "white" space (most commonly spaces or tabs).
+The number of boxes N of size s are determined across a range of box sizes,
+the slope of the curve of log(N(s)) vs log(1/s) being the estimate of the fractal
+dimension.
+</p>
+
+<b>Command line usage</b>
+
+<pre>
+Usage: pointboxcount [options] pointfilename
+Options:
+   -bmin n       Minimal box size (default: range/200)
+   -bmax n       Maximum box size (default: range/4)
+   -dmin n n n   Lower bounding box (default: auto)
+   -dmax n n n   Upper bounding box (default: auto)
+   -bfact n      Box size multiplicative factor (default: 1.5)
+   -oset n       Number of offsets used (default: 10)
+   -skip n       Skip n header lines (default: 0)
+   -xy           Enable projection onto the xy plane (default: off)
+   -xz           Enable projection onto the xz plane (default: off)
+   -yz           Enable projection onto the yz plane (default: off)
+   -pov          Save as Povray, mostly for debugging (default: false)
+   -obj          Save as OBJ, mostly for debugging (default: false)
+   -v            Verbose mode, default: off
+</pre>
+
+<b>Options</b>
+
+<p align="justify">
+When the points are read the bounding box of the data is determine and then used as the range
+on each orthogonal axes for the box counting search. 
+There is no point searching outside this bounding box for points.
+</p>
+<p align="justify">
+The range of box sizes can be
+specified (-bmin,-bmax) otherwise it will be automatically chosen. 
+This automatic choice is based upon the diagonal of the bounding box of the
+data, namely, a factor or 4 for the largest box and a factor 200 for the smallest box.
+This typically results in a range between one and two orders of magnitude.
+</p>
+<p align="justify">
+The progression
+of box sizes is determine by -bfact, a multiplicative factor. So if the smallest
+box size is S and the factor is 1.5, the sequence of box sizes will be 
+S, 1.5*S, 1.5*1.5*S, 1.5*1.5*1.5*S ... and so on.
+</p>
+<p align="justify">
+Good estimates of box counting dimension requires that one finds the minimum 
+box coverage for each box size. This is accomplished by randomly offsetting the origin
+for the boxes. The -mset option specifies the number of random offsets used per box size.
+In theory one should also vary the rotational axis for the boxes, for practical
+reasons this is problematic and not implemented here.
+</p>
+<p align="justify">
+Various output files can be generated to assist with checking and/or creating
+illustrative images, these include OBJ or POV files. Both contain axes, bounding box,
+the points themselves and the progression of boxes. The basis for the POVRay rendering
+might be the following: <a href="scene.pov">scene.pov</a> and
+<a href="scene.ini">scene.ini</a>.
+The images shown below were created with the POVRay output.
+</p>
+
+<b>Output</b>
+
+<p align="justify">
+The primary output is a text file containing the box size (s), the box count (N(s)),
+logarithm of the inverse of the box size and logarithm of the box count.
+An example is shown below.
+</p>
+
+<center><table><tr><td>
+<pre>
+   s       N(s)   log(1/s)   log(N(s))
+0.090949     7    2.397451   1.945910
+0.072760     9    2.620595   2.197225
+0.058208    14    2.843738   2.639057
+0.046566    21    3.066882   3.044522
+0.037253    28    3.290025   3.332205
+0.029802    40    3.513169   3.688879
+0.023842    53    3.736313   3.970292
+0.019073    74    3.959456   4.304065
+0.015259    98    4.182600   4.584967
+0.012207   130    4.405743   4.867534
+0.009766   160    4.628887   5.075174
+0.007812   214    4.852030   5.365976
+0.006250   273    5.075174   5.609472
+0.005000   336    5.298317   5.817111
+Best fit: y = 1.35246 x + -1.17252, r = 0.99652, e_m = 0.0302365, e_b = 0.119483
+File name: "sample.txt"
+Points: 997 (4 duplicates)
+Data bounds
+   X: 0.23966 0.45785
+   Y: 0.24818 0.34052
+   Z: 0.52885 0.71699
+Analysis bounds
+   x: 0.15 0.65
+   y: 0.15 0.6
+   z: 0.45 0.85
+Box range: 0.005 to 0.1
+Number of offsets: 100
+Box multiplicative factor: 1.25
+</pre>
+</td></tr></table></center>
+
+<b>Analysis</b>
+
+<p align="justify">
+A linear regression is performed and presented on the
+command line but users are encouraged to plot the points and ensure the linear
+portion of the curve is used. For example, very small box sizes and very large
+box sizes may result in spurious results. 
+As an example, in the following an extreme range of box sizes is specified.
+The curve at the left (large box sizes) is where the box size is so large
+there is always only a count of 1, that is, the data fits within one box.
+The curve at the right is where the box size is so small that only one
+point is ever within a box, so the box count is just the number of points.
+</p>
+<center>
+	<img src="graph1.png" width=400 heigth=382 border=1>
+</center></p>
+
+<p align="justify">
+Some example datasets are illustrated below, mostly used during software testing.
+It should be noted that for various reasons one does not expect results identical
+to theoretical. These include the fact that many of these forms only have the
+theoretical dimension when iterated to infinity, some are continuous while these
+are point approximations and finally some are defined spatially to infinity whereas in the
+calculator here the area outside the bounding box is assumed empty.
+</p>
+
+<b>Example 1</b>
+<p align="justify">
+The triangular gasket, as shown below.
+</p>
+<center>
+	<img src="example1a.png" width=800 height=265 border=0>
+</center><p>
+<p align="justify">
+The theoretical value is log(8) / log(2) = 1.58.
+The log(N(s)) vs log(1/s) graph is shown below along with the slope estimate of 
+1.56.
+</p>
+<center>
+   <img src="example1b.png" width=400 height=420 border=1>
+</center><p>
+
+<b>Example 2</b>
+<p align="justify">
+Cantor dust embedded in 3D as shown below.
+</p>
+<center>
+   <img src="example2a.png" width=800 height=808 border=0>
+</center><p>
+<p align="justify">
+The theoretical value is log(8) / log(3) = 1.8928.
+The log(N(s)) vs log(1/s) graph is shown below along with the slope estimate of
+1.86.
+</p>
+<center>
+   <img src="example2b.png" width=400 height=432 border=1>
+</center><p>
+
+<b>Example 3</b>
+<p align="justify">
+A simple non fractal object, a line embedded in 2D.
+</p>
+<center>
+   <img src="example3a.png" width=800 height=450 border=0>
+</center><p>
+<p align="justify">
+The theoretical value is 1.
+The log(N(s)) vs log(1/s) graph is shown below along with the slope estimate of
+1.018.
+</p>
+<center>
+   <img src="example3b.png" width=300 height=400 border=1>
+</center><p>
+
+<b>Example 4</b>
+<p align="justify">
+The classic Von Koch Snowflake, as shown below.
+</p>
+<center>
+   <img src="example4a.png" width=800 height=507 border=0>
+</center><p>
+<p align="justify">
+The theoretical value is log(4)/log(3) = 1.262.
+The log(N(s)) vs log(1/s) graph is shown below along with the slope estimate of
+1.277.
+</p>
+<center>
+   <img src="example4b.png" width=400 height=465 border=1>
+</center><p>
+
+</td></tr></table></center>
+</body>
+</html>
+
