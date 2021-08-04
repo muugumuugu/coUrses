@@ -1,0 +1,93 @@
+unit PointLine;
+//========================================================
+//
+//  Credits:
+/
+//  Theory by Paul Bourke http://local.wasp.uwa.edu.au/~pbourke/geometry/pointline/
+//
+//  Based in part on C code by Damian Coventry Tuesday, 16 July 2002
+//
+//  Based on VBA code by Brandon Crosby 9-6-05 (2 dimensions)
+//
+//  with grateful thanks for answering my need!
+//
+//--------------------------------------------------------
+//
+//  This Pascal (Delphi v7) implementation by Graham O'Brien 2007-10-13
+//  Errors are all mine.
+//
+//========================================================
+
+interface
+
+uses math;
+
+const
+ EPS    = 0.000001;         // smallest positive value: less than that to be considered zero
+ EPSEPS = EPS * EPS;        // and its square
+
+function SqLineMagnitude(const x1, y1, x2, y2: extended): extended;
+function DistancePointLine(const px, py, x1, y1, x2, y2: extended ): extended;
+
+implementation
+
+function SqLineMagnitude(const x1, y1, x2, y2: extended): extended;
+//
+//  Returns the square of the magnitude of the line
+//    to cut down on unnecessary Sqrt when in many cases
+//    DistancePointLine() squares the result
+//
+begin
+ result := (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
+end;
+
+function DistancePointLine(const px, py, x1, y1, x2, y2: extended ): extended;
+//  px, py is the point to test.
+//  x1, y1, x2, y2 is the line to check distance.
+//
+//  Returns distance from the line, or if the intersecting point on the line nearest
+//    the point tested is outside the endpoints of the line, the distance to the
+//    nearest endpoint.
+//
+//  Returns -1 on zero-valued denominator conditions to return an illegal distance. (
+//    modification of Brandon Crosby's VBA code)
+
+var
+ SqLineMag,              // square of line's magnitude (see note in function LineMagnitude)
+ u,                      // see Paul Bourke's original article(s)
+ ix,                     // intersecting point X
+ iy:         extended;   // intersecting point Y
+
+begin
+ SqLineMag := SqLineMagnitude(x1, y1, x2, y2);
+ if SqLineMag < EPSEPS then
+ begin
+   result := -1.0;
+   exit;
+ end;
+
+ u := ( (px - x1)*(x2 - x1) + (py - y1)*(y2 - y1) ) / SqLineMag;
+
+ if (u < EPS) or (u > 1) then
+ begin
+//  Closest point does not fall within the line segment,
+//    take the shorter distance to an endpoint
+   ix := SqLineMagnitude(px, py, x1, y1);
+   iy := SqLineMagnitude(px, py, x2, y2);
+   result := min(ix, iy);
+ end //  if (u < EPS) or (u > 1)
+ else
+ begin
+//  Intersecting point is on the line, use the formula
+   ix := x1 + u * (x2 - x1);
+   iy := y1 + u * (y2 - y1);
+   result := SqlineMagnitude(px, py, ix, iy);
+ end; //  else NOT (u < EPS) or (u > 1)
+
+// finally convert to actual distance not its square
+
+ result := sqrt(result);
+end;
+
+end.
+

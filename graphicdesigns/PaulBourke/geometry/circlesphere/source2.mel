@@ -1,0 +1,52 @@
+// Create 2 vectors in the plane orthonormal to the vector described by two locators, locator1 and locator2
+//
+// illustrates the tutorial by Paul Bourke: pbourke@swin.edu.au
+// http://astronomy.swin.edu.au/~pbourke/geometry/disk/
+//
+// implemented in mel by Dan Wills: dan@rsp.com.au
+//
+// Feb 2003
+
+//grab locator1 as P1
+float $P1loc[3];
+$P1loc[0] = `getAttr locator1.translateX`;
+$P1loc[1] = `getAttr locator1.translateY`;
+$P1loc[2] = `getAttr locator1.translateZ`;
+
+//grab locator2 as P2
+float $P2loc[3];
+$P2loc[0] = `getAttr locator2.translateX`;
+$P2loc[1] = `getAttr locator2.translateY`;
+$P2loc[2] = `getAttr locator2.translateZ`;
+
+//get random sample point P
+float $randpointP[3] = {`rand -2 2`,`rand -2 2`,`rand -2 2`};
+
+//put a locator there for illustration.
+spaceLocator -p $randpointP[0] $randpointP[1] $randpointP[2];
+
+//calculate vector from P1 to P
+float $PP1vec[3] = { $randpointP[0] - $P1loc[0],
+                    $randpointP[1] - $P1loc[1],
+                    $randpointP[2] - $P1loc[2]  };
+
+//create P1 to P vector
+curve -d 1 -ws -p $P1loc[0] $P1loc[1] $P1loc[2] -p ($P1loc[0] + $PP1vec[0]) ($P1loc[1] + $PP1vec[1]) ($P1loc[1] + $PP1vec[2]);
+
+float $P2P1vec[3] = { $P2loc[0] - $P1loc[0],
+                     $P2loc[1] - $P1loc[1],
+                     $P2loc[2] - $P1loc[2] };
+
+float $crossprodR[3] = crossProduct($PP1vec,$P2P1vec,0,0);
+float $crossprodS[3] = crossProduct($crossprodR,$P2P1vec,0,0);
+
+//create vector from P1 to P2:
+curve -d 1 -ws -p $P1loc[0] $P1loc[1] $P1loc[2]  -p $P2loc[0] $P2loc[1] $P2loc[2];
+
+//create cross product vector R:
+curve -d 1 -ws -p $P1loc[0] $P1loc[1] $P1loc[2] -p ($P1loc[0] + $crossprodR[0]) ($P1loc[1] + $crossprodR[1]) ($P1loc[2] + $crossprodR[2]);
+
+//create cross product vector S:
+curve -d 1 -ws -p $P1loc[0] $P1loc[1] $P1loc[2] -p ($P1loc[0] + $crossprodS[0]) ($P1loc[1] + $crossprodS[1]) ($P1loc[2] + $crossprodS[2]);
+
+

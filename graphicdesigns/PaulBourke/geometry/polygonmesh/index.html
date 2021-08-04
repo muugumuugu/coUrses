@@ -1,0 +1,1463 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Polygons, Meshes</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Polygons and meshes</h1>
+<b>
+In what follows are various notes and algorithms dealing with polygons and meshes.
+</b>
+</center>
+<p><br><br><br><p>
+
+
+
+<center>
+<h1>Surface (polygonal) Simplification</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+July 1997
+</center>
+
+<p align="justify">
+The following describes a method for reducing the number of 
+polygons making up a surface representation while still attempting
+to retain the fundamental form of the surface. The applications for
+this are obvious if performance improvements are being sought for
+rendering and/or interactive environments.
+</p>
+
+<p align="justify">
+The basic approach is to repeatedly remove the polygons with the
+shortest shared edge. Two polygons are removed on each step, the
+vertices of the remaining polygons are shifted to the midpoint of
+the shorted edge.
+</p>
+
+<p><center><img src="surfsimp1.gif"></center><p>
+
+<p align="justify">
+The following example illustrates the technique for a facet representation
+of a sphere. The initial sphere has 4000 facets, on each iteration the
+number of polygons is reduced by 1000. The initial sphere is obviously
+inefficient, to begin with, there are regions with much more detail than
+others (eg: the poles). If a smooth shaded rendering is being used then
+the model with 1000 facets is probably just as good as the original with
+4 times the number of facets.
+</p>
+
+<center><img src="surfsimp2.gif"></center><p>
+
+<p align="justify">
+As expected, for severe reductions in the number of polygons the surface
+undergoes a smoothing and loss of detail. This is readily illustrated for
+a gridded cube. 
+</p>
+
+<center><img src="surfsimp3.gif"></center><p>
+
+<p align="justify">
+Careful consideration needs to be given to the edges of non-manifold
+surfaces. A straightforward implementation will slowly eat away at
+the edge when the shortest facet edge is on the edge of the surface.
+</p>
+
+<center><img src="surfsimp4.gif"></center><p>
+
+<p align="justify">
+And finally, applied to a model of the human cortex.
+</p>
+
+<center><img src="surfsimp5.gif"></center><p>
+
+
+<p><br><br><br><p>
+
+
+
+<center>
+<h1>Clipping Polygonal Facets<br>with an Arbitrary Plane</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+February 1997
+</center>
+
+<p align="justify">
+This note along with the source code at the end clips a 3 vertex facet
+by an arbitrary plane. The facet is described by its 3 vertices, the
+clipping plane is specified by its normal and one point on the plane.
+The clipping side of the plane is taken to be that one containing the
+normal, in the diagram below this is the right side of the clipping plane.
+</p>
+The standard equation of a plane is<p>
+
+<dd>A x + B y + C z + D = 0</dd><p>
+
+where (A,B,C) is the unit normal. The value of D is determined by
+substituting in the known point 
+(P<sub>x</sub>,P<sub>y</sub>,P<sub>z</sub>) on the plane, namely<p>
+
+<dd>D = - (A P<sub>x</sub> + B P<sub>y</sub> + C P<sub>z</sub>)</dd><p>
+
+For a vertex (Q<sub>x</sub>,Q<sub>y</sub>,Q<sub>z</sub>) the expression<p>
+
+<dd>side(Q) = A Q<sub>x</sub> + B Q<sub>y</sub> + C Q<sub>z</sub> + D</dd><p>
+
+can be used to
+determine which side of the plane the vertex lies on. If it is positive
+the point lies on the same side as the normal, if negative it lies on
+the other side, if zero it lies on the plane.   
+<p>
+After determining if an edge intersects the cutting plane it is necessary
+to calculate the intersection point as that will become a vertex
+of the clipped facet.
+Let the edge be between two points P<sub>0</sub> and P<sub>1</sub>, 
+the equation of the points along the line segment<p>
+
+<dd>P = P<sub>0</sub> + u(P<sub>1</sub> - P<sub>0</sub>)</dd><p>
+
+where u lies between 0 and 1.
+Substituting this into the expression for the plane<p>
+
+<dd>A (P<sub>0x</sub> + u (P<sub>1x</sub> - P<sub>0x</sub>)) + 
+B (P<sub>0y</sub> + u (P<sub>1y</sub> - P<sub>0y</sub>)) + 
+C (P<sub>0z</sub> + u (P<sub>1z</sub> - P<sub>0z</sub>)) + D = 0</dd>
+<p>
+Solving for u<p>
+<dd>u = - side(P<sub>0</sub>) / (side(P<sub>1</sub>) - side(P<sub>0</sub>))
+</dd>
+<p>
+
+Substituting this into the equation of the line gives the actual
+intersection point.
+
+<p>
+There are 8 different cases to consider, they are illustrated in
+the table below and appear in order in the source code. The top two
+cases are when all the points are on either side of the clipping plane.
+The three cases on the left are when there is only one vertex on the
+clipping side of the plane, the three cases on the right occur when there
+are two vertices on the clipping side of the plane.
+
+<p><center><img src="polyclip1.gif"></center><p>
+
+<h3>Note</h3>
+<ul>
+<li>When there is only one point on the clipping side the
+resulting facet has 4 vertices, if the underlying database only
+deals with 3 vertex facets then this can be bisected using 
+a number of methods.<p>
+<li>When the facets to be clipped have more than 3 vertices then they can be
+subdivided first and each segment clipped individually.<p>
+<li>The algorithm as presented has no divide by zero problems<p>
+<li>The source below does the clipping in place, the order in which
+the vertices are calculated is important for the 3 cases when there
+is one point on the clipping side of the plane.<p>
+</ul>
+
+<a href="source3.c"><b>C Source</b></a>
+
+<p align="justify">
+As an example and testing exercise, the following shows a 2 dimensional
+Gaussian the the result from three clipping planes.
+</p>
+
+<center><img src="polyclip2.gif"></center><p>
+
+
+<p><br><br><br><p>
+
+
+<center>
+<h1>Surface Relaxation and Smoothing</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+January 1997
+</center>
+
+<p align="justify">
+This document describes a method of smoothing a general surface
+described by a collection of planar facets. The facets need not be
+evenly spaced nor lie on a grid, they can form an arbitrary 3D
+surface. The method can be applied iteratively to smooth the surface
+to an arbitrary degree. In general the method attempts to preserve
+gross features and it tends to result in equal size facets (normally
+a desirable characteristic). 
+This general technique is often known as surface relaxation.
+</p>
+
+<p align="justify">
+Consider a point P<sub>i</sub> surrounded by n vertices P<sub>j</sub>
+making up the facets sharing vertex P<sub>i</sub>.
+</p>
+
+<p><center><img src="relax3.gif"></center><p>
+
+Then the point P<sub>i</sub> is perturbed as follows:
+
+<p><center><img src="relax4.gif"></center><p>
+
+As an example consider the top figure below, it is a 2D Gaussian
+with noise added to each x,y,z component of each vertex.
+The subsequent smoothed versions 
+are the result of iteratively applying the technique 1,2,3 and 6 times
+respectively.
+<p>
+<center>
+<img src="relax1.gif" border=1>
+<img src="relax2.gif" border=1>
+</center>
+<p>
+
+The following is a more "real life" example, in particular, the facets
+are not arranged on a simple grid and are of varying sizes. The
+geometry is a 2cm slice from a model of the human cortex. The original
+surface on the left has clear vertical ribs which arose as a result
+of digitising scanned images which were slightly misaligned. The
+surface on the right has one iteration of relaxation applied to it.
+The vertical artefacts are clearly reduced.
+
+<p><center><img src="relax5.gif" border=1></center><p>
+
+The following shows a different sectioning of the same model through two
+relaxation iterations. The pairs of images are the same except that the
+facet edges are drawn on the surface on the right. In both cases the
+surface has been rendered using flat shading, that is, without smoothing
+across facets.
+<p>
+Original surface 
+<p><center><img src="relax6.gif" width=640 border=0></center><p>
+
+One degree of relaxation
+<p><center><img src="relax7.gif" width=640 border=0></center><p>
+
+Two degrees of relaxation
+<p><center><img src="relax8.gif" width=640  border=0></center><p>
+
+And finally the whole surface
+<p><center><img src="relax9.gif" width=640 border=1></center><p>
+
+
+<p><br><br><br><p>
+
+
+
+<center>
+<h1>Geometric Crumpling</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+January 1994
+</center>
+
+<p align="justify">
+In most rendering applications rough surfaces can be simulated
+with what are known as texture maps or more precisely bump
+maps. These are images which perturb the surface normal
+during the rendering process creating the appearance of a
+rough surface or raised and lowered structure such as grouting
+in a tiled floor.
+</p>
+
+<p align="justify">
+In some instances it is desirable to actually represent the surface
+roughness geometrically. For example, many textures don't retain 
+their desired effect when viewed from very close. Some effects
+are also hard to generate using bump maps, for example, the extent of
+the deformation is limited.
+</p>
+
+<p align="justify">
+There are many ways of modifying the geometry depending on the exact
+effect. One effect is that of crumpling, what you might do to a piece
+of paper.  In the following example, each facet is split into a 3x3 grid.
+Each vertex is then displaced by a random amount (Gaussian distribution).
+Of course for each displacement all facets which share that vertex
+are also modified.
+</p>
+<center><img src="crumple.gif"></center>
+<p>
+
+The above shows a Menger sponge before and after the crumpling exercise.
+<p>
+There are a few things to note<br>
+* This whole process is inefficient to say to least. In this case there
+has almost been a 10 fold increase in the geometric content.<br>
+* 4 point facets are in general no longer coplanar even if they were
+in the original model, triangulating these further increases the geometric
+content.<br>
+* The extent of the displacement is limited if it is undesirable
+for facets to intersect.
+<p>
+
+
+<p><br><br><br><br><p>
+
+
+
+<center>
+<h1>Splitting facets</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+November 1991
+</center><p>
+
+<p align="justify">
+The following discusses a number of ways of splitting up facet based
+computer models into smaller facets. There are a number of reasons for
+wanting to do this, some include:
+</p>
+
+<ul>
+<li>In order to add detail to the surface, for example, 
+    fractal spatial subdivision<br>
+<li>For surface relaxation algorithms<br>
+<li>To eliminate narrow angled facets which cause problems for some
+    rendering and texture algorithms<br>
+</ul>
+
+<table border=1 cellpadding=6 cellspacing=0 width=100%>
+
+<tr>
+<td align="center"><b>Method</b></td>
+<td align="center"><b>Additional Geometry</b></td>
+<td align="center"><b>Comments</b></td>
+</tr>
+
+<tr>
+<td><img src="split1.gif"></td>
+<td>Increases the number of facets by 3</td>
+<td>Perhaps the most common splitting technique.
+Doesn't result in finer internal angles.</td>
+</tr>
+
+<tr>
+<td><img src="split2.gif"></td>
+<td>Doubles the number of facets</td>
+<td>Simplest method, bisection.
+Normally the longest edge or the widest internal angle would be bisected.
+While it reduces long edges it also tends to produce narrow internal angles</td>
+</tr>
+
+<tr>
+<td><img src="split3.gif"></td>
+<td>2 additional facets</td>
+<td>The centroid becomes the new vertex. If the facet is part of
+a height field the centroid height would 
+normally be the average of the 3 original vertex heights.</td>
+</tr>
+
+<tr>
+<td><img src="split4.gif"></td>
+<td>Results in an identical but smaller triangular facet
+and three new 4 vertex facets.</td>
+<td>Uncommon</td>
+</tr>
+
+<tr>
+<td><img src="split5.gif"></td>
+<td>Yields three 4 vertex facets.</td>
+<td>The centroid is usually used as the mid point.</td>
+</tr>
+
+<tr>
+<td><img src="split6.gif"></td>
+<td>Gives a smaller 3 point facet and a new 4 point facet.</td>
+<td>This is a common first approach for long thin facets,
+the cut is made along the two longest edges</td>
+</tr>
+
+<tr>
+<td><img src="split7.gif"></td>
+<td>Subdivide a 4 point facet into two 4 point facets</td>
+<td>Simple example of a more general repeated bisection of
+a facet. The longest opposite pair of edges are split if
+equal size facets are desirable.</td>
+</tr>
+
+<tr>
+<td><img src="split8.gif"></td>
+<td>Results in a small 4 point facet and four new triangular facets.</td>
+<td>Uncommon</td>
+</tr>
+
+<tr>
+<td><img src="split9.gif"></td>
+<td>Bisection into two triangular facets</td>
+<td>The simplest splitting of a 4 point facet. Most commonly used by
+rendering program to ensure all facets are planar.
+Results in facets with small internal angles.</td>
+</tr>
+
+<tr>
+<td><img src="split10.gif"></td>
+<td>Gives three triangular facets.</td>
+<td>The centroid is normally used. An improved technique to simple
+bisection for smoothing height fields.
+</tr>
+</table><p>
+
+
+<p><br><br><br><p>
+
+
+
+<center>
+<h1>Facets, planes, normals, rendering</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+November 1992
+</center><p>
+
+<table><tr><td valign=top>
+<p align="justify">
+The usual way of representing a bounded planar surface (facet) 
+in computer graphic applications is as a sequence of vertices.
+Shading algorithms and ray-tracing generally requires knowledge
+of the normal to the facet, this is calculated by taking the cross
+product two of the edge vectors of the facet. The angle the normal
+makes with the light source vector determines the degree of
+shading of the facet. In particular, if the normal points towards the
+light source then the surface is brightly illuminated, if it points
+away from the light source then the surface is in shadow.
+</p>
+</td><td valign=top>
+<img src="twosided1.gif">
+</td></tr></table>
+
+<p align="justify">
+A common problem arises because the vertices need then to be
+specified in a specific order. A common convention is they need
+to be ordered such that the normal points outwards. This assumes
+there is an "outer" and "inner" ie: that the object is closed.
+</p>
+
+<table><tr><td valign=top>
+<img src="twosided2.gif">
+</td><td valign=top>
+<p>
+The usual way of calculating the angle between the normal and light
+source vector involves taking the cross product between these two
+vectors giving the cosine of the angle between them. Some rendering
+packages simple use the absolute value of this angle thus shading
+the back side the same as the side facing the light source.
+</td></tr></table>
+<p>
+Another technique which is common when you don't have control over
+the source of the facets nor the rendering package is to double up each
+facet, the duplicate having its vertices in the reverse order. These
+two sided facets can obviously make up objects which are not closed.
+<p>
+<table><tr><td valign=top>
+The basic problem arises because facets/planes don't exist in real life,
+all planar surfaces have a finite thickness. This is similar to the issue
+of representing lines in ray-tracing packages....they must be turned into
+objects with finite thickness such as cylinders. Creating planes with
+a finite thickness has been recognised for a long time in Architectural
+modelling where creating walls from infinitely thin planes leads to
+all sorts of problems not encountered if their true thickness is used.
+</td><td valign=top>
+<img src="twosided3.gif">
+</td></tr></table><p>
+
+
+<p><br><br><br><p>
+
+
+<center>
+<h1>Polygon types</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+January 1993
+</center>
+
+
+<p align="justify">
+There are a number of categories of polygons in common usage in
+computer modelling and graphics. The particular polygon type being
+used can have a dramatic effect on the complexity of many rendering
+and editing algorithms. For example, an algorithm for splitting
+a polygon into a number of 3 vertex facets is trivial for convex
+polygons and quite problematic for polygons with holes.
+</p>
+
+<p align="justify">
+While most of the discussion will be with regard to polygons as
+bounded planes in 3D, the same ideas apply to polygons in 2D.
+</p>
+
+<p align="justify">
+Some of the more frequently used categories will be listed and discussed below.
+</p>
+
+<table width=100%>
+
+<tr><td width=50% align=center valign=center>
+<img src="polygon1.gif">
+</td><td width=50% valign=top>
+<h3>3 vertex facet</h3>
+This is the simplest type of polygon. Perhaps one of the most important
+characteristics is the points lie on a plane, as such it is often the
+most fundamental primitive for 3D rendering applications which expect
+a single unambiguous normal for the whole polygonal region.
+</td></tr>
+
+<tr><td width=50% valign=center align=center>
+<img src="polygon2.gif">
+</td><td width=50% valign=top>
+<h3>Rectangular facet</h3>
+Rectangular or 4 vertex polygons are generated from gridded datasets and
+polygonal approximations of 2D surfaces. Many applications where such
+rectangular facets arise naturally don't ensure the vertices are coplanar,
+fortunately it is trivial to turn such a polygon into triangular and
+hence planar polygons.
+</td></tr>
+
+<tr><td width=50% valign=centeri align=center>
+<img src="polygon3.gif">
+</td><td width=50% valign=top>
+<h3>Convex polygon</h3>
+This is the simplest type of polygon with more than 3 or 4 vertices.
+</td></tr>
+
+<tr><td width=50% valign=center align=center>
+<img src="polygon4.gif">
+</td><td width=50% valign=top>
+<h3>Concave polygon</h3>
+This is the most general type of "simple" polygon, that is, without holes.
+</td></tr>
+
+<tr><td width=50% valign=center align=center>
+<img src="polygon5.gif"><br>
+<img src="polygon6.gif"><br>
+</td><td width=50% valign=top>
+<h3>Complex polygon</h3>
+Polygons with holes are defined in a number of ways. The holes can be
+"tagged" as such, a common method is to define the vertices of the holes
+in a order different from that of the solid parts. For example the solid
+parts might be defined clockwise about the normal, the holes anticlockwise
+about the normal.
+<p>
+Such polygons can be turned into concave polygons by introducing
+2 coincident edges, between the solid and hole polygons. For multiple
+holes and concave solid pieces the coincident edges need to be taken
+between appropriate vertices to avoid making an overlapping polygon.
+</td></tr>
+
+<tr><td width=50% valign=center align=center>
+<img src="polygon7.gif"><br>
+</td><td width=50% valign=top>
+<h3>Intersecting polygon</h3>
+These somewhat perverse polygons normally get lumped in with
+complex polygons with holes.
+The example on the right is the most straight forward case, situations
+where the polygon covers part of itself are generally avoided and are
+not handled consistently by rendering engines.
+</td></tr>
+</table>
+
+
+<p><br><br><br><br><p>
+
+<center>
+<a name="clockwise">
+<h1>Determining whether or not a polygon (2D) has its
+vertices ordered clockwise or counter-clockwise</h1></a>
+Written by <a href="../index.html">Paul Bourke</a><br>
+March 1998
+</center>
+
+<p align="justify">
+The following describes a method for determining whether or not
+a polygon has its vertices ordered clockwise or anticlockwise
+for both convex and concave polygons.
+A polygon will be assumed to be described by N vertices, ordered
+</p>
+
+<center>
+(x<sub>0</sub>,y<sub>0</sub>), (x<sub>1</sub>,y<sub>1</sub>), 
+(x<sub>2</sub>,y<sub>2</sub>), . . . (x<sub>n-1</sub>,y<sub>n-1</sub>)
+</center>
+
+<p align="justify">
+A simple test of vertex ordering 
+for convex polygons is based on considerations of
+the cross product between adjacent edges. If the cross product is
+positive then it rises above the plane (z axis up out of the plane)
+and if negative then the cross product is into the plane.
+</p>
+
+<center>
+cross product = 
+((x<sub>i</sub> - x<sub>i-1</sub>),(y<sub>i</sub> - y<sub>i-1</sub>)) 
+<b>x</b> 
+((x<sub>i+1</sub> - x<sub>i</sub>),(y<sub>i+1</sub> - y<sub>i</sub>))
+<p>
+=
+(x<sub>i</sub> - x<sub>i-1</sub>) * (y<sub>i+1</sub> - y<sub>i</sub>)
+- (y<sub>i</sub> - y<sub>i-1</sub>) * (x<sub>i+1</sub> - x<sub>i</sub>)
+</center>
+
+<p align="justify">
+A positive cross product means we have a counter-clockwise polygon. 
+</p>
+
+<p align="justify">
+To determine the vertex ordering for concave polygons one can
+use a result from the calculation of polygon
+areas, where the area is given by
+</p>
+<center><img src="polyarea2.gif" width=225 height=70 border=0></center>
+<p align="justify">
+If the above expression is positive then the polygon is ordered
+counter clockwise otherwise if it is negative then the polygon vertices are
+ordered clockwise.
+<p>
+
+<table cellspacing=0 cellpadding=0 width=100%><tr><td valign=top>   
+<a name="concave">
+<h3>Test for concave/convex polygon</h3></a>
+
+<p align="justify">
+For a convex polygon all the cross products of adjacent edges will
+be the same sign, a concave polygon will have a mixture of cross
+product signs.
+</p>
+</td><td valign=top>
+<img src="clockwise1.gif">
+</td></tr></table>
+
+<b>Source Code</b><p>
+<ul>
+<li><a href="convex.zip">Example and test program</a> for testing 
+whether a polygon is convex or concave. For MS, contributed by G. Adam Stanislav.
+<p>
+<li><a href="source2.c">Source Code</a> by the author.
+</ul>
+
+<p><br><br><br><p>
+
+<center>
+<h1>Clipping a line segment to a complex polygon</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+August 1997
+</center><p>
+
+The following describes a procedure for clipping a line segment to
+a complex polygon. Complex polygon refers to both concave polygons
+and polygons with holes.
+<p>
+Whether the requirement is to retain that portion of the line within
+the polygon or remove the portion of the polygon within the polygon
+the concept is the same.
+<p>
+Consider a parametric expression for the line segment between two
+points P<sub>1</sub> and P<sub>2</sub>.<br>
+<center>
+P = P<sub>1</sub> + mu (P<sub>2</sub> - P<sub>1</sub>) where 0 <= mu <= 1
+</center>
+<p>
+Then all the points of intersection of this line segment with edges of
+the polygon can be calculated.
+<p>
+Arrange these points of intersection by increasing values of mu along the
+line. These points form pairs of edges alternatively inside and outside
+the polygon.
+<p>
+
+<center>
+<img src="cliplinetopoly0.gif">
+</center>
+<p>
+The only remaining ambiguity is whether the first point P<sub>1</sub>
+of the line segment (mu = 0) is within or outside the polygon, 
+<a href="index.html#insidepoly">see here</a> for details.
+<p>
+<center>
+<img src="cliplinetopoly1.gif">
+</center>
+
+<p><br><br><br><p>
+
+	<center>
+	<h1>Calculating the area of a 3D polygon</h1>
+	Written by <a href="../index.html">Paul Bourke</a><br>
+	April 2000
+	</center>
+<p>
+
+<table width=100% border=0><tr><td>
+<b>Area of a triangular facet</b>
+<p align="justify">
+This simply stems from the definition of the cross product.
+</p>
+<center>
+A = || (P<sub>1</sub> - P<sub>0</sub>) x (P<sub>2</sub> - P<sub>0</sub>) || / 2
+</center>
+</td><td>
+<center><img src="figure1.png" width=179 height=135 border=0></center><p>
+</td></tr>
+
+<tr><td>
+<b>Area of a quad facet (assume planar)</b>
+<p align="justify">
+This is somewhat more interesting, it is left as an exercise to the reader
+that the quad formed by connecting the 4 midpoints of the edges is a parallelogram
+and further that the area of the quad is half the area of this parallelogram.
+For more information see Pierre Varignon who is credited with discovering this
+around 1730.
+</p>
+<center>
+A = || (P<sub>2</sub> - P<sub>0</sub>) x (P<sub>3</sub> - P<sub>1</sub>) || / 2
+</center>
+</td><td>
+<center><img src="figure2.png" width=250 height=186 border=0></center><p>
+</td></tr>
+
+<tr><td>
+<b>Area of an arbitrary planar polygon</b>
+<p align="justify">
+This general case is somewhat more difficult to derive. One approach is
+Stokes theorem, another is to decompose the polygon into triangles or quads.
+In the following N is the normal to the plane on which the polygon lies.
+</p>
+<center><img src="equation1.png" width=173 height=64 border=0></center>
+</td><td>
+<center><img src="figure3.png" width=272 height=254 border=0></center><p>
+</td></tr></table><p>
+
+<p><br><br><br><p>
+
+<center>
+<a name="insidepoly">
+<h1>Determining if a point lies on the interior of a polygon</h1>
+</a>
+Written by <a href="../index.html">Paul Bourke</a><br>
+November 1987<p>
+</center>
+
+<b>Solution 1 (2D)</b><br>
+<p align="justify">
+The following is a simple solution to the problem often encountered in computer
+graphics, determining whether or not a point (x,y) lies inside or outside a 2D
+polygonally bounded plane. This is necessary for example in applications such
+as polygon filling on raster devices, hatching in drafting software, and
+determining the intersection of multiple polygons.
+</p>
+
+<p align="justify">
+Consider a polygon made up of N vertices 
+(x<sub>i</sub>,y<sub>i</sub>) where i ranges from 0 to N-1.
+The last vertex 
+(x<sub>N</sub>,y<sub>N</sub>) 
+is assumed to be the same as the first vertex (x<sub>0</sub>,y<sub>0</sub>),
+that is, the polygon is closed. To determine the status of a point 
+(x<sub>p</sub>,y<sub>p</sub>)
+consider a horizontal ray emanating from 
+(x<sub>p</sub>,y<sub>p</sub>) and to the right. If the
+number of times this ray intersects the line segments making up the polygon is
+even then the point is outside the polygon. Whereas if the number of
+intersections is odd then the point (x<sub>p</sub>,y<sub>p</sub>) 
+lies inside the polygon. The
+following shows the ray for some sample points and should make the technique
+clear.
+</p>
+
+<center><IMG SRC="insidepoly1.gif" width=317 height=196></center><p>
+
+<p align="justify">
+Note: for the purposes of this discussion 0 will be considered even, the test
+for even or odd will be based on modulus 2, that is, if the number of
+intersections modulus 2 is 0 then the number is even, if it is 1 then it is
+odd.
+</p>
+<p align="justify">
+The only trick is what happens in the special cases when an edge or vertex of
+the polygon lies on the ray from (x<sub>p</sub>,y<sub>p</sub>). 
+The possible situations are illustrated below.
+</p>
+
+<center><IMG SRC="insidepoly2.gif" width=343 height=144></center><p>
+
+<p align="justify">
+The thick lines above are not considered as valid intersections, the thin lines
+do count as intersections. Ignoring the case of an edge lying along the ray or
+an edge ending on the ray ensures that the endpoints are only counted once.<p>
+Note that this algorithm also works for polygons with holes as illustrated
+below
+</p>
+
+<center><IMG SRC="insidepoly3.gif" width=281 height=180></center><p>
+
+<p align="justify">
+The following C function returns INSIDE or OUTSIDE indicating the status of a
+point P with respect to a polygon with N points.
+</p>
+<pre>
+#define MIN(x,y) (x &lt; y ? x : y)
+#define MAX(x,y) (x &gt; y ? x : y)
+#define INSIDE 0
+#define OUTSIDE 1
+
+typedef struct {
+   double x,y;
+} Point;
+
+int InsidePolygon(Point *polygon,int N,Point p)
+{
+  int counter = 0;
+  int i;
+  double xinters;
+  Point p1,p2;
+
+  p1 = polygon[0];
+  for (i=1;i&lt;=N;i++) {
+    p2 = polygon[i % N];
+    if (p.y &gt; MIN(p1.y,p2.y)) {
+      if (p.y &lt;= MAX(p1.y,p2.y)) {
+        if (p.x &lt;= MAX(p1.x,p2.x)) {
+          if (p1.y != p2.y) {
+            <a href="derive.jpg">xinters</a> = (p.y-p1.y)*(p2.x-p1.x)/(p2.y-p1.y)+p1.x;
+            if (p1.x == p2.x || p.x &lt;= xinters)
+              counter++;
+          }
+        }
+      }
+    }
+    p1 = p2;
+  }
+
+  if (counter % 2 == 0)
+    return(OUTSIDE);
+  else
+    return(INSIDE);
+}</pre>
+
+<p align="justify">
+The following code is by Randolph Franklin, it returns 1 for interior
+points and 0 for exterior points.
+</p>
+<pre>
+    int pnpoly(int npol, float *xp, float *yp, float x, float y)
+    {
+      int i, j, c = 0;
+      for (i = 0, j = npol-1; i &lt; npol; j = i++) {
+        if ((((yp[i] &lt;= y) && (y &lt; yp[j])) ||
+             ((yp[j] &lt;= y) && (y &lt; yp[i]))) &&
+            (x &lt; (xp[j] - xp[i]) * (y - yp[i]) / (yp[j] - yp[i]) + xp[i]))
+          c = !c;
+      }
+      return c;
+    }
+</pre>
+
+<p align="justify">
+Contribution by Alexander Motrichuk:
+<a href="InsidePolygonWithBounds.cpp">InsidePolygonWithBounds.cpp</a>.
+</p>
+<dd>
+<p align="justify">
+Quote:
+"For most of the algorithms above there is a pathological case if the point being 
+queried lies exactly on a vertex. The easiest way to cope with this is to test 
+that as a separate process and make your own decision as to 
+whether you want to consider them inside or outside."
+</p>
+</dd>
+
+<p align="justify">
+Contribution in VBA by Giuseppe Iaria: <a href="InsidePolygon.txt">InsidePolygon.txt</a>
+</p>
+
+<p align="justify">
+Contribution written in c# by Jerry Knauss: <a href="contains.txt">contains.c#</a>.
+</p>
+
+<b>Solution 2 (2D)</b><br>
+<p align="justify">
+Another solution forwarded by Philippe Reverdy is to compute the 
+sum of the angles made between the test point and each pair of points
+making up the polygon. If this sum is 2pi then the point is an interior
+point, if 0 then the point is an exterior point. This also works for
+polygons with holes given the polygon is defined with a path made up of
+coincident edges into
+and out of the hole as is common practice in many CAD packages.
+</p>
+The inside/outside test might then be defined in C as
+<pre>
+typedef struct {
+   int h,v;
+} Point;
+
+int InsidePolygon(Point *polygon,int n,Point p)
+{
+   int i;
+   double angle=0;
+   Point p1,p2;
+
+   for (i=0;i&lt;n;i++) {
+      p1.h = polygon[i].h - p.h;
+      p1.v = polygon[i].v - p.v;
+      p2.h = polygon[(i+1)%n].h - p.h;
+      p2.v = polygon[(i+1)%n].v - p.v;
+      angle += Angle2D(p1.h,p1.v,p2.h,p2.v);
+   }
+
+   if (ABS(angle) &lt; PI)
+      return(FALSE);
+   else
+      return(TRUE);
+}
+
+/*
+   Return the angle between two vectors on a plane
+   The angle is from vector 1 to vector 2, positive anticlockwise
+   The result is between -pi -> pi
+*/
+double Angle2D(double x1, double y1, double x2, double y2)
+{
+   double dtheta,theta1,theta2;
+
+   theta1 = atan2(y1,x1);
+   theta2 = atan2(y2,x2);
+   dtheta = theta2 - theta1;
+   while (dtheta &gt; PI)
+      dtheta -= TWOPI;
+   while (dtheta &lt; -PI)
+      dtheta += TWOPI;
+
+   return(dtheta);
+}
+</pre>
+<p>
+
+<b>Solution 3 (2D)</b><br>
+<p align="justify">
+There are other solutions to this problem for polygons with special attributes. 
+If the polygon is convex then one
+can consider the polygon as a "path" from the first vertex. A point is on the
+interior of this polygons if it is always on the same side of all the line
+segments making up the path.
+</p>
+<p align="justify">
+Given a line segment between P<sub>0</sub> (x<sub>0</sub>,y<sub>0</sub>) 
+and P<sub>1</sub> (x<sub>1</sub>,y<sub>1</sub>), 
+another point P (x,y) has the following relationship to the line segment.
+</p>
+Compute <br>
+<center>
+(y - y<sub>0</sub>) (x<sub>1</sub> - x<sub>0</sub>) - 
+(x - x<sub>0</sub>) (y<sub>1</sub> - y<sub>0</sub>)<p>
+</center>
+<p align="justify">
+if it is less than 0 then P is to the right of the line segment, 
+if greater than 0 it is to the left, if equal to 0 then it lies 
+on the line segment.
+</p>
+
+<center><IMG SRC="insidepoly4.gif" width=388 height=203></center>
+
+<b>Solution 4 (3D)</b><p>
+<table cellpadding=0 callspacing=0 width=100%><tr><td valign="top">
+<p align="justify">
+This solution was motivated by solution 2 and correspondence with 
+Reinier van Vliet and Remco Lam. 
+To determine whether a point is on the interior
+of a convex polygon in 3D one might be tempted to first determine
+whether the point is on the plane, then determine it's interior
+status. Both of these can be accomplished at once by computing the 
+sum of the angles between the test point (q below) 
+and every pair of edge points p[i]->p[i+1]. This sum will only be
+2pi if both the point is on the plane of the polygon AND on the
+interior. The angle sum will tend to 0 the further away from the
+polygon point q becomes. 
+</p>
+</td><td valign="top">
+<center><img src="insidepoly5.gif" width=320 height=276></center>
+</td></tr></table>
+
+<p align="justify">
+The following code snippet returns the angle sum between the
+test point q and all the vertex pairs. Note that the angle sum
+is returned in radians.
+</p>
+
+<pre>
+typedef struct {
+   double x,y,z;
+} XYZ;
+#define EPSILON  0.0000001
+#define MODULUS(p) (sqrt(p.x*p.x + p.y*p.y + p.z*p.z))
+#define TWOPI 6.283185307179586476925287
+#define RTOD 57.2957795
+
+double CalcAngleSum(XYZ q,XYZ *p,int n)
+{
+   int i;
+   double m1,m2;
+   double anglesum=0,costheta;
+   XYZ p1,p2;
+
+   for (i=0;i&lt;n;i++) {
+
+      p1.x = p[i].x - q.x;
+      p1.y = p[i].y - q.y;
+      p1.z = p[i].z - q.z;
+      p2.x = p[(i+1)%n].x - q.x;
+      p2.y = p[(i+1)%n].y - q.y;
+      p2.z = p[(i+1)%n].z - q.z;
+
+      m1 = MODULUS(p1);
+      m2 = MODULUS(p2);
+      if (m1*m2 &lt;= EPSILON)
+         return(TWOPI); /* We are on a node, consider this inside */
+      else
+         costheta = (p1.x*p2.x + p1.y*p2.y + p1.z*p2.z) / (m1*m2);
+
+      anglesum += acos(costheta);
+   }
+   return(anglesum);
+}
+</pre>
+
+<b>Note</b><br>
+<p align="justify">
+For most of the algorithms above there is a pathological case if the
+point being queries lies exactly on a vertex. The easiest way to cope
+with this is to test that as a separate process and make your own
+decision as to whether you want to consider them inside or outside.
+</p>
+
+<p><br><br><br><p>
+
+	<center>
+	<h1>Calculating the area and centroid of a polygon</h1>
+	Written by <a href="../index.html">Paul Bourke</a><br>
+	July 1988<p>
+	See also: <a href="centroid.pdf">centroid.pdf</a> by Robert Nurnberg. 
+	</center>
+
+<b>Area</b>
+
+<p align="justify">
+The problem of determining the area of a polygon seems at best messy but the
+final formula is particularly simple. The result and sample source code (C)
+will be presented here.
+Consider a polygon made up of line segments between N vertices 
+(x<sub>i</sub>,y<sub>i</sub>), i=0 to
+N-1. The last vertex 
+(x<sub>N</sub>,y<sub>N</sub>) is assumed to be the same as the first, ie: the
+polygon is closed. 
+</p>
+
+<center><IMG SRC="polyarea1.gif" width=346 height=206></center><p>
+
+The area is given by<p>
+
+<center><IMG SRC="polyarea6.gif" width=225 height=70 border=0></center><p>
+
+<p align="justify">
+Note for polygons with holes. The holes are usually defined by ordering the
+vertices of the enclosing polygon in the opposite direction to those of the
+holes. This algorithm still works except that the absolute value should be
+taken after adding the polygon area to the area of all the holes. That is, the
+holes areas will be of opposite sign to the bounding polygon area.
+</p>
+
+<p align="justify">
+The sign of the area expression above (without the absolute value) can be 
+used to determine the ordering of the vertices of the polygon. If the 
+sign is positive then the polygon vertices are ordered counter clockwise 
+about the normal, otherwise clockwise. 
+</p>
+
+<p align="justify">
+To derive this solution, project lines from each vertex to some horizontal line
+below the lowest part of the polygon. The enclosed region from each line
+segment is made up of a triangle and rectangle. Sum these areas together noting
+that the areas outside the polygon eventually cancel as the polygon loops
+around to the beginning.
+</p>
+
+<center><IMG SRC="polyarea3.gif" width=309 height=192></center><p>
+
+<p align="justify">
+The only restriction that will be placed on the polygon for this 
+technique to work is that the polygon must not be self intersecting, 
+for example the solution will fail in the following cases.
+</p>
+
+<center><IMG SRC="polyarea4.gif" width=191 height=90></center><p>
+
+<b>Centroid</b>
+
+<p align="justify">
+The centroid is also known as the "centre of gravity" or the "center
+of mass". The position of the centroid assuming the polygon to be made
+of a material of uniform density is given below. As in the calculation
+of the area above, x<sub>N</sub> is assumed to be x<sub>0</sub>, in
+other words the polygon is closed.
+</p>
+
+<center><IMG SRC="polyarea5.gif" width=335 height=166></center><p>
+
+<b>Centroid of a 3D shell described by 3 vertex facets</b><p>
+<p align="justify">
+The centroid C of a 3D object made up of a collection of N triangular
+faces with vertices (a<sub>i</sub>,b<sub>i</sub>,c<sub>i</sub>)
+is given below. R<sub>i</sub> is the average of the vertices of
+the i'th face and A<sub>i</sub> is twice the area of the i'th face.
+Note the faces are assumed to be thin sheets of uniform mass,
+they need not be connected or form a solid object. This reduces
+to the equations above for a 2D 3 vertex polygon.
+</p>
+<center><IMG SRC="facets.gif" width=275 height=234></center><p> 
+
+<b>Second moment of a polygon</b><p>
+
+<p align=justify">
+The following assume anticlockwise orientated polygon vertices, use the negative
+value for clockwise polygons.
+</p>
+
+<center>
+<table>
+<tr>
+<td valign="center">
+I<sub>x</sub> =
+</td>
+<td valign="center">
+<img src="twelve.gif">
+</td>
+<td valign="center">
+<img src="summation.gif">
+</td>
+<td valign="center">
+[ y<sub>i</sub><sup>2</sup> + y<sub>i</sub> y<sub>i+1</sub> + y<sub>i+1</sub><sup>2</sup> ]
+[ x<sub>i</sub> y<sub>i+1</sub> - x<sub>i+1</sub> y<sub>i</sub> ]
+</td>
+</tr>
+</table>
+</center>
+<p>
+
+<center>
+<table>
+<tr>
+<td valign="center">
+I<sub>y</sub> =        
+</td>
+<td valign="center">
+<img src="twelve.gif">
+</td>
+<td valign="center">
+<img src="summation.gif">
+</td>
+<td valign="center">
+[ x<sub>i</sub><sup>2</sup> + x<sub>i</sub> x<sub>i+1</sub> + x<sub>i+1</sub><sup>2</sup> ]
+[ x<sub>i</sub> y<sub>i+1</sub> - x<sub>i+1</sub> y<sub>i</sub> ]
+</td>
+</tr>
+</table>
+</center>
+<p>
+
+<center>
+<table>
+<tr>
+<td valign="center">
+2 I<sub>xy</sub> =        
+</td>
+<td valign="center">
+<img src="twelve.gif">
+</td>
+<td valign="center">
+<img src="summation.gif">
+</td>
+<td valign="center">
+[ x<sub>i</sub> y<sub>i+1</sub> + 2 x<sub>i</sub> y<sub>i</sub> +
+  2 x<sub>i+1</sub> y<sub>i+1</sub> + x<sub>i+1</sub> y<sub>i</sub> ]
+[ x<sub>i</sub> y<sub>i+1</sub> - x<sub>i+1</sub> y<sub>i</sub> ]
+</td>
+</tr>
+</table>
+</center>
+<p>
+
+<b>Sample source code</b><p>
+<ul>
+   <li><a href="source1.c">This C function</a> returns the area of a polygon.<br>
+   <li><a href="Prop_poli.txt">VBA version</a> conributed by Rui Vaz Rodrigues<br>
+   <li><a href="source2.java">JAVA code</a> submitted by Ram&oacute;n Talavera.<br>
+   <li><a href="PolygonUtilities.java">PolygonUtilities.java</a> contributed by Christopher Fuhrman</a><br>
+   <li><a href="polygon.pas">Pascal/Dephi</a> example by Rodrigo Alves Pons.<br>
+   <li><a href="PolygonArea.bas">Basic version</a> also by Rodrigo Alves Pons.<br>
+   <li><a href="javascript.txt">JavaScript</a> by Raymond Hill.<br>
+   <li><a href="python.txt">Python<a> and <a href="pythonexample.txt">example</a> by Jorg R&oslash;dsc&oslash;.
+</ul>
+
+<p><br><br><br><p>
+
+<table width=100% cellpadding=0 cellspacing=0 border=0><tr><td>
+<center>
+<h1>Determining whether a line segment intersects a 3 vertex facet</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+February 1997
+</center>
+
+<p align="justify">
+The following will find the intersection point (if it exists) between
+a line segment and a planar 3 vertex facet. The mathematics and solution
+can also be used to find the intersection between a plane and line, a simpler
+problem. The intersection between more complex polygons can be found by
+first triangulating them into multiple 3 vertex facets.
+</p>
+
+</td><td width=20>
+&nbsp;
+</td><td>
+<center><img src="roots.jpg" width=300 height=400></center>
+
+</td></tr></table>
+
+<p align="justify">
+Source code will be provided at the end, it illustrates the solution more
+than being written for efficiency.
+
+The labeling and naming conventions for the line segment and the facet
+are shown in the following diagram
+</p>
+
+<p><center><img src="linefacet1.gif"></center><p>
+
+<p align="justify">
+The procedure will be implemented given the line segment defined by
+its two end points and the facet bounded by its three vertices.
+</p>
+The solution involves the following steps<br>
+<ul>
+<li>Check the line and plane are not parallel<br>
+<li>Find the intersection of the line, on which the given line segment 
+    lies, with the plane containing the facet<br>
+<li>Check that the intersection point lies along the line segment<br>
+<li>Check that the intersection point lies within the facet<br>
+</ul>
+
+<p><br><p>
+
+<p align="justify">
+The intersection point P is found by substituting the equation for the
+line P = P<sub>1</sub> + mu (P<sub>2</sub> - P<sub>1</sub>)
+into the equation for the plane Ax + By + Cz + D = 0.
+</p>
+
+<p align="justify">
+Note that the values of A,B,C are the components of the normal to the
+plane which can be found by taking the cross product of any two normalised
+edge vectors, for example
+</p>
+<dd>(A,B,C) 
+= (P<sub>b</sub> - P<sub>a</sub>) cross (P<sub>c</sub> - P<sub>a</sub>)
+</dd>
+
+<p align="justify">
+Then D is found by substituting one vertex into the equation for the plane
+for example
+</p>
+
+<dd>A P<sub>ax</sub> + B P<sub>ay</sub> + C P<sub>az</sub> = -D
+</dd>
+
+<p align="justify">
+This gives an expression for mu from which the point of intersection P
+can be found using the equation of the line.
+</p>
+
+<dd>mu = 
+( D + A P<sub>1x</sub> + B P<sub>1y</sub> + C P<sub>1z</sub> ) /
+( A (P<sub>1x</sub> - P<sub>2x</sub>) 
++ B (P<sub>1y</sub> - P<sub>2y</sub>) 
++ C (P<sub>1z</sub> - P<sub>2z</sub>) )
+</dd>
+
+<p><br><p>
+
+<p align="justify">
+If the denominator above is 0 then the line is parallel to the plane and
+they don't intersect.
+For the intersection point to lie on the line segment, mu must be between
+0 and 1.
+</p>
+
+<p><br><p>
+
+<p align="justify">
+Lastly, we need to check whether or not the intersection point lies within
+the planar facet bounded by P<sub>a</sub>, P<sub>b</sub>, P<sub>c</sub>
+</p>
+
+<table width=100%><tr><td width=50%>
+<p align="justify">
+The method used here relies on the fact that the sum of the internal
+angles of a point on the interior of a triangle is 2pi, points outside
+the triangular facet will have lower angle sums.
+</p>
+
+</td><td width=50%>
+
+<p><center><img src="linefacet2.gif"></center><p>
+
+</td></tr></table>
+
+<p align="justify">
+If we form the unit vectors P<sub>a1</sub>, 
+P<sub>a2</sub>, P<sub>a3</sub> as follows (P is the point being tested
+to see if it is in the interior)
+</p>
+
+<ul>
+P<sub>a1</sub> = (P<sub>a</sub> - P) / |(P<sub>a</sub> - P)|<br>
+P<sub>a2</sub> = (P<sub>b</sub> - P) / |(P<sub>b</sub> - P)|<br>
+P<sub>a3</sub> = (P<sub>c</sub> - P) / |(P<sub>c</sub> - P)|<br>
+</ul>
+<p>
+the angles are
+<p>
+
+<ul>
+a1 = acos(P<sub>a1</sub> dot P<sub>a2</sub>)<br>
+a2 = acos(P<sub>a2</sub> dot P<sub>a3</sub>)<br>
+a3 = acos(P<sub>a3</sub> dot P<sub>a1</sub>)<br>
+</ul>
+
+<h3>Source code</h3>
+<pre>/*
+   Determine whether or not the line segment p1,p2
+   Intersects the 3 vertex facet bounded by pa,pb,pc
+   Return true/false and the intersection point p
+
+   The equation of the line is p = p1 + mu (p2 - p1)
+   The equation of the plane is a x + b y + c z + d = 0
+                                n.x x + n.y y + n.z z + d = 0
+*/
+int LineFacet(p1,p2,pa,pb,pc,p)
+XYZ p1,p2,pa,pb,pc,*p;
+{
+   double d;
+   double a1,a2,a3;
+   double total,denom,mu;
+   XYZ n,pa1,pa2,pa3;
+
+   /* Calculate the parameters for the plane */
+   n.x = (pb.y - pa.y)*(pc.z - pa.z) - (pb.z - pa.z)*(pc.y - pa.y);
+   n.y = (pb.z - pa.z)*(pc.x - pa.x) - (pb.x - pa.x)*(pc.z - pa.z);
+   n.z = (pb.x - pa.x)*(pc.y - pa.y) - (pb.y - pa.y)*(pc.x - pa.x);
+   Normalise(&n);
+   d = - n.x * pa.x - n.y * pa.y - n.z * pa.z;
+
+   /* Calculate the position on the line that intersects the plane */
+   denom = n.x * (p2.x - p1.x) + n.y * (p2.y - p1.y) + n.z * (p2.z - p1.z);
+   if (ABS(denom) &lt; EPS)         /* Line and plane don't intersect */
+      return(FALSE);
+   mu = - (d + n.x * p1.x + n.y * p1.y + n.z * p1.z) / denom;
+   p->x = p1.x + mu * (p2.x - p1.x);
+   p->y = p1.y + mu * (p2.y - p1.y);
+   p->z = p1.z + mu * (p2.z - p1.z);
+   if (mu &lt; 0 || mu &gt; 1)   /* Intersection not along line segment */
+      return(FALSE);
+
+   /* Determine whether or not the intersection point is bounded by pa,pb,pc */
+   pa1.x = pa.x - p->x;
+   pa1.y = pa.y - p->y;
+   pa1.z = pa.z - p->z;
+   Normalise(&pa1);
+   pa2.x = pb.x - p->x;
+   pa2.y = pb.y - p->y;
+   pa2.z = pb.z - p->z;
+   Normalise(&pa2);
+   pa3.x = pc.x - p->x;
+   pa3.y = pc.y - p->y;
+   pa3.z = pc.z - p->z;
+   Normalise(&pa3);
+   a1 = pa1.x*pa2.x + pa1.y*pa2.y + pa1.z*pa2.z;
+   a2 = pa2.x*pa3.x + pa2.y*pa3.y + pa2.z*pa3.z;
+   a3 = pa3.x*pa1.x + pa3.y*pa1.y + pa3.z*pa1.z;
+   total = (acos(a1) + acos(a2) + acos(a3)) * RTOD;
+   if (ABS(total - 360) &gt; EPS)
+      return(FALSE);
+
+   return(TRUE);
+}
+</pre>
+
+<p><br><br><br><p>
+
+<center>
+<h1>Eulers number and closed surfaces</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+January 1997
+</center>
+<p>
+
+Eulers number for geometry made up of planar polygons
+which are defined in terms of edges and vertices is<p>
+
+<center><h3>V - E + F</h3></center><p>
+
+Where V, E, and F are the number of vertices, edges, and faces
+respectively.
+<p>
+For a closed surface the Eulers number is always equal to 2.
+<p>
+This forms a simple test for the closure of computer
+generated facet geometry.
+
+<p><br><br><br><p>
+
+<center>
+<h1>"EAR" method for decomposiing polygons into triangles</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+April 2018
+</center>
+<p>
+
+<p align="justify">
+The so called "ear clipping" algorithm is a method for decomposing a simple polygon
+(no holes or crossings) into a set of triangular parts. An "ear" is defined as a 
+triangle where two edges are on the polygon boundary and the third edge is
+contained within the polygon. The method relies on the two ear theorem, that is,
+any simple polygon (with more than 3 edges) consists of at least 2 ears. Note
+that the polygon is not required to be 2D but if in 3D the vertices must all
+lie on a plane. The polygon may have concave portions.
+</p>
+
+<p align="justify">
+An example of an ear shown for the polygon below. Note that this particular polygon
+has a total of 5 ears.
+</p>
+
+<center>
+<img src="ear1.png" width=189 height=202 border=0>
+</center><p>
+
+<p align="justify">
+The process of decomposing by repeatedly clipping ears is shown below. Note that both
+the exact order and shape of the triangles are created depends on the order the 
+ears are found.
+</p>
+
+<center>
+<img src="ear2.png" width=747 height=495 border=0>
+</center><p>
+
+</td></tr></table></center><p>
+</body>
+</html>
+

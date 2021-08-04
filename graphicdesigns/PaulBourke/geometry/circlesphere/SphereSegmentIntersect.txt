@@ -1,0 +1,88 @@
+'---------------------------------------------------------------------------------------------------------
+'************************************ Routine SphereSegmentIntersect *************************************
+'---------------------------------------------------------------------------------------------------------
+'VBA implementation of the theory provided by Paul Bourke (http://paulbourke.net/geometry/circlesphere/)
+'author: ing. Giuseppe Iaria - rev. 12/08/2014
+'---------------------------------------------------------------------------------------------------------
+'Routine determines the intersection point of a segment and a sphere
+'The segment is defined by its end points P1 and P2, the sphere is defined by its centre C and radius R
+'If exsist, actual points P of intersection are returned in a 2-dimensions array P()
+'The P() array is implemented assuming a Base 1 condition, so the "Option Base 1" statement is required
+'The first dimension of the array P() refers to point number (maybe 1 or 2)
+'The second dimension of the array P() refers to point axis coordinates (1 = x, 2 = y, 3 = z)
+'Possible points of intersection coordinates are defined as (P(1,1);P(1,2);P(1,3)) (P(2,1);P(2,2);P(2,3))
+'Both conditions of line and segment intersection are valued and returned
+'Routine arguments are defined as follows:
+'- end points of segment: P1 (x1 ; y1), P2 (x2 ; y2)
+'- sphere: C (xC ; yC), R
+'- condition of line intersection: LineIntersection
+'- condition of segment intersection: SegmentIntersection
+'- array of points of intersection: P()
+'---------------------------------------------------------------------------------------------------------
+Option Base 1
+Public Sub SphereSegmentIntersect(ByVal x1 As Double, ByVal y1 As Double, ByVal z1 As Double, _
+                                ByVal x2 As Double, ByVal y2 As Double, ByVal z2 As Double, _
+                                ByVal xC As Double, ByVal yC As Double, zC As Double, _
+                                ByVal R As Double, ByRef P() As Double, _
+                                ByRef LineIntersection As Boolean, ByRef SegmentIntersection As Boolean)
+Dim a As Double, b As Double, c As Double
+Dim bbm4ac As Double, u1 As Double, u2 As Double, u As Double
+Const EPS As Single = 0.0001
+a = (x2 - x1) ^ 2 + (y2 - y1) ^ 2 + (z2 - z1) ^ 2
+b = 2 * ((x2 - x1) * (x1 - xC) + (y2 - y1) * (y1 - yC) + (z2 - z1) * (z1 - zC))
+c = xC ^ 2 + yC ^ 2 + zC ^ 2 + x1 ^ 2 + y1 ^ 2 + z1 ^ 2 - 2 * (xC * x1 + yC * y1 + zC * z1) - R ^ 2
+bbm4ac = b ^ 2 - 4 * a * c
+'Verify if line-sphere intersection occurs
+If (bbm4ac < 0 Or Abs(a) < EPS) Then
+    'NO intersection line-sphere
+    LineIntersection = False
+    SegmentIntersection = False
+    Exit Sub
+    Else
+    'line-sphere intersection occurs
+    LineIntersection = True
+    u1 = (-b - Sqr(bbm4ac)) / 2 / a
+    u2 = (-b + Sqr(bbm4ac)) / 2 / a
+End If
+'segment-sphere condition n. 1: segment is outside sphere, no point of intersection
+If ((u1 < 0 And u2 < 0) Or (u1 > 1 And u2 > 1)) Then
+    SegmentIntersection = False
+    Exit Sub
+End If
+'segment-sphere condition n. 2: segment is inside sphere, no point of intersection
+If ((u1 < 0 And u2 > 1) Or (u2 < 0 And u1 > 1)) Then
+    SegmentIntersection = False
+    Exit Sub
+End If
+'segment-sphere condition n. 3: one point of segment is inside sphere, 1 point of intersection
+If (((u1 >= 0 And u1 <= 1) And (u2 < 0 Or u2 > 1)) Or ((u2 >= 0 And u2 <= 1) And (u1 < 0 Or u1 > 1))) Then
+    SegmentIntersection = True
+    If (u2 >= 0 And u2 <= 1) Then u = u2 Else u = u1
+    ReDim P(1, 3)
+    P(1, 1) = x1 + u * (x2 - x1)
+    P(1, 2) = y1 + u * (y2 - y1)
+    P(1, 3) = z1 + u * (z2 - z1)
+    Exit Sub
+End If
+'segment-sphere condition n. 4: segment is tangent sphere, 1 point of intersection
+If ((Abs(u1 - u2) < EPS) And (u1 >= 0 And u1 <= 1)) Then
+    SegmentIntersection = True
+    ReDim P(1, 3)
+    P(1, 1) = x1 + u1 * (x2 - x1)
+    P(1, 2) = y1 + u1 * (y2 - y1)
+    P(1, 3) = z1 + u1 * (z2 - z1)
+    Exit Sub
+End If
+'segment-sphere condition n. 5: segment is outside sphere, 2 point of intersection
+If ((u1 >= 0 And u1 <= 1) And (u2 >= 0 And u2 <= 1)) Then
+    SegmentIntersection = True
+    ReDim P(2, 3)
+    P(1, 1) = x1 + u1 * (x2 - x1)
+    P(1, 2) = y1 + u1 * (y2 - y1)
+    P(1, 3) = z1 + u1 * (z2 - z1)
+    P(2, 1) = x1 + u2 * (x2 - x1)
+    P(2, 2) = y1 + u2 * (y2 - y1)
+    P(2, 3) = z1 + u2 * (z2 - z1)
+    Exit Sub
+End If
+End Sub

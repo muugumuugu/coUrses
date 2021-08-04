@@ -1,0 +1,245 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Auto-regression (AR)</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Auto-regression Analysis (AR)</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+Credits for source code: Alex Sergejew, Nick Hawthorn, Rainer Hegger.<br>
+November 1998
+</center>
+<p><br><p>
+
+<h3>Introduction</h3>
+
+<p align="justify">
+An autoregressive model (AR) is also known in the filter design
+industry as an infinite impulse response filter (IIR) or an all pole
+filter, and is sometimes known as a maximum entropy model in physics
+applications.
+There is "memory" or feedback and therefore the system 
+can generate internal dynamics.
+</p>
+
+The definition that will be used here is as follows
+<p>
+<center><img width=242 height=101 src="http://paulbourke.net/miscellaneous/ar/ar1.gif"></center>
+
+<p align="justify">
+where a<sub>i</sub> are the auto-regression coefficients, x<sub>t</sub>
+is the series under investigation, and N is the order (length) of the filter 
+which is generally very much less than the length of the series. The
+noise term or residue, epsilon in the above, is almost always assumed to be 
+Gaussian white noise.
+</p>
+
+<p align="justify">
+Verbally, the current term of the series can be estimated by a linear
+weighted sum of previous terms in the series. The weights are the
+auto-regression coefficients.
+</p>
+
+<p align="justify">
+The problem in AR analysis is to derive the "best" values for a<sub>i</sub>
+given a series x<sub>t</sub>. 
+The majority of methods assume the series x<sub>t</sub> is linear
+and stationary.
+By convention the the series x<sub>t</sub>
+is assumed to be zero mean, if not this is simply another term a<sub>0</sub>
+in front of the summation in the equation above.
+</p>
+
+<h3>Solutions</h3>
+
+<p align="justify">
+A number of techniques exist for computing AR coefficients. The main
+two categories are least squares and Burg method. Within each of these
+there are a few variants, the most common least squares method is
+based upon the Yule-Walker equations. MatLab has a wide range of
+supported techniques, note that when comparing algorithms from
+different sources there are two common variations, first is whether
+or not the mean is removed from the series, the second is the sign
+of the coefficients returned (this depends on the definition and is
+fixed by simply inverting the sign of all the coefficients).
+</p>
+
+<p align="justify">
+The most common method for deriving the coefficients involves
+multiplying the definition above by x<sub>t-d</sub>, taking the
+expectation values and normalising (see Box and Jenkins, 1976) gives
+a set of linear equations called the Yule-Walker equations
+that can be written in matrix form as
+</p>
+
+<center><img width=475 height=241 src="http://paulbourke.net/miscellaneous/ar/ar4.gif"></center>
+
+<p align="justify">
+where r<sub>d</sub> is the autocorrelation coefficient at delay d.
+Note: the diagonal is r<sub>0</sub> = 1.
+</p>
+
+<h3>Example</h3>
+
+<p align="justify">
+The following example is presented with some degree of detail in
+order to allow replication and comparison of the results with other
+packages. The data is 1000 samples from a sum of 4 sinusoids and is provided 
+<a href="http://paulbourke.net/miscellaneous/ar/sine4.dat">here</a>. The data looks like this
+</p>
+
+<center><img width=509 height=229 src="http://paulbourke.net/miscellaneous/ar/ar2.gif"></center>
+
+<p align="justify">
+While not particularly useful, an order 1 AR analysis gives a coefficient
+of 0.941872, this is not totally surprising as it is saying that by only
+looking at one term in the series the next term in the series is
+probably almost the same, ie: x<sub>t+1</sub> = 0.941872 * x<sub>t</sub>
+</p>
+
+<p align="justify">
+The following table gives the coefficients for a number of model orders
+for the example above.
+</p>
+
+<pre>
+      | Coefficients
+Order |     1         2        3         4         5        6        7        8   
+----- | -------- --------- -------- --------- --------- --------- -------- ---------
+1     | 0.941872
+2     | 1.826156 -0.938849
+3     | 2.753231 -2.740306 0.985501
+4     | 3.736794 -5.474295 3.731127 -0.996783
+8     | 4.259079 -6.232740 2.107323  2.969714 -1.421269 -2.591832 2.614633 -0.704923
+</pre>
+
+<p align="justify">
+As the order increases the estimates generally improve (this may not
+necessarily be so for noisy data when employing large AR orders!). It is often
+useful to plot the RMS error between the series estimated by the AR
+coefficients and the actual series. An example for the above case is
+shown below
+</p>
+
+<center><img width=421 height=181 src="http://paulbourke.net/miscellaneous/ar/ar3.gif"></center><p>
+
+<p align="justify">
+As is typical in AR analysis, the RMS error drops away very 
+fast and then evens out.
+</p>
+
+<h3>Special cases</h3>
+
+<b>White noise</b><br> 
+<p>
+The RMS error stays constant as the AR order is increased.
+<p>
+
+<b>Constant</b><br>
+
+<p align="justify">
+Most AR routines fail in this case even though the solution
+is straightforward (a<sub>1</sub> = 1, else a<sub>i</sub> = 0).
+A singular matrix results for the least squares formulation.
+</p>
+
+<b>Test 1</b>
+
+<p align="justify">
+Perhaps the best way to test code for computing AR coefficients
+is to generate artificial series with known coefficients and then 
+check that the AR calculation gives the same results. For example 
+one can generate the series 
+</p>
+
+<center>
+x<sub>t</sub> = a<sub>1</sub>x<sub>t-1</sub> + a<sub>2</sub>x<sub>t-2</sub> +
+a<sub>3</sub>x<sub>t-3</sub> + a<sub>4</sub>x<sub>t-4</sub> +
+a<sub>5</sub>x<sub>t-5</sub> + gaussianwhitenoise(0 mean, 1 std)
+</center>
+<p>
+
+where a<sub>1</sub> = 1.4, a<sub>2</sub> = -0.7,
+a<sub>3</sub> = 0.04, a<sub>4</sub> = 0.7, a<sub>5</sub> = -0.5.
+
+<p align="justify">
+AR analysis using a degree of
+5 should yield the same coefficients as those used to generate
+the series. The data for this series is available <a href="http://paulbourke.net/miscellaneous/ar/test1.dat">here</a>
+and is illustrated below:
+</p>
+
+<center><img width=519 height=243 src="http://paulbourke.net/miscellaneous/ar/ar5.gif"></center><p>
+
+<b>Test 2</b>
+
+<p align="justify">
+This test case is of order 7, the coefficients are:
+</p>
+
+<center>
+a<sub>1</sub> = 0.677, a<sub>2</sub> = 0.175,
+a<sub>3</sub> = 0.297, a<sub>4</sub> = 0.006, a<sub>5</sub> = -0.114
+a<sub>6</sub> = -0.083, a<sub>7</sub> = -0.025
+</center>
+
+<p align="justify">
+The raw series can be found <a href="http://paulbourke.net/miscellaneous/ar/test2.dat">here</a>
+and the data is plotted below.
+</p>
+
+<p><center><img width=520 height=252 src="http://paulbourke.net/miscellaneous/ar/ar6.gif"></center><p>
+
+<b>Test 3</b>
+
+<p align="justify">
+This test case is of order 2, the coefficients are:
+a<sub>1</sub> = 1.02, a<sub>2</sub> = -0.53,
+The raw series can be found <a href="http://paulbourke.net/miscellaneous/ar/test3.dat">here</a>
+and the data is plotted below.
+</p>
+
+<center><img width=512 height=240 src="http://paulbourke.net/miscellaneous/ar/ar7.gif"></center><p>
+
+<h3>Selecting the order of the model</h3>
+
+<p align="justify">
+There is no straightforward way to determine the correct model order.
+As one increases the order of the model the root mean square RMS error
+generally decreases quickly up to some order and then more slowly.
+An order just after the point at which the 
+RMS error flattens out is usually an appropriate order.
+There are more formal techniques for choosing the model order, 
+the most common of which is the Akaike Information Criterion.
+</p>
+
+<h3>Source code</h3>
+
+<p align="justify">
+Source code for computing AR coefficients is available 
+<a href="http://paulbourke.net/miscellaneous/ar/source/">here</a>.
+Two algorithms are available, the least squares method and the 
+Burg Maximum Entropy method.
+A modified version
+(<a href="http://paulbourke.net/miscellaneous/ar/burg.c">burg.c</a>) of the Burg method (C style zero index arrays)
+contributed by  Paul Sanders.
+</p>
+
+</td></tr></table></center>
+</body>
+</html>
+

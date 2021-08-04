@@ -1,0 +1,233 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Enlivening fountains</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Enlivening fountains</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+August 2016
+</center>
+<p><br><p>
+
+<p align="justify">
+Water fountains by their very nature are dynamic entities, the water never
+flows or is propelled in exactly the same way at any instance of time.
+This is particularly so for fountains in windy conditions.
+As such,
+photographs of water fountains appear static and somewhat dull, they fail
+to capture the dynamic nature. 
+The following documents various experiments to enliven images of fountains
+by combining large numbers of photographs captured over time.
+</p>
+
+<b>Example 1</b><p>
+
+<p align="justify">
+As an example consider the following single photograph of a fountain in the township
+of Renmark, South Australia.
+</p>
+<center>
+<a href="http://paulbourke.net/miscellaneous/fountains/before1.jpg"><img src="http://paulbourke.net/miscellaneous/fountains/before1_s.jpg" width=800 height=450 border=1></a><br>
+<smalltext>Single photograph</smalltext>
+</center><p>
+
+<p align="justify">
+In the next image 5000 frames are combined
+with a lighten filter. If C'(i,j) is the final value for each pixel (i,j)
+and C(i,j,t) is the pixel value at (i,j) at frame t, and L is the lighten operator then
+this combination can be written as
+</p>
+
+<center>
+<img src="http://paulbourke.net/miscellaneous/fountains/equation1.png" width=287 height=27 border=0>
+</center><p>
+
+<p align="justify">
+For this to work as intended the camera obviously need to be stationary and the effect as
+with most discussed here will affect any objects moving in the scene.
+</p>
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/fountains/after1a.jpg"><img src="http://paulbourke.net/miscellaneous/fountains/after1a_s.jpg" width=800 height=450 border=1></a><br>
+<smalltext>Processed using lighten filter</smalltext>
+</center><p>
+
+<p align="justify">
+In the following 5000 difference frames are added to the first frame, and described
+by the equations
+</p>
+
+<center>
+<img src="http://paulbourke.net/miscellaneous/fountains/equation2.png" width=378 height=65 border=0>
+</center><p>
+
+<p align="justify">
+Where A is an arbitrary scaling factor to enhance or reduce the combined result.
+</p>
+
+<p align="justify">
+For this operation and indeed for many other repeated additions the calculations are
+performed in floating point for each red, green and blue values. The conversion to
+8 bit colour only occurs at the end of the process after scaling. In actually the 
+results are also saved as a 16 bit per RGB to improve dynamic range which in turn
+facilitates post processing.
+</p>
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/fountains/after1b.jpg"><img src="http://paulbourke.net/miscellaneous/fountains/after1b_s.jpg" width=800 height=450 border=1></a><br>
+<smalltext>Processed using difference filter</smalltext>
+</center><p>
+
+<b>Example 2</b><p>
+
+<p align="justify">
+Of course this is essentially the same as a long exposure except it provides much
+more flexibility. For example, one is not locked into a particular time window, one
+does need to estimate exposure settings for an otherwise fixed time window, and one
+can remove frames for which unwanted objects/people/animals enter the frame. For example
+in the following from Adelaide, joggers were regularly running past the camera.
+These frames can simply be removed and the processing repeated, a luxury not available
+in "in-camera" long exposures.
+</p>
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/fountains/before2.jpg"><img src="http://paulbourke.net/miscellaneous/fountains/before2_s.jpg" width=800 height=450 border=1></a><br>
+<smalltext>Single photograph</smalltext>
+</center><p>
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/fountains/after2a.jpg"><img src="http://paulbourke.net/miscellaneous/fountains/after2a_s.jpg" width=800 height=450 border=1></a><Br>
+<smalltext>Processed result using lighten filter</smalltext>
+</center><p>
+
+<b>Example 3</b><p>
+
+<p align=justify">
+Given the water from a fountain is often light in colour, especially when reflecting light,
+one might also consider a maximum filter. That is, the final colour of a pixel is the
+maximum pixel across the image sequence.
+</p>
+
+<center>
+<img src="http://paulbourke.net/miscellaneous/fountains/equation3.png" width=318 height=28 border=0>
+</center><p>
+
+<p align=justify">
+The maximum may be based upon a number of metrics, the brightness but even simple
+maximum per RGB will often suffice.
+</p>
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/fountains/before3.jpg"><img src="http://paulbourke.net/miscellaneous/fountains/before3_s.jpg" width=800 height=450 border=1></a><br>
+<smalltext>Single photograph</smalltext>
+</center><p>
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/fountains/after3a.jpg"><img src="http://paulbourke.net/miscellaneous/fountains/after3a_s.jpg" width=800 height=450 border=1></a><Br>
+<smalltext>Processed result using maximum filter</smalltext>
+</center><p>
+
+<b>Pipeline</b><p>
+<p align="justify">
+The general pipeline then is to capture a large number of photographs, this can be
+achieved by time-lapse if high quality is required or simply a movie recording.
+In the later the frames are exported from the movie. Software is developed that
+scans through the frames and applies the chosen filter.
+</p>
+<pre>
+Usage: addframes [options] mask istart istop
+Options:
+   -f s   filter type (a,v,m,l,d,b,x,y), default: 'a'
+          a - add
+          v - average
+          m - maximum
+          l - lighten
+          d - darken
+          b - update significant difference between frames
+          x - add darker of blue channel
+          y - add difference between subsequent frames
+   -o s   output file name
+</pre>
+<p><br><p>
+
+<b>Example 4</b><p>
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/fountains/before4.jpg"><img src="http://paulbourke.net/miscellaneous/fountains/before4_s.jpg" width=800 height=450 border=1></a><br>
+<smalltext>Single photograph. Mandurah, Western Australia.</smalltext>
+</center><p>
+
+<p align="justify">
+Running average filter.
+</p>
+
+<!--
+<center>
+<img src="equation4.png" width=266 height=57 border=0>
+</center><p>
+-->
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/fountains/after4.jpg"><img src="http://paulbourke.net/miscellaneous/fountains/after4_s.jpg" width=800 height=450 border=1></a><Br>
+<smalltext>Processed result using running average filter</smalltext>
+</center><p>
+
+<b>Sunsets</b><p>
+<p align="justify">
+Same technique applied to sunsets.
+</p>
+<center>
+	<a href="http://paulbourke.net/miscellaneous/fountains/sunset2.jpg"><img src="http://paulbourke.net/miscellaneous/fountains/sunset2_s.jpg" width=800 height=533 border=1></a>
+</center><p>
+<center>
+   <a href="http://paulbourke.net/miscellaneous/fountains/sunset1.jpg"><img src="http://paulbourke.net/miscellaneous/fountains/sunset1_s.jpg" width=800 height=533 border=1></a>
+</center><p>
+<center>
+   <a href="http://paulbourke.net/miscellaneous/fountains/sunset3.jpg"><img src="http://paulbourke.net/miscellaneous/fountains/sunset3_s.jpg" width=800 height=533 border=1></a>
+</center><p>
+
+<p><br><p>
+<b>Sky effects</b><p>
+
+<p align="justify">
+Another nice effect is to apply the above to dynamic skys. In the following this 
+is a 5 minute average
+applied to the equirectangular footage from a 360 video camera.
+From Matagarup Bridge in Perth, Western Australia.
+</p>
+<center>
+	<a href="http://paulbourke.net/miscellaneous/fountains/smooth.jpg">
+	<img src="http://paulbourke.net/miscellaneous/fountains/smooth_s.jpg" width=800 height=400 border=1></a>
+</center><p>
+<p align="justify">
+And turned into stereographic projections.
+</p>
+<center>
+   <a href="http://paulbourke.net/miscellaneous/fountains/littleplanet1.jpg">
+   <img src="http://paulbourke.net/miscellaneous/fountains/littleplanet1s.jpg" width=800 height=800 border=1></a>
+</center><p>
+<center>
+   <a href="http://paulbourke.net/miscellaneous/fountains/littleplanet2.jpg">
+   <img src="http://paulbourke.net/miscellaneous/fountains/littleplanet2s.jpg" width=800 height=800 border=1></a>
+</center><p>
+
+<p><br><br><br><p>
+</td></tr></table></center>
+</body>
+</html>
+

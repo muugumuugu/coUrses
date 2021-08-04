@@ -1,0 +1,266 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Transferring slice data to Drishti</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Transferring slice data to Drishti using ImageJ</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+Data sample courtesy David Wacey<br>
+August 2011
+</center>
+<p><br><p>
+
+<h3>Introduction</h3>
+
+<p align="justify">
+The following discusses a pipeline for transferring slice data into Drishi, it is
+aimed at novice users and as such steps through the process in some detail.
+Please note this is only one of a number of ways of achieving the same final result.
+The tools used are ImageJ and Drishti, both free software packages. The following
+is based upon the most recent versions of both these software tools at the time of writing. 
+</p>
+
+<center><table width=800><tr><td>
+<p align="justify"><i>
+ImageJ is a public domain Java image processing program available for number of operating
+systems including Mac OSX, MSWindows, and Linux. It can display, edit, analyse, process, 
+save and print 8-bit, 16-bit and 32-bit images. It can read many image formats including 
+TIFF, GIF, JPEG, BMP, DICOM, FITS and raw. It supports stacks (and hyperstacks), a 
+series of images that share a single window.
+ImageJ was designed with an open architecture that provides extensibility via Java 
+plug-ins. Custom acquisition, analysis and processing plug-ins can be developed using 
+ImageJ's built in editor and Java compiler. User-written plug-ins make it possible to 
+solve almost any image processing or analysis problem.
+</i></p>
+</td></tr></table></center><p>
+
+<center><table width=800><tr><td>
+<p align="justify"><i>
+Drishti stands for vision or insight in Sanskrit, an Indian language.
+Drishti has been developed keeping in mind the end-use: visualising tomography data, 
+electron-microscopy data, etc. Understanding the data set is important and conveying 
+that understanding to the research community or a lay person is equally important. 
+Drishti is aiming for both. The central idea about Drishti is that the scientists 
+should be able to use it for exploring volumetric datasets as well as use it in presentations.
+</i></p>
+</td></tr></table></center><p>
+
+<h3>Slice preparation in ImageJ</h3>
+
+<p align="justify">
+The image slices used to illustrate the process have been generously provided by David
+Wacey. As provided there are 180 slices, each slice 874 x 818 pixels, saved as tiff files.
+The images here are scans of microfossils, outside the scope of this document is a slice
+alignment exercise also performed using plug-ins for ImageJ. Three sample slices provided below.
+</p>
+
+<center><table><tr>
+<td valign="center"><center>&nbsp;.&nbsp;.&nbsp;.&nbsp;</center></td>
+<td><center>
+	<a href="http://paulbourke.net/miscellaneous/Drishti_intro1/slice1.jpg"><img src="http://paulbourke.net/miscellaneous/Drishti_intro1/slice1s.jpg" width=200 height=187 border=1></a><br>
+	<smalltext>Slice 50</smalltext></center>
+</td>
+<td><center>
+	<a href="http://paulbourke.net/miscellaneous/Drishti_intro1/slice2.jpg"><img src="http://paulbourke.net/miscellaneous/Drishti_intro1/slice2s.jpg" width=200 height=187 border=1></a><br>
+	<smalltext>Slice 51</smalltext></center>
+</td>
+<td><center>
+	<a href="http://paulbourke.net/miscellaneous/Drishti_intro1/slice3.jpg"><img src="http://paulbourke.net/miscellaneous/Drishti_intro1/slice3s.jpg" width=200 height=187 border=1></a><br>
+	<smalltext>Slice 52</smalltext></center>
+</td>
+<td valign="center"><center>&nbsp;.&nbsp;.&nbsp;.&nbsp;</center></td>
+</tr></table></center><p>
+
+<p align="justify">
+In addition to opening and editing a single image, ImageJ can open what is called a
+stack of images. These should be sequentially numbered files and located in a single
+directory. They are read using "Import > Image Sequence" found in the "File" menu.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/Drishti_intro1/imageseq.jpg" width=687 height=525 border=0></center><p>
+
+<p align="justify">
+The key capability/benefit of image stacks is that one can perform image processing once and
+it will be applied to all images in the stack. Two common operations are cropping and
+changes to the contrast and brightness.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/Drishti_intro1/imageseq2.jpg" width=800 height=744 border=0></center><p>
+
+<p align="justify">
+Exporting the final processed stack as a single volumetric file and in a form suitable for Drishti
+is achieved with the so called raw data format. This is an unstructured list of the voxel data,
+each voxel value saved in the native data size, in this case 1 byte per voxel. The next most common
+data size for image stacks would be 16 bit, this determines the number of discrete states a
+voxel can be in. For 1 byte there are only 256 states (0-255), for unsigned 16 bit there are
+65536 states (0-2^16). This is normally referred to as the dynamic range. Where possible image
+processing should be performed at the highest possible dynamic range in order to reduce
+a number of possible artefacts that can arise from an insufficient number states in which to
+represent the image processing.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/Drishti_intro1/imageseq3.jpg" width=800 height=726 border=0></center><p>
+
+<p align="justify">
+As a sanity check the final file size can be confirmed. The top of the ImageJ window for an 
+image stack gives the number of slices, the resolution per slice (horizontal and vertical pixels), 
+and the number of bytes per slice. The total file size for the raw file should then be
+</p>
+
+<center>
+	number_of_slices x horizontal_pixels x vertical_pixels x number_of_bytes_per_pixel
+</center><p>
+
+<p align="justify">In this case:</p>
+
+<center>
+   180 x 874 x 818 x 1 = 128687760 bytes
+</center><p>
+
+<center><img src="http://paulbourke.net/miscellaneous/Drishti_intro1/dims.jpg" width=729 height=186 border=0></center><p>
+
+<h3>Importing into Drishti</h3>
+
+<p align="justify">
+Drishti tools are normally accessed through the launcher, in this discussion
+only the import and render modules will be used.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/Drishti_intro1/drishti0a.jpg" width=301 height=120 border=0></center><p>
+
+<p align="justify">
+The Drishti importer supports a number of file formats, one of which corresponds to the
+raw volume file created by ImageJ above.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/Drishti_intro1/drishti1.jpg" width=573 height=591 border=0></center><p>
+
+<p align="justify">
+The raw volume file as created is just a stream of bytes, there is no structure and there
+is no header to define the type of data per voxel or the number of voxels in each of the
+three dimensions.
+This information needs to be supplied through the raw import dialog. The order the
+volume dimensions are saved in ImageJ is opposite to the order Drishti expects to read.
+So if the volume dimensions in ImageJ is x,y,z where z are the slices, the order
+specified in the Drishti importer would be z,y,x.
+Drishti does support a special raw format with a header section but in this 
+case there is no header to the raw file so there are no header bytes to be skipped.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/Drishti_intro1/drishti2.jpg" width=572 height=590 border=0></center><p>
+
+<p align="justify">
+The importer presents the histogram and the slices, one can scroll through the slices in
+any of the three dimensions. Drishti only supports a single byte per voxel, if the input
+data has a higher dynamic range (eg: integer, float, etc) then the slider in the top half
+of this window allows one to choose the mapping between the range of voxel values and
+the 0 to 255 states available for Drishti. In this case the input data is also a single
+byte so no reduction in dynamic range is necessary. The voxel values could still be
+remapped to a different range to perhaps increase contrast but as discussed
+above it is suggested that this should be done in ImageJ. Similarly the volume can be
+cropped (click and drag borders of the slice) although this also may be done in ImageJ.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/Drishti_intro1/drishti3.jpg" width=569 height=849 border=0></center><p>
+
+<p align="justify">
+Finally the volume should be saved for the Drishti rendering module, 
+the standard extension is ".pvl.nc" for the NetCDF
+formatted file the Drishti render module will expect.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/Drishti_intro1/drishti4.jpg" width=571 height=848 border=0></center><p>
+
+<p align="justify">
+On saving one is presented with a number of options, each presented in a separate
+window. Saving a separate raw image is only useful if one has modified the voxel values
+and one wants to use that new raw data elsewhere, unnecessary in most cases and one could
+achieve the same thing by image processing and exporting from ImageJ. For large volumes
+one may want to subsample in slices (z) or, more commonly, 
+within slices (x,y). This will allow large volumes
+to be manipulated more readily on limited hardware as well as reduce noise artefacts.
+The later can additionally be achieved by using one of the "Volume Filters". Note that specifying
+the "Voxel Size" is important if dimensionally meaningful measurements are to be taken, this
+can however be changed later in the "Volume Information" window found in the "View" menu.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/Drishti_intro1/savepanels.jpg" width=440 height=745 border=0></center><p>
+
+<h3>Drishti Render</h3>
+
+<center><img src="http://paulbourke.net/miscellaneous/Drishti_intro1/drishti0b.jpg" width=301 height=120 border=0></center><p>
+
+<p align="justify">
+A NetCDF volume can be loaded into the render module as follows.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/Drishti_intro1/drishti5.jpg" width=905 height=607 border=0></center><p>
+
+<p align="justify">
+By default the volume is presented in a low resolution mode. This is yet another place
+where the volume can be cropped, hover the mouse over the X on any face until it
+changes colour, then drag to reduce or extend the cropped subvolume.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/Drishti_intro1/drishti6.jpg" width=588 height=607 border=0></center><p>
+
+<p align="justify">
+Many volumes do not have square voxels, for example the between-slice resolution is often
+less than the in-slice resolution. The volume information panel allows one to specify the
+voxel aspect ratio.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/Drishti_intro1/drishti7.jpg" width=586 height=605 border=0></center><p>
+
+<p align="justify">
+Most exploration in Drishti is performed in the higher resolution rendering mode, f2 toggles
+between the low resolution and high resolution mode. Note that only in the high resolution
+mode is the voxel dimensions and aspect ratio honoured.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/Drishti_intro1/drishti8.jpg" width=900 height=606 border=0></center><p>
+
+<p align="justify">
+At this stage one can start exploring by changing the transfer function and using the
+other features of Drishti. These are outside the scope of this discussion which is
+concentrated on the volume preparation in ImageJ and subsequent importing into Drishti.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/Drishti_intro1/drishti9.jpg" width=898 height=606 border=0></center><p>
+
+<p align="justify">
+A very small subset of useful keystrokes for Drishti are given below.
+</p>
+<center>
+<table width=800 border=0>
+<tr><td>f2</td><td>Toggle between high resolution and preview rendering modes</td></tr>
+<tr><td>b</td><td>Toggle bounding box</td></tr>
+<tr><td>?</td><td>Toggle text information at lower left of window</td></tr>
+<tr><td>alt-s</td><td>Capture screen to an image file</td></tr>
+<tr><td>1</td><td>Toggle shading. See the shading widget in the view menu.</td></tr>
+<tr><td> </td><td> </td></tr>
+<tr><td> </td><td> </td></tr>
+<tr><td> </td><td> </td></tr>
+<tr><td> </td><td> </td></tr>
+<tr><td> </td><td> </td></tr>
+</table>
+</center><p>
+
+</td></tr></table></center>
+</body>
+</html>

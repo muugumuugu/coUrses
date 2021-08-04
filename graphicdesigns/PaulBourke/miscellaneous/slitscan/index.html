@@ -1,0 +1,312 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Slit Scan Images</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Slit Scan Images</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+August 2014<p>
+</center>
+<p><br><p>
+
+<p align="justify">
+There are a number of methods by which time and space can be encoded in a single image.
+Historically one method of achieving this was the multiple exposure, multiple time points
+overlaid in one image and facilitated by current digital technology where images can be
+variably added together without the constraints of film. 
+</p>
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/slitscan/exposures.jpg"><img src="http://paulbourke.net/miscellaneous/slitscan/exposures_s.jpg" width=800 height=272 border=1></a><br>
+<smalltext>Multiple exposure, 220 images, 5 seconds apart, Mosman Park, Perth</smalltext>
+</center><p>
+
+<p align="justify">
+Another method possible in the digital
+era is the <a href="../../panorama/timelapsepano/index.html">chronopanorama</a> 
+where an isolated object at different times and
+at different spatial positions are embedded in an otherwise self consistent panorama.
+In what follows another approach is outlined, here single rows or columns from
+ frames (typically from a movie) are combined into a single image. This has parallels to
+slit cameras, also sometimes used for creating a panorama, hence the name.
+</p>
+
+<p align="justify">
+The general algorithm is straightforward, vertical or horizontal strips from a series
+of images (generally sequential frames from a movie) are laid adjacent to each other
+in the output slit-scan image. Variations include: the slit may be of variable width, 
+frames may be skipped, and one may vary the row or column used across the input images.
+The output image can be considered to vary horizontally (or vertically) in time.
+</p>
+
+<b>Vertical slits</b><p>
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/slitscan/diagram1.png"><img src="http://paulbourke.net/miscellaneous/slitscan/diagram1s.png" width=800 height=267 border=0></a>
+</center><p>
+
+<b>Horizontal slits</b><p>
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/slitscan/diagram2.png"><img src="http://paulbourke.net/miscellaneous/slitscan/diagram2s.png" width=350 height=558 border=0></a>
+</center><p>
+
+<b>Example 1: Stationary camera</b>.
+<p align="justify">
+While not a particularly interesting example, it does serve to illustrate some of the
+features of such images. Allowing one to think about how to film in order to create more
+engaging slit-scan images.
+</p>
+<p>
+<center>
+<a href="http://paulbourke.net/miscellaneous/slitscan/example1.jpg"><img src="http://paulbourke.net/miscellaneous/slitscan/example1s.png" width=800 height=1075 border=0></a>
+</center><p>
+
+<b>Example 2: Linearly moving camera</b>.
+<p align="justify">
+The following examples is from a camera pointing perpendicular to the direction of travel and taking
+vertical slits. If the camera were moving perfectly straight then this would result in
+a vertical perspective but horizontally orthographic projection, assuming also the speed
+was correct. In reality, and what makes these images interesting, is the vertical camera
+movement that shifts the horizon and change in speed that stretches space horizontally.
+An interesting feature of this type of image is that a stereoscopic pair can be created by 
+choosing two horizontally offset vertical slits.
+</p>
+<center>
+<a href="http://paulbourke.net/miscellaneous/slitscan/example2.jpg"><img src="http://paulbourke.net/miscellaneous/slitscan/example2s.png" width=800 height=419 border=1></a><br>
+<smalltext>Slit width = 1, Wellington St park, East Perth</smalltext>
+</center><p>
+<p align="justify">
+Adjusting the slit width has the effect of providing more continuity.
+This can be at the expense of introducing a sawtooth effect arising from features that
+ramp across the slit width, this can be seen in example 1 in the 20 pixel wide slit 
+(inset image bottom right).
+</p>
+<center>
+<a href="http://paulbourke.net/miscellaneous/slitscan/example3.jpg"><img src="http://paulbourke.net/miscellaneous/slitscan/example3s.png" width=800 height=210 border=1></a>
+<smalltext>Slit width = 2</smalltext>
+</center><p>
+<center>
+<a href="http://paulbourke.net/miscellaneous/slitscan/example4.jpg"><img src="http://paulbourke.net/miscellaneous/slitscan/example4s.png" width=800 height=107 border=1></a>
+<smalltext>Slit width = 4</smalltext>
+</center><p>
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/slitscan/example5.jpg"><img src="http://paulbourke.net/miscellaneous/slitscan/example5s.png" width=800 height=239 border=1></a>
+<smalltext>Slit width = 4, Barrack St, Perth CBD</smalltext>
+</center><p>
+<center>
+<a href="http://paulbourke.net/miscellaneous/slitscan/example6.jpg"><img src="http://paulbourke.net/miscellaneous/slitscan/example6s.png" width=800 height=119 border=1></a>
+<smalltext>Slit width = 8</smalltext>
+</center><p>
+
+<b>Implementations</b>
+
+<p align="justify">
+Utility to implement simple forward mapping has been developed, standard UNIX command line,
+as follows. The code to do this is straightforward, the images (individual frame from a movie)
+can be read one at a time and the
+appropriate row or column set extracted. The final image size can be determined at the outset,
+the only slightly tricky thing is dealing with images that may be greater than 32K pixels which
+is not dealt with by all image formats.
+</p>
+<pre>
+Usage: slitscan [options] nstart nstop mask
+Options:
+   -col  choose columns (default: rows)
+   -w n  width of slit (default: 1)
+   -l n  line to extract (default: central)
+   -s n  skip n frames (default: 1)
+   -o s  output file name (default: created internally)
+</pre>
+
+<p align="justify">
+Note that forward mappings have limitations, for example only integer sets
+of rows or columns can be extracted, there is no antialiasing, and without some difficulty
+one cannot extract arbitrary diagonal lines or other curves.
+</p>
+<p align="justify">
+These can be overcome by performing a reverse lookup, that is, one determines the best sample
+pixel from the set of input images for every point in the output image. This is the usual method by
+which image transformations are performed, it ensures no gaps in the output image which could
+arise from more complicated extraction schemes than just rows and columns. It also allows
+trivial implementation of supersampling antialiasing. An important implementation difference is
+that now one cannot read the input images in sequence because one does not know in advance
+which image the next pixel may come from. Since the whole image collection cannot usually be
+expected to reside in memory, this implementation requires a image loading/unloading management
+scheme, keeping images in memory if possible but releasing them and loading in new images
+as required.
+</p>
+
+<pre>
+Usage: reverseslitscan [options] n1 n2 mask
+Options:
+   -wh w h  dimension of the output image (default: 1024 1024)
+   -v1 n    variable 1 for modes (default: 0.5)
+   -v2 n    variable 2 for modes (default: 0)
+   -m n     image mode (default: 0)
+               0 = columns, v1 is column
+               1 = rows, v1 is the row
+               2 = column angle, v1 is column top, v2 is horizontal offset
+               3 = row angle, v1 is row, v2 is vertical offset
+   -a n     antialias level (default: 1)
+</pre>
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/slitscan/example7.jpg"><img src="http://paulbourke.net/miscellaneous/slitscan/example7s.png" width=800 height=351 border=1></a><br>
+<smalltext>St George Terrace, Perth CBD</smalltext>
+</center><p>
+
+<p align="justify">
+A variation is to scan the row or column across the image. This often leads to more 
+interesting results for stationary cameras and results in increased spatial coherence.
+</p>
+<center>
+<a href="http://paulbourke.net/miscellaneous/slitscan/diagram3.png"><img src="http://paulbourke.net/miscellaneous/slitscan/diagram3s.png" width=800 height=267 border=0></a>
+</center><p>
+<center>
+<a href="http://paulbourke.net/miscellaneous/slitscan/slitscan1.jpg"><img src="http://paulbourke.net/miscellaneous/slitscan/slitscan1s.jpg" width=800 height=309 border=1></a><br>
+<smalltext>Fireworks, Perth Australia day 2015</smalltext>
+</center><p>
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/slitscan/pigeonisland.jpg"><img src="http://paulbourke.net/miscellaneous/slitscan/pigeonisland_s.jpg" width=800 height=624 border=1></a><br>
+<smalltext>Sunrise on Big Pigeon Island</smalltext>
+</center><p>
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/slitscan/droneslitscan.jpg"><img src="http://paulbourke.net/miscellaneous/slitscan/droneslitscan_s.jpg" width=800 height=80 border=1></a><p>
+<a href="http://paulbourke.net/miscellaneous/slitscan/droneslitscan2.jpg"><img src="http://paulbourke.net/miscellaneous/slitscan/droneslitscan2_s.jpg" width=800 height=173 border=1></a><br>
+<smalltext>Inspire drone footage from Middle Head, Sydney</smalltext>
+</center><p>
+
+<br><p>
+<b>Contribution by David Carson</b><p>
+<center>
+<img src="http://paulbourke.net/miscellaneous/slitscan/davidcarson.png" width=800 height=450 border=1><br>
+</center><p>
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/slitscan/test_col.jpg">
+<img src="http://paulbourke.net/miscellaneous/slitscan/test_col_s.jpg" width=800 height=570 border=1></a><br>
+</center><p>
+<br><br>
+
+<b>Update April 2016</b><p>
+<p align="justify">
+Added the ability to extract pixels from every n'th frame.
+</p>
+<pre>
+Usage: slitscan [options] nstart nstop mask
+Options:
+   -col  extract columns (default)
+   -row  extract rows
+   -w n  width of extracted slit (default: 1)
+   -l n  slit row or column to extract (default: central)
+   -s n  image skip (default: 1)
+   -o s  output file name (default: created internally)
+</pre>
+<br><br>
+
+<p>
+<center>
+<a href="http://paulbourke.net/miscellaneous/slitscan/nepal.jpg">
+<img src="http://paulbourke.net/miscellaneous/slitscan/nepal_s.jpg" width=800 height=280 border=1></a><br>
+<smalltext>Plane banks in the Himalayas</smalltext>
+</center><p>
+<br>
+
+<p>
+<center>
+<a href="http://paulbourke.net/miscellaneous/slitscan/goldcoast.jpg">
+<img src="http://paulbourke.net/miscellaneous/slitscan/goldcoast_s.jpg" width=800 height=234 border=1></a><br>
+<smalltext>Rough landing flying into the Gold Coast</smalltext>
+</center><p>
+<br>
+
+<p align="justify">
+View of Hong Kong from the 17 floor of a hotel. The images spans sunset, the left hand
+column is 20 minutes behind the right hand column.
+</p>
+<center>
+<a href="http://paulbourke.net/miscellaneous/slitscan/hongkong.jpg">
+<img src="http://paulbourke.net/miscellaneous/slitscan/hongkong_s.jpg" width=800 height=438 border=1></a><br>
+</center><p>
+<br>
+
+
+<a name="slitscanobject">
+<b>Slit scan object panorama</b></a><p>
+See also: <a href="../../panorama/inversepano/index.html">Inverse panoramas</a><p>
+
+<p>
+<center>
+<a href="http://paulbourke.net/miscellaneous/slitscan/statue.jpg">
+<img src="http://paulbourke.net/miscellaneous/slitscan/statue_s.jpg" width=800 height=550 border=1></a><br>
+<smalltext>Statue on a rotating platform</smalltext>
+</center><p>
+<br>
+
+<p>
+<center>
+<a href="http://paulbourke.net/miscellaneous/slitscan/statue2.jpg">
+<img src="http://paulbourke.net/miscellaneous/slitscan/statue2_s.jpg" width=800 height=419 border=1></a><br>
+</center><p>
+<br>
+
+<p>
+<center>
+<a href="http://paulbourke.net/miscellaneous/slitscan/statue3.jpg">
+<img src="http://paulbourke.net/miscellaneous/slitscan/statue3_s.jpg" width=800 height=800 border=1></a><br>
+</center><p>
+<br>
+
+<p>
+<center>
+<a href="http://paulbourke.net/miscellaneous/slitscan/statue4.jpg">
+<img src="http://paulbourke.net/miscellaneous/slitscan/statue4_s.jpg" width=800 height=680 border=1></a><br>
+</center><p>
+<br>
+
+<b>Slit scan equirectangular movies</b><p>
+
+<p align="justify">
+Slit scans can also be applied to 360 video, namely equirectangular images. It can be
+applied both horizontally (rows) and vertically (columns).
+The following spans 1 hour, 6pm on the left edge and 7pm at the right edge, it still
+wraps like a normal equirectangular image except of course for the brightness change.
+Examples below from Matagarup Bridge in Perth, Western Australia.
+</p>
+
+<center>
+	<a href="http://paulbourke.net/miscellaneous/slitscan/equirect1.jpg">
+	<img src="http://paulbourke.net/miscellaneous/slitscan/equirect1_s.jpg" width=800 height=400 border=1></a>
+</center>
+
+<p align="justify">
+These in turn can be remapped to stereographic images.
+</p>
+
+<center>
+   <a href="http://paulbourke.net/miscellaneous/slitscan/equirect2.jpg">
+   <img src="http://paulbourke.net/miscellaneous/slitscan/equirect2s.jpg" width=800 height=800 border=1></a>
+</center>
+
+</td></tr></table></center>
+</body>
+</html>

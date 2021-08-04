@@ -1,0 +1,171 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Histogram Matching</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Histogram Matching</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+January 2011
+</center>
+<p><br><p>
+
+<p align="justify">
+Histogram matching is a process where a time series, image, or higher
+dimension scalar data is modified such that its histogram matches
+that of another (reference) dataset. A common application of this
+is to match the images from two sensors with slightly different 
+responses, or from a sensor whose response changes over time.
+</p>
+
+<!-- Table showing histograms of time series -->
+<center>
+<table width=840>
+<tr><td width=420 align="center">
+	<img src="http://paulbourke.net/miscellaneous/equalisation/equalise_target.png" width=400 height=300 border=0><br>
+	<smalltext>Histogram of reference time series</smalltext>
+</td><td width=420 align="center">
+	<img src="http://paulbourke.net/miscellaneous/equalisation/equalise_toadjust.png" width=400 height=300 border=0><br>
+	<smalltext>Histogram of time series to be adjusted</smalltext>
+</td></tr>
+<tr><td colspan=2>&nbsp;</td></tr>
+<tr><td width=420 valign="top">
+<p align="justify">
+The example given here is a synthetically generated time series.
+The reference series is just a uniform random distribution, the
+second series is a Gaussian random distribution.
+</p>
+</td><td width=420 align="center">
+   <img src="http://paulbourke.net/miscellaneous/equalisation/equalise_result.png" width=400 height=300 border=0><br>
+   <smalltext>Histogram of the adjusted time series</smalltext>
+</td></tr></table></center><p>
+
+<p align="justify">
+The algorithm is as follows. The cumulative histogram is computed for each dataset,
+see the diagram below.
+For any particular value (x<sub>i</sub>) in the data to be adjusted has a cumulative
+histogram value given by G(x<sub>i</sub>). This in turn is the cumulative distribution
+value in the reference dataset, namely H(x<sub>j</sub>). The input data
+value x<sub>i</sub> is replaced by x<sub>j</sub>.
+</p>
+
+<p align="justify">
+In practice for discrete valued data
+one does not step through data values but rather creates a mapping 
+to the output state for each possible input state. In the case of an image
+this would be a mapping for each of the 256 different states.
+</p>
+
+<center>
+	<img src="http://paulbourke.net/miscellaneous/equalisation/diagram1.jpg" width=800 height=416 border=0>
+</center><p>
+
+<p align="justify">
+The following is an example using a greyscale image. The first image is the reference
+image and the histogram is given. The second image is the one whose histogram will
+be matched to the first. The third shows the resulting matched image.
+</p>
+
+<center>
+<table width=840>
+<tr><td width=420 align="center">
+   <img src="http://paulbourke.net/miscellaneous/equalisation/image4.jpg" width=400 height=300 border=0><br>
+   <smalltext>Reference image</smalltext>
+</td><td width=420 align="center">
+   <img src="http://paulbourke.net/miscellaneous/equalisation/image_target.png" width=400 height=300 border=0><br>
+   <smalltext>Histogram of reference image</smalltext>
+</td></tr>
+<tr><td colspan=2>&nbsp;</td></tr>
+<tr><td width=420 align="center">
+   <img src="http://paulbourke.net/miscellaneous/equalisation/image5.jpg" width=400 height=300 border=0><br>
+   <smalltext>Image to be adjusted</smalltext>
+</td><td width=420 align="center">
+   <img src="http://paulbourke.net/miscellaneous/equalisation/image_toadjust.png" width=400 height=300 border=0><br>
+   <smalltext>Histogram of image to be adjusted</smalltext>
+</td></tr>
+<tr><td colspan=2>&nbsp;</td></tr>
+<tr><td width=420 align="center">
+   <img src="http://paulbourke.net/miscellaneous/equalisation/image6.jpg" width=400 height=300 border=0><br>
+   <smalltext>Histogram matched image</smalltext>
+</td><td width=420 align="center">
+   <img src="http://paulbourke.net/miscellaneous/equalisation/image_result.png" width=400 height=300 border=0><br>
+   <smalltext>Histogram of matched image</smalltext>
+</td></tr>
+</table>
+</center><p>
+
+<b>Notes</b>
+<ul>
+<li><p align="justify">
+In the discussion here the two datasets are assumed to have the same range
+of values. The size of the two datasets do not need to be the same.
+</p>
+<li><p align="justify">
+As can be seen in the examples above, the matching introduces gaps in the
+histograms. This is to be expected since the histograms are being distorted.
+This is especially so for discrete datasets such as images, it can often be
+reduced for continuous data by creating finer histogram bins.
+</p>
+<li><p align="justify">
+For RGB images the histogram matching can be applied in one of two ways:
+it can be applied to each colour channel independently or a single mapping 
+applied to all channels. In the later case this single mapping can be
+derived from a greyscale version of the image, the intensity, luminance, or
+other similar single measures. In the case where the matching is applied
+on a per channel basis, colouration effects can occur particularly if one
+or more channels has a narrow distribution.
+</p>
+<li><p align="justify">
+<a href="http://paulbourke.net/miscellaneous/equalisation/histmatch.sh">histmatch.sh</a> by Fred Weinhaus matches one image to
+another and is based upon functions installed with Imagemagik.
+</p>
+</ul>
+
+<b>Histogram normalisation</b>
+<p align="justify">
+Histogram normalisation (called "equalisation" in PhotoShop)
+is a similar process where the reference histogram
+is a uniform distribution (the cumulative distribution is a constant slope).
+The effect is to spread the data values over the available dynamic range.
+</p>
+
+<center>
+   <img src="http://paulbourke.net/miscellaneous/equalisation/diagram2.jpg" width=800 height=416 border=0>
+</center><p>
+
+<p align="justify">
+The figure illustrating the process is given above, it is the same as the
+earlier diagram except the reference cumulative probability distribution
+is a straight line rather than defined by a reference image.
+An example using the reference image used earlier is given below.
+</p>
+
+<center>
+<table width=840>
+<tr><td width=420 align="center">
+   <img src="http://paulbourke.net/miscellaneous/equalisation/image8.jpg" width=400 height=300 border=0><br>
+   <smalltext>Normalised version of reference image above</smalltext>
+</td><td width=420 align="center">
+   <img src="http://paulbourke.net/miscellaneous/equalisation/normalise_result.png" width=400 height=300 border=0><br>
+   <smalltext>Histogram of normalised image</smalltext>
+</td></tr>
+</table></center><p>
+
+</td></tr></table></center>
+</body>
+</html>
+

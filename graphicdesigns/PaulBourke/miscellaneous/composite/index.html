@@ -1,0 +1,219 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Image Compositing</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Image Compositing in Computer Graphics</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+December 2002
+</center>
+<p><br><p>
+
+<p align="justify">
+Compositing is the name given to the process of combining multiple
+images as overlapping layers producing a single output image. An
+early use of compositing was in the cartoon industry where each artist
+draws one aspect of the scene as a layer, the multiple layers from
+each artist are combined to form the current frame. Traditionally the
+layers were drawn on transparent sheets which could simply be overlaid
+and photographed.
+What the advent on computer based cartoon animation the regions of the
+layers with content were identified with a so called alpha channel,
+the alpha channel might be 0 for those regions which are not drawn
+upon to indicate they are transparent. The alpha channel might be 1
+for the regions that are drawn upon to indicate they are opaque. This
+gave rise to the rgba colour space, that is, each pixel has 4 bytes one
+for each of
+red, green, blue, and alpha. For example, a rgba image is shown below,
+on the left is the RGB image (it only has blue and white pixels) 
+and on the right is one possible corresponding alpha channel.
+</p>
+
+<center><table><tr><td>
+RGB<br>
+<img src="http://paulbourke.net/miscellaneous/composite/rgb1.gif" border=1 width=200 height=200>
+</td><td>
+Alpha<br>
+<img src="http://paulbourke.net/miscellaneous/composite/alpha1.gif" border=1 width=200 height=200> 
+</td><td align="right" valign="bottom">
+<smalltext>Image 1</smalltext>
+</td></tr></table></center>
+<p>
+
+<p align="justify">
+With an alpha channel indicating opaque (1, white) or transparent (0, black), 
+layers can now be added together from the
+background to the foreground such that those parts of a layer that
+are transparent don't affect anything behind them and those parts that are
+opaque write over anything behind them. For example, when combining
+a pixel in the foreground layer P<sub>2</sub> = 
+(R<sub>2</sub>,G<sub>2</sub>,B<sub>2</sub>,A<sub>2</sub>)
+with the corresponding 
+pixel in the background layer P<sub>1</sub> the following expression
+will achieve the desired effect. Where the foreground image has an
+alpha value of 1 the final contribution comes entirely from the 
+foreground image. Where the foreground image has an alpha value of 0
+the final contribution is entirely from the background image.
+</p>
+<center><table width=80%><tr><td>
+R = R<sub>1</sub> (1 - A<sub>2</sub>) + R<sub>2</sub> A<sub>2</sub><br>
+G = G<sub>1</sub> (1 - A<sub>2</sub>) + G<sub>2</sub> A<sub>2</sub><br> 
+B = B<sub>1</sub> (1 - A<sub>2</sub>) + B<sub>2</sub> A<sub>2</sub><br> 
+A = 1
+</td></tr></table></center>
+
+<p align="justify">
+An example of this is shown below, consider the image above of the blue
+rectangle as the background image and composite onto that the following
+layer.
+</p>
+
+<center><table><tr><td>
+RGB<br>
+<img src="http://paulbourke.net/miscellaneous/composite/rgb2.gif" border=1 width=200 height=200>
+</td><td>
+Alpha<br>
+<img src="http://paulbourke.net/miscellaneous/composite/alpha2.gif" border=1 width=200 height=200>
+</td><td align="right" valign="bottom">
+<smalltext>Image 2</smalltext>
+</td></tr></table></center>
+<p>
+
+<p align="justify">
+The result according to the above equations will be as follows.
+</p>
+
+<center><table><tr><td>
+RGB<br>
+<img src="http://paulbourke.net/miscellaneous/composite/rgb3.gif" border=1 width=200 height=200>
+</td><td>
+Alpha<br>
+<img src="http://paulbourke.net/miscellaneous/composite/alpha3.gif" border=1 width=200 height=200>
+</td><td align="right" valign="bottom"> 
+<smalltext>Image 3</smalltext>
+</td></tr></table></center>
+<p>
+
+<p align="justify">
+The discussion above has been limited to completely opaque or totally
+transparent layers. While that is all that is necessary in many cases,
+there are many other applications that require various levels of
+transparency. This arose in computer generated cartoon animation where
+antialiasing is required, this requires a range of alpha values on
+the antialiased edges.
+As another example, one might want to create the effect of
+semi-transparent coloured glass where the colour of the foreground pixels
+modifies the colour of the background layers. For example the red circle
+in the above example, if it were 50% transparent might give the following
+image when composited onto the blue square in image 1.
+</p>
+
+<center><table><tr><td>
+<img src="http://paulbourke.net/miscellaneous/composite/rgb4.gif" border=1 width=200 height=200>
+</td><td valign="bottom" align="right">
+<smalltext>Image 4</smalltext>  
+</td></tr></table></center>
+<p>
+
+<p align="justify">
+As soon as there is a more continuous value for the alpha channel, using all
+the possible 256 levels that can be stored in 1 byte, then there are 
+many more ways of combining a pair of images. These are typically called
+blending functions and there are quite a few in common usage depending on
+the desired effect. For a description of a very powerful set of blending
+functions see the OpenGL API documentation. For example all the following
+3 images are derived by combining image 1 and image 2 with different functions.
+Note that this is by no means an exhaustive set, many others are possible
+and in common usage.
+</p>
+
+<center><table><tr><td>
+<img src="http://paulbourke.net/miscellaneous/composite/rgb5.gif" border=1 width=200 height=200>
+</td><td>
+<img src="http://paulbourke.net/miscellaneous/composite/rgb6.gif" border=1 width=200 height=200>
+</td><td>
+<img src="http://paulbourke.net/miscellaneous/composite/rgb7.gif" border=1 width=200 height=200>
+</td><td valign="bottom" align="right">
+<smalltext>Image 5</smalltext>  
+</td></tr></table></center>
+<p>
+
+<center><table cellpadding=0 cellspacing=0 border=0 width=100%>
+<tr><td valign="top"> 
+<p align="justify">
+Perhaps the most common blending function was first promoted
+by Alvy Smith and Ed Catnull around 1977 and is often called the "over"
+operator.
+</p>
+<center><table width=80%><tr><td>
+R = R<sub>1</sub> (1 - A<sub>2</sub>) + R<sub>2</sub> A<sub>2</sub><br>
+G = G<sub>1</sub> (1 - A<sub>2</sub>) + G<sub>2</sub> A<sub>2</sub><br>
+B = B<sub>1</sub> (1 - A<sub>2</sub>) + B<sub>2</sub> A<sub>2</sub><br>
+A = A<sub>1</sub> (1 - A<sub>2</sub>) + A<sub>2</sub> A<sub>2</sub><br>
+</td></tr></table></center>
+<p align="justify">
+The image on the right is an example of using this blending function
+to composite 4 layers, each has a different colour square and the regions
+within each square have a different but constant alpha value.
+</p>
+</td><td width=10>
+&nbsp;
+</td><td align="right">
+<img src="http://paulbourke.net/miscellaneous/composite/01_a.gif" width=288 height=288>
+</td></tr></table></center><p>
+
+<center><table cellpadding=0 cellspacing=0 border=0 width=100%>
+<tr><td valign="top">
+
+<p align="justify">
+For some application there is a serious problem with the above
+blending function, it is not associative. That is, if we have 4 layers
+to composite the result from compositing (A & B & C & D) is not the
+same as (A & B) & (C & D), indeed this is true for the vast majority
+of the blending functions. Having a blending function that is associative
+is often required (eg: distributed volume rendering) and in other cases
+can lead to improved compositing performance.
+</p>
+
+<p align="justify">
+Bruce Wallace and Marc Levoy, and later,
+Tim Porter and Tom Duff proposed the following blending function that
+is associative. Note that the following expression can be simplified
+(and compositing performance increased)
+by premultiplying each colour by its alpha value.
+</p>
+<center><table width=80%><tr><td>
+R = R<sub>1</sub> A<sub>1</sub> (1 - A<sub>2</sub>) + 
+R<sub>2</sub> A<sub>2</sub><br>
+G = G<sub>1</sub> A<sub>1</sub> (1 - A<sub>2</sub>) + 
+G<sub>2</sub> A<sub>2</sub><br>
+B = B<sub>1</sub> A<sub>1</sub> (1 - A<sub>2</sub>) + 
+B<sub>2</sub> A<sub>2</sub><br>
+A = A<sub>1</sub> (1 - A<sub>2</sub>) + A<sub>2</sub>
+</td></tr></table></center>
+<p>
+</td><td width=10>
+&nbsp;
+</td><td align="right">
+<img src="http://paulbourke.net/miscellaneous/composite/02_a.gif" width=288 height=288>
+</td></tr></table></center>
+
+</td></tr></table></center>
+</body>
+</html>
+

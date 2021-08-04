@@ -1,0 +1,615 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Representations in Astronomy</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Representing star fields</h1>
+<h3>Includes projections onto spherical and cylindrical maps</h3>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 2001
+</center>
+<p><br><p>
+
+<p align="justify">
+Creating good star fields is not as simple as it might seem. 
+One approach (the physically elegant one) is to place some geometric
+object at the right location, generally a sphere at some fixed large distance
+from the center of the model. This has the problem of what primitive
+to use and how big should that primitive be. If the star object is
+too small then it will be missed by the raytracer, even with a high
+level of antialiasing. If the primitive is too large then the stars
+won't look like point sources. The same arguments apply to the distance
+the stars are placed from the center of the model. If it's too close 
+then the stars will look large, if too far away then the stars will
+be missed by the raytracer. Fiddling the characteristics of the star
+positions depending on the typical camera position is tedious.
+</p>
+
+<p align="justify">
+One way around the above problem is to create a large sphere around the
+model and map a high resolution texture onto that sphere. This immediately
+solves the problem with the size of the stars, they will appear the same
+size irrespective of the radius of the sphere the texture is mapped onto. 
+One implication
+is that the size of the stars will vary depending on the dimensions of
+the rendered image, so a different texture size may be required for
+small rendered images compared to large images.
+</p>
+
+<p align="justify">
+The following image <a href="http://paulbourke.net/miscellaneous/astronomy/8192x4096.png">8192x4096.png</a>
+has been created as a star map to be applied as a texture to a sphere 
+using standard spherical texture coordinates. 
+It is based upon real star positions. The magnitude,
+and therefore apparent brightness, is mapped onto the size of the
+dots. To assist with antialising, the stars are blurred. Note also the
+distortion (stretching) of the stars towards the top and bottom, 
+this exactly compensates for the distortion introduced by
+the spherical (polar) texture mapping. The appropriate texture size depends on
+the resolution of the final images, a few different sizes are provided:
+<a href="http://paulbourke.net/miscellaneous/astronomy/1024x512.png">1024x512.png</a>,
+<a href="http://paulbourke.net/miscellaneous/astronomy/2048x1024.png">2048x1024.png</a>,
+<a href="http://paulbourke.net/miscellaneous/astronomy/4096x2048.png">4096x2048.png</a>.
+</p>
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/astronomy/8192x4096.png">
+<img src="http://paulbourke.net/miscellaneous/astronomy/starmap_s.gif" width=800 height=400 border=1></a><br>
+[ Click for high resolution version (8192 x 4096) ]
+</center><p>
+
+<b>PovRay description</b><br>
+<p align="justify">
+The following illustrates how this might be applied as a texture map
+star sphere in PovRay. The exact settings for the finish {} may vary
+depending on other aspects of the model environment.
+</p>
+<pre>
+/* Star field */
+sphere {
+   <0,0,0>, 1
+   hollow
+   pigment {
+      image_map {
+         png "starmap.png"
+         map_type 1 /* Spherical */
+         once
+      }
+   }
+   finish {
+      ambient 2 /* Inverse of earlier global ambient level */
+      diffuse 0
+   }
+   scale 1000000 /* Depends on model units */
+}
+</pre>
+
+<b>Other issues</b><br>
+<ul>
+<p align="justify">
+<li><p align="justify">
+The distance the stars or star sphere with the texture map are placed
+cannot be infinitely distant or even at the real distance because of
+realities in the numerical systems used in computers. Closer stars
+mean that they are not necessarily invariant on the sky as the camera
+is moved around...as they are in reality. One solution to this is to
+center the star field sphere about the camera, in which case the stars
+don't move in relation to the camera.
+</p>
+<li><p align="justify">
+The dynamic range of the usual 8 bit greyscale range (256 levels of grey)
+is not nearly enough to represent the dynamic range of star brightnesses.
+This could be helped by using 16 bits per (r,g,b) or moving towards a
+16 bit luminance model.
+</p>
+</ul>
+
+<b>New: Oct 2011</b>
+<p aligh="justify">
+The following higher resolution spherical maps were generated for a project in
+conjunction with Chris Brooks. A different algorithm was used whereby stars, from
+the same catalogue, are placed on the image plane with a Gaussian spread and magnitude
+related to the star brightness. A selection of images are provided below, they are
+each 16 bit tiffs (for enough dynamic range), provided at 16K and 32K resolution, the
+last number in the file name relates to the maximum standard deviation of the Gaussian.
+</p>
+<center>
+<table width=40%>
+<tr><td>
+   <center>16K</center>
+</td><td>
+   <center>32K</center>
+</td></tr>
+<tr><td>
+	<center>
+	<a href="http://paulbourke.net/miscellaneous/astronomy/16384_8192_16_30.tif">16384 x 8192 x std30</a>
+	</center>
+</td><td>
+	<center>
+   <a href="http://paulbourke.net/miscellaneous/astronomy/32768_16384_16_30.tif">32768 x 16384 x std30</a>
+	</center>
+</td></tr>
+<tr><td>
+	<center>
+   <a href="http://paulbourke.net/miscellaneous/astronomy/16384_8192_16_60.tif">16384 x 8192 x std60</a>
+	</center>
+</td><td>
+	<center>
+   <a href="http://paulbourke.net/miscellaneous/astronomy/32768_16384_16_60.tif">32768 x 16384 x std60</a>
+	</center>
+</td></tr>
+<tr><td>
+	<center>
+   <a href="http://paulbourke.net/miscellaneous/astronomy/16384_8192_16_120.tif">16384 x 8192 x std120</a>
+	</center>
+</td><td>
+	<center>
+   <a href="http://paulbourke.net/miscellaneous/astronomy/32768_16384_16_120.tif">32768 x 16384 x std120</a>
+	</center>
+</td></tr>
+</table>
+</center><p>
+
+<p><br><br><br><p>
+
+
+<center>
+<h1>Star Positions</h1>
+Collated by <a href="../index.html">Paul Bourke</a><br>
+Based on tables in the "Bright Star Catalogue, 5th Revised Ed."<br>
+January 2000
+</center>
+
+<p><br><p>
+
+<center>
+<table width=100%><tr><td>
+
+<p align="justify">
+Ever wanted to include real star positions in your models or renderings?
+The data here will let you do that, it provides the positions in both
+polar and Cartesian coordinates, it also gives the visual magnitude.
+It contains all the stars that are brighter than magnitude 6.5, 
+stars visible to the human eye have a magnitude around 4 (depending on
+the lighting conditions from where you're viewing). There are over
+9100 stars listed.
+</p>
+
+<a href="http://paulbourke.net/miscellaneous/astronomy/catalog_text.gz">This file</a> gives the positions of the 9000
+brightest stars. The 6 columns are labelled as follows<br>
+<ul>
+<li>RA (Right ascension)
+The Star's east-west location on Earth's celestial sphere 
+west of the Equinox Line. In degrees ranging from 0 to 360.
+<p>
+<li>Dec (Declination)
+Declination is the star's angle north or south of Earth's
+celestial equator, ranging from -90 degrees at the south celestial 
+pole to +90 degrees at the north celestial pole. 
+In degrees.
+<p>
+<li>Mag (Magnitude)
+The apparent visual magnitude (brightness to an observer on Earth) this 
+star would have if it were at a distance of exactly 10 parsecs (32.64 
+light-years).  The sun has an absolute visual magnitude of
++4.85.  Note that the magnitude scale decreases with brightness; a 
+star of magnitude +6.0 would be 100 times dimmer than a star of magnitude +1.0. 
+<p>
+<li>x, y, z coordinates of the stars projected onto a unit sphere centered
+    at the origin. Simply multiply these coordinates to scale the sphere up
+    to whatever "infinity" is in your application.
+<p>
+</ul>
+
+The original tables and documentation can be found 
+<a href="http://paulbourke.net/miscellaneous/astronomy/data/">here</a>.<p>
+
+A useful include for C applications is: 
+<a href="http://paulbourke.net/miscellaneous/astronomy/stars.c">stars.c</a>.<p>
+
+</td></tr></table>
+</center>
+
+
+
+<p><br><br><br><p> 
+
+
+<center>
+<a name="cyl">
+<h1>Projection onto Cylinder and North/South poles</h1> 
+</a>
+Collated by <a href="../index.html">Paul Bourke</a><br>
+January 2008
+</center>
+
+<p><br><p>
+
+<p align="justify">
+The following is the mapping onto a cylinder, including the top and bottom
+caps. The cylinder covers -50 to 50 degrees vertically, the planar caps being
+therefore 50 to 90 degrees (north pole) and -50 to -90 degrees (south pole).
+</p>
+
+<center>
+<table>
+<tr><td>
+<center>
+North cap<br>
+Plane (inscribed circle) above 50 degree declination<br>
+<a href="http://paulbourke.net/miscellaneous/astronomy/northcap_1000.png">PNG</a><br>
+<a href="http://paulbourke.net/miscellaneous/astronomy/northcap_1000.png">
+	<img src="http://paulbourke.net/miscellaneous/astronomy/northcap_s.jpg" width=300 height=300 border=1>
+</a><br>
+</center>
+</td>
+<td>
+<center>
+South cap<br>
+Plane (inscribed circle) below -50 degree declination<br>
+<a href="http://paulbourke.net/miscellaneous/astronomy/southcap_1000.png">PNG</a><br>
+<a href="http://paulbourke.net/miscellaneous/astronomy/southcap_1000.png">
+	<img src="http://paulbourke.net/miscellaneous/astronomy/southcap_s.jpg" width=300 height=300 border=1>
+</a><br>
+</center>
+</td>
+</tr>
+<tr><td colspan=2>
+<center>
+Cylinder, -50 degrees to 50 degrees vertically, 360 degrees horizontally<br>
+<a href="http://paulbourke.net/miscellaneous/astronomy/cylinder_3142.png">PNG</a><br>
+<a href="http://paulbourke.net/miscellaneous/astronomy/cylinder_3142.png">
+	<img src="http://paulbourke.net/miscellaneous/astronomy/cylinder_s.jpg" width=800 height=303 border=1>
+</a><br>
+</center>
+</td></tr>
+</table><p>
+</center>
+
+<p align="justify">
+It was originally intended to be used as a physical star projector,
+namely to be printed and stuck together to form a real cylinder with a bright
+light source on the interior. To this end there are alignment points, a red
+star at the north pole, a blue point at the south pole, green points spaced
+at 1 degree intervals across the boundaries and also showing positive right
+ascension at the equator. It is expected that these alignment markings would be
+removed with a physical marker or digitally once the alignment is understood.
+</p>
+
+<center>
+<img src="http://paulbourke.net/miscellaneous/astronomy/diagram.gif" width=800 height=1220 border=0>
+</center>
+
+<p><br><br><p>
+
+<center>
+<h1>Simulated interaction between M31 and M32</h1>
+Jeremy Bailin, <a href="../index.html">Paul Bourke</a>, and Karl Gordon<br>
+June 2004
+</center>
+<p><br><p>
+
+<p align="justify">
+Interaction between M31
+    and its satellite M32. Gray fuzz is the old stellar component, red circles
+    represent the ISM, star formation/supernova events are bright white circles
+    and the newly-formed stars are the smaller white circles. The passage of
+    M32 through the disk triggers star formation at the observed location of
+    NGC 206 and opens a hole in the disk at the observed location of a hole
+    in the dust emission. Credit: Jeremy Bailin, Paul Bourke, and Karl Gordon.
+</p>
+
+Movie: <a href="http://paulbourke.net/miscellaneous/astronomy/M31M32.mov">M31M32.mov</a>
+
+<p><br><p>
+
+<center>
+<h1>Representing galaxies and planetary nebulae<br>using 3DStudioMax</h1>
+by Navpreet Singh<br>
+Supervised by <a href="../index.html">Paul Bourke</a><br>
+November 2001
+</center>
+<p><br><p>
+
+<table width=100% border=0 cellpadding=0 cellspacing=0>
+
+<tr><td valign="top" align="center">
+<center><font size=+2>R e a l</font></center>
+<br><br>
+</td><td valign="top" align="center">
+<center><font size=+2>V i r t u a l</font></center>
+<br><br>
+</td></tr>
+
+<tr><td valign="top" align="center">
+<img src="http://paulbourke.net/miscellaneous/astronomy/r_ngc1512.jpg" width="281" height="304" border=1><br>
+<b>NGC1512</b>
+</td><td valign="top" align="center">
+<img src="http://paulbourke.net/miscellaneous/astronomy/i1_ngc1512.jpg" width="320" height="240" border=1><p>
+<img src="http://paulbourke.net/miscellaneous/astronomy/i2_ngc1512.jpg" width="320" height="240" border=1><p>
+<br><br>
+</td></tr>
+
+<tr><td valign="top" align="center">
+<img src="http://paulbourke.net/miscellaneous/astronomy/r_ic418.jpg" width="281" height="225" border=1><br>
+<b>IC418</b>
+</td><td valign="top" align="center">
+<img src="http://paulbourke.net/miscellaneous/astronomy/i1_ic418.jpg" width="320" height="240" border=1><p>
+<img src="http://paulbourke.net/miscellaneous/astronomy/i2_ic418.jpg" width="320" height="240" border=1><p>
+<br><br> 
+</td></tr>
+
+<tr><td valign="top" align="center">
+<img src="http://paulbourke.net/miscellaneous/astronomy/r_hourglass.jpg" width="281" height="313" border=1><br>
+<b>Hourglass</b>
+</td><td valign="top" align="center">
+<img src="http://paulbourke.net/miscellaneous/astronomy/i1_hourglass.jpg" width="320" height="240" border=1><p>
+<img src="http://paulbourke.net/miscellaneous/astronomy/i2_hourglass.jpg" width="320" height="240" border=1><p>
+<br><br> 
+</td></tr>
+
+<tr><td valign="top" align="center">
+<img src="http://paulbourke.net/miscellaneous/astronomy/r_cartwheel.jpg" width="281" height="237" border=1><br>
+<b>Cartwheel</b>
+</td><td valign="top" align="center">
+<img src="http://paulbourke.net/miscellaneous/astronomy/i1_cartwheel.jpg" width="320" height="240" border=1><p>
+<img src="http://paulbourke.net/miscellaneous/astronomy/i2_cartwheel.jpg" width="320" height="240" border=1><p>
+<br><br> 
+</td></tr>
+
+<tr><td valign="top" align="center">
+<img src="http://paulbourke.net/miscellaneous/astronomy/r_eskimo.jpg" width="281" height="237" border=1><br>
+<b>Eskimo</b>
+</td><td valign="top" align="center">
+<img src="http://paulbourke.net/miscellaneous/astronomy/i1_eskimo.jpg" width="320" height="240" border=1><p>
+<img src="http://paulbourke.net/miscellaneous/astronomy/i2_eskimo.jpg" width="320" height="240" border=1><p>
+<br><br> 
+</td></tr>
+
+<tr><td valign="top" align="center">
+<img src="http://paulbourke.net/miscellaneous/astronomy/r_mz3.jpg" width="281" height="225" border=1><br>
+<b>MZ3</b>
+</td><td valign="top" align="center">
+<img src="http://paulbourke.net/miscellaneous/astronomy/i1_mz3.jpg" width="320" height="240" border=1><p>
+<img src="http://paulbourke.net/miscellaneous/astronomy/i2_mz3.jpg" width="320" height="240" border=1><p>
+<br><br> 
+</td></tr>
+
+<tr><td valign="top" align="center">
+<img src="http://paulbourke.net/miscellaneous/astronomy/r_ngc3310.jpg" width="281" height="310" border=1><br>
+<b>NGC3310</b>
+</td><td valign="top" align="center">
+<img src="http://paulbourke.net/miscellaneous/astronomy/i1_ngc3310.jpg" width="320" height="240" border=1><p>
+<img src="http://paulbourke.net/miscellaneous/astronomy/i2_ngc3310.jpg" width="320" height="240" border=1><p>
+<br><br> 
+</td></tr>
+
+<tr><td valign="top" align="center"> 
+<img src="http://paulbourke.net/miscellaneous/astronomy/r_ngc4314.jpg" width="281" height="296" border=1><br>
+<b>NCG4314</b>
+</td><td valign="top" align="center">
+<img src="http://paulbourke.net/miscellaneous/astronomy/i1_ngc4314.jpg" width="320" height="240" border=1><p>
+<img src="http://paulbourke.net/miscellaneous/astronomy/i2_ngc4314.jpg" width="320" height="240" border=1><p>
+<br><br> 
+</td></tr>
+
+</table>
+
+
+
+<p><br><p>
+
+
+
+<center><table width=700 cellpadding=0 cellspacing=0 border=0><tr><td>
+<center>
+<h1>Modelling Galaxies Using 3DStudioMax</h1>
+By Sivakumar Maniam, Suzan Hendrata, Rebecca Ng<br>
+Supervised by <a href="../index.html">Paul Bourke</a><br>
+November 2004
+</center>
+<p><br><p>
+
+<table width=100% cellpadding=10 cellspacing=10 border=0>
+
+<tr>
+<td width=300 valign="top">
+<a href="http://paulbourke.net/miscellaneous/astronomy/M104.jpg"><img border=1 src="http://paulbourke.net/miscellaneous/astronomy/M104.gif" width=300 height=240></a><br>
+<font size=-1><p align="justify">
+Elliptical galaxies are generally circular in shape and are often elongated. 
+Most galaxies in the universe are either elliptical or spiral. The 
+Sombrero galaxy is composed of massive dust clouds, and a bright centre core, 
+which is composed of millions of young stars. In 3D space the Sombrero 
+galaxy has a flat, stretched out shape, with a bulging core that is surrounded by dark dust clouds.
+</P></font>
+</td>
+<td valign="top" align="center">
+<img src="http://paulbourke.net/miscellaneous/astronomy/ellip1.jpg" width=320 height=240 border=1><p>
+<img src="http://paulbourke.net/miscellaneous/astronomy/ellip2.jpg" width=320 height=240 border=1><p>
+<img src="http://paulbourke.net/miscellaneous/astronomy/ellip3.jpg" width=320 height=240 border=1><p>
+</td>
+</tr>
+
+<tr><td colpsan=2 height=40>&nbsp;</td></tr>
+
+<tr>
+<td valign="top" width=300>
+<a href="http://paulbourke.net/miscellaneous/astronomy/NGC4603.jpg"><img border=1  src="http://paulbourke.net/miscellaneous/astronomy/NGC4603.gif" width=300 height=541></a><br>
+<font size=-1><p align="justify">
+Spiral galaxies are defined as spirals, because they have spiral arms. The 
+galaxy NGC 4603 contains several spiral arms, immersed with dust clouds, which 
+absorb the light pulsating from the stars within it. NGC 4603 is a distant 
+galaxy, which contains a special class of pulsating stars called Cepheid. 
+NGC4603 is also associated with other large collections of galaxies in the Centaurus cluster.
+</P></font>
+</td>
+<td valign="top" align="center">
+<img src="http://paulbourke.net/miscellaneous/astronomy/spiral1.jpg" width=320 height=427 border=1><p>
+<img src="http://paulbourke.net/miscellaneous/astronomy/spiral2.jpg" width=320 height=427 border=1><p>
+<img src="http://paulbourke.net/miscellaneous/astronomy/spiral3.jpg" width=320 height=240 border=1><p>
+<img src="http://paulbourke.net/miscellaneous/astronomy/spiral4.jpg" width=320 height=240 border=1><p>
+</td>
+</tr>
+
+<tr><td colpsan=2 height=40>&nbsp;</td></tr>
+
+<tr>
+<td valign="top" width=300>
+<a href="http://paulbourke.net/miscellaneous/astronomy/NGC4242.jpg"><img border=1  src="http://paulbourke.net/miscellaneous/astronomy/NGC4242.gif" width=300 height=425></a><br>
+<font size=-1><p align="justify">
+There are approximately 3% of galaxies, which cannot be classified as 
+elliptical or spiral. Often they are distorted and have no rotational 
+symmetry. These types of galaxies are often formed when galaxies collide or 
+when the galaxy is very young and has yet to reach a symmetrical shape.
+</p>
+<p align="justify">
+NCG 4242 has an intense bulging nucleus and surrounding gas. As you move 
+further away from the centre, the brightness of the galaxy decreases. 
+Although NGC 4242 appears bright blue in colour, the images of NGC 4242 are 
+often artificially coloured when reproduced for visual impact. The nucleus is 
+most likely at the centre of the galaxy, and made up of a cluster of young 
+stars. Individual (possibly older) bright stars outside of the nucleus are 
+also part of the galaxy and are positioned on the centre plane. The images 
+show a front-on view of the galaxy, but it is possible that it would appear 
+somewhat flat from side on.
+</P></font>
+</td>
+<td valign="top" align="center">
+<img src="http://paulbourke.net/miscellaneous/astronomy/irreg1.jpg" width=320 height=240 border=1><p>
+<img src="http://paulbourke.net/miscellaneous/astronomy/irreg2.jpg" width=320 height=240 border=1><p>
+<img src="http://paulbourke.net/miscellaneous/astronomy/irreg3.jpg" width=320 height=240 border=1><p>
+</td>
+</tr>
+</table>
+
+<p><br><p>
+
+<table width=100%>
+</tr><td>
+<center>
+<h1>Visualisation of the 2dF data</h1>
+<b>Survey revealing the 3D distribution of galaxies</b><p>
+Images from these renderings appeared in the 13 March 2003
+Nature journal.
+</center>
+<p><br><p>
+</td>
+
+<td>
+<center>
+<a href="http://paulbourke.net/miscellaneous/astronomy/wedge1.gif">
+<img src="http://paulbourke.net/miscellaneous/astronomy/s_wedge1.gif" width=300 height=300></a>
+</center>
+</td></tr>
+<tr><td colspan=2><br><br></td></tr>
+
+
+<tr><td valign="top">
+<center>
+<a href="http://paulbourke.net/miscellaneous/astronomy/simplex_side.gif">
+<img src="http://paulbourke.net/miscellaneous/astronomy/s_simplex_side.gif" width=330 height=264></a><br>
+<font size=-1>Featured in the AAO newsletter, #100, July 2002</font>
+</center>
+</td>
+
+<td valign="top">
+<center>
+<a href="http://paulbourke.net/miscellaneous/astronomy/simplex_top.gif">
+<img src="http://paulbourke.net/miscellaneous/astronomy/s_simplex_top.gif" width=330 height=264></a><br>
+<font size=-1>Appeared on the cover of the <br>
+2001-2002 Anglo-Australian Observatory Annual Report</font>
+</center>
+</td></tr>
+<tr><td colspan=2><br><br></td></tr>
+
+
+<tr><td>
+<center>
+<a href="http://paulbourke.net/miscellaneous/astronomy/flight_00900.gif">
+<img src="http://paulbourke.net/miscellaneous/astronomy/s_flight_00900.gif" width=330 height=203></a><br>
+<font size=-1>Frame from a stereoscopic flight through the dataset</font>
+</center>
+</td>
+
+<td>
+<center>
+<a href="http://paulbourke.net/miscellaneous/astronomy/flight_01100.gif">
+<img src="http://paulbourke.net/miscellaneous/astronomy/s_flight_01100.gif" width=330 height=203></a><br>
+<font size=-1>Frame from a stereoscopic flight through the dataset</font>
+</center>
+</td></tr>
+<tr><td colspan=2><br><br></td></tr>
+
+
+<tr><td>
+<center>
+<img src="http://paulbourke.net/miscellaneous/astronomy/plan_s.gif" width=300 height=300><br>
+<font size=-1>100Mpc sub cube (white)</font>
+</center>
+</td>
+
+<td>
+<center>
+<img src="http://paulbourke.net/miscellaneous/astronomy/gas_s.jpg" width=300 height=300><br>
+<font size=-1>Volume rendered density function</font>
+</center>
+</td></tr>
+<tr><td colspan=2><br><br></td></tr>
+
+
+<tr><td>
+<center>
+<a href="http://paulbourke.net/miscellaneous/astronomy/iso.jpg">
+<img src="http://paulbourke.net/miscellaneous/astronomy/iso_s.jpg" width=300 height=300></a><br>
+<font size=-1>Partly transparent isosurface of 100Mpc cube</font>
+</center>
+</td>
+
+<td>
+<center>
+<a href="http://paulbourke.net/miscellaneous/astronomy/transp.jpg">
+<img src="http://paulbourke.net/miscellaneous/astronomy/transp_s.jpg" width=300 height=300></a><br>
+<font size=-1>Partly transparent isosurface</font>
+</center>
+</td></tr>
+<tr><td colspan=2><br><br></td></tr>
+
+
+<tr><td>
+<center>
+<a href="http://paulbourke.net/miscellaneous/astronomy/density.jpg">
+<img src="http://paulbourke.net/miscellaneous/astronomy/density_s.jpg" width=300 height=300></a><br>
+<font size=-1>Isosurface made more transparent on sides facing
+the camera</font>
+</center>
+</td>
+
+<td>
+<center>
+<a href="http://paulbourke.net/miscellaneous/astronomy/net.jpg">
+<img src="http://paulbourke.net/miscellaneous/astronomy/net_s.jpg" width=300 height=300></a><br>
+<font size=-1>Isosurface represented as a net fabric</font>
+</center>
+</td></tr>
+<tr><td colspan=2><br><br></td></tr>
+</table>
+
+</td></tr></table></center>
+</body>
+</html>
+

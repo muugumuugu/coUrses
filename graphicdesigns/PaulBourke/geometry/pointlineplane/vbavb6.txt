@@ -1,0 +1,123 @@
+Function LineLineIntersect(p1 As POINT3D, p2 As POINT3D, p3 As POINT3D, p4 As POINT3D, pa As POINT3D, pb As POINT3D, Optional distance As Double = 0, Optional mua As Double = 0, Optional mub As Double = 0) As Boolean
+
+
+    Dim p13 As POINT3D
+    Dim p43 As POINT3D
+    Dim p21 As POINT3D
+    Dim distances(2) As Double
+    Dim BOUNDARY(2) As POINT3D 'should be renamed to something more meaningful
+    Dim d1343, d4321, d1321, d4343, d2121, numer, denom As Double
+    Dim PTEST As Boolean
+    LineLineIntersect = False
+    p13.x = p1.x - p3.x
+    p13.y = p1.y - p3.y
+    p13.z = p1.z - p3.z
+
+    p43.x = p4.x - p3.x
+    p43.y = p4.y - p3.y
+    p43.z = p4.z - p3.z
+
+    If Abs(p43.x) < eps And Abs(p43.y) < eps And Abs(p43.z) < eps Then Exit Function
+
+    p21.x = p2.x - p1.x
+    p21.y = p2.y - p1.y
+    p21.z = p2.z - p1.z
+
+    If Abs(p21.x) < eps And Abs(p21.y) < eps And Abs(p21.z) < eps Then Exit Function
+
+    d1343 = p13.x * p43.x + p13.y * p43.y + p13.z * p43.z
+    d4321 = p43.x * p21.x + p43.y * p21.y + p43.z * p21.z
+    d1321 = p13.x * p21.x + p13.y * p21.y + p13.z * p21.z
+    d4343 = p43.x * p43.x + p43.y * p43.y + p43.z * p43.z
+    d2121 = p21.x * p21.x + p21.y * p21.y + p21.z * p21.z
+
+    denom = d2121 * d4343 - d4321 * d4321
+    If (Abs(denom) < eps) Then Exit Function
+
+    numer = d1343 * d4321 - d1321 * d4343
+
+    If denom <> 0 Then
+        mua = numer / denom
+    End If
+    If d4343 <> 0 Then
+        mub = (d1343 + d4321 * (mua)) / d4343
+    End If
+    pa.x = p1.x + mua * p21.x
+    pa.y = p1.y + mua * p21.y
+    pa.z = p1.z + mua * p21.z
+
+    pb.x = p3.x + mub * p43.x
+    pb.y = p3.y + mub * p43.y
+    pb.z = p3.z + mub * p43.z
+    distance = Sqr((pb.x - pa.x) ^ 2 + (pb.y - pa.y) ^ 2 + (pb.z - pa.z) ^ 2)
+    LineLineIntersect = True
+
+
+    distances(1) = distance
+'test if nearest distance is in the "middle" of the 2 segments
+
+    PTEST = True
+    If PTEST Then
+        Call FindDistanceToSegment(p1, p2, pa, BOUNDARY(1), PTEST)
+    End If
+    If PTEST Then
+        Call FindDistanceToSegment(p3, p4, pb, BOUNDARY(1), PTEST)
+    End If
+
+'distance must be outside so get the nearest distance by the endpoints
+
+    If Not PTEST Then
+        distances(0) = FindDistanceToSegment(p1, p2, p3, BOUNDARY(0), PTEST)
+        distances(2) = FindDistanceToSegment(p1, p2, p4, BOUNDARY(2), PTEST)
+
+        If distances(0) <= distances(2) Then
+            pa = p3
+            pb = BOUNDARY(0)
+            distance = distances(0)
+        Else
+            pa = p4
+            pb = BOUNDARY(2)
+            distance = distances(2)
+        End If
+
+    End If
+
+
+'folowing code can be omitted it just works in acad 
+
+'distlimit =16 'chose whatever you need 
+    If distance <= distlimit Then
+        Dim polyObj As Acad3DPolyline
+        Dim points(0 To 8) As Double
+
+        points(0) = pa.x: points(1) = pa.y: points(2) = pa.z
+        points(3) = 0.5 * (pa.x + pb.x): points(4) = 0.5 * (pa.y + pb.y): points(5) = 0.5 * (pa.z + pb.z)
+        points(6) = pb.x: points(7) = pb.y: points(8) = pb.z
+
+        If round(36 - distance, 0) > 3 Then
+            Set polyObj = ThisDrawing.modelspace.Add3DPoly(points)
+            polyObj.color = acMagenta
+            polyObj.layer = "DELETEME"
+
+            Dim tpoint(2) As Double
+            Dim mtext As AcadMText
+            tpoint(0) = 0.5 * (pa.x + pb.x)
+            tpoint(1) = 0.5 * (pa.y + pb.y)
+            tpoint(2) = 0.5 * (pa.z + pb.z)
+
+            Set mtext = ThisDrawing.modelspace.AddMText(tpoint, 0, "")
+
+            mtext.AttachmentPoint = acAttachmentPointMiddleCenter
+            mtext.layer = "DELETEME"
+            mtext.height = 100
+            'mtext.BackgroundFill = True
+            mtext.textstring = Fix(str(round(distlimit - distance, 0)))
+
+            mtext.insertionPoint = tpoint
+            mtext.color = acRed
+            If round(distlimit - distance, 0) < 5 Then mtext.color = acGreen
+            If round(distlimit - distance, 0) > 5 And round(distlimit - distance, 0) <= 10 Then mtext.color = acYellow
+        End If
+    End If
+End Function
+

@@ -1,0 +1,775 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Fast Fourier Transform</title>
+</head>
+<body>
+<center><table width=800><tr><td>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+
+<center>
+<h1>D F T</h1>
+<h3>(Discrete Fourier Transform)</h3>
+<h1>F F T</h1>
+<h3>(Fast Fourier Transform)</h3>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 1993<p>
+</center>
+
+<p><br><p>
+
+<b>Introduction</b><p>
+
+<p align="justify">
+This document describes the Discrete Fourier Transform (DFT), that is, a Fourier
+Transform as applied to a discrete complex valued series. The mathematics will
+be given and source code (written in the C programming language) is provided in
+the appendices.
+</p>
+
+<b>Theory</b><p>
+<b>Continuous</b><p>
+
+<p align="justify">
+For a continuous function of one variable f(t), the Fourier Transform F(f) will
+be defined as:
+</p>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/dft/dft1.gif"></center><p>
+
+and the inverse transform as<p>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/dft/dft2.gif"></center><p>
+
+<p align="justify">
+where j is the square root of -1 and e denotes the natural exponent
+</p>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/dft/dft3.gif"></center><p>
+
+<b>Discrete</b><p>
+
+Consider a complex series x(k) with N samples of the form<p>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/dft/dft4.gif"></center><p>
+
+where x is a complex number<p>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/dft/dft5.gif"></center><p>
+
+<p align="justify">
+Further, assume that that the series outside the range 0, N-1 is extended
+N-periodic, that is, x<sub>k</sub> = x<sub>k+N</sub> for all k.
+The FT of this series will be denoted X(k), it will also have N samples.
+The forward transform will be defined as
+</p>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/dft/dft6.gif"></center><p>
+
+The inverse transform will be defined as<p>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/dft/dft7.gif"></center><p>
+
+<p align="justify">
+Of course although the functions here are described as complex series, real
+valued series can be represented by setting the imaginary part to 0. In
+general, the transform into the frequency domain will be a complex valued
+function, that is, with magnitude and phase.
+</p>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/dft/dft8.gif"></center><p>
+
+<p align="justify">
+The following diagrams show the relationship between the series index and the
+frequency domain sample index. Note the functions here are only diagrammatic, in
+general they are both complex valued series.
+</p>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/dft/dft9.gif"></center><p>
+
+<p align="justify">
+For example if the series represents a time sequence of length T then the
+following illustrates the values in the frequency domain.
+</p>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/dft/dft10.gif"></center><p>
+
+<b>Notes</b><p>
+<ul>
+
+<li><p align="justify">
+The first sample X(0) of the transformed series is the DC component, more
+commonly known as the average of the input series.
+</p>
+
+<li><p align="justify">
+The DFT of a real series, ie: imaginary part of x(k) = 0, results in a
+symmetric series about the Nyquist frequency. The negative frequency samples
+are also the inverse of the positive frequency samples.
+</p>
+
+<li><p align="justify">
+The highest positive (or negative) frequency sample is called the Nyquist
+frequency. This is the highest frequency component that should exist in the
+input series for the DFT to yield "uncorrupted" results. More specifically
+if there are no frequencies above Nyquist the original signal can be
+<b>exactly</b> reconstructed from the samples.
+</p>
+
+<li><p align="justify">
+The relationship between the harmonics returns by the DFT and the periodic
+component in the time domain is illustrated below.<br>
+<br><img src="http://paulbourke.net/miscellaneous/dft/dft0.gif">
+</p>
+
+</ul>
+
+<b>DFT and FFT algorithm.</b>
+
+<p align="justify">
+While the DFT transform above can be applied to any complex valued series, in
+practice for large series it can take considerable time to compute, the time
+taken being proportional to the square of the number on points in the series. A
+much faster algorithm has been developed 
+by Cooley and Tukey around 1965 called the FFT (Fast Fourier
+Transform). The only requirement of the the most popular implementation
+of this algorithm (Radix-2 Cooley-Tukey) is that the number of points
+in the series be a power of 2. The computing time for the radix-2 FFT is 
+proportional to
+</p>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/dft/dft14.gif"></center><p>
+
+<p align="justify">
+So for example a transform on 1024 points using the DFT takes about 100 times longer
+than using the FFT, a significant speed increase. Note that in reality
+comparing speeds of various FFT routines is problematic, many of the
+reported timings have more to do with specific coding methods and their
+relationship to the hardware and operating system.
+</p>
+
+<b>Sample transform pairs and relationships</b><p>
+
+<ul>
+
+<li>The Fourier transform is linear, that is<p>
+<center>
+a f(t) + b g(t) ---&gt; a F(f) + b G(f)<p>
+a x<sub>k</sub> + b y<sub>k</sub> ---&gt; a X<sub>k</sub> + b Y<sub>k</sub><p>
+</center>
+<p>
+
+<li>Scaling relationship<p>
+<center>f(t / a) ---&gt; a F(a f)</center><p>
+<center>f(a t) ---&gt; F(f / a) / a</center><p>
+
+<li>Shifting<p>
+<center>
+f(t + a) ---&gt; F(f) e<sup>-j 2 pi a f</sup><p>
+</center>
+<p>
+
+<li>Modulation<p>
+<center>
+f(t) e<sup>j 2 pi a t</sup> ---&gt; F(t - a)<p>
+</center>
+<p>
+
+<li>Duality<p>
+<center>
+X<sub>k</sub> ---&gt; (1/N) x<sub>N-k</sub><p>
+</center>
+<p align="justify">
+Applying the DFT twice results in a scaled, time reversed version of
+the original series.
+</p>
+
+<li>The transform of a constant function is a DC value only.<br>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/dft/dft15.gif"></center><p>
+
+<li>The transform of a delta function is a constant<br>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/dft/dft16.gif"></center><p>
+
+<li><p align="justify">
+The transform of an infinite train of delta functions spaced by T
+is an infinite train of delta functions spaced by 1/T.
+</p>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/dft/dft23.gif"></center><p>
+
+<li><p align="justify">
+The transform of a cos function is a positive delta at the appropriate
+positive and negative frequency.
+</p>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/dft/dft17.gif"></center><p>
+
+<li><p align="justify">
+The transform of a sin function is a negative complex delta function 
+at the appropriate positive frequency and a negative complex 
+delta at the appropriate negative frequency.
+</p>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/dft/dft18.gif"></center><p>
+
+<li>The transform of a square pulse is a sinc function<p>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/dft/dft19.gif"></center><p>
+
+<p align="justify">
+More precisely, if f(t) = 1 for |t| &lt; 0.5, and
+f(t) = 0 otherwise then F(f) = sin(pi f) / (pi f)
+</p>
+
+<li>Convolution<p>
+<center>
+f(t) <b>x</b> g(t) ---> F(f) G(f)<p>
+F(f) <b>x</b> G(f) ---> f(t) g(t)<p>
+x<sub>k</sub> <b>x</b> y<sub>k</sub> ---> N X<sub>k</sub> Y<sub>k</sub><p>
+x<sub>k</sub> y<sub>k</sub> ---> (1/N) X<sub>k</sub> <b>x</b> Y<sub>k</sub><p>
+</center>
+<p align="justify">
+Multiplication in one domain is equivalent to convolution in the other
+domain
+and visa versa. For example the transform of a truncated sin function are two
+delta functions convolved with a sinc function, a truncated sin function is a
+sin function multiplied by a square pulse.
+</p>
+
+<li><p align="justify">
+The transform of a triangular pulse is a sinc<sup>2</sup> function.
+This can be derived from first principles but is more easily derived
+by describing the triangular pulse as the convolution of two square
+pulses and using the convolution-multiplication relationship of the Fourier
+Transform.
+</p>
+</ul>
+
+<b>Sampling theorem</b><p>
+
+<p align="justify">
+The sampling theorem (often called "Shannons Sampling Theorem")
+states that a continuous signal must be discretely
+sampled at least twice the frequency of the highest frequency in the signal. 
+</p>
+<p align="justify">
+More precisely, a continuous function f(t) is completely defined by samples
+every 1/fs (fs is the sample frequency) if the frequency spectrum F(f) is zero
+for f &gt; fs/2. fs/2 is called the Nyquist frequency and places the limit on
+the minimum sampling frequency when digitising a continuous signal.
+</p>
+<p align="justify">
+If x(k) are the samples of f(t) every 1/fs then f(t) can be <b>exactly</b>
+reconstructed from these samples, if the sampling theorem has been satisfied, 
+by
+</p>
+<center><IMG SRC="http://paulbourke.net/miscellaneous/dft/dft12.gif"></center><p>
+where <p>
+<center><IMG SRC="http://paulbourke.net/miscellaneous/dft/dft13.gif"></center><p>
+
+<p align="justify">
+Normally the signal to be digitised would be appropriately filtered before
+sampling to remove higher frequency components. If the sampling frequency is
+not high enough the high frequency components will wrap around and appear in
+other locations in the discrete spectrum, thus corrupting it.
+</p>
+<p align="justify">
+The key features and consequences of sampling a continuous signal can
+be shown graphically as follows.
+</p>
+Consider a continuous signal in the time and frequency domain.
+<p>
+<center><img src="http://paulbourke.net/miscellaneous/dft/dft20.gif"></center><p>
+<p align="justify">
+Sample this signal with a sampling frequency f<sub>s</sub>, time between
+samples is 1/f<sub>s</sub>.
+This is equivalent to convolving in the frequency domain by delta
+function train with a spacing of f<sub>s</sub>.
+</p>
+<center><img src="http://paulbourke.net/miscellaneous/dft/dft21.gif"></center><p>
+<p align="justify">
+If the sampling frequency is too low the frequency spectrum overlaps,
+and become corrupted.
+</p>
+<center><img src="http://paulbourke.net/miscellaneous/dft/dft22.gif"></center><p>
+<p align="justify">
+Another way to look at this is to consider a sine function sampled
+twice per period (Nyquist rate). There are other sinusoid functions 
+of higher frequencies that would give exactly the same samples and
+thus can't be distinguished from the frequency of the original sinusoid.
+</p>
+
+<b>Appendix A. DFT (Discrete Fourier Transform)</b><p>
+
+<pre>
+/*
+   Direct fourier transform
+*/
+int DFT(int dir,int m,double *x1,double *y1)
+{
+   long i,k;
+   double arg;
+   double cosarg,sinarg;
+   double *x2=NULL,*y2=NULL;
+
+   x2 = malloc(m*sizeof(double));
+   y2 = malloc(m*sizeof(double));
+   if (x2 == NULL || y2 == NULL)
+      return(FALSE);
+
+   for (i=0;i&lt;m;i++) {
+      x2[i] = 0;
+      y2[i] = 0;
+      arg = - dir * 2.0 * 3.141592654 * (double)i / (double)m;
+      for (k=0;k&lt;m;k++) {
+         cosarg = cos(k * arg);
+         sinarg = sin(k * arg);
+         x2[i] += (x1[k] * cosarg - y1[k] * sinarg);
+         y2[i] += (x1[k] * sinarg + y1[k] * cosarg);
+      }
+   }
+
+   /* Copy the data back */
+   if (dir == 1) {
+      for (i=0;i&lt;m;i++) {
+         x1[i] = x2[i] / (double)m;
+         y1[i] = y2[i] / (double)m;
+      }
+   } else {
+      for (i=0;i&lt;m;i++) {
+         x1[i] = x2[i];
+         y1[i] = y2[i];
+      }
+   }
+
+   free(x2);
+   free(y2);
+   return(TRUE);
+}</pre>
+
+<b>Appendix B. FFT (Fast Fourier Transform)</b><p>
+
+<pre>
+/*
+   This computes an in-place complex-to-complex FFT 
+   x and y are the real and imaginary arrays of 2^m points.
+   dir =  1 gives forward transform
+   dir = -1 gives reverse transform 
+*/
+short FFT(short int dir,long m,double *x,double *y)
+{
+   long n,i,i1,j,k,i2,l,l1,l2;
+   double c1,c2,tx,ty,t1,t2,u1,u2,z;
+
+   /* Calculate the number of points */
+   n = 1;
+   for (i=0;i&lt;m;i++) 
+      n *= 2;
+
+   /* Do the bit reversal */
+   i2 = n &gt;&gt; 1;
+   j = 0;
+   for (i=0;i&lt;n-1;i++) {
+      if (i &lt; j) {
+         tx = x[i];
+         ty = y[i];
+         x[i] = x[j];
+         y[i] = y[j];
+         x[j] = tx;
+         y[j] = ty;
+      }
+      k = i2;
+      while (k &lt;= j) {
+         j -= k;
+         k &gt;&gt;= 1;
+      }
+      j += k;
+   }
+
+   /* Compute the FFT */
+   c1 = -1.0; 
+   c2 = 0.0;
+   l2 = 1;
+   for (l=0;l&lt;m;l++) {
+      l1 = l2;
+      l2 &lt;&lt;= 1;
+      u1 = 1.0; 
+      u2 = 0.0;
+      for (j=0;j&lt;l1;j++) {
+         for (i=j;i&lt;n;i+=l2) {
+            i1 = i + l1;
+            t1 = u1 * x[i1] - u2 * y[i1];
+            t2 = u1 * y[i1] + u2 * x[i1];
+            x[i1] = x[i] - t1; 
+            y[i1] = y[i] - t2;
+            x[i] += t1;
+            y[i] += t2;
+         }
+         z =  u1 * c1 - u2 * c2;
+         u2 = u1 * c2 + u2 * c1;
+         u1 = z;
+      }
+      c2 = sqrt((1.0 - c1) / 2.0);
+      if (dir == 1) 
+         c2 = -c2;
+      c1 = sqrt((1.0 + c1) / 2.0);
+   }
+
+   /* Scaling for forward transform */
+   if (dir == 1) {
+      for (i=0;i&lt;n;i++) {
+         x[i] /= n;
+         y[i] /= n;
+      }
+   }
+   
+   return(TRUE);
+}
+</pre>
+
+Modification by Peter Cusack that uses the MS complex type
+<a href="http://paulbourke.net/miscellaneous/dft/fft_ms.c">fft_ms.c</a>.<p>
+
+<b>References</b><p>
+
+<b>Fast Fourier Transforms</b><br>
+Walker, J.S.<br>
+CRC Press. 1996
+<p>
+
+<b>Fast Fourier Transforms: Algorithms<br></b>
+Elliot, D.F. and Rao, K.R.<br>
+Academic Press, New York, 1982
+<p>
+
+<b>Fast Fourier Transforms and Convolution Algorithms</b><br>
+Nussbaumer, H.J.<br>
+Springer, New York, 1982
+<p>
+
+<b>Digital Signal Processing</b><br>
+Oppenheimer, A.V. and Shaffer, R.W.<br>
+Prentice-Hall, Englewood Cliffs, NJ, 1975
+<p>
+
+<p><br><br><br><p.
+
+<center>
+<h1>2 Dimensional FFT</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+July 1998
+</center>
+<p><br><p>
+
+<p align="justify">
+The following briefly describes how to perform 2 dimensional Fourier
+transforms. Source code is given at the end and an example is presented
+where a simple low pass filtering is applied to an image. Filtering in
+the spatial frequency domain is advantageous for the same reasons as
+filtering in the frequency domain is used in time series analysis,
+the filtering is easier to apply and can be significantly faster.
+</p>
+It is assumed the reader is familiar with 
+<a href="index.html">1 dimensional Fourier</a>
+transforms as well as the key time/frequency transform pairs.
+<p>
+<center><img src="http://paulbourke.net/miscellaneous/dft/fft2d3.gif"></center>
+<p align="justify">
+In the most general situation a 2 dimensional transform takes a complex
+array. The most common application is for image processing where each
+value in the array represents to a pixel, therefore the real value
+is the pixel value and the imaginary value is 0. 
+</p>
+
+<p align="justify">
+2 dimensional Fourier transforms simply involve a number of 1 dimensional
+Fourier transforms. More precisely, a 2 dimensional transform 
+is achieved by first transforming each row, replacing
+each row with its transform and then transforming each column, replacing
+each column with its transform. Thus a 2D transform of a 1K by 1K image
+requires 2K 1D transforms. This follows directly from the definition
+of the Fourier transform of a continuous variable or the discrete Fourier
+transform of a discrete system.
+</p>
+
+<p align="justify">
+The transform pairs that are commonly derived in 1 dimension can also
+be derived for the 2 dimensional situation. The 2 dimensional pairs can
+often be derived simply by considering the procedure of applying
+transforms to the rows and then the columns of the 2 dimensional array.
+</p>
+
+<p><center><img src="http://paulbourke.net/miscellaneous/dft/fft2d1.gif"><br>
+Delta function transforms to a 2D DC plane</center><p>
+
+<p><center><img src="http://paulbourke.net/miscellaneous/dft/fft2d2.gif"><br>
+Line of delta functions transforms to a line of delta functions
+</center><p>
+
+<p><center>
+<table><tr><td align=center>
+<img src="http://paulbourke.net/miscellaneous/dft/square1.gif"><br>
+Square pulse
+</td><td>
+<--FFT-->
+</td><td align=center>
+<img src="http://paulbourke.net/miscellaneous/dft/square2.gif"><br>
+2D sinc function
+</td></tr></table>
+</center><p>
+
+<b>Note</b><p>
+<p align="justify">
+The above example has had the quadrants reorganised so as to place
+DC (freq = 0) in the center of the image. The default organisation
+of the quadrants from most FFT routines is as below</p>
+<center>
+<img src="http://paulbourke.net/miscellaneous/dft/layout.gif">
+</center>
+
+<p><br><p>
+
+<table cellspacing=0 cellpadding=0><tr><td valign=top>
+<h3>Example</h3>
+The following example uses the image shown on the right.
+</td><td valign=top>
+<p><center><img src="http://paulbourke.net/miscellaneous/dft/cat1.gif"></center><p>
+</td></tr>
+
+<tr><td valign=top>
+<p align="justify">
+In order to perform FFT (Fast Fourier Transform) instead of the
+much slower DFT (Discrete Fourier Transfer) the image must be 
+transformed so that the width and height are an integer power of 2.
+This can be achieved in one of two ways, scale the image up to the
+nearest integer power of 2 or zero pad to the nearest integer power
+of 2. The second option was chosen here to facilitate comparisons with
+the original. The resulting image is 256 x 256 pixels.
+</p>
+</td><td valign=top>
+<p><center><img src="http://paulbourke.net/miscellaneous/dft/cat2.gif"></center><p>
+</td></tr>
+
+<tr><td valign=top>
+The magnitude of the 2 dimension FFT (spatial frequency domain) is
+</td><td valign=top>
+<p><center><img src="http://paulbourke.net/miscellaneous/dft/cat3.gif"></center><p>
+</td></tr></table>
+<p>
+
+<p align="justify">
+Image processing can now be performed (for example filtering) and
+the image converted back to the spatial domain.
+For example low pass filtering involves reducing the high frequency
+components (those radially distant from the center of the above image).
+Two examples using different cut-off frequencies are illustrated below.
+</p>
+<center>
+<table><tr><td align=center>
+<img src="http://paulbourke.net/miscellaneous/dft/cat4.gif"><br>
+Low pass filter with a low corner frequency
+</td><td align=center>
+<img src="http://paulbourke.net/miscellaneous/dft/cat5.gif"><br>
+Low pass filter with a higher corner frequency
+</td></tr></table>
+</center><p>
+
+<p><br><p>
+<h3>Source Code</h3>
+<pre>
+/*-------------------------------------------------------------------------
+   Perform a 2D FFT inplace given a complex 2D array
+   The direction dir, 1 for forward, -1 for reverse
+   The size of the array (nx,ny)
+   Return false if there are memory problems or
+      the dimensions are not powers of 2
+*/
+int FFT2D(COMPLEX **c,int nx,int ny,int dir)
+{
+   int i,j;
+   int m,twopm;
+   double *real,*imag;
+
+   /* Transform the rows */
+   real = (double *)malloc(nx * sizeof(double));
+   imag = (double *)malloc(nx * sizeof(double));
+   if (real == NULL || imag == NULL)
+      return(FALSE);
+   if (!Powerof2(nx,&m,&twopm) || twopm != nx)
+      return(FALSE);
+   for (j=0;j&lt;ny;j++) {
+      for (i=0;i&lt;nx;i++) {
+         real[i] = c[i][j].real;
+         imag[i] = c[i][j].imag;
+      }
+      FFT(dir,m,real,imag);
+      for (i=0;i&lt;nx;i++) {
+         c[i][j].real = real[i];
+         c[i][j].imag = imag[i];
+      }
+   }
+   free(real);
+   free(imag);
+
+   /* Transform the columns */
+   real = (double *)malloc(ny * sizeof(double));
+   imag = (double *)malloc(ny * sizeof(double));
+   if (real == NULL || imag == NULL)
+      return(FALSE);
+   if (!Powerof2(ny,&m,&twopm) || twopm != ny)
+      return(FALSE);
+   for (i=0;i&lt;nx;i++) {
+      for (j=0;j&lt;ny;j++) {
+         real[j] = c[i][j].real;
+         imag[j] = c[i][j].imag;
+      }
+      FFT(dir,m,real,imag);
+      for (j=0;j&lt;ny;j++) {
+         c[i][j].real = real[j];
+         c[i][j].imag = imag[j];
+      }
+   }
+   free(real);
+   free(imag);
+
+   return(TRUE);
+}
+
+/*-------------------------------------------------------------------------
+   This computes an in-place complex-to-complex FFT
+   x and y are the real and imaginary arrays of 2^m points.
+   dir =  1 gives forward transform
+   dir = -1 gives reverse transform
+
+     Formula: forward
+                  N-1
+                  ---
+              1   \          - j k 2 pi n / N
+      X(n) = ---   &gt;   x(k) e                    = forward transform
+              N   /                                n=0..N-1
+                  ---
+                  k=0
+
+      Formula: reverse
+                  N-1
+                  ---
+                  \          j k 2 pi n / N
+      X(n) =       &gt;   x(k) e                    = forward transform
+                  /                                n=0..N-1
+                  ---
+                  k=0
+*/
+int FFT(int dir,int m,double *x,double *y)
+{
+   long nn,i,i1,j,k,i2,l,l1,l2;
+   double c1,c2,tx,ty,t1,t2,u1,u2,z;
+
+   /* Calculate the number of points */
+   nn = 1;
+   for (i=0;i&lt;m;i++)
+      nn *= 2;
+
+   /* Do the bit reversal */
+   i2 = nn &gt;&gt; 1;
+   j = 0;
+   for (i=0;i&lt;nn-1;i++) {
+      if (i &lt; j) {
+         tx = x[i];
+         ty = y[i];
+         x[i] = x[j];
+         y[i] = y[j];
+         x[j] = tx;
+         y[j] = ty;
+      }
+      k = i2;
+      while (k &lt;= j) {
+         j -= k;
+         k &gt;&gt;= 1;
+      }
+      j += k;
+   }
+
+   /* Compute the FFT */
+   c1 = -1.0;
+   c2 = 0.0;
+   l2 = 1;
+   for (l=0;l&lt;m;l++) {
+      l1 = l2;
+      l2 &lt;&lt;= 1;
+      u1 = 1.0;
+      u2 = 0.0;
+      for (j=0;j&lt;l1;j++) {
+         for (i=j;i&lt;nn;i+=l2) {
+            i1 = i + l1;
+            t1 = u1 * x[i1] - u2 * y[i1];
+            t2 = u1 * y[i1] + u2 * x[i1];
+            x[i1] = x[i] - t1;
+            y[i1] = y[i] - t2;
+            x[i] += t1;
+            y[i] += t2;
+         }
+         z =  u1 * c1 - u2 * c2;
+         u2 = u1 * c2 + u2 * c1;
+         u1 = z;
+      }
+      c2 = sqrt((1.0 - c1) / 2.0);
+      if (dir == 1)
+         c2 = -c2;
+      c1 = sqrt((1.0 + c1) / 2.0);
+   }
+
+   /* Scaling for forward transform */
+   if (dir == 1) {
+      for (i=0;i&lt;nn;i++) {
+         x[i] /= (double)nn;
+         y[i] /= (double)nn;
+      }
+   }
+
+   return(TRUE);
+}
+
+/*-------------------------------------------------------------------------
+   Calculate the closest but lower power of two of a number
+   twopm = 2**m <= n
+   Return TRUE if 2**m == n
+*/
+int Powerof2(int n,int *m,int *twopm)
+{
+   if (n <= 1) {
+      *m = 0;
+      *twopm = 1;
+      return(FALSE);
+   }
+
+   *m = 1;
+   *twopm = 2;
+   do {
+      (*m)++;
+      (*twopm) *= 2;
+   } while (2*(*twopm) <= n);
+
+   if (*twopm != n)
+      return(FALSE);
+   else
+      return(TRUE);
+}
+
+</pre>
+
+<p>
+</body>
+</html>
+

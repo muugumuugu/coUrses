@@ -1,0 +1,314 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Gaussian Elimination</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Gaussian Elimination</h1>
+<h3>Solving simultaneous equations</h3>
+Written by <a href="../index.html">Paul Bourke</a><br>
+August 1997
+</center>
+<p><br><p>
+
+<p align="justify">
+The following note will briefly discuss the standard method
+of solving simultaneous equations. It will also present 
+C source which implements the so called "partial pivoting" algorithm.
+An example of 3 simultaneous equations with 3 unknowns 
+x<sub>0</sub>, x<sub>1</sub>, x<sub>2</sub> is shown below
+</p>
+
+<center>
+<table align=center><tr>
+<td>x<sub>0</sub></td>
+<td>+</td>
+<td>x<sub>1</sub></td>
+<td>+</td>
+<td>x<sub>2</sub></td>
+<td>=</td>
+<td>0</td>
+</tr><tr>
+<td>2x<sub>0</sub></td>
+<td>+</td>
+<td>x<sub>1</sub></td>
+<td>+</td>
+<td>x<sub>2</sub></td>
+<td>=</td>
+<td>1</td>
+</tr><tr>
+<td>x<sub>0</sub></td>
+<td>+</td>
+<td>2x<sub>1</sub></td>
+<td>+</td>
+<td>x<sub>2</sub></td>
+<td>=</td>
+<td>15</td>
+</tr><tr>
+</tr></table></center>
+<p>
+<p align="justify">
+We wish to determine the values of the 3 unknowns.
+The solution basically relies on us being able to multiply a row
+by a constant, and add (or subtract) two rows. So for example the
+first row above could be multiplied by -2 and then the second row could be
+added to it to give a new set of equations (but with the same solution)
+</p>
+
+<center>
+<table align=center><tr>
+<td>x<sub>0</sub></td>
+<td>+</td>
+<td>x<sub>1</sub></td>
+<td>+</td>
+<td>x<sub>2</sub></td>
+<td>=</td>
+<td>0</td>
+</tr><tr>
+<td> </td>
+<td>-</td>
+<td>x<sub>1</sub></td>
+<td>-</td>
+<td>x<sub>2</sub></td>
+<td>=</td>
+<td>1</td>
+</tr><tr>
+<td>x<sub>0</sub></td>
+<td>+</td>
+<td>2x<sub>1</sub></td>
+<td>+</td>
+<td>x<sub>2</sub></td>
+<td>=</td>
+<td>15</td>
+</tr><tr>
+</tr></table></center>
+<p>
+
+<p align="justify">
+The rows and factor chosen was designed to eliminate the first unknown
+x<sub>0</sub> from the second equation. If we now take -1 times the first
+row and add the last row we get
+</p>
+
+<center>
+<table align=center><tr>
+<td>x<sub>0</sub></td>
+<td>+</td>
+<td>x<sub>1</sub></td>
+<td>+</td>
+<td>x<sub>2</sub></td>
+<td>=</td>
+<td>0</td>
+</tr><tr>
+<td> </td>
+<td>-</td>
+<td>x<sub>1</sub></td>
+<td>-</td>
+<td>x<sub>2</sub></td>
+<td>=</td>
+<td>1</td>
+</tr><tr>
+<td> </td>
+<td>+</td>
+<td>x<sub>1</sub></td>
+<td>+</td>
+<td>0x<sub>2</sub></td>
+<td>=</td>
+<td>15</td>
+</tr><tr>
+</tr></table></center>
+<p>
+
+<p align="justify">
+And finally, adding the last two rows gives
+</p>
+
+<center>
+<table align=center><tr>
+<td>x<sub>0</sub></td>
+<td>+</td>
+<td>x<sub>1</sub></td>
+<td>+</td>
+<td>x<sub>2</sub></td>
+<td>=</td>
+<td>0</td>
+</tr><tr>
+<td> </td>
+<td>-</td>
+<td>x<sub>1</sub></td>
+<td>-</td>
+<td>x<sub>2</sub></td>
+<td>=</td>
+<td>1</td>
+</tr><tr>
+<td> </td>
+<td> </td>
+<td> </td>
+<td>-</td>
+<td>x<sub>2</sub></td>
+<td>=</td>
+<td>16</td>
+</tr><tr>
+</tr></table></center>
+<p>
+
+<p align="justify">
+The above is known as the elimination phase, the aim is to turn all
+the elements below the diagonal into zeros. The solution can now be determined
+by so called "back substitution". 
+From the last equation we see that x<sub>2</sub> is -16. Substituting
+this value into the second equation gives x<sub>1</sub> = 15, and finally
+substituting these two values into the first equation gives the last
+unknown x<sub>0</sub> = 1.
+</p>
+
+<p align="justify">
+In general a series of simultaneous equations can be written in matrix
+notation. If we have n equations with n unknowns (x<sub>0</sub>, 
+x<sub>1</sub>, x<sub>2</sub>, ... x<sub>n-1</sub>) this can be written as
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/gausselim/gausselim1.gif"></center>
+
+<p align="justify">
+This is often written in a more compact way as <b>A</b> x = b, where
+<b>A</b> is a matrix, x and b are vectors.
+The Gaussian elimination process consists of two steps, first reducing
+the elements below the diagonal to 0 and second, back substituting
+to find the solutions. 
+In order to eliminate the appropriate element it is not sufficient to
+simply use a ratio based automatically on the values on the elements
+column as this may result in a divide by zero. The usual
+solution is to swap the rows around so that the element being removed
+has the largest magnitude.<br>
+If it still happens that all elements on the columns to be removed are
+zero then this reflects a "singular" matrix, that is, the n equations
+were not all independent and therefore there isn't a unique solution.
+</p>
+
+<p align="justify">
+The following source code implements the above algorithm in a straightforward
+way, there are improvements that could be made especially for sparse systems
+of equations (a large number of equations with mostly zero elements).
+</p>
+
+<b>C source example</b>
+<pre>
+/*
+   Solve a system of n equations in n unknowns using Gaussian Elimination
+   Solve an equation in matrix form Ax = b
+   The 2D array a is the matrix A with an additional column b.
+   This is often written (A:b)
+
+   A0,0    A1,0    A2,0    ....  An-1,0     b0
+   A0,1    A1,1    A2,1    ....  An-1,1     b1
+   A0,2    A1,2    A2,2    ....  An-1,2     b2
+   :       :       :             :          :
+   :       :       :             :          :
+   A0,n-1  A1,n-1  A2,n-1  ....  An-1,n-1   bn-1
+
+   The result is returned in x, otherwise the function returns FALSE
+   if the system of equations is singular.
+*/
+int GSolve(double **a,int n,double *x)
+{
+   int i,j,k,maxrow;
+   double tmp;
+
+   for (i=0;i&lt;n;i++) {
+
+      /* Find the row with the largest first value */
+      maxrow = i;
+      for (j=i+1;j&lt;n;j++) {
+         if (ABS(a[i][j]) &gt; ABS(a[i][maxrow]))
+            maxrow = j;
+      }
+
+      /* Swap the maxrow and ith row */
+      for (k=i;k&lt;n+1;k++) {
+         tmp = a[k][i];
+         a[k][i] = a[k][maxrow];
+         a[k][maxrow] = tmp;
+      }
+
+      /* Singular matrix? */
+      if (ABS(a[i][i]) &lt; EPS)
+         return(FALSE);
+
+      /* Eliminate the ith element of the jth row */
+      for (j=i+1;j&lt;n;j++) {
+         for (k=n;k&gt;=i;k--) {
+            a[k][j] -= a[k][i] * a[i][j] / a[i][i];
+         }
+      }
+   }
+
+   /* Do the back substitution */
+   for (j=n-1;j&gt;=0;j--) {
+      tmp = 0;
+      for (k=j+1;k&lt;n;k++)
+         tmp += a[k][j] * x[k];
+      x[j] = (a[n][j] - tmp) / a[j][j];
+   }
+
+   return(TRUE);
+}
+</pre>
+
+<p>
+A simple calling program which solves the example earlier is<p>
+<pre>
+#define ABS(x) (x &lt; 0 ? -(x) : (x))
+#define EPS 0.00001
+#define TRUE  1
+#define FALSE 0
+
+int main(int argc,char **argv)
+{
+   int i,n = 3;
+   double x[3] = {0.0,0.0,0.0};
+   double **a;
+
+   a = (double **)malloc((n+1)*sizeof(double *));
+   for (i=0;i&lt;n+1;i++)
+      a[i] = (double *)malloc(n*sizeof(double));
+
+   a[0][0] = 1;   a[1][0] = 1;   a[2][0] = 1;  a[3][0] = 0;
+   a[0][1] = 2;   a[1][1] = 1;   a[2][1] = 1;  a[3][1] = 1;
+   a[0][2] = 1;   a[1][2] = 2;   a[2][2] = 1;  a[3][2] = 15;
+   GSolve(a,n,x);
+   WriteSolution(a,n,x);
+}
+
+void WriteSolution(double **a,int n,double *x)
+{
+   int j,k;
+
+   for (j=0;j&lt;n;j++) {
+      for (k=0;k&lt;n+1;k++) {
+         printf("%10.3f ",a[k][j]);
+      }
+      printf(" | %10.3f\n",x[j]);
+   }
+   printf("\n");
+}
+</pre>
+
+</td></tr></table></center>
+</body>
+</html>
+

@@ -1,0 +1,289 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>simsun: simulator for the design of solar heaters</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>simsun</h1>
+<h3>Simulator for the design of solar heaters</h3>
+Developed in collaboration with Ole Jorgen Nydal<br>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 2008<p>
+</center>
+<p><br><p>
+
+<p align="justify">
+The application "simsun" is intended to assist with the design of solar heating
+systems where the reflector units are made up of planar mirror faces. The basic
+algorithm involves tracing rays from the sun, seeing which object (reflector or
+absorber) they strike, accumulating formation about the intensity on surfaces, and
+tracing further reflected rays as necessary. 
+</p>
+
+<p align="justify">
+The sun is considered to be infinitely far away (defined only by a direction vector)
+and all the rays are parallel, no account is made for the finite sun disk.
+The projection of all the geometry (absorbers and reflectors) onto the plane
+normal to the sun vector defines the region for sun ray selection. For simplicity
+the bounding circle of this projection forms the region in which rays are randomly sampled.
+</p>
+
+<table width=100%><tr><td>
+	<center><img src="http://paulbourke.net/miscellaneous/simsun/figure1.png" width=402 height=265 border=0></center><p>
+</td><td>
+	<center><img src="http://paulbourke.net/miscellaneous/simsun/figure2.png" width=185 height=159 border=0></center><p>
+</td></tr></table><p>
+
+<p align="justify">
+Rays are traced through reflections
+until they either head in a direction in which they will strike no further objects
+(the most common situation), or their intensity drops below some threshold.
+On each reflection the ray is assumed to lose some intensity, this can be set for
+both the reflectors (usually very high values because the reflectors are typically
+mirrors) and the absorbers (generally a low value since the absorbers are designed
+to absorb as much light as possible). Only one reflected ray is considered per
+reflection, that is, no scattering is taken into account.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/simsun/features.jpg" width=910 height=628 border=0><br>
+Identifying components in the graphical display (Note the ground plane serves
+no purpose other than providing a reference plane.)
+</center>
+
+<p align="justify">
+For an absorber the difference between the incident and reflected light (if any)
+is added to the appropriate quad of the absorber. This is normalised by the
+quads area to give ray intensity per unit area. It is this value that is mapped
+to a colour scale when surface shading is enabled. For a reflector the reflected
+intensity contributes to the appropriate quad of the reflector. So in shaded
+mode the colour of quads making up reflectors
+indicates how much light is reflected, again normalised for the quad surface area.
+</p>
+
+<b>Usage</b><p>
+<p align="justify">
+The software is run from the command line (developed for Mac OS-X and Linux)
+reads a specification file that contains all the user selectable
+parameters of the model. The key elements include the sun vector, a description
+of the geometry of the receiver and absorber, and the reflection coefficients for
+both the receivers and absorbers. The receivers and absorbers are created solely from
+4 vertex facets (quads) that must be coplanar, it is left up to the user to ensure
+they are planar. 
+</p>
+
+<pre>
+Usage: simsun [options] specification_file
+Options
+   -h                           This text
+   -d                           Debug/verbose mode
+   -f                           Full screen
+
+Interface
+   Right mouse button           Popup menus
+   Center mouse button          Roll camera
+   Left mouse button            Rotate camera
+   Arrow keys                   Rotate camera
+   + -                          Zoom in/out
+   i                            Toggle simulation info
+   h                            Toggle help info
+   r                            Toggle ray illustration
+   c                            Toggle construction geometry
+   s                            Toggle surfaces
+   b                            Toggle wireframe borders
+   p                            Toggle ray calculations
+   P                            Perform single ray calculation
+   R                            Reset simulation
+   1,2,3,4,5                    Preset camera settings
+   w                            Window dump to TGA file
+   q                            Quit
+</pre>
+
+<b>Example of a model specification file</b><p>
+<p align="justify">
+The following is a simple model file, it reads two meshes one for the
+absorber and one for the reflector. Note that multiple reflector or
+absorber meshes can be read, the corresponding reflection coefficients
+should be specified before the mesh is read, this allows reflectors
+and absorbers to have different coefficients. As indicated, a "#" at
+the start of the line is a comment, the rest of the line is ignored.
+</p>
+<pre>
+# This is a comment
+
+# Sun directly overhead
+sun 0 0 -1
+
+# Reflector reflection coefficient, applies to future reflectors
+rcoeff 0.9
+
+# A reflector
+reflector reflector.txt
+
+# Absorber reflection coefficient, applies to future absorbers
+acoeff 0
+
+# An absorber
+absorber absorber.txt
+</pre>
+
+<center><img src="http://paulbourke.net/miscellaneous/simsun/screen1.jpg" width=910 height=728 border=0></center><p>
+
+<b>Example of a reflector (or absorber) data file</b><p>
+
+<p align="justify">
+The format for the quads making up the receiver or absorber is a simple text file with
+one quad element per line. Each line therefore contains 4 triples, the 4 vertices of the
+quad. Each vertex or element of the vertex can be separated by any white space
+character (typically space or tab), or any number of white space characters. 
+There is no requirement on the ordering of
+the quad vertices, clockwise or anticlockwise about the normal of the plane, but in
+general it is good form to order the quads consistently. 
+It is however very important that the 4 vertices all lie on the same plane, noting that
+in general 4 vertices will not be on the same plane.
+</p>
+<pre>
+   0.1000   0.0000   0.0031   0.0924   0.0383   0.0031   0.3465   0.1435   0.0439   0.3750   0.0000   0.0439 
+   0.0924   0.0383   0.0031   0.0707   0.0707   0.0031   0.2652   0.2652   0.0439   0.3465   0.1435   0.0439 
+   0.0707   0.0707   0.0031   0.0383   0.0924   0.0031   0.1435   0.3465   0.0439   0.2652   0.2652   0.0439 
+   0.0383   0.0924   0.0031   0.0000   0.1000   0.0031   0.0000   0.3750   0.0439   0.1435   0.3465   0.0439 
+   0.0000   0.1000   0.0031  -0.0383   0.0924   0.0031  -0.1435   0.3465   0.0439   0.0000   0.3750   0.0439 
+  -0.0383   0.0924   0.0031  -0.0707   0.0707   0.0031  -0.2652   0.2652   0.0439  -0.1435   0.3465   0.0439 
+  -0.0707   0.0707   0.0031  -0.0924   0.0383   0.0031  -0.3465   0.1435   0.0439  -0.2652   0.2652   0.0439 
+  -0.0924   0.0383   0.0031  -0.1000   0.0000   0.0031  -0.3750   0.0000   0.0439  -0.3465   0.1435   0.0439 
+  -0.1000   0.0000   0.0031  -0.0924  -0.0383   0.0031  -0.3465  -0.1435   0.0439  -0.3750   0.0000   0.0439 
+  -0.0924  -0.0383   0.0031  -0.0707  -0.0707   0.0031  -0.2652  -0.2652   0.0439  -0.3465  -0.1435   0.0439 
+  -0.0707  -0.0707   0.0031  -0.0383  -0.0924   0.0031  -0.1435  -0.3465   0.0439  -0.2652  -0.2652   0.0439 
+  -0.0383  -0.0924   0.0031  -0.0000  -0.1000   0.0031  -0.0000  -0.3750   0.0439  -0.1435  -0.3465   0.0439 
+  -0.0000  -0.1000   0.0031   0.0383  -0.0924   0.0031   0.1435  -0.3465   0.0439  -0.0000  -0.3750   0.0439 
+   0.0383  -0.0924   0.0031   0.0707  -0.0707   0.0031   0.2652  -0.2652   0.0439   0.1435  -0.3465   0.0439 
+   0.0707  -0.0707   0.0031   0.0924  -0.0383   0.0031   0.3465  -0.1435   0.0439   0.2652  -0.2652   0.0439 
+   0.0924  -0.0383   0.0031   0.1000  -0.0000   0.0031   0.3750  -0.0000   0.0439   0.3465  -0.1435   0.0439 
+   0.3750   0.0000   0.0439   0.3465   0.1435   0.0439   0.6005   0.2487   0.1320   0.6500   0.0000   0.1320 
+   0.3465   0.1435   0.0439   0.2652   0.2652   0.0439   0.4596   0.4596   0.1320   0.6005   0.2487   0.1320 
+   0.2652   0.2652   0.0439   0.1435   0.3465   0.0439   0.2487   0.6005   0.1320   0.4596   0.4596   0.1320 
+   0.1435   0.3465   0.0439   0.0000   0.3750   0.0439   0.0000   0.6500   0.1320   0.2487   0.6005   0.1320 
+   0.0000   0.3750   0.0439  -0.1435   0.3465   0.0439  -0.2487   0.6005   0.1320   0.0000   0.6500   0.1320 
+  -0.1435   0.3465   0.0439  -0.2652   0.2652   0.0439  -0.4596   0.4596   0.1320  -0.2487   0.6005   0.1320 
+  -0.2652   0.2652   0.0439  -0.3465   0.1435   0.0439  -0.6005   0.2487   0.1320  -0.4596   0.4596   0.1320 
+  -0.3465   0.1435   0.0439  -0.3750   0.0000   0.0439  -0.6500   0.0000   0.1320  -0.6005   0.2487   0.1320 
+  -0.3750   0.0000   0.0439  -0.3465  -0.1435   0.0439  -0.6005  -0.2487   0.1320  -0.6500   0.0000   0.1320 
+  -0.3465  -0.1435   0.0439  -0.2652  -0.2652   0.0439  -0.4596  -0.4596   0.1320  -0.6005  -0.2487   0.1320 
+  -0.2652  -0.2652   0.0439  -0.1435  -0.3465   0.0439  -0.2487  -0.6005   0.1320  -0.4596  -0.4596   0.1320 
+  -0.1435  -0.3465   0.0439  -0.0000  -0.3750   0.0439  -0.0000  -0.6500   0.1320  -0.2487  -0.6005   0.1320 
+  -0.0000  -0.3750   0.0439   0.1435  -0.3465   0.0439   0.2487  -0.6005   0.1320  -0.0000  -0.6500   0.1320 
+   0.1435  -0.3465   0.0439   0.2652  -0.2652   0.0439   0.4596  -0.4596   0.1320   0.2487  -0.6005   0.1320 
+   0.2652  -0.2652   0.0439   0.3465  -0.1435   0.0439   0.6005  -0.2487   0.1320   0.4596  -0.4596   0.1320 
+   0.3465  -0.1435   0.0439   0.3750  -0.0000   0.0439   0.6500  -0.0000   0.1320   0.6005  -0.2487   0.1320 
+   0.6500   0.0000   0.1320   0.6005   0.2487   0.1320   0.8546   0.3540   0.2674   0.9250   0.0000   0.2674 
+   0.6005   0.2487   0.1320   0.4596   0.4596   0.1320   0.6541   0.6541   0.2674   0.8546   0.3540   0.2674 
+   0.4596   0.4596   0.1320   0.2487   0.6005   0.1320   0.3540   0.8546   0.2674   0.6541   0.6541   0.2674 
+   0.2487   0.6005   0.1320   0.0000   0.6500   0.1320   0.0000   0.9250   0.2674   0.3540   0.8546   0.2674 
+   0.0000   0.6500   0.1320  -0.2487   0.6005   0.1320  -0.3540   0.8546   0.2674   0.0000   0.9250   0.2674 
+  -0.2487   0.6005   0.1320  -0.4596   0.4596   0.1320  -0.6541   0.6541   0.2674  -0.3540   0.8546   0.2674 
+  -0.4596   0.4596   0.1320  -0.6005   0.2487   0.1320  -0.8546   0.3540   0.2674  -0.6541   0.6541   0.2674 
+  -0.6005   0.2487   0.1320  -0.6500   0.0000   0.1320  -0.9250   0.0000   0.2674  -0.8546   0.3540   0.2674 
+  -0.6500   0.0000   0.1320  -0.6005  -0.2487   0.1320  -0.8546  -0.3540   0.2674  -0.9250   0.0000   0.2674 
+  -0.6005  -0.2487   0.1320  -0.4596  -0.4596   0.1320  -0.6541  -0.6541   0.2674  -0.8546  -0.3540   0.2674 
+  -0.4596  -0.4596   0.1320  -0.2487  -0.6005   0.1320  -0.3540  -0.8546   0.2674  -0.6541  -0.6541   0.2674 
+  -0.2487  -0.6005   0.1320  -0.0000  -0.6500   0.1320  -0.0000  -0.9250   0.2674  -0.3540  -0.8546   0.2674 
+  -0.0000  -0.6500   0.1320   0.2487  -0.6005   0.1320   0.3540  -0.8546   0.2674  -0.0000  -0.9250   0.2674 
+   0.2487  -0.6005   0.1320   0.4596  -0.4596   0.1320   0.6541  -0.6541   0.2674   0.3540  -0.8546   0.2674 
+   0.4596  -0.4596   0.1320   0.6005  -0.2487   0.1320   0.8546  -0.3540   0.2674   0.6541  -0.6541   0.2674 
+   0.6005  -0.2487   0.1320   0.6500  -0.0000   0.1320   0.9250  -0.0000   0.2674   0.8546  -0.3540   0.2674 
+   0.9250   0.0000   0.2674   0.8546   0.3540   0.2674   1.1087   0.4592   0.4500   1.2000   0.0000   0.4500 
+   0.8546   0.3540   0.2674   0.6541   0.6541   0.2674   0.8485   0.8485   0.4500   1.1087   0.4592   0.4500 
+   0.6541   0.6541   0.2674   0.3540   0.8546   0.2674   0.4592   1.1087   0.4500   0.8485   0.8485   0.4500 
+   0.3540   0.8546   0.2674   0.0000   0.9250   0.2674   0.0000   1.2000   0.4500   0.4592   1.1087   0.4500 
+   0.0000   0.9250   0.2674  -0.3540   0.8546   0.2674  -0.4592   1.1087   0.4500   0.0000   1.2000   0.4500 
+  -0.3540   0.8546   0.2674  -0.6541   0.6541   0.2674  -0.8485   0.8485   0.4500  -0.4592   1.1087   0.4500 
+  -0.6541   0.6541   0.2674  -0.8546   0.3540   0.2674  -1.1087   0.4592   0.4500  -0.8485   0.8485   0.4500 
+  -0.8546   0.3540   0.2674  -0.9250   0.0000   0.2674  -1.2000   0.0000   0.4500  -1.1087   0.4592   0.4500 
+  -0.9250   0.0000   0.2674  -0.8546  -0.3540   0.2674  -1.1087  -0.4592   0.4500  -1.2000   0.0000   0.4500 
+  -0.8546  -0.3540   0.2674  -0.6541  -0.6541   0.2674  -0.8485  -0.8485   0.4500  -1.1087  -0.4592   0.4500 
+  -0.6541  -0.6541   0.2674  -0.3540  -0.8546   0.2674  -0.4592  -1.1087   0.4500  -0.8485  -0.8485   0.4500 
+  -0.3540  -0.8546   0.2674  -0.0000  -0.9250   0.2674  -0.0000  -1.2000   0.4500  -0.4592  -1.1087   0.4500 
+  -0.0000  -0.9250   0.2674   0.3540  -0.8546   0.2674   0.4592  -1.1087   0.4500  -0.0000  -1.2000   0.4500 
+   0.3540  -0.8546   0.2674   0.6541  -0.6541   0.2674   0.8485  -0.8485   0.4500   0.4592  -1.1087   0.4500 
+   0.6541  -0.6541   0.2674   0.8546  -0.3540   0.2674   1.1087  -0.4592   0.4500   0.8485  -0.8485   0.4500 
+   0.8546  -0.3540   0.2674   0.9250  -0.0000   0.2674   1.2000  -0.0000   0.4500   1.1087  -0.4592   0.4500
+</pre>
+
+<b>Inbuilt absorber or reflector geometries</b><p>
+<p align="justify">
+In addition to the meshes above which provide the most general form of mesh description, 
+there are a number of built-in geometric primitives
+that can be chosen. At the time of writing these are "sphere", "cylinder", and "parabola".
+A sphere is described by its center and radius, see example below. A cylinder is described
+by two vertices and a radius. The parabola is defined by the origin, the normal, and
+parameter "a" (in 2D this is y = a x<sup>2</sup>), the focal point along the normal axis
+is 1/(4a). Note the length of the normal determines the "height" of the parabola. So in
+the following example the sphere is at the focal point. Note the the built-in geometries
+can be intermixed with meshes.
+</p>
+<pre>
+sun 0 0 -1
+rcoeff 1
+reflector parabola 0 0 0 0 0 0.5 0.5
+acoeff 0
+absorber sphere 0 0 0.5 0.25
+</pre>
+
+<table width=100%><tr><td valign="bottom">
+<img src="http://paulbourke.net/miscellaneous/simsun/sphere.jpg" width=200 height=200 border=0><br>
+Sphere primitive defined by center and radius.
+</td><td valign="bottom">
+<img src="http://paulbourke.net/miscellaneous/simsun/cylinder.jpg" width=300 height=129 border=0><br>
+Cylinder primitive defined by 2 points and radius.
+</td><td valign="bottom">
+<img src="http://paulbourke.net/miscellaneous/simsun/parabola.jpg" width=250 height=204 border=0><br>
+Parabola defined by position, normal, and scalar.
+</td></tr></table><p>
+
+<b>Menus</b><p>
+<p align="justify">
+The right mouse button gives a pop-up menu with various options, most of which have
+speed keys. The model illustrated below corresponds to the model file described above.
+</p>
+<center><img src="http://paulbourke.net/miscellaneous/simsun/menus.jpg" width=802 height=622 border=0></center><p>
+<ul>
+<li><p align="justify">
+The "compute" menu allows fixed number of rays to be cast. This is useful for comparative
+studies, it is also faster because the 3D representation is not updated. Note that rays
+that do not strike any geometry are ignored and do not form part of the statistics.
+</p>
+<li><p align="justify">
+The tessellation of the absorber and reflectors does not smooth out the geometry. It is
+intended to provide a means by which more surface detail is generated for the statistics.
+Note that the tessellation attempts to create quads of similar area, you may want to
+apply the tessellation multiple times in order to get the desired detail.
+</p>
+<li><p align="justify">
+The "camera" menu item sets various points as the origin for navigation.
+</p>
+<li><p align="justify">
+"Save results" currently writes two text files, called "reflector_results.txt" and
+"absorber_results.txt". These are tagged and extremely verbose, the reader should have
+no trouble decoding them. There is one entry in the files for each quad.
+</p>
+</ul>
+
+<b>Sample model files</b>: <a href="http://paulbourke.net/miscellaneous/simsun/samples.zip">samples.zip</a><p> 
+
+</td></tr></table></center>
+</body>
+</html>
+

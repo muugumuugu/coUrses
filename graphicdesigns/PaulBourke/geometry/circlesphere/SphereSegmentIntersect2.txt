@@ -1,0 +1,142 @@
+Function SPHERE_RAY_INTERSECTION(circlecenter As POINT3D, circleradius As Double, linepoints() As POINT3D, RESULT() As POINT3D) As Long
+           SPHERE_RAY_INTERSECTION = 0
+            Dim cx As Double
+            cx = circlecenter.x
+            Dim cy As Double
+            cy = circlecenter.y
+            Dim cz As Double
+            cz = circlecenter.z
+
+            Dim px As Double
+            px = linepoints(0).x
+            Dim py As Double
+            py = linepoints(0).y
+            Dim pz As Double
+            pz = linepoints(0).z
+
+            Dim vx As Double
+            vx = linepoints(1).x - px
+            Dim vy As Double
+            vy = linepoints(1).y - py
+            Dim vz As Double
+            vz = linepoints(1).z - pz
+
+            Dim A As Double
+            A = vx * vx + vy * vy + vz * vz
+            Dim B As Double
+            B = 2# * (px * vx + py * vy + pz * vz - vx * cx - vy * cy - vz * cz)
+            Dim C As Double
+            C = px * px - 2 * px * cx + cx * cx + py * py - 2 * py * cy + cy * cy + pz * pz - 2 * pz * cz + cz * cz - circleradius * circleradius
+
+            Dim D As Double
+            D = B * B - 4 * A * C
+
+            If D < 0 Then
+            cphere_line_intersect = 0
+            Erase RESULT
+            Exit Function
+
+            End If
+            Dim i As Long
+            Dim j As Long
+            i = 0
+
+           SPHERE_RAY_INTERSECTION = 1 'D=0
+                Dim t1 As Double
+                ReDim RESULT(0)
+                t1 = (-B - Sqr(D)) / (2# * A)
+
+            If D > 0 Then
+               SPHERE_RAY_INTERSECTION = 2
+                ReDim RESULT(1)
+                Dim t2 As Double
+                t2 = (-B + Sqr(D)) / (2# * A)
+
+                If Abs(t1 - 0.5) < Abs(t2 - 0.5) Then
+                    i = 0: j = 1
+                Else
+                    j = 1: i = 0
+                End If
+            End If
+
+
+            RESULT(i).x = linepoints(0).x * (1 - t1) + t1 * linepoints(1).x
+            RESULT(i).y = linepoints(0).y * (1 - t1) + t1 * linepoints(1).y
+            RESULT(i).z = linepoints(0).z * (1 - t1) + t1 * linepoints(1).z
+            If D = 0 Then Exit Function
+
+
+            RESULT(j).x = linepoints(0).x * (1 - t2) + t2 * linepoints(1).x
+            RESULT(j).y = linepoints(0).y * (1 - t2) + t2 * linepoints(1).y
+            RESULT(j).z = linepoints(0).z * (1 - t2) + t2 * linepoints(1).z
+
+
+End Function
+
+Sub POINTS_BOUNDING_BOX(points() As POINT3D, PMIN As POINT3D, PMAX As POINT3D)
+    On Error GoTo raus
+    PMIN.x = points(0).x
+    PMIN.y = points(0).y
+    PMIN.z = points(0).z
+    PMAX = PMIN
+    For i = LBound(points) To UBound(points)
+        If points(i).x < PMIN.x Then PMIN.x = points(i).x
+        If points(i).x > PMAX.x Then PMAX.x = points(i).x
+
+        If points(i).y < PMIN.y Then PMIN.y = points(i).y
+        If points(i).y > PMAX.y Then PMAX.y = points(i).y
+
+        If points(i).z < PMIN.z Then PMIN.z = points(i).z
+        If points(i).z > PMAX.z Then PMAX.z = points(i).z
+    Next
+raus:
+End Sub
+
+Function POINT_INSIDE_BOX(points() As POINT3D, P As POINT3D) As Boolean
+POINT_INSIDE_BOX = True
+Dim PMIN As POINT3D
+Dim PMAX As POINT3D
+Call POINTS_BOUNDING_BOX(points(), PMIN, PMAX)
+        If P.x < PMIN.x Or P.x > PMAX.x Then POINT_IN_BOX = False: Exit Function
+        If P.y < PMIN.y Or P.y > PMAX.y Then POINT_IN_BOX = False: Exit Function
+        If P.z < PMIN.z Or P.z > PMAX.z Then POINT_IN_BOX = False: Exit Function
+End Function
+
+
+Sub tpolyseq()
+Dim PS As POINT3D
+Dim R As Double
+Dim PL() As POINT3D
+Dim PR() As POINT3D
+
+PS.x = 0
+PS.y = 0
+PS.z = 0
+R = 1
+ReDim PL(1)
+
+PL(0).x = 0
+PL(0).y = 0
+PL(0).z = 0
+
+PL(1).x = 1
+PL(1).y = 0
+PL(1).z = 0
+dim N as long
+N= SPHERE_RAY_INTERSECTION(PS, R, PL, PR)
+Debug.print "Found Intersection points: " ,N
+
+if N>0 then
+Debug.Print PR(0).x, PR(0).y, PR(0).z
+If POINT_INSIDE_BOX(PL, PR(0)) Then Debug.Print "first point is on segment"
+end if
+
+if N>1 then
+Debug.Print PR(1).x, PR(1).y, PR(1).z
+
+If POINT_INSIDE_BOX(PL, PR(1)) Then Debug.Print "second point is on segment"
+
+end if
+
+End Sub
+

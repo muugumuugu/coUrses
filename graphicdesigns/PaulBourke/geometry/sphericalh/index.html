@@ -1,0 +1,221 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle2.css" type="text/css" media=all>
+<title>Spherical Harmonics</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Spherical Harmonics</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+February 1990<p>
+MSWindows interactive viewer:
+<a href="SHDEmo.exe.gz">SHDEmo.exe.gz</a> contributed by Wolfgang Wester<br>
+(Requires OpenGL and Win95/98/Me or Win NT/2000)<p>
+Contribution by Georg Duemlein: <a href="pythonSOP.txt">pythonSOP</a><br>
+</center>
+<p><br><p>
+
+<table width=100%>
+
+<tr><td valign="top">
+
+<img src="C_0356535.jpg" width="300" height="300"><br>
+<img src="C_0363141.jpg" width="300" height="300"><br>
+<img src="C_1400262.jpg" width="300" height="300"><br>
+<img src="C_2104230.jpg" width="300" height="300"><br>
+<img src="C_2312644.jpg" width="300" height="300"><br>
+<img src="C_3005654.jpg" width="300" height="300"><br>
+<img src="C_4324626.jpg" width="300" height="300"><br>
+<img src="C_5051333.jpg" width="300" height="300"><br>
+<img src="C_5134020.jpg" width="300" height="300"><br>
+<img src="C_5145525.jpg" width="300" height="300"><br>
+
+</td><td valign="top">
+
+<center><img src="C_0235053.jpg" width="300" height="300"></center><br>
+&nbsp;<p>
+
+<b>Formulation</b><p>
+
+<p align="justify">
+The following closed objects are commonly called spherical harmonics
+although they are only remotely related to the mathematical definition
+found in the solution to certain wave functions, most notable the
+eigenfunctions of angular momentum operators.
+</p>
+
+<p align="justify">
+The formula is quite simple, the form used here is based upon spherical
+(polar) coordinates (radius, theta, phi). 
+</p>
+
+<center>
+r = 
+sin(m0 phi)<sup>m1</sup> +
+&nbsp;
+cos(m2 phi)<sup>m3</sup> +
+&nbsp;
+sin(m4 theta)<sup>m5</sup> +
+&nbsp;
+cos(m6 theta)<sup>m7</sup>
+</center><p>
+
+<p align="justify">
+Where phi ranges from 0 to pi (lines of latitude), 
+and theta ranges from 0 to 2 pi (lines of longitude), and r is the
+radius. The parameters m0, m1, m2, m3, m4, m5, m6, and m7 are all
+integers greater than or equal to 0.
+</p>
+
+&nbsp;<p>
+<center><img src="C_6312121.jpg" width="300" height="300"></center><br>
+&nbsp;<p>
+
+<b>Implementation details</b>
+<p align="justify">
+The images here were created using OpenGL. While the parameters
+m0, m1, m2, m3, m4, m5, m6, m7
+can range from 0 upwards, as the degree increases the objects become 
+increasingly "pointed" and a large number of polygons are required
+to represent the surface faithfully. All the examples here have a 
+maximum degree of 6. The maximum number of polygons used is 128 x 128
+and most were only 64 x 64, that is,
+the theta and phi angles are split into 64 equal steps each.
+</p>
+The C function that computes a point on the surface is<p>
+<pre>
+XYZ Eval(double theta,double phi, int *m)
+{
+   double r = 0;
+   XYZ p;
+
+   r += pow(sin(m[0]*phi),(double)m[1]);
+   r += pow(cos(m[2]*phi),(double)m[3]);
+   r += pow(sin(m[4]*theta),(double)m[5]);
+   r += pow(cos(m[6]*theta),(double)m[7]);
+
+   p.x = r * sin(phi) * cos(theta);
+   p.y = r * cos(phi);
+   p.z = r * sin(phi) * sin(theta);
+
+   return(p);
+}
+</pre>
+
+The OpenGL snippet that creates the geometry is<p>
+<pre>
+   du = TWOPI / (double)resolution; /* Theta */
+   dv = PI / (double)resolution;    /* Phi   */
+
+   glBegin(GL_QUADS);
+   for (i=0;i&lt;resolution;i++) {
+      u = i * du;
+      for (j=0;j&lt;resolution;j++) {
+         v = j * dv;
+         q[0] = Eval(u,v);
+         n[0] = CalcNormal(q[0],
+                           Eval(u+du/10,v),
+                           Eval(u,v+dv/10));
+         c[0] = GetColour(u,0.0,TWOPI,colourmap);
+         glNormal3f(n[0].x,n[0].y,n[0].z);
+         glColor3f(c[0].r,c[0].g,c[0].b);
+         glVertex3f(q[0].x,q[0].y,q[0].z);
+
+         q[1] = Eval(u+du,v);
+         n[1] = CalcNormal(q[1],
+                           Eval(u+du+du/10,v),
+                           Eval(u+du,v+dv/10));
+         c[1] = GetColour(u+du,0.0,TWOPI,colourmap);
+         glNormal3f(n[1].x,n[1].y,n[1].z);
+         glColor3f(c[1].r,c[1].g,c[1].b);
+         glVertex3f(q[1].x,q[1].y,q[1].z);
+
+         q[2] = Eval(u+du,v+dv);
+         n[2] = CalcNormal(q[2],
+                           Eval(u+du+du/10,v+dv),
+                           Eval(u+du,v+dv+dv/10));
+         c[2] = GetColour(u+du,0.0,TWOPI,colourmap);
+         glNormal3f(n[2].x,n[2].y,n[2].z);
+         glColor3f(c[2].r,c[2].g,c[2].b);
+         glVertex3f(q[2].x,q[2].y,q[2].z);
+
+         q[3] = Eval(u,v+dv);
+         n[3] = CalcNormal(q[3],
+                           Eval(u+du/10,v+dv),
+                           Eval(u,v+dv+dv/10));
+         c[3] = GetColour(u,0.0,TWOPI,colourmap);
+         glNormal3f(n[3].x,n[3].y,n[3].z);
+         glColor3f(c[3].r,c[3].g,c[3].b);
+         glVertex3f(q[3].x,q[3].y,q[3].z);
+      }
+   }
+   glEnd();
+</pre>
+
+&nbsp;<p>
+<center><img src="C_6640240.jpg" width="300" height="300"></center><br>
+&nbsp;<p>
+
+<b>Exercises for the reader</b>
+<ul>
+<li><p align="justify">
+While it is easy to see that the even parameters m0, m2, m4, m6
+need to be integers for closed forms, what about the odd terms
+m1, m3, m5, m7. Can they be real numbers?
+</p>
+<li><p align="justify">
+The figures on this page all use the same colour map, it maps theta
+onto a colour map that smoothly progresses through the colours
+red -> yellow -> green -> cyan -> blue -> magenta -> red. Note it is
+a circular colour map. There are many other ways of colouring these
+surfaces, for example a radial intensity variation might look nice.
+</p>
+<li><p align="justify">
+While the objects here all look the same size, there is generally
+quite a bit of variation in the size arising from applying the above
+formula directly. Find a normalising term (function of the m0, m1, .... m7)
+that will make surfaces fit into a unit cube.
+</p>
+</ul>
+
+&nbsp;<p>
+<center><img src="C_5255210.jpg" width="300" height="300"></center><br>
+&nbsp;<p>
+
+</td></tr>
+</table>
+
+<center><table><tr><td>
+   <a href="model1.jpg"><img src="model1s.jpg" width=400 height=300 border=1></a>
+</td><td width=20>
+&nbsp;
+</td><td>
+   <a href="model2.jpg"><img src="model2s.jpg" width=400 height=300 border=1></a>
+</td></tr></table></center>
+<p>
+
+<br><br><br>
+
+Very nice rendering technique by Georg Duemlein (Nov 2008).<br>
+For source code see: <a href="pythonSOP.txt">pythonSOP</a><br>
+<center>
+<img src="georg1.jpg" width=841 height=1190 border=1>
+</center><p>
+
+</td></tr></table></center>
+</body>
+</html>
+

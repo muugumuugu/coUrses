@@ -1,0 +1,87 @@
+'---------------------------------------------------------------------------------------------------------
+'************************************ Function InsidePolygon *************************************
+'---------------------------------------------------------------------------------------------------------
+'VBA implementation of the theory provided by Paul Bourke (http://paulbourke.net/geometry/polygonmesh/)
+'author: ing. Giuseppe Iaria - rev. 20/08/2014
+'---------------------------------------------------------------------------------------------------------
+'The function is based on Solution 1 (2D)
+'The function determines if a point P lies inside or outside a Polygon, returning "True" or "False"
+'The points are defined through the user-defined type "Point"
+'The Polygon is an array of points, each being a user-defined type "Point"
+'The Polygon is implemented assuming a "Base 1" condition, so the "Option Base 1" statement is required
+'The optional argument "OnPolygonBorder" deals with these special cases:
+' - P lies on a vertex of the Polygon
+' - P lies on a line segment of the Polygon
+'If omitted or passed as "False", and a special case occurs, then the function returns "False"
+'If passed as "True", and a special case occurs, then the function returns "True"
+'Auxiliary functions used:
+' - DistancePointSegment: determines the distance between a point and a line segment
+' - Distance2Point: determines the distance between two points
+'Both the auxiliary functions have been developed on:
+' - the theory by Paul Bourke (http://paulbourke.net/geometry/pointlineplane/)
+' - an original VBA code by Brandon Crosby (http://paulbourke.net/geometry/pointlineplane/source.vba)
+'---------------------------------------------------------------------------------------------------------
+
+Option Base 1
+
+Public Type Point
+    x As Double
+    y As Double
+End Type
+
+Public Function InsidePolygon(Polygon() As Point, P As Point, Optional ByVal OnPolygonBorder As Boolean) As Boolean
+Dim counter As Integer, i As Integer, ip1 As Integer
+Dim xInters As Double, dist As Double
+Const EPS As Single = 0.0001
+'Check if the point lies on a polygon's vertex or line segment
+For i = 1 To UBound(Polygon)
+    ip1 = i Mod UBound(Polygon) + 1
+    dist = DistancePointSegment(P, Polygon(i), Polygon(ip1))
+    If dist < EPS Then
+        If OnPolygonBorder Then
+            InsidePolygon = True
+            Else
+            InsidePolygon = False
+        End If
+        Exit Function
+    End If
+    Next i
+'Determine the numbers of intersection between the orizzontal ray from point and polygon
+For i = 1 To UBound(Polygon)
+    ip1 = i Mod UBound(Polygon) + 1
+    If P.y > IIf(Polygon(i).y < Polygon(ip1).y, Polygon(i).y, Polygon(ip1).y) Then
+        If P.y <= IIf(Polygon(i).y > Polygon(ip1).y, Polygon(i).y, Polygon(ip1).y) Then
+            If P.x <= IIf(Polygon(i).x > Polygon(ip1).x, Polygon(i).x, Polygon(ip1).x) Then
+                If Polygon(i).y <> Polygon(ip1).y Then
+                    xInters = Polygon(i).x + (Polygon(ip1).x - Polygon(i).x) * (P.y - Polygon(i).y) / (Polygon(ip1).y - Polygon(i).y)
+                    If (Polygon(i).x = Polygon(ip1).x) Or (P.x <= xInters) Then counter = counter + 1
+                End If
+            End If
+        End If
+    End If
+    Next i
+If counter Mod 2 = 0 Then InsidePolygon = False Else InsidePolygon = True
+End Function
+
+Private Function DistancePointSegment(P As Point, P1 As Point, P2 As Point) As Double
+Dim LineMag As Double, u As Double
+Dim d1 As Double, d2 As Double
+Dim Pint As Point
+Const EPS As Single = 0.0001
+LineMag = Distance2Point(P1, P2)
+If LineMag < EPS Then Exit Function
+u = (((P.x - P1.x) * (P2.x - P1.x)) + ((P.y - P1.y) * (P2.y - P1.y))) / LineMag ^ 2
+If u < 0 Or u > 1 Then
+    d1 = Distance2Point(P, P1)
+    d2 = Distance2Point(P, P2)
+    If d1 > d2 Then DistancePointSegment = d2 Else DistancePointSegment = d1
+    Else
+    Pint.x = P1.x + u * (P2.x - P1.x)
+    Pint.y = P1.y + u * (P2.y - P1.y)
+    DistancePointSegment = Distance2Point(P, Pint)
+End If
+End Function
+
+Private Function Distance2Point(P1 As Point, P2 As Point) As Double
+Distance2Point = Sqr((P2.x - P1.x) ^ 2 + (P2.y - P1.y) ^ 2)
+End Function

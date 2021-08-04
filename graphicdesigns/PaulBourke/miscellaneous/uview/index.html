@@ -1,0 +1,172 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>An evaluation of a user controlled exploration of a 3D environment</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>An evaluation of a user controlled exploration of a 3D environment
+</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+October 1992
+</center>
+<p><br><p>
+
+<p align="justify">
+There are number of levels at which a user can 'experience' 3 dimensional
+scenes by using computer renderings. One method is simply to generate a number
+of images from different view points or camera positions. Another alternative
+is to create an animation, a sequence of renderings showing what would be seen
+if the camera were moved along a path through the 3D model. The one
+characteristic of both these techniques is that they do not allow the viewer to
+interactively choose the position from which to view the scene. This project
+investigates and attempts to implement a scheme by which the user can choose to
+go anywhere and look in any direction within the computer based model. This is
+a similar approach that virtual reality applications take except that in that
+case the rendering is much simpler in order to achieve real time response.<p>
+There are some constraints that do now allow the ideal user controlled walk
+through experience. The more important of these constraints are described below
+along with their effect on this project.
+</p>
+
+<ul>
+<li><p align="justify">
+Highly realistic scenes cannot be computed interactively, indeed it can take
+many hours on even very powerful hardware platforms. The views therefore need
+to be precomputed. In this example each frame took about 20 minutes on a
+Silicon Graphics mainframe using the Radiance rendering application. The image
+creation process was entirely automated so there was no human intervention
+after the rendering process was initiated.
+</p>
+
+<li><p align="justify">
+The storage requirements for a large number of precomputed views will be very
+high. This translates into a restriction on the number of discrete camera
+positions and the number of views per position. This example distributed view
+positions on an 11x11 rectangular mesh, 8 views were computed for each mesh (or
+node) position at 45 degree steps, see 
+<a href="index.html#figure1">figure 1</a>. The images are compressed
+since the lower the average image file size the more images per unit storage
+are possible. The more images that can be stored the finer the view position
+mesh and the more views per node. In the demonstration here the constraint on
+disk space was a very modest 44MB Syquist removable disk. Each image was a
+256x256 pixel 24 bit colour bitmap and averaged 45KB in size. This constrained
+the project to the 11x11 mesh with 8 views per mesh node. If more storage space
+was available then one would generally increase the number of mesh nodes before
+increasing the number of views per node. For this project the model describing
+the 3D scene was 40x40m square, the 11x11 mesh chosen means that the viewing
+positions are 4m apart. While the view directions were calculated in 45 degree
+steps the camera aperture angle of 60 degrees gave some image overlap when
+turning left or right, see <a href="index.html#figure2">figure 2</a>.
+</p>
+
+<li><p align="justify">
+The images cannot all fit in memory, and therefore the images can not be
+played back at high speeds (20-30 frames per second) as in the case of an
+animation. The software that was written for this project displays the scene
+from the user chosen position and viewing angle by reading the appropriate
+image file from disk. The load/decompress/display operations took less than 2
+seconds per image.
+</p>
+</ul>
+<p>
+
+<p align="justify">
+An application called UVIEW was written for the Macintosh. It takes the image
+database and allows the user to traverse through it in discrete steps. The user
+is restricted to only two operations, the first is to move forward or backward,
+the second is to turn left or right. Moving forward or backward is simply
+moving from one node to the next while retaining the same view direction.
+Turning left or right is just changing the view direction appropriately while
+remaining at the same node. See 
+<a href="index.html#figure2">figure 2 and 3</a> for examples of the view
+rotation and position change. 
+</p>
+
+<p align="justify">
+The user chose these two movements with the four arrow keys. For any user
+movement or view change the software determines the next image file, loads it
+from the disk, decompresses it, and then displays it. In order to avoid a "map"
+relating positions and views to files, the file names contain the necessary
+information. Each file name contains three numbers, the x and y position and
+the view angle. For example the file called 20,8,45 is the image at position
+(20,8) looking 45 degrees from north. The software searches for all legal image
+file names in a directory and uses the file name information to create the
+mapping of images to positions and views.
+</p>
+
+<a name="figure1">
+<center><IMG SRC="http://paulbourke.net/miscellaneous/uview/uview1.gif"></center><br>
+Figure 1. Camera nodes and views.</a>
+<p>
+
+<a name="figure2">
+<center><IMG SRC="http://paulbourke.net/miscellaneous/uview/uview2.gif"></center><br>
+Figure 2. 8 views at each node.</a>
+<p>
+
+<a name="figure3">
+<center><IMG SRC="http://paulbourke.net/miscellaneous/uview/uview3.gif"></center><br>
+Figure 3. Forward and back, single view direction.</a>
+<p>
+
+<p align="justify">
+One conclusion from this project was that the mesh spacing and number of views
+per node were too low. A great improvement is noticed at 12 views per node,
+that is stepping the camera direction in 30 degree steps with about a 45 degree
+camera aperture for some view overlap. The mesh spacing should then be chosen
+as small as possible, constrained by the storage space available. For most
+scenes a 30x30 mesh would be ideal. The above would result in around 20,000
+images, at 45Kb each this storage medium would most likely be removable
+read/write optical disks.
+</p>
+
+<p align="justify">
+An useful extension might be to define the mesh at more precision for the more
+interesting parts of a scene, see <a href="index.html#figure4">figure 4</a>.
+</p>
+
+<p align="justify">
+A possibility that proved unsuccessful was to define various paths through the
+scene. This had the advantage in providing a more intelligent route through the
+model but the restriction on the users viewing choices didn't satisfy the aims
+of this project. An example of the path concept can be seen in 
+<a href="index.html#figure5">figure 5</a>.
+Another problem with this approach is the high human input required to design
+the paths through the scene. The mesh method chosen can easily be made an
+entirely automated process given a 3D model.
+</p>
+
+<a name="figure4">
+<center><IMG SRC="http://paulbourke.net/miscellaneous/uview/uview4.gif"></center><br>
+Figure 4. Variable mesh density.</a>
+<p>
+
+<a name="figure5">
+<center><IMG SRC="http://paulbourke.net/miscellaneous/uview/uview5.gif"></center><br>
+Figure 5</a>. Predefined paths.</a>
+<p>
+
+<center>
+<img src="http://paulbourke.net/miscellaneous/uview/palace.gif" border=1>
+</center>
+
+</td></tr></table></center>
+</body>
+</html>
+
+
+

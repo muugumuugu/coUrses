@@ -1,0 +1,825 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Topics in OpenGL</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Saving images from OpenGL applications</h1>
+Written by <a href="../index.html">Paul Bourke</a><p>
+</center>
+<p><br><p>
+
+<p align="justify">
+It is not uncommon that one wants to be able to create and save images 
+from an OpenGL application. This might be for promotional purposes,
+a WWW page, documentation, creating frames for an animation etc.
+This short note gives a simple example
+on how this can be done, making it elegant and suited to your own needs
+is left as an exercise.
+</p>
+
+<b>Window Dump</b>
+
+<p align="justify">
+The first example creates a raw image file but of course it can
+be modified to write any image format. The source code is given here:
+<a href="http://paulbourke.net/miscellaneous/OpenGL/windowdump.c">WindowDump()</a>.
+The key parts are setting the read buffer correctly,
+<font color="#ff0000">glReadBuffer(GL_BACK_LEFT);</font>
+and reading the buffer image <font color="#ff0000">
+glReadPixels(0,0,width,height,GL_RGB,GL_UNSIGNED_BYTE,image);
+</font>
+</p>
+
+<b>Note</b><br>
+<ul>
+<li><p align="justify">
+This example will write two stereo pairs if the application
+supports stereo buffers.</p>
+<li><p align="justify">
+This example writes the bytes out individually, with some loss of
+generality this could be greatly simplified with fwrite(). Writing
+single bytes can cope with formats that might reverse the colour
+components such as TARGA, it is also convenient to sometimes flip
+the image vertically.
+</p>
+<li><pa lign="justify">
+The last argument to
+<font color="#ff0000">glPixelStorei(GL_PACK_ALIGNMENT,1);</font>
+can be changed to higher values for increased performance on some
+platforms. It does often put restriction on the window size, that is,
+the window must be an integer multiple of the value specified in
+glPixelStorei().
+</p>
+<li><p align="justify">
+The above function should be called before the buffers are swapped.
+While this doesn't make much difference on most OpenGL implementations,
+strictly speaking the the back buffers are undefined after the swap.
+</p>
+</ul>
+
+<b>Higher resolution</b>
+
+<p align="justify">
+One restriction of the above method is that one is limited to
+screen resolution, how does one create a higher resolution image?
+One way to handle this is to render the scene N times (N = 4 in
+the following example), each time the viewport is set so as to
+capture the appropriate subimage.
+</p>
+
+<font color="#ff0000">
+<pre>
+   if (dobigdump) {
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      CreateTheProjection();                /* - Application Specific - */
+      for (i=0;i<4;i++) {
+         for (j=0;j<4;j++) {
+            fprintf(stderr,"Frame (%d,%d)\n",i,j);
+            ClearTheBuffers();              /* - Application Specific - */
+            glViewport(-i*width,-j*height,4*width,4*height);
+            glMatrixMode(GL_MODELVIEW);
+            glDrawBuffer(GL_BACK);
+            glLoadIdentity();
+            gluLookAt(vp.x,vp.y,vp.z,focus.x,focus.y,focus.z,up.x,up.y,up.z);
+            MakeLighting();
+            MakeMaterial();
+            DrawTheModel();                 /* - Application Specific - */
+            WindowDump();
+            glutSwapBuffers();
+         }
+      }
+      dobigdump = FALSE;
+   }
+</pre>
+</font>
+
+<b>Note</b><br>
+<ul>
+<li><p align="justify">
+This example makes no attempt to stitch the images back together, the
+idea here is to present the technique, the details are left up to the
+reader. The local solution is to have a post processing tool that
+collages the images into the one 4x4 grid.
+</p>
+<li><p align="justify">
+It is sometimes necessary to check the maximum viewport size, on most
+"decent" systems this is 65536 x 65536. The maximum size is obtained using
+glGet() and GL_MAX_VIEWPORT_DIMS, for example
+<font color="#ff0000">glGetIntegerv(GL_MAX_VIEWPORT_DIMS,num);</font>
+</p>
+</ul>
+
+<p><br><p>
+
+<center>
+<h1>Distributed OpenGL Rendering</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+July 1996
+</center>
+<p><br><p>
+
+<b>Introduction</b>
+
+<p align="justify">
+The following outlines a method of distributing an OpenGL model across
+a number of computers each with their own OpenGL rendering card. The
+OpenGL model might be distributed using MPI from a controlling machine
+(that need not have OpenGL capabilities). Each of the slaves render a 
+subset of the geometry and send their draw buffers and depth buffers
+back to the controlling machine. These images are combined according to 
+the values in their depth buffers.
+</p>
+
+<b>The problem</b>
+
+<p align="justify">
+While tremendous performance improvements (especially price performance)
+are being made in OpenGL cards, there will always be geometric models
+that bring the best card to it's knees. For example, a high performance
+card might be able to render 15 million triangular facets per second.
+For interactive rates of 20 frames per second this means that one can
+display geometry with 750,000 polygons, if one wishes to render in stereo
+that drops to models with 375,000 triangular polygons. While this might seem
+a large number of polygons for those in the virtual reality or games
+market, it is a relatively low polygon count for many scientific visualisation
+applications. As an example, the terrain model shown below of Mars
+contains over 11 million triangular polygons.
+</p>
+<center><img src="http://paulbourke.net/miscellaneous/OpenGL/mars.gif"></center>
+<p>
+
+<b>Possible Solution</b>
+
+<p align="justify">
+A solution that follows the trends in cluster computing is to distribute
+the OpenGL rendering load among a number of machines. Fortunately, OpenGL
+maintains a depth buffer and this buffer is accessible to the programmer
+using glReadPixels(). The idea then is to split up the geometry making
+up the scene and distribute each piece to one OpenGL card, generally each
+card will be in a separate computer. Each card will then only need to render
+a subset of the geometry. For example, for a terrain model it is quite
+easy to split the polygons up evenly (the splitting of the geometry so
+that each OpenGL card is evenly loaded is not always trivial) so if there
+are N machines, each one only handles 1/N of the total number of polygons.
+</p>
+
+<p align="justify">
+Each OpenGL card then renders it's portion of the geometry and sends the
+image and depth buffer to be merged into the final image. The logic for
+this is straightforward, set a pixel in the final image to the pixel
+in the subimage which has the smallest depth value, ie: is closest to
+the camera.
+</p>
+
+<b>Example</b>
+
+<table width=100%>
+<tr>
+<td width=230><img src="http://paulbourke.net/miscellaneous/OpenGL/part1.gif" width=300 depth=225></td>
+<td width=230><img border=1 src="http://paulbourke.net/miscellaneous/OpenGL/depth1.gif" width=300 depth=225></td>
+</tr>
+<tr><td colspan=2>
+<p align="justify">
+<b>Part 1</b><br>
+The model is made up of 3 parts, the first is the red core shown above.
+The next two pieces are shown below along with their corresponding
+depth buffers on the right.
+</p>
+</td></tr>
+
+<tr>
+<td width=230><img src="http://paulbourke.net/miscellaneous/OpenGL/part2.gif" width=300 depth=225></td>
+<td width=230><img border=1 src="http://paulbourke.net/miscellaneous/OpenGL/depth2.gif" width=300 depth=225></td>
+</tr>
+<tr><td colspan=2>
+<p align="justify">
+<b>Part 2</b><br>
+OpenGL maintains a depth buffer as long as glEnable(GL_DEPTH_TEST)
+has been called. This depth buffer gives the depth from the camera
+for each pixel in the draw buffer.
+Points at infinity are shown as white in this example, 
+those parts of the object closer to the camera tend towards black.
+In other rendering applications the depth buffer is often called the z-buffer.
+</p>
+</td></tr>
+
+<tr>
+<td width=230><img src="http://paulbourke.net/miscellaneous/OpenGL/part3.gif" width=300 depth=225></td>
+<td width=230><img border=1 src="http://paulbourke.net/miscellaneous/OpenGL/depth3.gif" width=300 depth=225></td>
+</tr>
+<tr><td colspan=2>
+<p align="justify">
+<b>Part 3</b><br>
+The depth buffer is accessed through the routine glReadPixels(), using something
+like 
+<br>
+glReadPixels(0,0,width,height,GL_DEPTH_COMPONENT,GL_FLOAT,depthbuffer);
+<br>
+where width and height are the dimensions of the window, and depthbuffer is
+malloc'ed with something like the following
+<br>
+depthimage = malloc(screenwidth*screenheight*sizeof(GL_FLOAT));
+<br>
+Indeed this is the same way the image is acquired, for example, <br>
+glReadPixels(0,0,width,height,GL_RGB,GL_UNSIGNED_BYTE,imagebuffer);
+</p>
+</td></tr>
+
+<tr>
+<td width=230><img src="http://paulbourke.net/miscellaneous/OpenGL/part4.gif" width=300 depth=225></td>
+<td width=230><img border=1 src="http://paulbourke.net/miscellaneous/OpenGL/depth4.gif" width=300 depth=225></td>
+</tr>
+<tr><td colspan=2>
+<p align="justify">
+<b>Composited image</b><br>
+This is the final image, the images on the left are combined depending
+on the values of the depth buffer. That is, any pixel in the final image
+comes from one of the three partial images depending on which one has
+the lowest depth value. For example, the pixels under  the
+green cone that protrudes from the center to the right have lower depth
+values than the pixels in the same region under the magnetic field lines.
+</p>
+</td></tr>
+
+</table>
+<p>
+
+<b>Limitation</b>
+
+<p align="justify"> 
+The fundamental problem with this technique is bandwidth. Consider rendering
+a 800 x 600 RGB model at 20 frames per second. There are 3 bytes for each
+image pixel and 4 bytes for each depth buffer pixel. So to transmit an
+image/depthbuffer pair from one machine to another requires
+   (3 + 4) * 800 * 600 bytes or just over 3MB. For interactive performance
+at 20 frames per second this requires a bandwidth of 60MB per second which
+is clearly more than the capabilities of all but the very highest performance
+networks. To make matters worse even higher bandwidth is required the more
+OpenGL cards participate in the rendering although bandwidth bottlenecks
+can be reduced by arranging the OpenGL cards/machines in a tree structure
+and combining the image/depthbuffer pairs as the image pieces move up the tree.
+</p>
+<center><img src="http://paulbourke.net/miscellaneous/OpenGL/diagram.gif"></center>
+<p>
+
+<b>References</b>
+Sepia: Scalable 3D compositing using PCI Pamette.
+Laurent Moll, Alan Heinrich, Mark Shand.
+Compaq Computer Corporation, Systems Research Center, Palo Alto, California, USA.
+<p>
+
+<p><br><p>
+
+<table width=100%><tr><td>
+<center>
+<h1>AutoCAD to Interactive OpenGL</h1>
+Written by <a href="../index.html">Paul Bourke</a><p>
+AutoCAD Model by Chris Little<br>
+Melbourne University School of Architecture<p>
+<a href="http://paulbourke.net/miscellaneous/OpenGL/realthing.html">Photos of "the real thing"</a><br>
+Photos courtesy of Terrence Cooney, Nark O'Toole, Ella Bourke.
+</center>
+<p align="justify">
+This model is based upon the amphitheatre 
+in the center of the ancient Roman city 
+of Jerash a few kilometers outside Amman in Jordan.
+The theatre could seat around 4000 people and is similar in design
+to the amphitheatre in the center of Amman.
+</p>
+</td><td valign="bottom">
+<img src="http://paulbourke.net/miscellaneous/OpenGL/jerash4.jpg">
+</td></tr></table>
+
+<p><br><p>
+
+<p align="justify">
+The following discusses an attempt to translate an Architectural 
+model from AutoCAD so that it can be explored interactively in OpenGL.
+The AutoCAD model was supplied courtesy of the Melbourne University
+School of Architecture and like many models of this kind it was designed
+solely for AutoCAD and not for interactive rendering. The geometry was
+exported "as is", the aim was to explore how far one could go with
+automatic measures. Two wire frame shots of the model are shown below. 
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/OpenGL/subdivide1.gif"></center><p>
+
+<p align="justify">
+Note that there are a large number of facets, about 250,000. The
+vast majority were 3 vertex polygons, this is mostly due to the
+exporter for WRL files which was used to extract the geometry.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/OpenGL/subdivide2.gif"></center><p>
+
+<p align="justify">
+One thing to notice is the large variation in density of the polygons.
+A large number of polygons are used around the decorative parts of the
+columns and archways.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/OpenGL/subdivide4.gif"></center><p>
+
+<p align="justify">
+It is quite straightforward to write an OpenGL viewer for this geometry.
+Since the geometry is static it can all be placed in a display list
+using
+</p>
+<pre>
+   glNewList(itemid,GL_COMPILE);
+      :
+   /* Draw the polygons here */
+      :
+   glEndList();
+</pre>
+The camera is moved around controlled by the user, the scene  is
+rendered using
+<pre>
+   glCallList(itemid);
+</pre>
+<p align="justify">
+With the OpenGL card available for this work the refresh rate was
+only about one frame per second, half that for viewing in stereo.
+The question then is what can be done to improve the frame rate.
+Certainly the biggest gains could be made by creating the geometry
+appropriately, for this exercise the geometry was taken as given.
+In many cases this is the situation, the software that created the model
+might not be available or the expertise/desire to make changes to a complicated
+model might not exist.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/OpenGL/subdivide3.gif"></center><p>
+
+<p align="justify">
+A obvious saving for environments that one mainly wishes to walk inside
+is to only render the geometry that is in front of the camera, or even
+better, within the view frustum. (Which of these is chosen usually depends
+on the number of items that need to be tested against the view frustum,
+if large then the simpler in-front/behind test is faster.) In this case
+one obviously doesn't want to compare each facet at each time step.
+One solution is to subdivide the geometry into pieces, form a display
+list for each one but only draw those that are visible from the current
+camera position.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/OpenGL/subdivide5.gif"></center><p>
+
+<p align="justify">
+The images here show the model subdivision at various levels of splitting.
+For a particular model there is an optimal level at which subdivision
+should be taken, too much and the intersection tests and display list
+handling dominate, too few and the geometry in the largest display list
+determines the frame rate.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/OpenGL/subdivide6.gif"></center><p>
+
+<p align="justify">
+How the subdivision is done is by no means trivial. A couple of schemes
+were tried for this exercise, the one finally used was to decide on a
+number of subdivisions and iteratively bisect the subdivision containing the
+largest number of polygons. This tends to form subdivisions with 
+approximately equal numbers of polygons, for example 
+it can be seen that there are
+smaller subdivisions around the columns than the seats.
+A better algorithm would be to base the centers of the subdivisions
+on the dense areas within the geometry. It should also be noted that
+while in this case the subdivisions didn't overlap, that restriction
+could be lifted for a more efficient partitioning scheme.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/OpenGL/subdivide7.gif"></center><p>
+
+
+<b>Geometry Optimisation</b>
+
+<p align="justify">
+As well as doing things efficiently in OpenGL, there are some 
+standard checks and transformations of the geometry that should 
+be made whenever transforming geometry from a CAD package into
+an environment where "every polygon counts". There are a number
+of inefficiencies that can arise with modelling in a package
+such as AutoCAD and exporting the geometry through an intermediate
+format. 
+</p>
+
+<ul>
+<li>It isn't uncommon for there to be duplicate objects in a human
+    generated model. A filter can be used to remove: all identical
+    lines and facets; facets that are coplanar and lie within another
+    larger facet.
+<p>
+<li>Turn two 3 vertex facets that share an edge into a single 4
+    vertex facet. This can be particularly important for packages
+    that automatically split all facets into 3 vertex facets whether
+    or not all the vertices are coplanar.
+<p>
+<li>It isn't uncommon for modelling packages to generate redundant facets,
+    that is, facets where two vertices are coincident.
+<p>
+</ul>
+
+<p><br><p>
+
+<center>
+<h1>Multiwall and off-axis projection</h1>
+Written by Paul Bourke</a><br>
+February 2003<p>
+AutoCAD Model courtesy of Chris Little,
+Stephanie Phan, Andrew Hutson,<br>
+Frank Sears from the Melbourne University School of Architecture<p>
+</center>
+<p><br><p>
+
+<p align="justify">
+The images shown here were created for a number of purposes: to 
+illustrate the need for offaxis frustums for immersive environments,
+to test the movie playing performance of the recently released Matrox
+Parhelia 3 display cards, to demonstrate correct image creation and
+presentation at the CAEV (3 wall projection system at Melbourne
+University), and finally to test a more general camera specification
+in PovRay.
+</p>
+
+<p align="justify">
+The images below on the right illustrate the projection type. 
+The red lines are the projection planes and the 
+blue lines the border of the frustum. These are top views but the same
+offaxis frustum concept also applies vertically.
+For the correct or minimally distorted projection, the 
+viewer should be located at the intersection of the blue lines.
+The key concept is that for correct projection the frustums
+change with the viewers position (requiring viewer head tracking)
+and the frustums are generally asymmetric
+</p>
+
+<p align="justify">
+All the images are 3072 by 768 and should therefore be a one
+to one match with projector pixels.
+All projections are based upon the screens being 2.4m wide and
+1.8m high (4:3 ratio) with the side screens at an angle of 21
+degrees (geometry of the test environment). 
+It could be argued that the screens would be better angled
+at a greater angle than 21 degrees so as to bring the "sweet spot"
+(for 3 symmetric frustums, example 1) closer to the center of the room.
+</p>
+
+<table width=100%>
+
+<tr>
+<td valign="top">
+<b>Example 1</b><p>
+Correct<br>
+3 symmetric frustums<br>
+View at focal point, 6.5m from center screen<p>
+<a href="http://paulbourke.net/miscellaneous/OpenGL/caev1.jpg">JPEG</a><br>
+<p><a href="http://paulbourke.net/miscellaneous/OpenGL/caev1.jpg"><img src="http://paulbourke.net/miscellaneous/OpenGL/caev1s.jpg" width=256 height=64 border=1></a>
+<p align="justify">
+This is commonly the projection used when the rendering software
+being used only supports symmetric frustums.
+</p>
+</td>
+<td valign="top" align="right">
+<img src="http://paulbourke.net/miscellaneous/OpenGL/1.gif" width=405 height=373>
+</td>
+</tr>
+
+<tr>
+<td valign="top">
+<b>Example 2</b><p>
+Incorrect<br>
+Single symmetric frustum<br>
+View from focal point, 6.5m from center screen<p>
+<a href="http://paulbourke.net/miscellaneous/OpenGL/caev2.jpg">JPEG</a><br>
+<p><a href="http://paulbourke.net/miscellaneous/OpenGL/caev2.jpg"><img src="http://paulbourke.net/miscellaneous/OpenGL/caev2s.jpg" width=256 height=64 border=1></a>
+<p align="justify">
+This is the simplest render option, often chosen chosen because
+it's the easiest.
+</p>
+</td>
+<td valign="top" align="right">
+<img src="http://paulbourke.net/miscellaneous/OpenGL/2.gif" width=402 height=376>
+</td>
+</tr>
+
+<tr>
+<td valign="top">
+<b>Example 3</b><p>
+Incorrect<br>
+Single symmetric frustum<br>
+View 3.1m from center screen<p>
+<a href="http://paulbourke.net/miscellaneous/OpenGL/caev3.jpg">JPEG</a><br>
+<p><a href="http://paulbourke.net/miscellaneous/OpenGL/caev3.jpg"><img src="http://paulbourke.net/miscellaneous/OpenGL/caev3s.jpg" width=256 height=64 border=1></a>
+<p align="justify">
+Similar to (2) which can be applied to any position along the normal to
+the center screen.
+</p>
+</td>
+<td valign="top" align="right">
+<img src="http://paulbourke.net/miscellaneous/OpenGL/3.gif" width=404 height=378>
+</td>
+</tr>
+
+<tr>
+<td valign="top">
+<b>Example 4</b><p>
+Incorrect<br>
+Cylindrical projection<br>
+View from focal point, 6.5m from center screen<p>
+<a href="http://paulbourke.net/miscellaneous/OpenGL/caev4.jpg">JPEG</a><br>
+<p><a href="http://paulbourke.net/miscellaneous/OpenGL/caev4.jpg"><img src="http://paulbourke.net/miscellaneous/OpenGL/caev4s.jpg" width=256 height=64 border=1></a>
+<p align="justify">
+This is a good approximation to example 1
+and can be performed in a single render. Unfortunately it only
+works for a single viewer position.
+</p>
+</td>
+<td valign="top" align="right">
+<img src="http://paulbourke.net/miscellaneous/OpenGL/4.gif" width=400 height=385>
+</td>
+</tr>
+
+<tr>
+<td valign="top">
+<b>Example 5</b><p>
+Correct<br>
+1 symmetric, 2 asymmetric frustum<br>
+View 3.1m from center screen<p>
+<a href="http://paulbourke.net/miscellaneous/OpenGL/caev5.jpg">JPEG</a><br>
+<p><a href="http://paulbourke.net/miscellaneous/OpenGL/caev5.jpg"><img src="http://paulbourke.net/miscellaneous/OpenGL/caev5s.jpg" width=256 height=64 border=1></a>
+</td>
+<td valign="top" align="right">
+<img src="http://paulbourke.net/miscellaneous/OpenGL/5.gif" width=402 height=376>
+</td>
+</tr>
+
+<tr>
+<td valign="top">
+<b>Example 6</b><p>
+Correct<br>
+1 symmetric, 2 asymmetric frustum<br>
+View 2.0, from normal of the left screen<p>
+<a href="http://paulbourke.net/miscellaneous/OpenGL/caev6.jpg">JPEG</a><br>
+<p><a href="http://paulbourke.net/miscellaneous/OpenGL/caev6.jpg"><img src="http://paulbourke.net/miscellaneous/OpenGL/caev6s.jpg" width=256 height=64 border=1></a>
+</td>
+<td valign="top" align="right">
+<img src="http://paulbourke.net/miscellaneous/OpenGL/6.gif" width=398 height=378>
+</td>
+</tr>
+
+<tr>
+<td valign="top">
+<b>Example 7</b><p>
+Correct<br>
+3 asymmetric frustum<br>
+View 2.0m from the left edge of the left screen<p>
+<a href="http://paulbourke.net/miscellaneous/OpenGL/caev7.jpg">JPEG</a><br>
+<p><a href="http://paulbourke.net/miscellaneous/OpenGL/caev7.jpg"><img src="http://paulbourke.net/miscellaneous/OpenGL/caev7s.jpg" width=256 height=64 border=1></a>
+<p align="justify">
+This is an example of the most general case where all the frustums
+are asymmetric.
+</p>
+</td>
+<td valign="top" align="right">
+<img src="http://paulbourke.net/miscellaneous/OpenGL/7.gif" width=403 height=378>
+</td>
+</tr>
+
+<tr>
+<td valign="top">
+<b>Example 8</b><p>
+Correct<br>
+1 symmetric, 2 asymmetric frustum<br>
+View 1.0m from center screen<p>
+<a href="http://paulbourke.net/miscellaneous/OpenGL/caev8.jpg">JPEG</a><br>
+<p><a href="http://paulbourke.net/miscellaneous/OpenGL/caev8.jpg"><img src="http://paulbourke.net/miscellaneous/OpenGL/caev8s.jpg" width=256 height=64 border=1></a>
+<p align="justify">
+An example of a typical viewer position for highly immersive applications.
+This isn't necessarily the common for front projection since a viewer position
+this close is likely to block the light from a front projection arrangement.
+</p>
+</td>
+<td valign="top" align="right">
+<img src="http://paulbourke.net/miscellaneous/OpenGL/8.gif" width=402 height=377>
+</td>
+</tr>
+
+</table>
+
+Notes
+<ul>
+<li>Those that give undistorted views are indicated but they only
+    give undistorted views if the viewer stands in the right place.
+    Distorted projections are: 2, 3, and 4.
+<p>
+<li>Correct views can be created from any position in the room
+    requiring one or more off axis frustums.
+<p>
+<li>I claim that the errors in the incorrect projection examples
+    are most noticeable in animated (camera or object) content.
+<p>
+<li>All images have been created using PovRay and custom offaxis 
+    frustum code.
+<p>
+</ul>
+
+
+<p><br><br><br><p>
+
+
+
+<center>
+<h1>Multiple wall projection</h1>
+Using independent computers and OpenGL<p>
+December 2000<br>
+Written by <a href="http://paulbourke.net/miscellaneous/&quot;">Paul Bourke</a>
+</center>
+<p><br><p>
+
+<b>Introduction</b>
+<p align="justify">
+This document describes an approach to presenting 3 dimensional
+environments on multiple screens (projected onto large walls). The key
+challenges for this project included the following.
+</p>
+<ul>
+<li>The content must be interactive, typically around 30 frames per second.<br>
+<li>Independent computers will be used to drive each display.<br>
+<li>Relatively low cost Linux machines with consumer grade OpenGL hardware
+will be used.<br>
+<li>The displays must be "perfectly" synchronised, it isn't acceptable
+to have noticeable delays between the content on each display.<br>
+<li>The orientation of the displays must be very general, coping with
+any number of displays, different angles and orientations.<br>
+</ul>
+
+<b>Hardware</b><br>
+<p align="justify">
+The hardware setup for this experiment was minimal, standard Linux (Intel based)
+boxes with GeForce OpenGL cards and 100MBit networking (10MBit was also
+shown to be satisfactory for the small communication volumes needed).
+While most testing was performed simply using three monitors placed in
+the right orientation, the system was operated in a couple of 2 and 3
+wall installations with projectors creating a seamless wide angle
+image.
+</p>
+<p><center><img border=1 src="http://paulbourke.net/miscellaneous/OpenGL/loops.gif" width=600 height=150></center><p>
+
+<b>Intermachine communication</b><br>
+<p align="justify">
+In order to ensure that the displays on each computer updated exactly
+in sync, a simple socket library
+was written using sock streams over TCPIP.
+(All the machine were on a 100MBit network). Note that even if all the 
+computers were identical and updating as fast as they could, they wouldn't
+stay in synchronisation. The main source of variation occurs when the
+geometry complexity in one view is much greater than the other views.
+Since OpenGL does frustum culling, the complex views will render more
+slowly.
+</p>
+<p><center><img border=1 src="http://paulbourke.net/miscellaneous/OpenGL/grid1.gif" width=600 height=150></center><p>
+<p align="justify">
+The software was written with one machine acting 
+as the server and all the others
+clients. The same binary served as both client and server. A few messages
+were defined that were exchanged between the clients and server, these could
+be extended for more complicated environments, for example, where the geometry
+was changing. The messages are briefly explained below.
+</p>
+<ul>
+<li><font color="ff0000">vp x y z</font><br>
+Change the view position to (x,y,z). Server -> client.<br>
+<li><font color="ff0000">vd x y z</font><br>
+Change the view direction vector. Server -> client.<br>
+<li><font color="ff0000">update</font><bR>
+Draw geometry to the back buffer. Server -> client.<br>
+<li><font color="ff0000">swap</font><br>
+Swap buffers, back buffer to front buffer. Server -> client.<br>
+<li><font color="ff0000">flags f1 f2 f3 ....</font><br>
+A way to pass general flags to the clients from menus chosen on the
+server. For example, rendering mode, models choice, wall configuration, etc.
+<li><font color="ff0000">ready wallid</font><br>
+As a result of an update from the server, 
+a client will send this message when they
+have finished drawing to the their back buffer.
+Client -> server<br>
+<li><font color="ff0000">quit</font><br> 
+The user chooses to quite while operating the server, quit is a menu item.
+Server -> client.<br>
+</ul>
+<p align="justify">
+So, the general flow is as follows. Whenever the user (controlling the server)
+chooses a menu item, that information is sent to the clients with the
+"flags" message. As the user drags the mouse controlling the camera position
+and orientation, the "vp" and "vd" messages are sent to the clients.
+Every 30ms the server tries to refresh its display, it sends the "update"
+message to each client and draws the geometry to its own back buffer. The
+server then waits for "ready" messages from each client, when everyone is
+ready the server sends a "swap" message at which point an essentially
+instantaneous buffer swap is performed on all machines.
+</p>
+
+<b>Performance</b><br>
+<p align="justify">
+Strict performance tests haven't been performed because they rely on
+so many factors (scene complexity and type, OpenGL hardware, machine
+characteristics,....). For the particular configuration being used here,
+for a scene with sufficient geometry that could only just render at
+30fps on a single machine, introducing 3 synced machines incurred a penalty
+of less than 2fps.
+While no testing has yet been done on the performance/scaling for very
+large numbers of walls, there was no further loss of frame rate for 5 walls.
+<br>
+It is of course not necessary for all the machines in the "pool" to
+be of identical performance, the end performance (frame rate) will of
+course be limited by the slowest OpenGL hardware in the machine pool.
+</p>
+<p><center><img border=1 src="http://paulbourke.net/miscellaneous/OpenGL/wire.gif" width=600 height=150></center><p>
+<p><center><img border=1 src="http://paulbourke.net/miscellaneous/OpenGL/shaded.gif" width=600 height=150></center><p> 
+
+<b>OpenGL projection</b><br>
+<p align="justify">
+OpenGL is especially suited to this type of projection because it has a very
+general frustum functionality (glFrustum()) which allows one to create
+the so called "off-axis" projections needed. The standard perspective
+projection offered by most rendering engines is unsuitable because it
+assume the view position is along a line that is both normal to and passes
+through the center of the projection plane.
+</p>
+<p><center><img border=0 src="http://paulbourke.net/miscellaneous/OpenGL/frustum.gif" width=600 height=372></center><p>
+
+<b>Wall configuration</b><p>
+<p align="justify">
+The wall specification is totally general.
+So while all the example above show a 3 wall environment where all the
+walls are in line, in practice the tests were mostly performed on 3
+walls where the two side walls are toed in by about 30 degrees. Another
+arrangement is shown below where the walls are arranged vertically.
+Another application for 2 synced machines is in passive stereographics
+where one machine handles the left eye and the other machine the right eye.
+This functionality was also used in the testing as well as a 5 wall
+environment.
+</p>
+<table width=100% cellpadding=0 cellspacing=0>
+<tr><td valign="top">
+<p align="justify"> 
+The walls are specified by their centroid, normal, and up vector.
+These are all defined in real world coordinates, that is, one can
+measure a particular configuration directly and enter those parameters
+into the software as is. In addition the user position or in the case
+of an audience the "sweet spot" is also required, again in real world
+coordinates. While this is a very convenient coordinate system for
+defining the walls, it does require that the geometry being displayed
+is scaled to an appropriate size.
+</p>
+<center>
+<img border=0 src="http://paulbourke.net/miscellaneous/OpenGL/walldef.gif" width=356 height=393>
+</center>
+</td><td width="220" valign="top" align=right>
+<img border=1 src="http://paulbourke.net/miscellaneous/OpenGL/vertical.gif" width=200 height=450></center>
+</td></tr></table>
+<p>
+
+<b>Extensions</b><br>
+<ul>
+<li><p align="justify">
+A variation of the above has been implemented for machines playing
+precomputed movies. The obvious application for this is playing a 
+precomputed movie in stereo. In this case there is only one wall
+but two cameras.
+</p>
+<li><p align="justify">
+The exploratory exercise above only dealt with very simple camera
+flying controls (position and orientation). Other camera attributes
+can be trivially controlled by adding further message types.
+</p>
+<li><p align="justify">
+Control over the geometry is also straightforward, as the user
+modifies objects on the server, messages need to be sent to the clients
+so they can reflect those changes. This also applies to time varying
+geometry, eg: traffic lights, planetary motion, moving characters, etc.
+There are some other operations that
+may not be trivial, for example, creating new geometry where the data
+transfer volumes may become more significant.
+</p>
+</ul>
+
+</td></tr></table></center>
+</body>
+</html>

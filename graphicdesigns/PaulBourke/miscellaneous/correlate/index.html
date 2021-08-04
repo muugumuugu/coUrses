@@ -1,0 +1,413 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Cross Correlation</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Cross Correlation</h1>
+<font size="+1">
+<a href="index.html#auto">AutoCorrelation</a> --
+<a href="index.html#2d">2D Pattern Identification</a>
+</font><p>
+Written by <a href="../index.html">Paul Bourke</a><br>
+August 1996
+</center>
+
+<p><br><p>
+
+<p align="justify">
+Cross correlation is a standard method of estimating the degree to which
+two series are correlated. 
+Consider two series x(i) and y(i) where i=0,1,2...N-1.
+The cross correlation r at delay d is defined as
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/correlate/xcorrelate1.gif" width="267" height="86"></center>
+
+<p align="justify">
+Where mx and my are the means of the corresponding series.
+If the above is computed for all delays d=0,1,2,...N-1
+then it results in a cross correlation series of twice the length as
+the original series. 
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/correlate/xcorrelate2.gif" width="288" height="82"></center>
+
+<p align="justify">
+There is the issue of what to do when the index into the series
+is less than 0 or greater than or equal to the number of points. 
+(i-d &lt; 0 or i-d &gt;= N)
+The most common approaches are to either ignore these points or
+assuming the series x and y are zero for i &lt; 0 and i &gt;= N. 
+In many signal processing applications the series is assumed to be
+circular in which case the out of range indexes are "wrapped"
+back within range, ie: x(-1) = x(N-1), x(N+5) = x(5) etc
+</p>
+
+<p align="justify">
+The range of delays d and thus the length
+of the cross correlation series can be less than N, 
+for example the aim may be to test correlation at short delays only.
+The denominator in the expression above serves to normalise the
+correlation coefficients such that -1 &lt;= r(d) &lt;= 1, the bounds
+indicating maximum correlation and 0 indicating no correlation.
+A high negative correlation indicates a high correlation but of the inverse
+of one of the series.
+</p>
+
+<table width="100%"><tr><td valign="top"
+<p align="justify">
+As a simple example consider the two rectangular pulses shown below
+in blue and green, the correlation series is shown in red.
+</p>
+
+<p align="justify">
+The maximum correlation is achieved at a delay of 3. Considering the
+equations above, what is happening is the second series is being slid
+past the first, at each shift the sum of the product of the newly lined
+up terms in the series is computed. This sum will be large when the 
+shift (delay) is such that similar structure lines up. This is essentially
+the same as the so called convolution except for the normalisation terms
+in the denominator.
+</p>
+</td><td>
+<center><img src="http://paulbourke.net/miscellaneous/correlate/xcorrelate3.gif" width="326" height="241"></center>
+</td></tr></table><p>
+
+<b>Source code</b>
+
+<p align="justify">
+Sample C source to calculate the correlation series with no data wrapping. 
+The two series are x[], and y[] of "n" points.
+The correlation series is calculated for a maximum delay
+of "maxdelay".
+</p>
+
+<pre>
+   int i,j
+   double mx,my,sx,sy,sxy,denom,r;
+   
+   /* Calculate the mean of the two series x[], y[] */
+   mx = 0;
+   my = 0;   
+   for (i=0;i&lt;n;i++) {
+      mx += x[i];
+      my += y[i];
+   }
+   mx /= n;
+   my /= n;
+
+   /* Calculate the denominator */
+   sx = 0;
+   sy = 0;
+   for (i=0;i&lt;n;i++) {
+      sx += (x[i] - mx) * (x[i] - mx);
+      sy += (y[i] - my) * (y[i] - my);
+   }
+   denom = sqrt(sx*sy);
+
+   /* Calculate the correlation series */
+   for (delay=-maxdelay;delay&lt;maxdelay;delay++) {
+      sxy = 0;
+      for (i=0;i&lt;n;i++) {
+         j = i + delay;
+         if (j &lt; 0 || j &gt;= n)
+            continue;
+         else
+            sxy += (x[i] - mx) * (y[j] - my);
+         /* Or should it be (?)
+         if (j &lt; 0 || j &gt;= n)
+            sxy += (x[i] - mx) * (-my);
+         else
+            sxy += (x[i] - mx) * (y[j] - my);
+         */
+      }
+      r = sxy / denom;
+      
+      /* r is the correlation coefficient at "delay" */
+
+   }</pre>
+
+<p align="justify">
+If the series are considered circular then the source with
+the same declarations as above might be
+</p>
+
+<pre>
+   /* Calculate the mean of the two series x[], y[] */
+   mx = 0;
+   my = 0;   
+   for (i=0;i&lt;n;i++) {
+      mx += x[i];
+      my += y[i];
+   }
+   mx /= n;
+   my /= n;
+
+   /* Calculate the denominator */
+   sx = 0;
+   sy = 0;
+   for (i=0;i&lt;n;i++) {
+      sx += (x[i] - mx) * (x[i] - mx);
+      sy += (y[i] - my) * (y[i] - my);
+   }
+   denom = sqrt(sx*sy);
+
+   /* Calculate the correlation series */
+   for (delay=-maxdelay;delay&lt;maxdelay;delay++) {
+      sxy = 0;
+      for (i=0;i&lt;n;i++) {
+         j = i + delay;
+         while (j &lt; 0)
+            j += n;
+         j %= n;
+         sxy += (x[i] - mx) * (y[j] - my);
+      }
+      r = sxy / denom;
+      
+      /* r is the correlation coefficient at "delay" */
+
+   }</pre>
+
+<b>Example</b><p>
+
+The following shows two time series x,y.
+<p>
+
+<center><img src="http://paulbourke.net/miscellaneous/correlate/xcorrelate5.gif" width="486" height="371"></center>
+<p>
+
+<p align="justify">
+The cross correlation series with a maximum delay of 4000
+is shown below. There is a strong correlation at a delay of
+about 40.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/correlate/xcorrelate4.gif" width="475" height="281"></center><p>
+
+<a name="auto"><h3>Auto Correlation</h3></a>
+
+<p align="justify">
+When the correlation is calculated between a series and a lagged version
+of itself it is called autocorrelation. A high correlation is likely to
+indicate a periodicity in the signal of the corresponding time duration.
+<br>
+The correlation coefficient at lag k of a series x<sub>0</sub>, x<sub>1</sub>,
+x<sub>2</sub>,....x<sub>N-1</sub> is normally given as
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/correlate/autocorr1.gif" width="426" height="156"></center>
+
+<p align="justify">
+Where mx is the mean of the series.
+When the term i+k extends past the length of the series N two options are
+available. The series can either be considered to be 0 or in the usual
+Fourier approach the series is assumed to wrap, in this case the index
+into the series is (i+k) mod N.
+</p>
+
+<p align="justify">
+If the correlation coefficient is calculated for all lags
+k=0,1,2...N-1 the resulting
+series is called the autocorrelation series or the correlogram.
+The autocorrelation series can be computed directly as above or
+from the Fourier transform as
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/correlate/autocorr2.gif" width="371" height="44"></center>
+
+<p align="justify">
+That is, one can compute the autocorrelation series by transforming
+the series into the frequency domain, taking the modulus of each 
+spectral coefficient, and then performing the inverse transform. Note
+that depending on the normalisation used with the particular FFT
+algorithm there may need to be a scaling by N.
+</p>
+
+<p align="justify">
+This method for computing the auto correlation series
+is particularly useful for long series where the efficiency of
+the Fast Fourier Transform can significantly reduce the time required
+to compute the autocorrelation series.
+</p>
+
+<p align="justify">
+Note that this is a special case of the expression for calculating
+the cross correlation using Fourier transforms. The Fourier transform
+of the cross correlation function is the product of the Fourier transform
+of the first series and the complex conjugate of the Fourier transform
+of the second series.
+</p>
+
+
+<a name="2d"><h3>2D Pattern Identification using Cross Correlation</h3></a>
+
+<p align="justify">
+One approach to identifying a pattern within an image uses cross
+correlation of the image with a suitable mask. Where the mask and
+the pattern being sought are similar the cross correlation will be
+high. The mask is itself an image which needs to have the same
+functional appearance as the pattern to be found.
+</p>
+
+<p align="justify">
+Consider the image below in black and the mask shown in red. The
+mask is centered at every pixel in the image and the cross correlation
+calculated, this forms a 2D array of correlation coefficients.
+</p>
+
+<p><center><img src="http://paulbourke.net/miscellaneous/correlate/twodcorr10.gif" width="400" height="296"><p></center>
+
+<p align="justify">
+The form of the un-normalised correlation coefficient at position (i,j)
+on the image is given by
+</p>
+
+<p><center><img src="http://paulbourke.net/miscellaneous/correlate/twodcorr9.gif" width="539" height="64"><p></center>
+
+where <img src="http://paulbourke.net/miscellaneous/correlate/twodcorr12.gif" width="35" height="26" align=middle> 
+is the mean of the masks pixels and
+<img src="http://paulbourke.net/miscellaneous/correlate/twodcorr11.gif" width="39" height="26" align=middle> 
+is the mean of the image pixels under (covered by) the mask.
+
+<p align="justify">
+The peaks in this cross correlation "surface" are the positions
+of the best matches in the image of the mask.
+</p>
+
+<b>Issues</b>
+<ul>
+<li><p align="justify">
+The process can be extremely time consuming, the 2D cross correlation
+function needs to be computed for every point in the image. Calculation
+of the cross correlation function is itself a N<sup>2</sup> operation.
+Ideally the mask should be chosen as small as practicable.
+</p>
+<li><p align="justify">
+In many image identification processes the mask may need to be
+rotated and/or scaled at each position.
+</p>
+<li><p align="justify">
+This process is very similar to 2D filtering except in that case
+the image is replaced by an appropriately scaled version of the 
+correlation surface.
+</p>
+</ul>
+
+<table width="100%"><tr><td valign="top">
+<p align="justify">
+<b>Example 1</b><br>
+In this first example it was necessary to pick out the position
+of the colour singularities and to determine the orientation of the 
+colour sequence. A sample image illustrating the singularities
+to be analysed is shown below
+(all images and masks shown here are at the same scale)
+</p>
+</td><td>
+<p><center><img src="http://paulbourke.net/miscellaneous/correlate/twodcorr1.gif" width="260" height="220" border=1>
+</center><p>
+</td></tr></table><p>
+
+<table width="100%"><tr><td valign="top">
+<p align="justify">
+Two masks were required as the colour circles 
+exist as mirror images as well as rotated. That is, yellow on the right
+of read and yellow on the left of red.
+</p>
+</td><td>
+<img src="http://paulbourke.net/miscellaneous/correlate/twodcorr3.gif" width="32" height="32" border=1>
+<img src="http://paulbourke.net/miscellaneous/correlate/twodcorr4.gif" width="32" height="32" border=1>
+</td></tr></table><p>
+
+<p align="justify">
+The maximum cross correlation for all angles and for each of the two masks 
+is retained for each position.
+This maximum cross correlation surface with the image mapped onto it is
+</p>
+
+<p><center><img src="http://paulbourke.net/miscellaneous/correlate/twodcorr2.gif" width="600" height="190" border=1>
+</center><p>
+
+<table width="100%"><tr><td valign="justify">
+<p align="justify">
+<b>Example 2</b><br>
+This example is basically the same as the previous one except the
+non singularity regions haven't been pre-filtered.
+</p>
+</td><td>
+<p><center><img src="http://paulbourke.net/miscellaneous/correlate/twodcorr6.gif" width="200" height="200" border=1>
+</center><p>
+</td></tr></table><p>
+
+<p align="justify">
+The resulting surface where the height is proportional to the
+maximum correlation coefficient across all angles and for the mirror
+of the masks is
+</p>
+
+<p><center><img src="http://paulbourke.net/miscellaneous/correlate/twodcorr5.gif" width="600" height="285" border=1>
+</center><p>
+
+<p align="justify">
+The width and relative height of the correlation peaks can be improved
+by matching the dimensions of the mask with those of the features being
+sought in the image. For example, if the size of the mask is smaller and
+radial as below
+</p>
+
+<p><img src="http://paulbourke.net/miscellaneous/correlate/twodcorr8.gif" width="16" height="16" border=1>
+
+<font size=-1>
+(Note: the black denotes no mask is applied, not the colour black)
+</font>
+<p>
+
+then the peaks are significantly narrower.
+
+<p><center><img src="http://paulbourke.net/miscellaneous/correlate/twodcorr7.gif" width="500" height="458" border=1>
+</center><p>
+
+<p align="justify">
+The above is an example over a relatively small portion of the whole
+image. The entire surface is 
+</p>
+
+<p><center><img src="http://paulbourke.net/miscellaneous/correlate/twodcorr13.gif" width="500" height="393" border=1>
+</center><p>
+
+<p align="justify">
+The maximum cross correlation image (white = high correlation, 
+black = low correlation)
+</p>
+
+<p><center><img src="http://paulbourke.net/miscellaneous/correlate/twodcorr14.gif" width="500" height="393" border=1>
+</center><p>
+
+<p align="justify">
+And finally the surface shown in 3D with the original image mapped onto it
+</p>
+
+<p><center><img src="http://paulbourke.net/miscellaneous/correlate/twodcorr15.gif" width="600" height="372" border=1>
+</center><p>
+
+<p><center><img src="http://paulbourke.net/miscellaneous/correlate/twodcorr16.gif" width="600" height="484" border=1>
+</center><p>
+
+</td></tr></table></center>
+</body>
+</html>
+

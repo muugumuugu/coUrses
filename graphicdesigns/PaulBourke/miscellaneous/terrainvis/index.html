@@ -1,0 +1,802 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Terrain Visualisation</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<table width=100%><tr><td>
+<center>
+<H1>Computer Based<br>Terrain Visualisation Techniques</H1>
+<H2>"From Points to Wood"</H2>
+Written by <a href="../index.html">Paul Bourke</a><br>
+August 1988
+</center>
+</td><td>
+<img src="http://paulbourke.net/miscellaneous/terrainvis/landscapesmall.gif" width=100 height=100>
+</td></tr></table>
+<p><br><p>
+
+<b>Introduction</b>
+<p align="justify">
+This report describes some of the computer based techniques which can be used
+to aid in the visualisation of terrain.
+In the following discussion it is assumed that we have acquired data in a
+suitable form which allows us to define the surface on a computer. This usually
+starts as a series of points lying on the surface and stored as x,y,z triples.
+There are many ways of getting this data, the example here was digitised from
+contour maps using a large scale digitising tablet connected to a computer. The
+next step is normally to turn the digitised data into a series of polygonally
+bounded planes, called facets, so that they can be read, viewed and manipulated
+by 3D modelling and rendering software. The point data is this example is
+transformed into a regular polygonal mesh by an algorithm called Delaunay
+triangulation See an earlier discussion by myself for details of this algorithm
+and computer program which transforms randomly distributed spot heights into
+triangular or regular meshes and exports this surface description in a format
+suitable for most 3D modelling and/or rendering programs.
+</p>
+
+<b>Contouring</b>
+<p align="justify">
+Contouring has been the traditional way of presenting 3D terrain data on 2D
+sheets of paper. It has advantages of having units (contour values) so precise
+height calculations can be made. Contour lines are usually drawn with line
+segments so they can easily be transferred to large scale hard copy devices such
+as plotters. The main problem with this visualisation technique is that it does
+not give a good 3D impression of the terrain, the best most people can
+determine is that some localised parts of the surface are higher or lower than
+others.
+</p>
+
+<b>Mesh representations</b>
+<p align="justify">
+This is the most straightforward way of rendering the 3D data, it is a direct
+perspective viewing transformation of the computer database. (Almost any 3D
+modelling package can display, view, and print this representation,
+MicroStation was used here due to its advantages when handling very large
+geometric databases).
+</p>
+
+<table width=100% cellpadding=0 border=0 cellspacing=0>
+<tr><td valign="top" width=300 align=right>
+<a name="1">
+<img border=0 src="http://paulbourke.net/miscellaneous/terrainvis/terrain1.gif" width=300 height=204></a><br>
+<smalltext>Figure 1</smalltext>
+</td><td width=20>
+&nbsp;
+</td><td valign="top">
+<p align="justify">
+<a href="index.html#1">Figure 1</a> 
+shows the example landscape represented in this way. The reasons why
+this makes the landscape look three dimensional are: the automatic shading of
+the steep parts of the terrain because the mesh lines appear closer together,
+the flat areas are obvious due to the regularity of the mesh, the perspective
+transformation gives a simple depth cueing due to the mesh lines becoming
+denser. These effects generally require that the mesh density approaches that
+of the viewing device, or at least that the projection of the mesh onto the
+viewing plane is close to the resolution of the device. 
+</p>
+</td></tr></table>
+
+<p align="justify">
+This rendering can also be in colour. The colour may be related to height but
+it could also be some other attribute such as ground cover, population, etc.<p>
+The example in 
+<a href="index.html#1">Figure 1</a> is a 128x128 cell mesh and it consists of about 33,000
+line segments. On many high end computer platforms this can be drawn in real
+time so that the user can "fly" about the landscape. This number of polygons
+can however cripple many desktop machines. For this reason good terrain
+modelling software allows the user to view the surface at a range of
+resolutions. 
+</p>
+
+<b>Vertical contouring</b>
+
+<table width=100% cellpadding=0 border=0 cellspacing=0>
+<tr><td valign="top" width=300 align=right>
+<a name="2">
+<img border=0 src="http://paulbourke.net/miscellaneous/terrainvis/terrain2.gif" width=300 height=212></a><br>
+<smalltext>Figure 2</smalltext>
+</td><td width=20>
+&nbsp;
+</td><td valign="top">
+<p align="justify">
+While horizontal contouring has long been a popular method, vertical contours
+can also be effective. The reasons for the success of this rendition method are
+the same as for mesh representations, it generates dark (dense) areas which
+would naturally be shadowed in direct sun light.
+</p>
+<p align="justify">
+<a href="index.html#2">Figure 2</a> 
+is an example of such a rendering of our demonstration landscape. This
+rendering was created with a 3D modelling package called Vision3D written by
+myself.
+There is a considerable reduction in the data needed to draw this form of
+rendering, unfortunately the effect is only satisfactory when the contour lines
+are about 45 degrees to the view direction and so animations are not usually
+possible.
+</p>
+</td></tr></table><p>
+
+<b>Shaded renderings</b>
+<p align="justify">
+Higher levels of realism can be achieved by simulating more closely how the
+terrain would appear in reality. There are a wide range of techniques for
+accomplishing this, each technique generally involves a trade off between
+realism and computation time.
+</p>
+
+<table width=100% cellpadding=0 border=0 cellspacing=0>
+<tr><td valign="top" width=300 align=right>
+<a name="3">
+<img border=1 src="http://paulbourke.net/miscellaneous/terrainvis/terrain3.gif" width=300 height=284></a><br>
+<smalltext>Figure 3</smalltext>
+</td><td width=20>
+&nbsp;
+</td><td valign="top">
+<p align="justify">
+<a href="index.html#3">Figure 3</a> 
+shows a relatively sophisticated rendering This rendering was created
+using a raytracing/radiosity package called Radiance. It was chosen mainly
+because it was available on a very fast hardware platform. One undesirable
+characteristic of this technique can be seen in the patches visible on the
+surface. These are the result of the limits in the data available in the
+description of the surface. The courser the mesh the more obvious the patches
+are. The finer the mesh the more data the rendering process must handle and the
+longer it will take.
+</p>
+
+<p align="justify">
+There are techniques (Phong shaded polygons) which can reduce and even remove
+the patchiness of the surface by interpolating the surface normals between the
+facets. These techniques however require more computation time and have the
+undesirable characteristic that the shadows are still based on the gridded
+geometry and do not appear smooth. The example in 
+<a href="index.html#3">Figure 3</a> uses the same data
+density as the mesh shown in <a href="index.html#1">Figure 1</a>.
+</p>
+</td></tr></table><p> 
+
+<b>Physical models</b>
+<p align="justify">
+Given the digital model it is possible to determine the path required to
+manufacture the surface using a computer controlled milling machine. In its
+simplest form this is a drill which can be controlled backward and forward and
+up and down over a piece of wood say, so as to cut away unwanted portions.
+</p>
+
+<center><table><tr><td align="right">
+<a name="4">
+<img border=0 src="http://paulbourke.net/miscellaneous/terrainvis/terrain4.gif" width=419 height=157></a><br>
+<smalltext>Figure 4</smalltext>
+</center>
+</td></tr></table></center>
+
+<p align="justify">
+<a href="index.html#4">Figure 4</a> shows the result of milling our example landscape from wood. I used a
+OH-FANUC, model 2R-NC milling machine operated by the School of Engineering,
+Auckland University. The machine is controlled by the MasterCAM software  For
+this example the wood is about 300mm square and the drill bit used in about 5mm
+radius. Note that it is not necessary to use a particularly fine bit because
+the wood is cut away at the edge of the bit not from the bottom. The bit size
+then only determines the  narrowest valleys that are possible.
+This physical scale model of the landscape has big advantages for visualisation
+purposes. The model is to scale, although in this case there is a 2 times
+exaggeration in height. The viewer can instantaneously view the terrain from
+various positions and angles by simply turning the model about. Tactile
+exploration of the model is of course possible and can be informative as well
+as satisfying.
+</p>
+
+<p align="justify">
+An extension of this technique would be to automatically draw features such as
+roads, boundaries, contours, etc onto the landscape. This could be done with a
+robot arm holding a pen or with a laser which would burn the line features onto
+the surface of the wood.
+<p>
+
+<!--
+<p><br><p>
+
+<b>Further Rendered Examples</b><br>
+By Matiu Carr<p>
+<center>
+<img src="greenhithe1.jpg" width=515 height=480 border=1>
+<p>
+<img src="greenhithe2.jpg" width=617 height=480 border=1>
+<p>
+<img src="greenhithe3.jpg" width=515 height=480 border=1>
+<p>
+<img src="greenhithe4.jpg" width=615 height=480 border=1>
+</center>
+-->
+
+<p><br><p>
+
+<center>
+<h1>Data reduction in terrain modelling</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 1994
+</center>
+<p><br><p>
+
+A common characteristic of terrain modelling/rendering exercises is the vast
+amount of data involved. This is particularly severe where the spot height
+information is a result of some automated survey or when it results from
+digitised contours. In addition there are a number of activities which require
+very different levels of detail, for example the detail required for high
+quality renderings may be quite high. The information that a 3D modelling
+package can handle while retaining user interaction may be quite low. The need
+for multiple terrain representations can arise naturally in modelling
+applications, for example it may be necessary to acquire a more course terrain
+model for interactive modelling and substitute a more detailed version for
+final presentation. As with many computer based activities there is often a gap
+between what one might like to and what is practical given disk, memory, or
+processing resources.<p>
+
+There are two common representations for computer based terrain models. The
+first consists of a triangular mesh of polygons, this is normally the result
+from a triangulation process. One advantage of this approach is that it
+naturally generates detail in the regions that are sampled more frequently,
+these are normally the regions which have more height variation. This
+representation is a more faithful representation of the underlying data since
+the sample points are generally the vertices of the triangular mesh.<p>
+The second form of representation is as a regular mesh of rectangular polygons,
+these are generated by estimating the heights at each corner of the mesh cells.
+The main advantage with this is that multiple resolution meshes can be readily
+generated from the same dataset of spot heights. This form is tend to provide
+more 3D visual cues as the wire frame rendered mesh acts a type of slope based
+shading.<p>
+
+<b>Triangulation example</b><p>
+In this example the original digitised aerial survey resulted in 600,000 spot
+heights, covering a rectangular region of 42km by 64km. Converting this
+directly to a triangular mesh would result in a surface of approximately twice
+that number of polygons, 1.2million!. This number of polygons would certainly
+be a handful for most software packages especially if interactive 3D control
+was necessary.<p>
+One approach to data reduction is to filter the spot heights file so as to
+evenly distribute the points over the region. This is done by checking the
+distances between all points so that no two points are closer than some user
+chosen distance. An improved approach would be to incorporate the height
+variation between neighbouring points so that highly sampled areas are better
+represented, this assumes that regions are densely sampled because of increased
+height variation.<p>
+Below are some examples of the surface and the number of resulting polygons for
+1,3,and 5km filter distances.<p>
+5km radius, 116 polygons<br>
+<center><IMG SRC="http://paulbourke.net/miscellaneous/terrainvis/terraindata1.gif"></center><p>
+
+3km radius, 316 polygons<br>
+<center><IMG SRC="http://paulbourke.net/miscellaneous/terrainvis/terraindata2.gif"></center><p>
+
+1km radius, 2600 polygons<br>
+<center><IMG SRC="http://paulbourke.net/miscellaneous/terrainvis/terraindata3.gif"></center><p>
+
+Notice there are only a few polygons in the lake regions where no sampling was
+necessary.<p>
+
+<b>Gridding example</b><p>
+This example uses another terrain database containing 100,000 points over a
+650m square area. These were used to produce a gridded representation at a user
+selected resolution and thus file size. This very precise control of resolution
+is not possible in the previous filtering process, the user didn't know the
+resulting number of polygons beforehand. The exact size of the grid cells is
+also precisely known which can be useful for rough distance estimates.<p>
+The following are some examples of 10, 20, and 65 square meshes showing the
+number of polygons involved.<p>
+10x10 grid, 65m grid size, 40 polygons<br>
+<center><IMG SRC="http://paulbourke.net/miscellaneous/terrainvis/terraindata4.gif"></center><p>
+
+20x20, 32.5m grid size, 200 polygons<br>
+<center><IMG SRC="http://paulbourke.net/miscellaneous/terrainvis/terraindata5.gif"></center><p>
+
+65x65, 1m grid, 1850 polygons<br>
+<center><IMG SRC="http://paulbourke.net/miscellaneous/terrainvis/terraindata6.gif"></center><p>
+
+There is normally a further overhead if a rectangular mesh surface is to be
+used for rendering purposes because the 4 point facets above will generally not
+be coplanar. The simplest solution is to split each facet into two along the
+diagonal thus increasing the number of polygons by a factor of 2. A better
+method is to interpolate the midpoint, unfortunately this increases the number
+of polygons by a factor of 4.<br>
+<center><IMG SRC="http://paulbourke.net/miscellaneous/terrainvis/terraindata7.gif"></center><p>
+
+In summary, the two representations can be used to create a terrain model of
+any desired data size. Indeed one would normally generate a number of surfaces
+with different resolution, the particular one used at any given time would
+depend on the applications ability, the response times, and quality/precision
+goals.
+<p>
+
+<br><p>
+
+<center>
+<h1>Terrain morphing</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+April 2001<p>
+<a href="http://paulbourke.net/miscellaneous/terrainvis/source/">Source code</a> that created the examples below.<br>
+QuickTime animation of example 3:
+<a href="http://paulbourke.net/miscellaneous/terrainvis/morph.mov.gz">morph.mov.gz</a></a> (1.2MB)
+</center>
+<p><br></p>
+
+<p align="justify">
+Morphing is a popular technique in the computer graphics industry 
+extensively used in Michael Jackson videos but also used in
+countless movies and television ads. The technique was first used in
+the early 1980's, one of the first movies that used morphing was 
+"Indiana Jones and the last Crusade".
+Morphing is a very different technique to fading, in that case 
+the colour of each pixel in an intermediate frame is a linear
+interpolation between the colour of the corresponding pixel 
+in the start and stop frame. 
+</p>
+For example
+<br><center>
+colour<sub>intermediate</sub> = colour<sub>start</sub> + 
+	mu (colour<sub>stop</sub> - colour<sub>start</sub>) 
+</center>
+<p>
+
+<center><img src="http://paulbourke.net/miscellaneous/terrainvis/tmorph0.gif" width=446 height=193></center>
+
+<p align="justify">
+In morphing one tries to capture a 
+sense of the geometric transformations between the start and stop frame.
+In what follows a standard morphing technique as presented by Thaddeus Beier
+at the 1992 Siggraph will be applied to create smooth transitions between
+two terrain datasets. For example the application in mind was the morphing
+of data from continental drift simulations. The technique and algorithm
+here applies equally well to the more traditional image morphing. The
+strict term for this method is "field morphing" because the operator
+chooses related regions in the start and stop frames, during the morph
+the relationships between these regions is preserved.
+</p>
+
+<p align="justify">
+In order to understand the morph transformation, assume we have a start
+and stop surface. On each of these surfaces we create a single directed line,
+this pair of lines indicates a transformation relationship between the
+two surfaces. For example, in the following the intention is that the
+region around the line P1 to P2 is rotated and shrunk during the morph
+between the two frames.
+</p>
+<center>
+<img src="http://paulbourke.net/miscellaneous/terrainvis/tmorph3.gif" width=275 height=166>
+</center>
+<p align="justify">
+Now consider estimating the surface height at a point P
+on an intermediate surface. 
+A directed line P1->P2 on this intermediate surface is
+formed by interpolating between the lines in the start and stop image.
+In order to estimate the value at point P
+compute u and v, these are the normalised distance along the lines
+P1->P2 and P1->Perp respectively. Note that there are two possible
+perpendicular vectors, in what follows it doesn't matter which perpendicular
+is used as long as a consistent choice is made.
+</p>
+
+<center>P = P1 + u (P2 - P1) + v (Perp - p1)</center>
+<p>
+
+<center>
+<img src="http://paulbourke.net/miscellaneous/terrainvis/tmorph1.gif" width=158 height=206>
+</center>
+
+<p align="justify">
+These values of u and v are applied the line in the start and stop
+surface to get the corresponding point in those surfaces. The
+line on the intermediate image is a linear interpolation between the
+corresponding lines in the start and stop surface. The 
+surface height in the intermediate surface is a cross fade of these two height
+samples. If the animation sequence is controlled by a parameter mu
+that ranges from 0 (start) to 1 (stop) and the two height samples
+are z1 (start) and z2 (stop) then the intermediate height is as follows.
+</p>
+
+<center>z = z1 (1 - mu) + z2 mu</center>
+<p>
+
+<center>
+<img src="http://paulbourke.net/miscellaneous/terrainvis/tmorph2.gif" width=449 height=196>
+</center>
+<p>
+
+<p align="justify">
+Most morphs will require more than a single line to define the related regions
+in the start and stop surfaces. For every point on the intermediate surface
+each line gives a point on the start surface, a weighted sum of all these
+points is used to choose the point to sample on the start surface. The same
+applies for the stop surface. The cross fade is then applied to the
+weighted sum estimate of the corresponding points on the start and stop
+surface.
+</p>
+
+<center>
+<img src="http://paulbourke.net/miscellaneous/terrainvis/tmorph4.gif" width=445 height=195>
+</center>
+
+<p align="justify">
+The weight is predominantly determined by the
+distance of the point and the line on the control surface. This is
+intuitively obvious, the influence a line plays on a point is inversely
+related to the distance of the point to the line.
+Different forms
+of the weighting can change the exact details of the field on influence,
+for the details see the sample code.
+</p>
+
+<b>Examples</b><br>
+<p align="justify">
+In the examples that follow, fractal landscapes are created within
+the red outlines. The control lines are shown in green except for example 2
+where the control lines are identical to the outline.
+Samples from an animation between the start and stop surfaces 
+are given for both
+simple blending and morphing. While the blend is a valid smooth transition
+between the two surfaces, the sample below should convey the richer 
+transition given by the morph.
+</p>
+
+<table><tr><td valign="top">
+<b>Example 1 - Rotation</b><p>
+<p align="justify">
+This first example illustrates rotation, note the single control line
+in the last frame is at 90 degrees to where it is in the first frame.
+The blend case doesn't behave too objectionably and may be the desired
+effect in some application. In the morph case there is a clear rotation
+of the island features.
+</p>
+</td><td valign="top">
+Start frame<br>
+<img src="http://paulbourke.net/miscellaneous/terrainvis/plan1start.gif" width=187 height=187>
+</td><td valign="top">
+Stop frame<br>
+<img src="http://paulbourke.net/miscellaneous/terrainvis/plan1stop.gif" width=187 height=187>
+</td></tr></table>
+<p>
+Blend<br>
+<center><img src="http://paulbourke.net/miscellaneous/terrainvis/blend1.gif" width=700 height=140></center><p>
+Morph<br>
+<center><img src="http://paulbourke.net/miscellaneous/terrainvis/morph1.gif" width=700 height=140></center><p>
+
+<table><tr><td valign="top">
+<b>Example 2 - Translation</b><p> 
+<p align="justify">
+This is an example of translation, as with the above example there
+is a stunning difference between the morph case and the straightforward
+blend of the height fields. In the morph case the island slowly moves
+across the ocean while in the blend one island drops away while the
+other appears.
+</p>
+</td><td valign="top">
+Start frame<br>
+<img src="http://paulbourke.net/miscellaneous/terrainvis/plan2start.gif" width=187 height=187>
+</td><td valign="top">
+Stop frame<br> 
+<img src="http://paulbourke.net/miscellaneous/terrainvis/plan2stop.gif" width=187 height=187>
+</td></tr></table>
+<p>
+Blend<br>
+<center><img src="http://paulbourke.net/miscellaneous/terrainvis/blend2.gif" width=700 height=140></center><p>
+Morph<br>
+<center><img src="http://paulbourke.net/miscellaneous/terrainvis/morph2.gif" width=700 height=140></center><p>
+
+<table><tr><td valign="top">
+<b>Example 3 - Separation</b><p>
+<p align="justify">
+This is a more complicated example, the main land mass
+rotates and a small island splits off. In the blend example the
+small island appears but in the morph animation the land mass
+clearly rotates while the island slowly pulls away.
+</p>
+</td><td valign="top">
+Start frame<br> 
+<img src="http://paulbourke.net/miscellaneous/terrainvis/plan3start.gif" width=187 height=187>
+</td><td valign="top">
+Stop frame<br> 
+<img src="http://paulbourke.net/miscellaneous/terrainvis/plan3stop.gif" width=187 height=187>
+</td></tr></table>
+<p>
+Blend<br>
+<center><img src="http://paulbourke.net/miscellaneous/terrainvis/blend3.gif" width=700 height=140></center><p>
+Morph<br>
+<center><img src="http://paulbourke.net/miscellaneous/terrainvis/morph3.gif" width=700 height=140></center><p>
+
+<table><tr><td valign="top">
+<b>Example 4 - Lake Creation</b><p>
+<p align="justify">
+This example is only fully appreciated as an animation sequence, the
+left and right arms are drawn around and closes off the gap.
+This example does illustrate the difficulty imposed by the requirement
+of having the same number of control lines in the start and stop surface.
+</p>
+</td><td valign="top">
+Start frame<br>
+<img src="http://paulbourke.net/miscellaneous/terrainvis/plan4start.gif" width=187 height=187>
+</td><td valign="top">
+Stop frame<br>
+<img src="http://paulbourke.net/miscellaneous/terrainvis/plan4stop.gif" width=187 height=187>
+</td></tr></table>
+<p>
+Morph<br>
+<center><img src="http://paulbourke.net/miscellaneous/terrainvis/morph4.gif" width=700 height=140></center><p>
+
+<b>References</b><p>
+
+Digital Image Processing of Earth Observation Sensor Data.
+Bernstein, R.
+IBM J. Res. Development, 20:40-57, 1976.
+<p>
+
+Feature-Based Image Metamophosis.
+Beier, T.
+Siggraph 1992
+<p>
+
+Space Deformation Models Survey.
+Bechmann, D.
+Computers & Graphics, 18(4):571-586, 1994.
+<p>
+
+Three-Dimensional Distance Field Metamorphosis.
+Cohen-Or, D., Levin, D., Solomovici, A..
+Transactions on Graphics, 1998.
+<p>
+
+Extended free-form deformations: A sculpturing tool for 3D geometric modeling.
+Coquillart, S.
+Computer Graphics (SIGGRAPH '90 Proceedings), volume 24, pages 187--196, 1990.
+<p>
+
+Conformal image warping.
+Frederick, C. and Schwartz, E.L.
+IEEE Computer Graphics and Applications, 10(3):54-61, March 1990.
+<p>
+
+Establishing Correspondence by Topological Merging,
+A New Approach to 3D Shape Transformation.
+Kent, J., Parent, R., Carlson, W.
+<p>
+
+The Morphological Cross-Dissolve.
+Novins, K., Arvo, J.
+Conference Abstracts and Applications, page 257. ACM SIGGRAPH, August 1999.
+<p>
+
+A Morphable Model for the Synthesis of 3D Faces.
+Blanz, V., Vetter, T.
+Proceedings of SIGGRAPH 99, pages 187-194. ACM SIGGRAPH, August 1999.
+<p>
+
+Digital Image Warping.
+Wolberg, G.
+IEEE Computer Society Press, 1990
+<p>
+
+<p><br><p>
+
+<center>
+<h1>Terragen Animation Extension (tgs_interp)</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+July 2003, updated November 2004<br>
+</center>
+<p>
+
+<center><table width=80% cellpadding=0 cellspacing=0><tr><td>
+<blockquote>
+"Terragen is a scenery generator, created with the goal of generating 
+photorealistic landscape images and animations.....capable of 
+near-photorealistic results for professional landscape visualisation, 
+special effects, art and recreation." 
+[Terragen web site].
+</blockquote>
+</td></tr></table></center><p>
+
+<b>Motivation</b><br>
+<p align="justify">
+There are a number of environments in which one might want to
+create content using Terragen but for which Terragen doesn't provide explicit
+support eg: stereoscopic projection, fisheye frames for planetarium domes, 
+panoramic images. 
+The following describes a utility that solves this problem and
+as a side effect conforms to conventions that allow 
+time consuming animation rendering to be performed
+locally on a large rendering cluster of 200+ processors.
+</p>
+
+<p align="justify"> 
+The utility is called "tgs_interp" mostly because it provides keyframe
+interpolation (supported by keyframe files in Terragen called a .tgs file).
+The basic work flow is to create a tgs file using Terragen or plug-ins, use
+tgs_interp to read this tgs file and instruct it to create a number of other
+tgs files which will then be read and rendered by Terragen. 
+In the case of stereoscopic projection
+two tgs frames result from each interpolated frame. For cubic projection
+5 or 6 tgs frames result for each interpolated frame. The utility is written for
+UNIX command line operation, currently compiled for Mac OS-X and Linux.
+</p>
+
+<pre>
+Usage: tgs_interp [options] tgsfile
+Options
+   -n n   number of tween frames (default: 1)
+   -c n   calculate cubic views, 5 or 6 (default: off)
+   -s n   calculate stereo pairs, supply eye separation (default: off)
+   -p n   add a pitch offset in degrees, positive pitch forward (default: 0)
+   -f n   tgs splitting mode, 0=single, 1=lots, 2=stereo, 6=cubic
+   -z n   adjust camera height (default: 0)
+</pre>
+
+<b>Projection options</b><br>
+<p align="justify">
+The two environments not directly supported by Terragen and addressed by this
+utility are:
+</p>
+<ul>
+<li><p align="justify">Stereoscopic (-s)<br>
+In this case the camera is offset to the left and right
+of the non-stereoscopic position. The width of the left and right
+images should be widened for rendering in Terragen and truncated afterwards
+to create the correct stereo pairs, this is discussed in more detail
+<a href="../../stereographics/stereorender/index.html">here</a> and later in this document.
+</p>
+<li><p align="justify">Cubic (-c).<br>
+Cubic renderings are created by rendering 5 or 6 perspective frustums,
+namely the frustums formed from the center of a cube about the camera and each
+of the faces of the cube. These renderings can then combined into a fisheye
+image (or other projections such as panoramic or spherical) using techniques described
+<a href="../../dome/skyvision/index.html">here</a>.
+Note that the QuickTime VR support in Terragen isn't quite good enough for
+creating fisheye animations because the faces of the cube in that case are
+aligned with the coordinate axes rather than the camera view direction.
+</p>
+</ul>
+
+<b>Frame output options (-f)</b><br>
+<p align="justify">
+This option determines the format of the output tgs file(s). The options are as follows.
+</p>
+<ul>
+<li><p align="justify">0 - All the frames are written to a single tgs file, the default. 
+This is usually the choice when tgs_interp is simply used as a keyframe interpolation.
+</p>
+<li><p align="justify">1 - Each frame is written to a single tgs file. This is intended
+primarily for locally developed cluster based distributed rendering software, use with
+care...it can create lots of files.
+</p>
+<li><p align="justify">2 - This is intended for use with stereoscopic output, the left and
+right eye frames will each be written to their own tgs file. Recommended for stereoscopic
+output.
+</p>
+<li><p align="justify">3 - This is intended for cubic output, each of the 5 or 6 faces (left,
+front, right, back, top, bottom) will be written to their own tgs file. Recommended for 
+cubic output.
+<p>
+</ul>
+
+<b>Additional options (-z and -p)</b><br>
+<ul>
+<li><p align="justify">Height adjustment (-z)<br>
+This raises or lowers the camera along the camera "up" vector. 
+</p>
+<li><p align="justify">Pitch adjustment (-p)<br>
+This will pitch the camera forward or upward by some angle. Primarily intended
+for creating fisheye content for planetarium domes which have different ideal
+horizon levels. Note that this can also be performed using the software that
+converts cubic views to a fisheye image.
+</p>
+</ul>
+<p>
+
+<b>Notes on stereoscopic rendering</b>
+<p align="justify">
+There are a number of ways of formulating and setting up stereoscopic rendering, the approach
+taken here will be the correct parallel camera method and since Terragen doesn't support
+offaxis frustums it will be based upon the techniques described 
+<a href="../../stereographics/stereorender/index.html">here</a>. In essence this involves rendering frustums
+that are slightly wider than desired and truncating the images to give the correct stereo
+pairs. The following example outlines how the author would set up a stereoscopic rendering
+using Terragen and tgs_interp.
+</p>
+<ul>
+<li><p align="justify">
+The horizontal camera aperture "a"
+(also called the horizontal field of view) is controlled in Terragen by the zoom setting.
+The relationship is <br>
+<center>zoom = 1 / tan(a/2)</center><br>
+So in this example if the intended horizontal aperture is 60 degrees, the Terragen zoom is 1.732
+</p>
+<li><p align="justify">
+The degree to which the image width (as specified in Terragen) should be increased is given by<br>
+<center>delta = e w / (2 f<sub>o</sub> tan(a/2))</center><br>
+So in this example, if the final image width "w" is to be 1024 pixels and the eye separation 100 units
+and the distance to zero parallax is 3000 units, then amount by which the image width
+will be extended is 30 pixels.
+Note this is based upon the eye separation being 1/30 of the
+distance to zero parallax, a common ratio. It is often more useful to think in terms of
+the zero parallax distance and then use 1/30 of that for the eye separation.<br>
+So, Terragen should be instructed to render an image
+that is 1054 pixels wide. After the images are rendered 30 pixels will be removed from the
+left of the left eye image and 30 pixels will be removed from the right of the right eye image.
+This process in effect creates offaxis frustums even though only 
+symmetric frustums were available.
+</p>
+<li><p align="justify">
+And finally, to be strictly correct the aperture and hence the zoom setting in Terragen needs
+to be recalculated, the expression is<br>
+<center>2 atan((w + delta) tan(a/2) / w)</center><br>
+In this example the intended aperture is 61.443 degrees
+and the zoom to be set in Terragen is 1.683. This is a relatively minor adjustment that
+is often not bothered with.
+</p>
+</ul>
+<center><table><tr><td>
+<a href="http://paulbourke.net/miscellaneous/terrainvis/stereo_l.jpg"><img src="http://paulbourke.net/miscellaneous/terrainvis/stereo_ls.jpg" width=300 height=225 border=1></a><br>
+<smalltext>Left eye, model courtesy of Peter Morse</smalltext>
+</td><td width=10>&nbsp;</td><td>
+<a href="http://paulbourke.net/miscellaneous/terrainvis/stereo_r.jpg"><img src="http://paulbourke.net/miscellaneous/terrainvis/stereo_rs.jpg" width=300 height=225 border=1></a><br>
+<smalltext>Right eye</smalltext>
+</td></tr></table></center><p>
+
+<b>Notes on cubic rendering and derived projections</b>
+<p align="justify">
+The width and height of the rendered image should be set equal before rendering.
+The zoom factor set by the user will be reset to 1, in other words a horizontal 
+(and vertical) aperture of 90 degrees. 
+</p>
+
+<center><table><tr><td>
+<img src="http://paulbourke.net/miscellaneous/terrainvis/cubic.jpg" width=600 height=450 border=0><br>
+<smalltext>Unfolded cube, model courtesy of Peter Morse</smalltext>
+</td></tr></table></center><p>
+
+<center><table><tr><td>
+<a href="http://paulbourke.net/miscellaneous/terrainvis/sph.jpg"><img src="http://paulbourke.net/miscellaneous/terrainvis/sph_s.jpg" width=600 height=300 border=1></a><br>
+<smalltext>Derived spherical panoramic</smalltext>
+</td></tr></table></center><p>
+
+<center><table><tr><td>
+<a href="http://paulbourke.net/miscellaneous/terrainvis/cyl.jpg"><img src="http://paulbourke.net/miscellaneous/terrainvis/cyl_s.jpg" width=600 height=150 border=1></a><br>
+<smalltext>Derived cylindrical panoramic</smalltext>
+</td></tr></table></center><p>
+
+<center><table><tr><td>
+<img src="http://paulbourke.net/miscellaneous/terrainvis/fish.jpg" width=600 height=600 border=1><br>
+<smalltext>Derived fisheye</smalltext>
+</td></tr></table></center><p>
+
+<b>Further notes</b><p>
+<ul>
+<li><p align="justify">
+The Mac and MSWindows version of Terragen seem to be slightly out of step with how
+animation files are named. Until this is resolved tgs_anim will use it's own conventions
+that just happen to be those preferred by the author and most compatible with local
+conventions used for stereoscopic content and animations for planetariums.
+</p>
+<li><p align="justify">
+This utility has been tested/checked with the current version of Terragen and the format/style
+of the tgs files it creates. Obviously future versions of Terragen may change details of
+the tgs files that this utility assumes, or new features may be added for which this utility
+is ignorant. Every attempt will be made to keep this utility in step with the current version
+of Terragen.
+</p>
+</ul>
+
+</td></tr></table></center>
+</body>
+</html>
+

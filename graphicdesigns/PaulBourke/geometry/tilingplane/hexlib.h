@@ -1,0 +1,21 @@
+long   HexDigit(long,long);
+long   HexPower(long);
+void   HexCoord(long,double *,double *);
+long   HexAdd(long,long,long);
+long   HexAdd_b7(long,long,long);
+long   HexMul(long,long,long);
+long   HexMul_b7(long,long,long);
+long   HexShift(long,int,int,long);
+long   Hex2Dec(long);
+long   Dec2Hex(long);
+long   HexEven(long);
+long   HexLeft(long);
+long   HexReflect(long,long,int);
+long   HexMagnitude(long);
+double HexDistance(long,long);
+double HexAngle(long,long);
+long   HexInverse(long,long,long);
+long   HexSqrt(long,long,long);
+long   HexComplexPower(long,double,long);
+long   CoordHex(double,double,long);
+

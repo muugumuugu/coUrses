@@ -1,0 +1,118 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Solid angle of a pixel</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Solid angle of a pixel</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+July 2017
+</center><p>
+
+<p align="justify">
+In the following the question of how much solid angle a pixel representing
+a projection of a 3D scene covers will be presented. Applications for this
+include computing the total solid angle an object in a scene covers, for example,
+for lighting calculations.
+While what follows can be extended to any projection space, for simplicity here
+we will consider 90 degree by 90 degree perspective projections such as generated
+from <a href="../../panorama/cubemaps/index.html">cube maps</a>.
+</p>
+
+<p align="justify">
+Consider one face of the cube centered at the origin as shown below. Each
+pixel of which may be in one or another state and the aim is to find the solid
+angle of all pixels in a particular state. This involves counting up the solid
+angle of each pixel in that state. If the aim is to find the solid angle overall
+then this can be applied to each of the 6 cube faces.
+</p>
+
+<center>
+	<img src="solidangle1.png" width=600 height=426 border=0>
+</center><p>
+
+<p align="justify">
+One pixel on this face of the cube is shown highlighted above, the corners 
+labeled as shown. Consider vectors from the origin to c<sub>0</sub> ... c<sub>3</sub> and 
+normalise, these are now points on a unit sphere. Splitting the 4 vertex 
+pixel rectangle into two halves gives two spherical triangles. The shortest 
+curve between two of these vertices are sections of a great circle (they 
+lie on the plane that also contains the origin). The solid angle of such a 
+triangle is simply
+</p>
+<center>
+&Oslash;<sub>0</sub> + &Oslash;<sub>1</sub> + &Oslash;<sub>2</sub> - &pi;
+</center><p>
+
+<p align="justify">
+Where the angles 
+&Oslash;<sub>0</sub> + &Oslash;<sub>1</sub> + &Oslash;<sub>2</sub>
+are the angles of the spherical triangle at each vertex as shown below.
+The tangents at each c<sub>i</sub> lie in the plane to the neighbouring point.
+</p>
+
+<center>
+   <img src="solidangle2.png" width=400 height=334 border=0>
+</center><p>
+
+<p align="justify">
+Computing the tangents at each c<sub>i</sub> is achieved using the "standard" 
+double cross product trick. For example to find the tangent vector from 
+c<sub>0</sub> to c<sub>1</sub>, 
+calculate the vector c<sub>1</sub> - c<sub>0</sub>, take the cross product of this with the 
+normal vector at c<sub>0</sub> which is also c<sub>0</sub> 
+(sphere is at the origin). The result is a 
+vector perpendicular to the normal at c<sub>0</sub>. The cross product of this vector 
+with the normal at c<sub>0</sub> is the desired tangent vector.
+</p>
+
+<pre>
+XYZ CalcTangent(XYZ p0,XYZ p1)
+{
+   XYZ p,r,t;
+
+   p = VectorSub(p1,p0);
+   r = CrossProduct(p0,p);
+   t = CrossProduct(r,p0);
+   Normalise(&t);
+
+   return(t);
+}
+</pre>
+
+<p align="justify">
+There are a few simple test cases for a coded implementation. If the cube face is
+entirely contained in the object whose solid angle is to be measured then the solid
+angle should be 4&pi;/6.
+</p>
+
+<p align="justify">
+Consider a disk of radius R one unit from the origin. The solid
+angle should be 2&pi;(1-cos(&theta;)) where &theta; is atan(R).
+</p>
+
+<p align="justify">
+For a bounded longitude and latitude rectangle the solid angle is
+given by (sin(&phi;<sub>2</sub>) - sin(&phi;<sub>1</sub>))
+(&theta;<sub>2</sub> - &theta;<sub>1</sub>)
+Where &phi; is latitude and &theta; longitude.
+</p>
+
+</td><tr></table></center>
+</body>
+</html>
+

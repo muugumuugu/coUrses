@@ -1,0 +1,309 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle2.css" type="text/css" media=all>
+<title>Knots</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Knots</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+October 1992
+</center>
+<p><br><p>
+
+The following describes a few parametric functions 
+in 3 dimensions which
+give the appearance of knots in a piece of string.
+<p>
+<b>Knot 1</b>
+
+<p><center><img src="knot1.gif" width="398" height="494"></center><p>
+<p>
+<b>Knot 2</b>
+
+<p><center><img src="knot2.gif" width="316" height="478"></center><p>
+
+This is a special case of the more general torus
+knot described in knot 3.
+<p>
+<b>Knot 3</b>
+
+<p align="justify">
+This is an example of a torus knot which exists on the
+surface a torus. It is characterised by the number of
+time it wraps around the meridian and longitudinal
+axis of a torus.
+</p>
+
+<p><center><img src="knot3.gif" width="302" height="438"></center><p>
+<p><center><img src="knot4.gif" width="308" height="448"></center><p>
+<p><center><img src="knot5.gif" width="299" height="433"></center><p>
+
+<p>
+<b>Knot 4</b>
+<p>
+
+There are a whole family of curves including knots which are
+formed by the equations:<p>
+x = r * cos(phi) * cos(theta)<br>
+y = r * cos(phi) * sin(theta)<br>
+z = r * sin(phi)<p>
+which are the equations for converting from polar to Cartesian
+coordinates except that we make r, theta, phi a function of a parameter
+beta which ranges from 0 to pi.<p>
+
+For the following<p>
+r(beta) = 0.8 + 1.6 * sin(6 * beta)<br>
+theta(beta) = 2 * beta<br>
+phi(beta) = 0.6 * pi * sin(12 * beta)
+<p>
+<center><img src="knot6.gif" width="600" height="212"></center>
+<p>
+<b>Knot 5</b><p>
+Using the same systems of equations as in knot 4, with<p>
+
+r(beta) = 1.2 * 0.6 * sin(0.5 * pi + 6 * beta)<br>
+theta(beta) = 4 * beta<br>
+phi(beta) = 0.2 * pi * sin(6 * beta)<p>
+
+<center><img src="knot7.gif" width="600" height="211"></center>
+
+<p>
+<b>C Source for Knot 1</b>
+<pre>
+#include "stdio.h"
+#include "stdlib.h"
+#include "math.h"
+
+#define TWOPI 6.283185307179586476925287
+#define NSEGMENTS 1000
+#define RADIUS .50
+
+int main(argc,argv)
+int argc;
+char **argv;
+{
+   int i;
+   double x,y,z,xlast,ylast,zlast;
+   double mu;
+
+   for (i=0;i&lt;=NSEGMENTS;i++) {
+      mu = i * TWOPI / (double)NSEGMENTS;
+      x = 10 * (cos(mu) + cos(3*mu)) + cos(2*mu) + cos(4*mu);
+      y = 6 * sin(mu) + 10 * sin(3*mu);
+      z = 4 * sin(3*mu) * sin(5*mu/2) + 4*sin(4*mu) - 2 * sin(6*mu);
+
+      /*
+         Write the geometry in any format you like
+         Here I create sphere and cylinder combinations for Radiance
+      */
+      if (i &lt; NSEGMENTS)
+         printf("surf sphere s%d\n0 0 4 %g %g %g %g\n",i,x,y,z,RADIUS);
+      if (i != 0)
+         printf("surf cylinder c%d\n 0 0 7 %g %g %g %g %g %g %g\n",
+            i,xlast,ylast,zlast,x,y,z,RADIUS);
+      xlast = x;
+      ylast = y;
+      zlast = z;
+   }
+}</pre>
+<p>
+<b>C Source for Knot 2</b>
+
+<pre>
+#include "stdio.h"
+#include "stdlib.h"
+#include "math.h"
+
+#define PI 3.141592653589793238462643
+#define TWOPI 6.283185307179586476925287
+#define NSEGMENTS 1000
+#define RADIUS 0.1
+
+int main(argc,argv)
+int argc;
+char **argv;
+{
+   int i;
+   double x,y,z,xlast,ylast,zlast;
+   double mu;
+
+   for (i=0;i&lt;=NSEGMENTS;i++) {
+      mu = i * TWOPI / (double)NSEGMENTS;
+      x = (4 * cos(mu + PI)) / 3 + 2 * cos(3 * mu);
+      y = 4 * sin(mu) / 3 + 2 * sin(3 * mu);
+      z = sin(4 * mu) + sin(2 * mu) / 2;
+
+      if (i &lt; NSEGMENTS)
+         printf("surf sphere s%d\n0 0 4 %g %g %g %g\n",i,x,y,z,RADIUS);
+      if (i != 0)
+         printf("surf cylinder c%d\n 0 0 7 %g %g %g %g %g %g %g\n",
+            i,xlast,ylast,zlast,x,y,z,RADIUS);
+      xlast = x;
+      ylast = y;
+      zlast = z;
+   }
+}</pre>
+<p>
+<b>C Source for Knot 3</b>
+<p>
+
+<pre>#include "stdio.h"
+#include "stdlib.h"
+#include "math.h"
+
+#define TWOPI 6.283185307179586476925287
+#define NSEGMENTS 1000
+#define RADIUS 0.05
+
+int main(argc,argv)
+int argc;
+char **argv;
+{
+   int i;
+   double x,y,z,xlast,ylast,zlast;
+   double mu;
+   int nlongitude,nmeridian;
+
+   nmeridian  = atoi(argv[1]);
+   nlongitude = atoi(argv[2]);
+
+   for (i=0;i&lt;=NSEGMENTS;i++) {
+      mu = i * TWOPI * nmeridian / (double)NSEGMENTS;
+      x = cos(mu) * (1 + cos(nlongitude*mu/(double)nmeridian) / 2.0);
+      y = sin(mu) * (1 + cos(nlongitude*mu/(double)nmeridian) / 2.0);
+      z = sin(nlongitude*mu/(double)nmeridian) / 2.0;
+
+      if (i &lt; NSEGMENTS)
+         printf("surf sphere s%d\n0 0 4 %g %g %g %g\n",i,x,y,z,RADIUS);
+      if (i != 0)
+         printf("surf cylinder c%d\n 0 0 7 %g %g %g %g %g %g %g\n",
+            i,xlast,ylast,zlast,x,y,z,RADIUS);
+      xlast = x;
+      ylast = y;
+      zlast = z;
+   }
+}</pre>
+
+<p><br><br><br><p>
+
+<center>
+<h1>Eight Knot</h1>
+By <a href="../index.html">Paul Bourke</a><br>
+January 2001
+</center>
+<p>
+x = 10 (cos(t) + cos(3 t)) + cos(2 t) + cos(4 t)
+<br>
+y = 6 sin(t) + 10 sin(3 t) 
+<br>
+z = 4 sin(3 t) sin(5 t / 2) + 4 sin(4 t) - 2 sin(6 t) 
+<br>
+0 < t < 2 pi
+<p>
+
+<center><img src="1.gif" width=603 height=404></center><p>
+<center><img src="2.gif" width=651 height=277></center><p>
+<center><img src="3.gif" width=652 height=407></center><p>
+
+<b>Knot in Second Life</b><br>
+<center>
+<a href="knots1.png"><img src="knots1s.png" border=1 width=800 height458></a>
+</center><p>
+
+<p><br><br><br><p>
+
+
+<center>
+<h1>Cinquefoil Knot</h1>
+Graphics by <a href="../index.html">Paul Bourke</a><br>
+November 2004
+</center>
+<p>
+x = cos(u) [ 2 - cos(2 u/(2 k + 1)) ]<br>
+y = sin(u) [ 2 - cos(2 u/(2 k + 1)) ]<br>
+z = -sin(2 u/(2 k + 1))<br>
+where 0 < u < (4 k + 2) pi<p>
+<p>
+
+k=1, see Trefoil Knot.<p>
+
+k=2<br>
+<center><img src="1.jpg" width=600 height=600></center><p>
+<center><img src="2.jpg" width=600 height=600></center><p>
+<center><img src="3.jpg" width=600 height=600></center><p>
+
+k=3<br>
+<center><img src="4.jpg" width=600 height=600></center><p>
+<center><img src="5.jpg" width=600 height=600></center><p>
+<center><img src="6.jpg" width=600 height=600></center><p>
+
+<p><br><br><br><p>
+
+<center>
+<h1>Trefoil Knot</h1>
+Graphics by <a href="../index.html">Paul Bourke</a><br>
+November 2004
+</center>
+<p>
+x = 41 cos(u) - 18 sin(u) - 83 cos(2 u) - 83 sin(2 u) - 11 cos(3 u) + 27 sin(3 u)<br>
+y = 36 cos(u) + 27 sin(u) - 113 cos(2 u) + 30 sin(2 u) + 11 cos(3 u) - 27 sin(3 u)<br>
+z = 45 sin(u) - 30 cos(2 u) + 113 sin(2 u) - 11 cos(3 u) + 27 sin(3 u)<br>
+where 0 < u < 2 pi<p>
+
+<p>
+
+<center><img src="t1.jpg" width=600 height=600></center><p>
+<center><img src="t2.jpg" width=600 height=600></center><p>
+<center><img src="t3.jpg" width=600 height=600></center><p>
+
+<p><br><br><br><p>
+
+
+<center>
+<h1>Granny Knot</h1>
+Graphics by <a href="../index.html">Paul Bourke</a><br>
+November 2004
+</center>
+<p>
+x = -22 cos(u) - 128 sin(u) - 44 cos(3 u) - 78 sin(3 u)<br>
+y = -10 cos(2 u) - 27 sin(2 u) + 38 cos(4 u) + 46 sin(4 u)<br>
+z = 70 cos(3 u) - 40 sin(3 u)<br>
+where 0 < u < 2 pi<p>
+<a href="granny.pov">PovRay source</a>
+<p>
+
+<center><img src="g1.jpg" width=600 height=600></center><p>
+<center><img src="g2.jpg" width=600 height=600></center><p>
+<center><img src="g3.jpg" width=600 height=600></center><p>
+<center><img src="g4.jpg" width=600 height=600></center><p>
+
+<p><br><br><br><p>
+<b>Second Life</b><br>
+<center>
+<a href="knots2.png"><img src="knots2s.png" border=1 width=800 height=458></a>
+</center><p>
+
+<p><br><br><br><p>
+<b>3D printed</b><p>
+<center>
+<a href="knotsprint.jpg"><img src="knotsprint_s.jpg" border=1 width=800 height=533></a>
+</center><p>
+
+</td></tr></table></center>
+</body>
+</html>
+

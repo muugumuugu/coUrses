@@ -1,0 +1,361 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>ffmpeg, convert (imagemagick), exiftool and MeshLab crib sheet</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>ffmpeg, convert (imagemagick) exiftool and MeshLab crib sheet</h1>
+Assembled by <a href="../index.html">Paul Bourke</a><br>
+Started June 2018, ongoing ...
+<p>
+See also: 
+<!--
+<a href="FFmpeg_Book.pdf">
+-->
+<a href="http://www.astro-electronic.de/FFmpeg_Book.pdf">
+An Introduction to FFmpeg, Timelapse and Fulldome Video Production, Color Grading, Audio Processing and Panasonic LUMIX GH5S by Michael Koch</a>
+</center>
+<p><br><p>
+
+<p align="justify">
+A small collection of helpful command lines for ffmpeg and convert (imagemagick). Certainly
+not trying to be comprehensive but a note to myself for things I seem to need to do regularly.
+Collated here to save myself digging around on-line and/or through the respective manuals. 
+Hopefully others may find them useful also.
+If you think the following are incomplete, can be improved,
+or if you would like to add your own please drop me an <a href="../index.html">email</a>.
+</p>
+
+<br>
+<h3>ffmpeg</h3>
+
+Convert mp4 to mov.
+<pre>
+   ffmpeg -i inputmoviename -acodec copy -vcodec copy -f mov outputmoviename
+</pre>
+
+Convert frames to movie using Apple animation codec
+<pre>
+   ffmpeg -framerate 30 -i inputframes%04d.png -vcodec qtrle outputmoviename
+</pre>
+
+Convert from mov to mp4
+<pre>
+   ffmpeg -i inputmoviename -vcodec copy -acodec copy outputmoviename
+</pre>
+
+Convert from mov to mp4 using h265 compression, default preset is medium, default crf is 28
+<pre>
+   ffmpeg -i inputmoviename -c:v libx265 -preset slow -crf 25 -acodec copy outputmoviename
+</pre>
+
+Add audio to existing movie, transcoding the audio
+<pre>
+   ffmpeg -i inputvideo.mp4 -i inputaudio.wav -c:v copy -c:a aac output.mp4
+</pre>
+
+Used for making mp4 for Gear VR, this was 2015, may have changed now.
+<pre>
+   ffmpeg -framerate 30 -i inputframename%04d.png -c:v libx264 -profile:v high 
+      -crf 18 -pix_fmt yuv420p outputmoviename
+</pre>
+
+Extract frames
+<pre>
+   ffmpeg -i inputmoviename -q:v 1 directoryname/outputframename%04d.tga
+</pre>
+
+Extract a single frame
+<pre>
+   ffmpeg -ss 00:01:00 -i inputmoviename -vframes 1 -q:v 1 outputimagename
+</pre>
+
+Extract a time range from a movie
+<pre>
+   ffmpeg -i inputmoviename -ss 00:03:00 -t 00:01:00 outputmoviename
+</pre>
+
+Extract 16 bit from greater than 8 bit movies, eg: GH5
+<pre>
+   ffmpeg -i inputmoviename -vf "format=pix_fmts=rgb48" directoryname/outputframename%04d.png
+</pre>
+
+Extract frames and scale
+<pre>
+   ffmpeg -i inputmoviename -vf scale=2048:1080 -q:v 1 directoryname/outputframename%04d.tga
+</pre>
+
+Extract frames and rotate by multiples of 90 degrees (see transpose options)
+<pre>
+   ffmpeg -i inputmoviename -vf transpose=2 -q:v 1 directoryname/outputframename%04d.tga
+</pre>
+
+Build mp4 movie from frames
+<pre>
+   ffmpeg -r 30 -i scene%04d.tga -c:v libx265 -crf 20 outputmoviename
+</pre>
+
+Build mp4 movie from frames for system that don't fully support yuv444p
+<pre>
+   ffmpeg -r 30 -i scene%04d.jpg -c:v libx264 -crf 20 -pix_fmt yuv420p outputmoviename
+   ffmpeg -r 30 -i scene%04d.png -c:v libx265 -crf 26 -tag:v hvc1 -pix_fmt yuv420p outputmoviename
+</pre>
+
+Build mp4 from frames and audio
+<pre>
+ffmpeg -r 30 -i dirname/frame_%d.jpg -i audio.mp4 -c:a copy -c:v libx265 outputmovie.mp4
+ffmpeg -r 30 -i dirname/frame_%d.jpg -i audio.mp4 -c:a copy -c:v libx265 -crf 24 outputmovie.mp4
+ffmpeg -r 30 -i dirname/frame_%d.jpg -i audio.mp4 -c:a copy -c:v libx264 -crf 18 outputmovie.mp4
+</pre>
+
+Extract audio channels
+<pre>
+ffmpeg -i video13.mp4 -vn -acodec copy video13.mp3
+</pre>
+
+Convert and apply remap filter
+<pre>
+   ffmpeg -i inputmoviename -i 0001_x.pgm -i 0001_y.pgm -lavfi remap outputmoviename
+</pre>
+For missing values the chroma key colour is used, to change from green to black
+<pre>
+    ffmpeg -i inputmovie -i x.pgm -i y.pgm -lavfi remap=fill=black outputmovie
+</pre>
+
+Convert and apply cropping
+<pre>
+   ffmpeg -i inputmoviename -filter:v "crop=out_w:out_h:x:y" outputmoviename
+</pre>
+
+Movie encoding from frames, proposed for fulldome video using Watchout
+<pre>
+   ffmpeg -threads auto -r 30 -i "inputframedirectory/inputframename%04d.png" -f vob 
+      -vcodec mpeg2video -b:v 30000k -minrate 30000k -maxrate 30000k -g 15 -bf 2 -an 
+      -trellis 2 "outputmoviename.m2v"
+</pre>
+
+Movie encoding from frames with HAP codec, proposed for Vioso Wings fulldome playback.
+Ensure ffmpeg is installed "with-snappy".
+<pre>
+   ffmpeg -r 30 -i "inputframedirectory/inputframename%04d.tga" -vcodec hap 
+      -format hap -r 30 outputmoviename
+</pre>
+
+Movie information.
+<pre>
+   ffmpeg -i moviename
+</pre>
+ 
+Scale a movie.
+<pre>
+   ffmpeg -i inputmoviename -filter:v scale=640:480 -c:a copy outputmoviename
+</pre>
+
+Extract a time segment from a movie.
+<pre>
+   ffmpeg -i inputmoviename -ss 00:00:30 -t 00:00:50 -codec copy outputmoviename
+</pre>
+
+QuickTime movie to animated gif.
+(Contributed by Jordi Vallverdú Alcover)
+<pre>
+   ffmpeg -ss 00:00:00.000 -i input.mov -pix_fmt rgb24 -r 10 
+      -s 320x240 -t 00:00:10.000 output.gif
+   convert -layers Optimize output.gif output_optimized.gif
+</pre>
+
+Record from webcam (Mac OSX)
+<pre>
+   ffmpeg -f avfoundation -list_devices true -i ""
+   ffmpeg -f avfoundation -framerate 30 -video_size 1280x720 
+      -pixel_format rgb24 -i "0:0" out.mov
+   ffmpeg -f avfoundation -framerate 30 -video_size 1280x720 -i "0:0" 
+      -c:v libx264 -crf 22 out.mp4
+</pre>
+
+Append two movies side by side
+<pre>
+   ffmpeg -i inputmovie1 -i inputmovie2 
+      -filter_complex "[0:v:0]pad=iw*2:ih[bg]; [bg][1:v:0]overlay=w" 
+      -c:v libx264 outputmoviename
+</pre>
+
+Append two movies side by side or top and bottom
+<pre>
+   ffmpeg -i inputmovie1 -i inputmovie2 -filter_complex vstack outputmoviename
+   ffmpeg -i inputmovie1 -i inputmovie2 -filter_complex hstack outputmoviename
+</pre>
+
+
+
+<!-- ********************************************************************* -->
+
+<br>
+<h3>exiftool</h3>
+
+Extract and assign colour profile
+<pre>
+   exiftool -icc_profile -b imagefilename.jpg > theprofile.icc
+   exiftool "-icc_profile<=theprofile.icc" newimagefilename.jpg
+</pre>
+
+Tag as equirectangular, eg: for FaceBook
+<pre>
+   exiftool -ProjectionType="equirectangular" imagefilename.jpg
+</pre>
+
+
+<!-- ********************************************************************* -->
+
+<br>
+<h3>convert (imagemagick)</h3>
+
+Resize proportionately
+<pre>
+   convert inputfilename -resize 4096x2048 outputfilename.jpg
+</pre>
+
+Resize forced
+<pre>
+   convert inputfilename -resize 4096x2048\! outputfilename.jpg
+</pre>
+
+Crop, supply size and origin
+<pre>
+   convert -crop 256x256+1024+0 inputfilename.exr outputfilename.jpg
+</pre>
+
+Concatenate N images horizontally
+<pre>
+   convert inputfilename1.jpg inputfilename2.jpg ... inputfilenameN.jpg +append outputfilename.jpg
+</pre>
+
+Concatenate N images vertically
+<pre>
+   convert inputfilename1.jpg inputfilename2.jpg ... inputfilenameN.jpg -append outputfilename.jpg
+</pre>
+
+Specify jpeg compression quality
+<pre>
+    convert -quality 90 -verbose inputfilename.tga outputfilename.jpg
+</pre>
+
+Create pyramidal tiff
+<pre>
+   convert inputimagename.tif -define tiff:tile-geometry=256x256 -compress jpeg 'ptif:outputfilename.ptif'
+</pre>
+
+Dice an image up into parts
+<pre>
+   convert -crop 25%x25% inputimage.jpg split%2d.jpg
+   convert -crop 8192x8192 inputimage.jpg split%2d.jpg
+</pre>
+
+Create an animated gif.
+<pre>
+   convert -delay 120 -loop 0 inputframesequence*.png outputfilename.gif
+</pre>
+
+Convert a raw RGB file to tiff.
+<pre>
+   convert -size WIDTHxHEIGHT -depth 16 inputfilename.rgb outputfilename.tiff
+</pre>
+
+<br>
+<h3>MeshLab</h3>
+<p align="justify">
+While most people engage with MashLab through the graphical interface, it is possible
+to script operations on the command line. This is accomplished through the meshlabserver.
+Details on different platforms may differ, for example in the location of the server,
+but on the Mac it might be invoked as follows:
+</p>
+<pre>
+/Applications/meshlab.app/Contents/MacOS/meshlabserver -i $1.obj -o $1_cleaned.obj -m wt -s clean.mlx
+</pre>
+<p align="justify">
+The .mlx file describes the operations to be performed, in this case clean.mlx might be
+</p>
+<pre>
+&lt;!DOCTYPE FilterScript&gt;
+&lt;FilterScript&gt;
+ &lt;filter name="Remove Unreferenced Vertices"/&gt;
+ &lt;filter name="Remove Zero Area Faces"/&gt;
+ &lt;filter name="Remove Duplicate Vertices"/&gt;
+ &lt;filter name="Remove Duplicate Faces"/&gt;
+ &lt;filter name="Merge Close Vertices"&gt;
+ &lt;Param type="RichAbsPerc" description="Merging distance" 
+   min="0" max="0.012423" tooltip="All the vertices that closer 
+   than this threshold are merged together. Use very small values, 
+   default values is 1/10000 of bounding box diagonal. " 
+   name="Threshold" value="0.00012423" isxmlparam="0"/&gt;
+ &lt;/filter&gt;
+&lt;/FilterScript&gt;
+</pre>
+
+Remove unreferenced vertices<br>
+<pre>
+&lt;!DOCTYPE FilterScript &gt;
+&lt;FilterScript&gt;
+ &lt;filter name="Remove Unreferenced Vertices"/&gt;
+&lt;/FilterScript&gt;
+</pre>
+
+Decimate a mesh<br>
+<pre>
+CTYPE FilterScript&gt;
+&lt;FilterScript&gt;
+ &lt;filter name="Simplification: Quadric Edge Collapse Decimation (with texture)"&gt;
+  &lt;Param value="1000000" name="TargetFaceNum" description="Target number of faces" 
+     isxmlparam="0" tooltip="" type="RichInt"/&gt;
+  &lt;Param value="0" name="TargetPerc" description="Percentage reduction (0..1)" 
+     isxmlparam="0" tooltip="" type="RichFloat"/&gt;
+  &lt;Param value="0.3" name="QualityThr" description="Quality threshold" 
+     isxmlparam="0" tooltip="" type="RichFloat"/&gt;
+  &lt;Param value="1" name="Extratcoordw" description="Texture Weight" 
+     isxmlparam="0" tooltip="" type="RichFloat"/&gt;
+  &lt;Param value="false" name="PreserveBoundary" description="Preserve Boundary of the mesh" 
+     isxmlparam="0" tooltip="" type="RichBool"/&gt;
+  &lt;Param value="1" name="BoundaryWeight" description="Boundary Preserving Weight" 
+     isxmlparam="0" tooltip="" type="RichFloat"/&gt;
+  &lt;Param value="true" name="OptimalPlacement" description="Optimal position of simplified vertices" 
+     isxmlparam="0" tooltip="" type="RichBool"/v
+  &lt;Param value="true" name="PreserveNormal" description="Preserve Normal" 
+     isxmlparam="0" tooltip="" type="RichBool"/&gt;
+  &lt;Param value="true" name="PlanarQuadric" description="Planar Simplification" 
+     isxmlparam="0" tooltip="" type="RichBool"/&gt;
+  &lt;Param value="false" name="Selected" description="Simplify only selected faces" 
+     isxmlparam="0" tooltip="" type="RichBool"/&gt;
+ &lt;/filter&gt;
+&lt;/FilterScript&gt;
+</pre>
+
+Remove zero area faces<br>
+<pre>
+&lt;!DOCTYPE FilterScript&gt;
+&lt;FilterScript&gt;
+ &lt;filter name="Remove Zero Area Faces"/&gt;
+&lt;/FilterScript&gt;
+</pre>
+
+<p>
+<a href="http://paulbourke.net/miscellaneous/ffmpeg/meshlabsmoothing/">Brief note on smoothing meshes in Meshlab</a>
+
+<br><br>
+</td></tr></table></center>
+</body>
+</html>
+

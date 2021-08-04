@@ -1,0 +1,113 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Frustum culling</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Frustum Culling</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+November 2000<p>
+</center>
+<p><br><p>
+
+<p align="justify">
+Before geometry is sent to a rendering engine it is often desirable
+to determine whether or not it is visible and therefore need not
+be rendered. While rendering engines such as OpenGL clip the geometry
+themselves, it still requires the overhead of the geometry being sent to
+the engine. 
+<br>
+In most 3D rendering applications a perspective projection is applied. 
+The volume of space that is visible is called the view frustum, an example
+is shown below. It is defined by four planes (top, bottom, left, right)
+and optionally a front and back cutting plane.
+The near and far cutting planes are normally specified as scalars, distances
+along the view direction vector. The sides and top/bottom can be specified
+directly or they are computed from the camera aperture. In some packages
+this is calculated from the 
+<a href="../lens/index.html">vertical aperture, some on the horizontal</a>, 
+whichever is chosen the other is fixed given the ratio of the window 
+width and height.
+</p>
+
+<p><center><img src="http://paulbourke.net/miscellaneous/frustum/frustum1.gif" width=528 height=305></center><p>
+
+<p align="justify">
+In order to determine whether part of a primitive is inside the frustum it
+is necessary to check that every vertex in the primitive is outside
+the volume. To determine this, compute the vertices of each plane
+making up the frustum. Each plane can be written in the form,
+Ax + By + Cz + D = 0. The constants A,B,C,D can be calculated from any
+three points on the planes (since all four points are coplanar) say
+(x<sub>1</sub>,y<sub>1</sub>,z<sub>1</sub>),
+(x<sub>2</sub>,y<sub>2</sub>,z<sub>2</sub>), and
+(x<sub>3</sub>,y<sub>3</sub>,z<sub>3</sub>) as follows:
+</p>
+
+A = y<sub>1</sub> (z<sub>2</sub> - 
+z<sub>3</sub>) + y<sub>2</sub> 
+(z<sub>3</sub> - z<sub>1</sub>) + y<sub>3</sub>
+(z<sub>1</sub>> - z<sub>2</sub>)
+<br>
+
+B = z<sub>1</sub> (x<sub>2</sub> - x<sub>3</sub>) + 
+z<sub>2</sub> (x<sub>3</sub> - x<sub>1</sub>) + 
+z<sub>3</sub> (x<sub>1</sub> - x<sub>2</sub>)
+<br>
+
+C = x<sub>1</sub> (y<sub>2</sub> - y<sub>3</sub>) + 
+x<sub>2</sub> (y<sub>3</sub> - y<sub>1</sub>) +
+x<sub>3</sub> (y<sub>1</sub> - y<sub>2</sub>)
+<br>
+
+- D = x<sub>1</sub> 
+(y<sub>2</sub> z<sub>3</sub> - y<sub>3</sub> z<sub>2</sub>) + 
+x2 (y<sub>3</sub> z<sub>1</sub> - y<sub>1</sub> z<sub>3</sub>) + 
+x3 (y<sub>1</sub> z<sub>2</sub> - y<sub>2</sub> z<sub>1</sub>)
+<p>
+
+<p align="justify">
+In order to test whether a point (x,y,z) is on the left or right of
+the plane compute Ax + By + Cz + D. If the result is greater than zero
+then the point is on the same side as the normal (A,B,C), if less than
+zero then it's on the opposite side, if zero then it lies on the plane.
+</p>
+
+<b>Notes</b><br>
+<ul>
+<li><p align="justify">
+A parallel (orthographic) projection still consists of a viewing
+volume but it is a much simpler shape, a box. Clipping against such a
+volume uses the same techniques discussed here.
+</p>
+<p><center><img src="http://paulbourke.net/miscellaneous/frustum/frustum2.gif" width=563 height=398></center><p> 
+
+<li><p align="justify">
+In many applications there would be significant overhead in testing every
+single point of low level primitives. The alternative is to group primitives
+together into higher level shapes, then one simply tests the 
+vertices of the bounding box of the
+shape to determine whether it is inside or outside the frustum.
+When the shape intersects the view frustum one can choose whether
+to further test the individual primitives or simple pass the
+whole shape to the rendering engine.
+</p>
+</ul>
+
+</td></tr></table></center>
+</body>
+</html>

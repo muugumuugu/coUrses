@@ -1,0 +1,181 @@
+
+'Following routines calculate the minimal distance of 2 3d lines in the 3d space
+'useful for example as a collision detection of reinforcement bars
+'VBA by Thomas Ludewig 2012 based on code of Paul Bourke
+
+Public Type POINT3D
+X as double
+Y as double
+Z as double
+End Type
+
+
+
+Private Function FindDistanceToSegment(P1 As POINT3D, P2 As POINT3D, PT As POINT3D, ByRef closest As POINT3D, Optional online As Boolean = False) As Double
+    Dim DX As Double
+    Dim DY As Double
+    Dim DZ As Double
+
+    Dim t As Double
+
+    online = False
+    DY = P2.Y - P1.Y
+    DX = P2.X - P1.X
+    DZ = P2.z - P1.z
+
+    If (DX = 0) And (DY = 0) And (DZ = 0) Then
+        ' It's a point not a line segment.
+        closest = P1
+        DX = PT.X - P1.X
+        DY = PT.Y - P1.Y
+        DZ = PT.z - P1.z
+
+        FindDistanceToSegment = Sqr(DX * DX + DY * DY + DZ * DZ)
+        Exit Function
+    End If
+
+
+
+    ' Calculate the t that minimizes the distance.
+    t = ((PT.X - P1.X) * DX + (PT.Y - P1.Y) * DY + (PT.z - P1.z) * DZ) / (DX * DX + DY * DY + DZ * DZ)
+
+    ' See if this represents one of the segment's
+    ' end points or a point in the middle.
+    If t < 0 Then
+        closest.X = P1.X
+        closest.Y = P1.Y
+        closest.z = P1.z
+
+        DX = PT.X - P1.X
+        DY = PT.Y - P1.Y
+        DZ = PT.z - P1.z
+
+    ElseIf t > 1 Then
+        closest.X = P2.X
+        closest.Y = P2.Y
+        closest.z = P2.z
+
+        DX = PT.X - P2.X
+        DY = PT.Y - P2.Y
+        DZ = PT.z - P2.z
+    Else
+        online = True
+        closest.X = P1.X + t * DX
+        closest.Y = P1.Y + t * DY
+        closest.z = P1.z + t * DZ
+
+        DX = PT.X - closest.X
+        DY = PT.Y - closest.Y
+        DZ = PT.z - closest.z
+
+
+    End If
+
+    FindDistanceToSegment = Sqr(DX * DX + DY * DY + DZ * DZ)
+End Function
+
+'LINE1= P1,P2
+'LINE2= P2,P3
+'PA = resultpoint on line 1
+'PB = resultpoint on line 2
+'DISTANCE = resulting distance between both line
+
+Function Line_Line_distance(P1 As POINT3D, P2 As POINT3D, P3 As POINT3D, P4 As POINT3D, PA As POINT3D, PB As POINT3D, Optional DISTANCE As Double = 0 ) As Boolean
+
+    dim mua As Double
+    dim mub As Double
+
+
+    Dim p13 As POINT3D
+    Dim p43 As POINT3D
+    Dim p21 As POINT3D
+    Dim distances(2) As Double
+    Dim BOUNDARY(2) As POINT3D
+    Dim d1343, d4321, d1321, d4343, d2121, numer, denom As Double
+    Dim PTEST As Boolean
+    LineLineIntersect = True
+    p13.X = P1.X - P3.X
+    p13.Y = P1.Y - P3.Y
+    p13.z = P1.z - P3.z
+
+    p43.X = P4.X - P3.X
+    p43.Y = P4.Y - P3.Y
+    p43.z = P4.z - P3.z
+
+    If Abs(p43.X) < EPS And Abs(p43.Y) < EPS And Abs(p43.z) < EPS Then
+        LineLineIntersect = False
+        Exit Function
+    End If
+    p21.X = P2.X - P1.X
+    p21.Y = P2.Y - P1.Y
+    p21.z = P2.z - P1.z
+
+    If Abs(p21.X) < EPS And Abs(p21.Y) < EPS And Abs(p21.z) < EPS Then
+        LineLineIntersect = False
+        Exit Function
+    End If
+
+    d1343 = p13.X * p43.X + p13.Y * p43.Y + p13.z * p43.z
+    d4321 = p43.X * p21.X + p43.Y * p21.Y + p43.z * p21.z
+    d1321 = p13.X * p21.X + p13.Y * p21.Y + p13.z * p21.z
+    d4343 = p43.X * p43.X + p43.Y * p43.Y + p43.z * p43.z
+    d2121 = p21.X * p21.X + p21.Y * p21.Y + p21.z * p21.z
+
+    denom = d2121 * d4343 - d4321 * d4321
+    If (Abs(denom) < EPS) Then
+        LineLineIntersect = False
+        Exit Function
+    End If
+    numer = d1343 * d4321 - d1321 * d4343
+
+    If denom <> 0 Then
+        mua = numer / denom
+    End If
+    If d4343 <> 0 Then
+        mub = (d1343 + d4321 * (mua)) / d4343
+    End If
+    PA.X = P1.X + mua * p21.X
+    PA.Y = P1.Y + mua * p21.Y
+    PA.z = P1.z + mua * p21.z
+
+    PB.X = P3.X + mub * p43.X
+    PB.Y = P3.Y + mub * p43.Y
+    PB.z = P3.z + mub * p43.z
+    DISTANCE = Sqr((PB.X - PA.X) ^ 2 + (PB.Y - PA.Y) ^ 2 + (PB.z - PA.z) ^ 2)
+    LineLineIntersect = True
+
+
+    distances(1) = DISTANCE
+
+
+    PTEST = True
+    If PTEST Then
+        Call FindDistanceToSegment(P1, P2, PA, BOUNDARY(1), PTEST)
+    End If
+    If PTEST Then
+        Call FindDistanceToSegment(P3, P4, PB, BOUNDARY(1), PTEST)
+    End If
+
+
+
+    If Not PTEST Then
+        distances(0) = FindDistanceToSegment(P1, P2, P3, BOUNDARY(0), PTEST)
+        distances(2) = FindDistanceToSegment(P1, P2, P4, BOUNDARY(2), PTEST)
+
+
+        If distances(0) <= distances(2) Then
+            PA = P3
+            PB = BOUNDARY(0)
+            DISTANCE = distances(0)
+        Else
+            PA = P4
+            PB = BOUNDARY(2)
+            DISTANCE = distances(2)
+        End If
+
+    End If
+    DISTANCE = Round(Abs(DISTANCE), 0)
+
+
+
+End Function

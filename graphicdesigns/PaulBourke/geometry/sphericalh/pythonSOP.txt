@@ -1,0 +1,88 @@
+#
+# spherical harmonic pythonSOP
+# 2008 Georg Duemlein
+# http://www.preset.de/
+# 
+
+import math
+
+# This code is called when instances of this SOP cook.
+node = hou.pwd()
+geo = node.geometry()
+
+# Add code to modify the contents of geo.
+
+# read the GUI parameters
+m = []
+m.append(node.parm("m0").eval())
+m.append(node.parm("m1").eval())
+m.append(node.parm("m2").eval())
+m.append(node.parm("m3").eval())
+m.append(node.parm("m4").eval())
+m.append(node.parm("m5").eval())
+m.append(node.parm("m6").eval())
+m.append(node.parm("m7").eval())
+
+radius = node.parm("radius").eval()
+
+thetaslice = node.parmTuple("thetafromto").eval()
+thetastart = math.radians(thetaslice[0])
+
+# calculate stepsizes and ranges
+thetarange = math.radians(360 * ((thetaslice[1] - thetaslice[0]) / 360))
+phislice = node.parmTuple("phifromto").eval()
+phistart = math.radians(phislice[0])
+phirange = math.radians(180 * ((phislice[1] - phislice[0]) / 360))
+
+thetaresolution = node.parm("thetaresolution").eval()
+phiresolution = node.parm("phiresolution").eval()
+
+# Paul Bourke's spherical harmonic function
+def sphericalHarmonics (theta, phi):
+    r = 0
+    r = r + math.pow(math.sin(m[0] * phi), m[1])
+    r = r + math.pow(math.cos(m[2] * phi), m[3])
+    r = r + math.pow(math.sin(m[4] * theta), m[5])
+    r = r + math.pow(math.cos(m[6] * theta), m[7])
+    r = r * radius
+    xyz = hou.Vector3((r * math.sin(phi) * math.cos(theta), r * math.cos(phi), r * math.sin(phi) * math.sin(theta)))
+    return xyz
+
+
+
+# stepsizes and ranges mapped to PI
+du = thetarange / thetaresolution
+dv = phirange / phiresolution
+
+# stepsizes and ranges mapped to UV space
+mu = 1.0 / (thetaresolution - 1)
+mv = 1.0 / phiresolution
+
+# init UV coordinates
+attr = geo.addAttrib(hou.attribType.Point, "uv", (0.0, 0.0, 0.0))
+
+# create points
+for i in range(0, thetaresolution):
+    u = i * du + thetastart
+    mapu = i * mu
+    for j in range(0, phiresolution + 1):
+        v = j * dv + phistart
+        mapv = j * mv
+        pt0 = geo.createPoint()
+        pt0.setPosition(sphericalHarmonics (u, v))
+        pt0.setAttribValue("uv", (mapu, mapv, 0))
+
+
+# mesh spherical harmonic
+# if/then for future point only version
+if 1 == 1:
+    points = geo.points()
+    pphi = phiresolution + 1
+    pnum = ((phiresolution + 1) * (thetaresolution ))
+    for i in range(0, phiresolution):
+        for j in range(0, thetaresolution):
+            poly = geo.createPolygon()
+            poly.addVertex(points[i + j * pphi])
+            poly.addVertex(points[(i + 1) + j * pphi])
+            poly.addVertex(points[((i + 1) + ((j + 1) * pphi)) % pnum])
+            poly.addVertex(points[(i + (j + 1) * pphi) % pnum])

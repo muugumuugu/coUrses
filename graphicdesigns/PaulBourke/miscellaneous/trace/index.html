@@ -1,0 +1,214 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle2.css" type="text/css" media=all>
+<title>Trace - experiment in rendering point fields</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Trace - An experiment in rendering point fields</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+April 2002
+</center>
+<p><br><p>
+
+<table width=100% cellpadding=0 cellspacing=0 border=0>
+<tr><td valign="top">
+<p align="justify">
+"TRACE" was an experimental rendering program written in an attempt to
+render point fields.....in more interesting ways than with just points. 
+In many scientific
+simulations while points are used for practical computational reasons,
+they are intended to be approximations to continuous distributions and
+so it makes sense to render them as such. Some initial examples from
+this rendering experiment are shown on the right, they are mostly
+from astronomy based simulations based upon points that represent
+stars, gas, and dark matter.
+</p>
+
+The overall flow of the program is as follows:<br>
+<ul>
+<li>Initialise internal state, read the data file, set up internal
+optimisations, get camera state and other options from either the
+command line or default settings file.
+<p>
+<li>For each pixel in the destination image 
+create a ray from the camera into the scene. The way this ray
+passes through the scene will dictate how the pixel in question is shaded.
+<p>
+<li>For each point in the scene calculate the closest distance to
+the ray. It is this closest distance that acts as an approximation
+on how much influence the point has on the ray.
+<p>
+<li>Evaluate a function of the ray-point distance to determine how
+the colour of the ray should change. The different functions are
+listed near the end of the document. They are all monotonically
+decreasing function of the distance from the origin (data point position).
+<p>
+<li>Save the resulting image as well as statistical and performance
+information.
+<p>
+</ul>
+
+<b>Data file format</b><p>
+<p align="justify">
+A very simple data format was chosen, it was an ASCII file where each
+line represents one point. The first character of the line identifies the
+line data type, this could be "#" for a comment or "p" for a point. The
+next three items on the line are the x,y,z coordinates of the point.
+The next item is the point type (see table below), this is an integer
+from 0 upwards. The next item is the spread of the distribution, the
+interpretation depends somewhat on the point type. The last three items
+on the line are the r,g,b colour of the point. An example data file might be
+as follows
+</p>
+<pre>
+# Tests all the datatypes
+
+p -1.4 3  0.5  0  0.1  1 1 1
+p -1.0 3  0.5  1  0.1  1 1 1
+p -0.6 3  0.5  2  0.1  1 1 1
+p -0.2 3  0.5  3  0.1  1 1 1
+p  0.2 3  0.5  4  0.1  1 1 1
+p  0.6 3  0.5  5  0.1  1 1 1
+p  1.0 3  0.5  6  0.1  1 1 1
+p  1.4 3  0.5  7  0.1  1 1 1
+
+p -1.4 3 0.0  0  0.075  1 0 0
+p -1.0 3 0.0  1  0.075  1 0 0
+p -0.6 3 0.0  2  0.075  1 0 0
+p -0.2 3 0.0  3  0.075  1 0 0
+p  0.2 3 0.0  4  0.075  1 0 0
+p  0.6 3 0.0  5  0.075  1 0 0
+p  1.0 3 0.0  6  0.075  1 0 0
+p  1.4 3 0.0  7  0.075  1 0 0
+
+p -1.4 3 -0.5  0  0.05  1 0 1
+p -1.0 3 -0.5  1  0.05  1 0 1
+p -0.6 3 -0.5  2  0.05  1 0 1
+p -0.2 3 -0.5  3  0.05  1 0 1
+p  0.2 3 -0.5  4  0.05  1 0 1
+p  0.6 3 -0.5  5  0.05  1 0 1
+p  1.0 3 -0.5  6  0.05  1 0 1
+p  1.4 3 -0.5  7  0.05  1 0 1
+</pre>
+Gives the rendered image below<p>
+<center><img src="http://paulbourke.net/miscellaneous/trace/type.jpg" width=300 height=400></center><p>
+
+<b>Optimisation</b><p>
+<p align="justify">
+A brute force approach means that every point is compared and contributes
+to every ray. This is obviously wasteful because all point distributions
+only affect a local region and if the ray passes further than a points
+maximum influence it never contributes or changed the ray. The subset of
+points that need to be considered for a ray was reduced by dividing up
+the view frustum into an n by n grid and tagging which points can possibly
+influence a ray in each grid cell. So when a ray is passing through
+a particular cell only those points whose distribution affects that
+cell are considered.
+</p>
+
+</td><td width=10>
+&nbsp;&nbsp;
+</td><td valign="top">
+<center>
+<a href="http://paulbourke.net/miscellaneous/trace/example1.jpg"><img src="http://paulbourke.net/miscellaneous/trace/example1s.jpg" width=267 height=200></a><br>
+<br>
+<a href="http://paulbourke.net/miscellaneous/trace/example2.jpg"><img src="http://paulbourke.net/miscellaneous/trace/example2s.jpg" width=267 height=200></a><br>
+<br>
+<a href="http://paulbourke.net/miscellaneous/trace/example3.jpg"><img src="http://paulbourke.net/miscellaneous/trace/example3s.jpg" width=267 height=200></a><br>
+<br>
+<a href="http://paulbourke.net/miscellaneous/trace/example4.jpg"><img src="http://paulbourke.net/miscellaneous/trace/example4s.jpg" width=267 height=200></a><br>
+<br>
+<a href="http://paulbourke.net/miscellaneous/trace/example5.jpg"><img src="http://paulbourke.net/miscellaneous/trace/example5s.jpg" width=267 height=200></a><br>
+<br>
+<a href="http://paulbourke.net/miscellaneous/trace/example6.jpg"><img src="http://paulbourke.net/miscellaneous/trace/example6s.jpg" width=267 height=200></a><br>
+<br>
+<a href="http://paulbourke.net/miscellaneous/trace/example7.jpg"><img src="http://paulbourke.net/miscellaneous/trace/example7s.jpg" width=267 height=200></a><br>
+<br>
+<a href="http://paulbourke.net/miscellaneous/trace/example8.jpg"><img src="http://paulbourke.net/miscellaneous/trace/example8s.jpg" width=267 height=200></a><br>
+</center>
+</td></tr>
+</table>
+
+<p><b>Point distribution types</b><p>
+<p align="justify">
+The following table gives the different point distributions that were
+implemented. The choice for a particular application depends mostly
+on the type of falloff, in practice only types 0, 1, 2, and 6 were
+used. 
+</p>
+<center>
+<table width=90% border=1>
+<tr>
+<td><b>Number</b></td>
+<td><b>Name</b></td>
+<td><b>Formula</b></td>
+<td><b>Example</b></td>
+</tr>
+<tr>
+<td><b>0</b></td>
+<td>Rectangle</td>
+<td>W(r) = 1 for r&lt;d</td>
+<td><img src="http://paulbourke.net/miscellaneous/trace/0.gif" width=200 height=200></td>
+</tr>
+<tr>
+<td><b>1</b></td>
+<td>Gaussian</td>
+<td>W(r) = exp(-r*r/(d*d))</td>
+<td><img src="http://paulbourke.net/miscellaneous/trace/1.gif" width=200 height=200></td>
+</tr>
+<tr>
+<td><b>2</b></td>
+<td>Inverse</td>
+<td>W(r) = 1 / (1 + r / d)</td>
+<td><img src="http://paulbourke.net/miscellaneous/trace/2.gif" width=200 height=200></td>
+</tr>
+<tr>
+<td><b>3</b></td>
+<td>Inverse squared</td>
+<td>W(r) = 1 / (1 + r*r/(d*d))</td>
+<td><img src="http://paulbourke.net/miscellaneous/trace/3.gif" width=200 height=200></td>
+</tr>
+<tr>
+<td><b>4</b></td>
+<td>Cosine</td>
+<td>W(r) = (1 + cos(r*pi/(2*d))) / 2</td>
+<td><img src="http://paulbourke.net/miscellaneous/trace/4.gif" width=200 height=200></td>
+</tr>
+<tr>
+<td><b>5</b></td>
+<td>Exponential cosine</td>
+<td>W(r) = exp(-r/d) (1 + cos(r*pi/(2*d))) / 2</td>
+<td><img src="http://paulbourke.net/miscellaneous/trace/5.gif" width=200 height=200></td>
+</tr>
+<tr>
+<td><b>6</b></td>
+<td>Exponential</td>
+<td>W(r) = exp(-r/d)</td>
+<td><img src="http://paulbourke.net/miscellaneous/trace/6.gif" width=200 height=200></td>
+</tr>
+<tr>
+<td><b>7</b></td>
+<td>Linear</td>
+<td>W(r) = (d*2 - r) / (2*d)</td>
+<td><img src="http://paulbourke.net/miscellaneous/trace/7.gif" width=200 height=200></td>
+</tr>
+</table>
+</center>
+
+</td></tr></table></center>
+</body>
+</html>

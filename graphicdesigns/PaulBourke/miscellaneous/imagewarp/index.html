@@ -1,0 +1,323 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Image warping</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Image warping / distortion</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+December 2002<p>
+</center>
+<p><br><p>
+
+<p align=justify">
+This documents, primarily with examples, an image warping application
+that was originally developed to test the simulation of various lens
+types. 
+There are a few key ideas with image transformations such as this.
+</p>
+<ul>
+<li><p align="justify">
+The transformation that one needs is not the function that
+maps from the source image to the destination but the reverse.
+What is required is to find the source pixel associated with
+each pixel in the destination image. In general the image plane is
+considered to be a real valued function rather than a discrete pixel
+plane, this is particularly so when antialiasing is implemented.
+</p>
+<li><p align="justify">
+The image coordinates are transformed from pixels (i,j) ranging from
+0 to the width-1 and height-1 to normalised coordinates (x,y) ranging
+from -1 to 1, this is irrespective of the image proportions
+and it applies to both the source and destination image coordinates.
+</p>
+<center>
+x = 2 i / width - 1<br>
+y = 2 j / height - 1<br>
+<p>
+</center>
+<li><p align="justify">
+A key ingredient for image quality is antialiasing. In the
+code given here, supersampling is used. That is, each pixel
+in the destination image is sampled a number of times,
+the resulting estimate from the source image are averaged
+(box filter is used here)
+to give a final estimate in the destination image.
+</p>
+<li><p align="justify">
+Some transformation act upon the cartesian coordinates
+while other are radial (polar coordinates)  in nature. The r,phi coordinates
+are as follows.
+</p>
+<center>
+r = sqrt(x<sup>2</sup> + y<sup>2</sup>)<br>
+phi = atan2(y,x)<br>
+</center>
+<p align="justify">
+After the radial based warp the reverse transformation back to
+cartesian normalised coordinates is:
+</p>
+<center>
+x = r cos(phi)<br>
+y = r sin(phi)<br>
+</center>
+</ul>
+
+<p align="justify">
+This application 
+(<a href="http://paulbourke.net/miscellaneous/imagewarp/imagewarp.c">imagewarp.c</a>)
+is written as a UNIX utility that reads a
+TGA file (24 or 32 bit), performs the warping as specified
+by command line arguments and writes the resulting image
+as a TGA file to standard output (to be redirected to a file
+say).
+</p>
+<pre>
+imagewarp tgafilename [options]
+Options:
+-a n   set antialias level (Default: 1)
+-w n   width of the output image (Default: 500)
+-h n   height of the output image (Default: width)
+-m n   mapping type (Default: 0)
+-p1 n  first parameter for mapping (Default: 0)
+-p2 n  second parameter for mapping (Default: 0)
+-p3 n  third parameter for mapping (Default: 0)
+-s n   scale factor (Default: 1)
+-v     debug/verbose mode (Default: off)
+</pre>
+
+<p align="justify">
+The following lists each of the image warping types supported,
+other warping function can readily be added.
+</p>
+<table width=100% cellpadding=0 cellspacing=0>
+<tr>
+<td valign="top">
+Source image<p>
+This is the test image: <a href="http://paulbourke.net/miscellaneous/imagewarp/test.tga">test.tga</a>
+that is transformed into each of the images below.
+</td><td valign="top" width="510 align="right">
+<img src="http://paulbourke.net/miscellaneous/imagewarp/00.jpg" width=500 height=500 border=1>
+</td>
+
+<tr>
+<td valign="top">
+r -> sqrt(r)<br>
+</td><td valign="top" width="510 align="right">
+<img src="http://paulbourke.net/miscellaneous/imagewarp/01.jpg" width=500 height=500 border=1>
+</td>
+
+<tr>
+<td valign="top">
+r -> 2 arcsin(r) / pi<br>
+</td><td valign="top" width="510 align="right">
+<img src="http://paulbourke.net/miscellaneous/imagewarp/02.jpg" width=500 height=500 border=1>
+</td>
+
+
+<tr>
+<td valign="top">
+r -> sin(pi r / 2)<br>
+</td><td valign="top" width="510 align="right">
+<img src="http://paulbourke.net/miscellaneous/imagewarp/03.jpg" width=500 height=500 border=1>
+</td>
+
+
+<tr>
+<td valign="top">
+r -> r<sup>p</sup><br>
+p = 1.5<br>
+</td><td valign="top" width="510 align="right">
+<img src="http://paulbourke.net/miscellaneous/imagewarp/04a.jpg" width=500 height=500 border=1>
+</td>
+
+
+<tr>
+<td valign="top">
+r -> r<sup>p</sup><br>
+p = 2<br>
+</td><td valign="top" width="510 align="right">
+<img src="http://paulbourke.net/miscellaneous/imagewarp/04b.jpg" width=500 height=500 border=1>
+</td>
+
+
+<tr>
+<td valign="top">
+r -> r<sup>p</sup><br>
+p = 3<br>
+</td><td valign="top" width="510 align="right">
+<img src="http://paulbourke.net/miscellaneous/imagewarp/04c.jpg" width=500 height=500 border=1>
+</td>
+
+
+<tr>
+<td valign="top">
+x -> sin(pi x / 2)<br>
+y -> sin(pi x / 2)<br>
+</td><td valign="top" width="510 align="right">
+<img src="http://paulbourke.net/miscellaneous/imagewarp/05.jpg" width=500 height=500 border=1>
+</td>
+
+
+<tr>
+<td valign="top">
+x -> sign(x) x<sup>2</sup><br>
+y -> sign(y) y<sup>2</sup><br>
+</td><td valign="top" width="510 align="right">
+<img src="http://paulbourke.net/miscellaneous/imagewarp/06.jpg" width=500 height=500 border=1>
+</td>
+
+
+<tr>
+<td valign="top">
+x -> 2 asin(x) / pi<br>
+y -> 2 asin(y) / pi<br>
+</td><td valign="top" width="510 align="right">
+<img src="http://paulbourke.net/miscellaneous/imagewarp/07.jpg" width=500 height=500 border=1>
+</td>
+
+
+<tr>
+<td valign="top">
+x -> x (1 - p r) / (1 - p)<br>
+y -> y (1 - p.r) / (1 - p)<br>
+p = 0.1<br>
+</td><td valign="top" width="510 align="right">
+<img src="http://paulbourke.net/miscellaneous/imagewarp/08a.jpg" width=500 height=500 border=1>
+</td>
+
+
+<tr>
+<td valign="top">
+x -> x (1 - p r) / (1 - p)<br>
+y -> y (1 - p.r) / (1 - p)<br>
+p = 0.2<br>
+</td><td valign="top" width="510 align="right">
+<img src="http://paulbourke.net/miscellaneous/imagewarp/08b.jpg" width=500 height=500 border=1>
+</td>
+
+
+<tr>
+<td valign="top">
+x -> x (1 - p r) / (1 - p)<br>
+y -> y (1 - p.r) / (1 - p)<br>
+p = 0.3<br>
+</td><td valign="top" width="510 align="right">
+<img src="http://paulbourke.net/miscellaneous/imagewarp/08c.jpg" width=500 height=500 border=1>
+</td>
+
+
+<tr>
+<td valign="top">
+Method by H. Farid and A.C. Popescu
+for modest lens with good fit.<br>
+p = 0.2<br>
+</td><td valign="top" width="510 align="right">
+<img src="http://paulbourke.net/miscellaneous/imagewarp/09a.jpg" width=500 height=500 border=1>
+</td>
+
+
+<tr>
+<td valign="top">
+Method by H. Farid and A.C. Popescu
+for modest lens with good fit.<br>
+p = 0.4<br>
+</td><td valign="top" width="510 align="right">
+<img src="http://paulbourke.net/miscellaneous/imagewarp/09b.jpg" width=500 height=500 border=1>
+</td>
+
+
+<tr>
+<td valign="top">
+Method by H. Farid and A.C. Popescu
+for modest lens with good fit.<br>
+p = 0.6<br>
+</td><td valign="top" width="510 align="right">
+<img src="http://paulbourke.net/miscellaneous/imagewarp/09c.jpg" width=500 height=500 border=1>
+</td>
+
+
+<tr>
+<td valign="top">
+r -> p1 10<sup>r p2</sup> - p1<br>
+p1 = 0.049<br>
+p2 = 1.280<br>
+</td><td valign="top" width="510 align="right">
+<img src="http://paulbourke.net/miscellaneous/imagewarp/10.jpg" width=500 height=500 border=1>
+</td>
+
+
+<tr>
+<td valign="top">
+r -> p1 r<sup>3</sup> + p2 r<sup>2</sup> + p3 r<br>
+p1 = 0.819<br>
+p2 = 0.046<br>
+p3 = 0.152<br>
+</td><td valign="top" width="510 align="right">
+<img src="http://paulbourke.net/miscellaneous/imagewarp/11.jpg" width=500 height=500 border=1>
+</td>
+
+
+<tr>
+<td valign="top">
+Janez Pers, Stanislav Kovacic
+An Alternative Model for Radial Distortion in Wide-Angle Lenses
+(Single parameter model)<br>
+p = 0.1<br>
+</td><td valign="top" width="510 align="right">
+<img src="http://paulbourke.net/miscellaneous/imagewarp/12a.jpg" width=500 height=500 border=1>
+</td>
+
+
+<tr>
+<td valign="top">
+Janez Pers, Stanislav Kovacic
+An Alternative Model for Radial Distortion in Wide-Angle Lenses
+(Single parameter model)<br>
+p = 0.2<br>
+</td><td valign="top" width="510 align="right">
+<img src="http://paulbourke.net/miscellaneous/imagewarp/12b.jpg" width=500 height=500 border=1>
+</td>
+
+
+<tr>
+<td valign="top">
+Janez Pers, Stanislav Kovacic
+An Alternative Model for Radial Distortion in Wide-Angle Lenses
+(Single parameter model)<br>
+p = 0.3<br>
+</td><td valign="top" width="510 align="right">
+<img src="http://paulbourke.net/miscellaneous/imagewarp/12c.jpg" width=500 height=500 border=1>
+</td>
+
+
+<tr>
+<td valign="top">
+Rotation<br>
+phi = phi + p<br>
+p = 0.5<br>
+</td><td valign="top" width="510 align="right">
+<img src="http://paulbourke.net/miscellaneous/imagewarp/13.jpg" width=500 height=500 border=1>
+</td>
+
+</tr>
+</table>
+
+</td></tr></table></center>
+</body>
+</html>
+

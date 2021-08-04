@@ -1,0 +1,159 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle2.css" type="text/css" media=all>
+<title>Fitting Puzzle or Solid Constructive Geometry</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800 cellpadding=0 cellspacing=0 border=0><tr><td>
+
+<center>
+<h1>The Fitting Puzzle</h1>
+or
+<h1>Thank goodness for CSG <br>(Constructive Solid Geometry)</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+December 1996
+</center>
+
+<p><br><p>
+
+What single object can slide exactly through each of the holes
+shown below without leaving gaps? That is, the object must
+slip through each hole filling the hole completely.
+
+<p><center><img src="http://paulbourke.net/fun/fittoy/fittoy1.gif"></center><p>
+
+The solution is the intersection of each of the outlines of the holes
+extruded along each of the three orthogonal axes in 3 space. This
+is where CSG based rendering engines come to the rescue,
+generating this intersection in a facet based modeller 
+would be extremely difficult, it is trivial in a solid modeller.
+<br>
+The following show the three primitives that intersect, a cylinder,
+a rectangle, and a plus sign. The plus sign is in turn made up of
+the union of two rectangles.
+
+<p><center><img src="http://paulbourke.net/fun/fittoy/fittoy2.gif"></center><p>
+
+Below is a transparent version of the above in an attempt
+to illustrate the intersecting volume.
+
+<p><center><img src="http://paulbourke.net/fun/fittoy/fittoy3.gif"></center><p>
+
+And finally the actual intersecting volume. It is circular in
+along one axis (x), square along another axis (z) and a plus sign
+along the last axis (y).
+
+<p><center><img src="http://paulbourke.net/fun/fittoy/fittoy4.gif"></center><p>
+
+If you have good woodworking skills and make one of these,
+probably from wood,
+please let me know and perhaps send me a copy.
+
+<p>
+The base into which the object fits might
+look something like the following.
+
+<p><center><img src="http://paulbourke.net/fun/fittoy/fittoy5.gif"></center><p>
+
+Again using CSG this is particularly easy to generate using the same
+forms as described earlier but subtracting them from a rectangular box.
+
+<p><br><p>
+
+<h3>Source</h3>
+The images above were generated using the RayShade rendering
+package, the geometric description for the union and intersecting
+volume is given below.
+<pre>
+eyep 1.5 -2 2
+lookp 0 0 0
+up 0 0 1
+fov 60
+screen 200 200
+light 1 1 1 directional 1 -0.5 1.5
+light 0.5 0.5 0.5 directional -1 -0.5 0.7
+light 0.2 0.2 0.2 directional 1 0 0
+surface surfx
+   ambient .2 .05 .05
+   diffuse .8 .05 .05
+   specular .05 .05 .05
+   specpow 20
+surface surfy
+   ambient .2 .05 .05
+   diffuse .05 .8 .05
+   specular .05 .05 .05
+   specpow 20
+surface surfz
+   ambient .2 .05 .05
+   diffuse .05 .05 .8
+   specular .05 .05 .05
+   specpow 20
+
+/* Plus sign along the x axis */
+name xobject
+union
+   box surfx -0.16666667 -1 -0.5 0.16666667 1 0.5
+   box surfx -0.5 -1 -0.16666667 0.5 1 0.16666667
+end
+
+/* Cylinder along the y axis */
+name yobject
+list
+   cylinder surfy .5 -1  0.0  0.0  1  0.0  0.0
+   disc surfy .5 -1  0.0  0.0 -1.0  0.0  0.0
+   disc surfy .5  1  0.0  0.0  1.0  0.0  0.0
+end
+
+/* Box along the z axis */
+name zobject
+list
+   box surfz -0.5 -0.5 -1 0.5 0.5 1
+end
+
+/* Create the unio of the three extruded forms */
+name solidobject
+list
+   object xobject
+   object yobject
+   object zobject
+end
+
+/* Create the intersecting volume
+name solidobject
+intersect
+   object xobject
+   intersect
+      object yobject
+      object zobject
+   end
+end
+*/
+
+/* Create the base
+name solidobject
+difference
+   box surfa -2.5 -1 -0.25 2.5 1 0.25
+   union
+      object xobject rotate 1 0 0 90
+      union
+         object yobject
+         object zobject
+      end
+   end
+end */
+</pre>
+
+</td></tr></table></center>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<html>
+<head><link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Fowler Angles</title></head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Fowler Angles</h1>
+Original by Rob Fowler<br>
+Edited by <a href="../index.html">Paul Bourke</a><br>
+February 1997
+</center>
+<p><bhr><p>
+
+<p align="justify">
+If you want a monotonic function of the angle, rather than needing the
+value of the angle itself, you can avoid the arcsine and arctangent
+computation by using Fowler angles.  These use dx and dy to return a value that
+can be used for angular comparison routines.
+</p>
+<p><bhr><p>
+
+<pre>
+/*
+   This function is due to Rob Fowler.  Given dy and dx between 2 points
+   A and B, we calculate a number in [0.0, 8.0) which is a monotonic
+   function of the direction from A to B. 
+
+   (0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0) correspond to
+   (  0,  45,  90, 135, 180, 225, 270, 315, 360) degrees, measured
+   counter-clockwise from the positive x axis.
+*/
+double FowlerAngle(dy,dx)
+double dy,dx;
+{
+    double adx, ady;    /* Absolute Values of Dx and Dy */
+    int    code;        /* Angular Region Classification Code */
+
+    adx = (dx &lt; 0) ? -dx : dx;  /* Compute the absolute values. */
+    ady = (dy &lt; 0) ? -dy : dy;
+
+    code = (adx &lt; ady) ? 1 : 0;
+    if (dx &lt; 0)  code += 2;
+    if (dy &lt; 0)  code += 4;
+
+    switch (code)
+    {
+        case 0: return (dx==0) ? 0 : ady/adx;  /* [  0, 45] */
+        case 1: return (2.0 - (adx/ady));      /* ( 45, 90] */
+        case 3: return (2.0 + (adx/ady));      /* ( 90,135) */
+        case 2: return (4.0 - (ady/adx));      /* [135,180] */
+        case 6: return (4.0 + (ady/adx));      /* (180,225] */
+        case 7: return (6.0 - (adx/ady));      /* (225,270) */
+        case 5: return (6.0 + (adx/ady));      /* [270,315) */
+        case 4: return (8.0 - (ady/adx));      /* [315,360) */
+    }
+}
+</pre>
+
+</td></tr></table></center>
+</body>
+</html>
+

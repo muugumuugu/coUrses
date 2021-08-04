@@ -1,0 +1,842 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Tiling Textures on the Plane</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Tiling Textures on the Plane (Part 1)</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+September 1992<p>
+</center>
+
+<p align="justify">
+In many texturing applications it is necessary to be able to "tile"
+the texture over a larger region than the texture segment covers.
+In the ideal case the texture segment automatically tiles, that is,
+if it laid out in a grid it forms a seamless appearance. For example
+consider the following texture.
+</p>
+<p><center><img src="satin1.gif" width="200" height="200"><p></center>
+
+If it is laid side by side it forms a continuous seamless surface.
+
+<p><center><img src="satin1b.gif" width="400" height="400"></center><p>
+
+<p align="justify">
+Many textures of tiles form such seamless surfaces easily
+because they are naturally bounded by rectangular discontinuities.
+For example consider the tile
+</p>
+
+<p><center><img src="tile4.gif" width="200" height="200"></center><p>
+
+Laid out it forms the tiling below
+
+<p><center><img src="tile4b.gif" width="400" height="400"></center><p>
+
+Other regular tiles fit together in more subtle ways.
+
+<p><center><img src="tile3.gif" width="128" height="64"><p></center>
+
+Laid out it forms the tiling below
+
+<p><center><img src="tile3b.gif" width="384" height="128"></center></p>
+
+<p align="justify">
+For texture segments that don't have strong directional structure
+a common tiling method involves mirroring each second segment so that
+adjacent edges match, this is illustrated below
+</p>
+
+<p><center><img src="texture1.jpg" width="249" height="249"></center><p>
+
+and here in a real example
+
+<p><center><img src="texture2.jpg" width="400" height="1047"></center><p>
+
+<p align="justify">
+This larger segment can now be repeated in the normal way indefinitely
+as all the edges will now join without discontinuities. Sometimes a mixture
+of mirroring and direct tiling can be applied, that is, mirror tile in
+one direction and do a straightforward tile in the other direction.
+</p>
+
+<p align="justify">
+In what follows one method will be discussed for making any image tile with
+reduced seams. In the following the image on the left will be used as an example, it
+clearly doesn't tile. The discontinuities between the tiles can be
+illustrated by swapping the diagonal halves of the image as shown
+on the right. Sometimes it is possible to edit the image on the right,
+smoothing out the center vertical and horizontal seams, the result would
+then tile. In general this is difficult and has the disadvantage of being
+a manual process.
+</p>
+
+<table width="100%"><tr><td align="center" width="50%" valign="top">
+<a href="original1.html">
+<img src="original1.gif" width="256" height="256"></a><br>
+Original 1. Original image to be tiled.<br>
+Courtesy Roger Bagula.
+</td><td align="center" width="50%" valign="top">
+<a href="original2.html">
+<img src="original2.gif" width="256" height="256"></a><br>
+Original 2. The original image with the opposite quadrants swapped.
+This clearly shows the discontinuities that would result from the tiling.
+</td></tr></table>
+<p>
+
+<p align="justify">
+In what follows, let the original image be represented as <b>O</b>,
+for simplicity consider the image to be square with N pixels
+vertically and horizontally. Each pixel is indexed (C conventions)
+as O[i][j] where i and j range from 0 to N-1.
+</p>
+
+<p align="justify">
+The diagonally swapped image will be referred to as <b>O</b><sup>d</sup>.
+Each pixel in <b>O</b><sup>d</sup> is found as follows (assuming N is
+even):
+</p>
+<center>
+<b>O</b><sup>d</sup>[i][j] = O[(i+N/2)%N][(j+N/2)%N]
+</center>
+<p>
+
+<p align="justify">
+Two masks are created, there are many alternatives but the example
+shown below is a radial linear ramp from black to white. Other masks
+can be used, the requirement is that the mask tends smoothly to pure
+white at the image boundary. The second mask on the right is diagonal
+swapped version of the mask on the left.
+</p>
+
+<table width="100%"><tr><td align="center" width="50%" valign="top">
+<a href="mask1.html">
+<img src="mask1.gif" width="256" height="256"></a><br>
+Mask 1.
+</td><td align="center" width="50%" valign="top">
+<a href="mask2.html">
+<img src="mask2.gif" width="256" height="256"></a><br>
+Mask 2.
+</td></tr></table>
+<p>
+
+<p align="justify">
+The mask shall be referred to as <b>M</b>. The mask above can be formed
+by the following:
+</p>
+<center>
+<b>M</b>[i][j] = 
+<b>M</b>[i][N-1-j] =
+<b>M</b>[N-1-i][j] =
+<b>M</b>[N-1-i][N-1-j] =
+sqrt((i-N/2)*(i-N/2) + (j-N/2)*(j-N/2)) / (N/2)
+</center>
+<p align="justify">
+Where i and j range from 0 to N/2-1. 
+<b>M</b><sup>d</sup> is calculated
+as for <b>O</b><sup>d</sup> above.
+<p>
+
+<p align="justify">
+The following two images are created by multiplying the two original
+images by their respective masks. I've chosen a slightly different
+convention here to normal, here for purposes of the multiplication
+black has a value of 1 and white 0. These two images tile (although
+rather boringly) because the left image decays to zero at it's edges.
+</p>
+
+<table width="100%"><tr><td align="center" width="50%" valign="top">
+<a href="result1.html">
+<img src="result1.gif" width="256" height="256"></a><br>
+Multiplication of the original image (Original 1) with mask 1.
+</td><td align="center" width="50%" valign="top">
+<a href="result2.html">
+<img src="result2.gif" width="256" height="256"></a><br>
+Multiplication of the diagonal swapped image (Original 2) with mask 2.
+</td></tr></table>
+<p>
+
+<p align="justify">
+And finally, the tilable image on the left is created by averaging
+the two images above. On the right is a reduced 2x2 tiling of the tile on
+the left showing the absence of any discontinuities.
+</p>
+
+<table width="100%"><tr><td align="center" width="50%" valign="top">
+<a href="final.html">
+<img src="final.gif" width="256" height="256"></a><br>
+The average of the two tiles above.
+</td><td align="center" width="50%" valign="top">
+<a href="finaltile.html">
+<img src="finaltile.gif" width="256" height="256"></a><br>
+A 2x2 tiling of the tile on the left.
+</td></tr></table>
+<p>
+
+<p align="justify">
+If <b>T</b> is the tilable texture, this can be written as
+</p>
+<center>
+<b>T</b>[i][j] = 
+<b>M</b>[i][j] <b>O</b> / (<b>M</b>[i][j]+<b>M</b><sup>d</sup>[i][j]) +
+<b>M</b><sup>d</sup>[i][j] <b>O</b><sup>d</sup> / 
+(<b>M</b>[i][j]+<b>M</b><sup>d</sup>[i][j])
+</center>
+<p>
+<p align="justify">
+Note that to avoid zero divide by the denominators above it is
+customary constrain the mask values to positive (non zero) values.
+</p>
+
+<table width="100%"><tr><td align="center" width="50%" valign="top">
+<a href="sample2.html">
+<img src="sample2.gif" width="256" height="256"></a><br>
+Applying this technique to the diagonal grey scale tile above
+can give some further insight into how the method works.
+</td><td align="center" width="50%" valign="top">
+<a href="sample2tile.html">
+<img src="sample2tile.gif" width="256" height="256"></a><br>
+This is the resulting tilable grey scale image.
+</td></tr></table>
+<p>
+
+<table width="100%"><tr><td align="center" width="50%" valign="top">
+<a href="linearmask.html">
+<img src="linearmask.gif" width="256" height="256"></a><br>
+Often a linear mask is used as illustrated above in order to
+minimise the introduction of circular structure into the tile.
+</td><td align="center" width="50%" valign="top">
+<a href="sample2tile2.html">
+<img src="sample2tile2.gif" width="256" height="256"></a><br>
+This shows the linear tile applied to the previous grey scale 
+diagonal ramp.
+</td></tr></table>
+<p>
+<p align="justify">
+This linear mask is calculated as follows:
+</p>
+<center>
+<b>M</b>[i][j] =
+<b>M</b>[i][N-1-j] =
+<b>M</b>[N-1-i][j] =
+<b>M</b>[N-1-i][N-1-j] =
+MAX((N/2-i),(N/2-j)) / (N/2))
+</center>
+<p>
+
+<p align="justify">
+For perhaps a more realistic texture, consider the following photograph
+of some grass.
+</p>
+<table width="100%"><tr><td align="center" width="50%" valign="top">
+<a href="sample3.html">
+<img src="sample3.gif" width="256" height="256"></a><br>
+</td><td align="center" width="50%" valign="top">
+<a href="sample3tile2.html">
+<img src="sample3tile2.gif" width="256" height="256"></a><br>
+</td></tr></table>
+<p>
+
+A detailed leaf example.<br>
+<table width="100%"><tr><td align="center" width="50%" valign="top">
+<a href="sample4.html">
+<img src="sample4.gif" width="256" height="256"></a><br>
+</td><td align="center" width="50%" valign="top">
+<a href="sample4tile.html">
+<img src="sample4tile.gif" width="256" height="256"></a><br>
+</td></tr></table>
+<p>
+
+<b>Software</b><p>
+
+<ul>
+<li><p align="justify">
+<b>C source</b><br>
+This very crude/simple 
+<a href="tile.c">C source</a> is what I initially used to experiment
+with these techniques, you may find it useful.
+</p>
+
+<li><p align="justify">
+<b>PhotoShop</b> has a filter called "offset" that makes the
+diagonal flipped images. You can then create the masks with the ramp
+tool and form the tile with the appropriate operations on layers
+comprising of original image, mask and their respective diagonal
+images. Use the "screen" to apply the masks to each image. To 
+combine the two resulting images, invert one of them and then take
+the "difference".</p>
+
+<li><p align="justify">
+<b>GIMP</b> has a tiling function that seems to work on the same
+principle as outlined here using a linear mask.
+</p>
+
+<li><p align="justify">
+A <b>Shake</b> implementation has been put together by  
+Emmanuel Mogenet, a screen shot is <a href="shot.jpg">here (shot.jpg)</a>
+and the source is <a href="SoftTile.h">here (SoftTile.h)</a>.
+</p>
+</ul>
+
+<p><br><br><br><p>
+
+<center>
+<h1>Parametric Equation of a Sphere and Texture Mapping</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+August 1996
+</center>
+
+<p align="justify">
+One possible parameterisation of the sphere will be discussed
+along with the transformation required to texture map a sphere.
+An angle parameterisation of the sphere is
+</p>
+
+<ul>
+<b>x</b> = r sin(theta) cos(phi)<br>
+<b>y</b> = r sin(theta) sin(phi)<br>
+<b>z</b> = r cos(theta)<br>
+</ul>
+
+<p align="justify">
+where r is the radius, theta the angle from the z axis (0 <= theta <= pi),
+and phi the angle from the x axis (0 <= phi <= 2pi).
+Textures are conventionally specified as rectangular images
+which are most easily parameterised by two cartesian type
+coordinates (u,v) say, where 0 <= u,v <= 1. The equation
+above for the sphere can be rewritten in terms of u and v as
+</p>
+
+<ul>
+<b>x</b> = r sin(v pi) cos(u 2 pi)<br>
+<b>y</b> = r sin(v pi) sin(u 2 pi)<br>
+<b>z</b> = r cos(v pi)<br>
+</ul>
+
+<p>
+Solving for the u and v from the above gives
+<ul>
+<b>v</b> = arccos(z/r) / pi<br>
+<b>u</b> = ( arccos(x/(r sin(<b>v</b> pi))) ) / (2 pi)
+</ul>
+
+<p align="justify">
+So, given a point (x,y,z) on the surface of the sphere the above gives
+the point (u,v) each component of which can be appropriately scaled
+to index into a texture image.
+</p>
+
+<p>
+<b>Note</b><p>
+<ul>
+<li><p align="justify">A sphere cannot be "unwrapped" without distortion,
+for example, the length between  points on the sphere will not
+equal the distance between points on the unwrapped plane.
+</p>
+<li><p align="justify">
+When implementing this in code it is important to note that most implementations
+of arccos() returns value from 0 to pi and not 0 to 2 pi as the
+the formula above assumes. The second half cycle of the arccos
+function is obtained by noticing the sign of the y value. So the
+transformation written in C might be as follows
+</p>
+</ul>
+
+<pre>#define PI 3.141592654
+#define TWOPI 6.283185308
+
+void SphereMap(x,y,z,radius,u,v)
+double x,y,z,r,*u,*v;
+{
+   *v = acos(z/radius) / PI;
+   if (y &gt;= 0)
+      *u = acos(x/(radius * sin(PI*(*v)))) / TWOPI;
+   else
+      *u = (PI + acos(x/(radius * sin(PI*(*v))))) / TWOPI;
+}
+</pre>
+
+<p align="justify">
+There are still two special points, the exact north and south
+poles of the sphere, each of these two points needs to be
+"spread" out along the whole edge v=0 and v=1. In the formula
+above this is where sin(v pi) = 0.
+</p>
+
+
+<p><br><br><br><p>
+
+
+<center>
+<h1>OpenGL sphere with texture coordinates</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+January 1999
+<p>
+A more efficient contribution by Federico Dosil:
+<a href="sphere.c">sphere.c</a>
+</center>
+
+<p align="justify">
+While straightforward many people seem to have trouble creating
+a sphere with texture coordinates. Here's the way I do it
+(written for clarity rather than efficiency).
+</p>
+
+<center><img src="texture.gif"></center><p>
+
+<b>Note</b><br>
+<ul>
+<li><p align="justify">
+The whole line at the North pole and the South pole texture
+map onto a single point at the poles. 
+</p>
+<li><p align="justify">While this linear mapping
+of lines of latitude is fine for general textures, it may not be
+correct for particular image textures such as maps of the Earth.
+In those cases the latitude texture coordinates need to be matched to the 
+latitude function used to make the image.<br>
+<center><img src="earth.gif" width=512 height=256 border=1></center>
+</p>
+<li><p align="justify">On many implementations triangle strips are muck 
+efficient than quad strips. On the other hand triangle strips don't
+look so good in wireframe mode. Depending on personal taste the line
+<font color="#ff0000">glBegin(GL_QUAD_STRIP);</font> can be replaced with
+<font color="#ff0000">glBegin(GL_TRIANGLE_STRIP);</font> 
+<center><table><tr><td>
+<img src="quads.gif" width=200 height=202>
+</td><td>
+<img src="triangles.gif" width=200 height=201>
+</td><td>
+<img src="nz.gif" width=200 height=197>
+</td></tr></table></center>
+</ul>
+
+<font color="#ff0000">
+<pre>
+/*
+   Create a sphere centered at c, with radius r, and precision n
+   Draw a point for zero radius spheres
+*/
+void CreateSphere(XYZ c,double r,int n)
+{
+   int i,j;
+   double theta1,theta2,theta3;
+   XYZ e,p;
+
+   if (r &lt; 0)
+      r = -r;
+   if (n &lt; 0)
+      n = -n;
+   if (n &lt; 4 || r &lt;= 0) {
+      glBegin(GL_POINTS);
+      glVertex3f(c.x,c.y,c.z);
+      glEnd();
+      return;
+   }
+
+   for (j=0;j&lt;n/2;j++) {
+      theta1 = j * TWOPI / n - PID2;
+      theta2 = (j + 1) * TWOPI / n - PID2;
+
+      glBegin(GL_QUAD_STRIP);
+      for (i=0;i&lt;=n;i++) {
+         theta3 = i * TWOPI / n;
+
+         e.x = cos(theta2) * cos(theta3);
+         e.y = sin(theta2);
+         e.z = cos(theta2) * sin(theta3);
+         p.x = c.x + r * e.x;
+         p.y = c.y + r * e.y;
+         p.z = c.z + r * e.z;
+
+         glNormal3f(e.x,e.y,e.z);
+         glTexCoord2f(i/(double)n,2*(j+1)/(double)n);
+         glVertex3f(p.x,p.y,p.z);
+
+         e.x = cos(theta1) * cos(theta3);
+         e.y = sin(theta1);
+         e.z = cos(theta1) * sin(theta3);
+         p.x = c.x + r * e.x;
+         p.y = c.y + r * e.y;
+         p.z = c.z + r * e.z;
+
+         glNormal3f(e.x,e.y,e.z);
+         glTexCoord2f(i/(double)n,2*j/(double)n);
+         glVertex3f(p.x,p.y,p.z);
+      }
+      glEnd();
+   }
+}
+</pre>
+</font>
+
+<p align="justify">
+It is a small modification to enable one to create subsets of a 
+sphere....3 dimensional wedges. As an example see the following code.
+</p>
+
+<font color="#ff0000">
+<pre>
+/*
+   Create a sphere centered at c, with radius r, and precision n
+   Draw a point for zero radius spheres
+   Use CCW facet ordering
+   "method" is 0 for quads, 1 for triangles
+      (quads look nicer in wireframe mode)
+   Partial spheres can be created using theta1->theta2, phi1->phi2
+   in radians 0 &lt; theta &lt; 2pi, -pi/2 &lt; phi &lt; pi/2
+*/
+void CreateSphere(XYZ c,double r,int n,int method,
+   double theta1,double theta2,double phi1,double phi2)
+{
+   int i,j;
+   double t1,t2,t3;
+   XYZ e,p;
+
+   /* Handle special cases */
+   if (r &lt; 0)
+      r = -r;
+   if (n &lt; 0)
+      n = -n;
+   if (n &lt; 4 || r &lt;= 0) {
+      glBegin(GL_POINTS);
+      glVertex3f(c.x,c.y,c.z);
+      glEnd();
+      return;
+   }
+
+   for (j=0;j&lt;n/2;j++) {
+      t1 = phi1 + j * (phi2 - phi1) / (n/2);
+      t2 = phi1 + (j + 1) * (phi2 - phi1) / (n/2);
+
+      if (method == 0)
+         glBegin(GL_QUAD_STRIP);
+      else
+         glBegin(GL_TRIANGLE_STRIP);
+
+      for (i=0;i&lt;=n;i++) {
+         t3 = theta1 + i * (theta2 - theta1) / n;
+
+         e.x = cos(t1) * cos(t3);
+         e.y = sin(t1);
+         e.z = cos(t1) * sin(t3);
+         p.x = c.x + r * e.x;
+         p.y = c.y + r * e.y;
+         p.z = c.z + r * e.z;
+         glNormal3f(e.x,e.y,e.z);
+         glTexCoord2f(i/(double)n,2*j/(double)n);
+         glVertex3f(p.x,p.y,p.z);
+
+         e.x = cos(t2) * cos(t3);
+         e.y = sin(t2);
+         e.z = cos(t2) * sin(t3);
+         p.x = c.x + r * e.x;
+         p.y = c.y + r * e.y;
+         p.z = c.z + r * e.z;
+         glNormal3f(e.x,e.y,e.z);
+         glTexCoord2f(i/(double)n,2*(j+1)/(double)n);
+         glVertex3f(p.x,p.y,p.z);
+
+      }
+      glEnd();
+   }
+}
+</pre>
+</font>
+
+<br><br><br><br>
+
+
+<center>
+<h1>Texture map correction for spherical mapping</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+January 2001<p>
+<a href="polar_map_correction.lua"> Lua/gluas script</a> contributed by Philip Staiger.<br>
+<a href="polarCorrection.py">Python script for use with GIMP<a> by Rafael Navega.
+</center>
+
+<p align="justify">
+When texture mapping a sphere with a rectangular texture image with
+polar texture coordinates, the parts of the image near the poles get
+distorted. Given the different topology between a sphere and plane,
+there will always be some nonlinear distortion or cut involved. This
+normally manifests itself in pinching at the poles where rows of pixels
+are being compressed tighter and tighter together the closer one gets
+to the pole. At the poles is the extreme case where the whole top and bottom
+row of pixels in the texture map is compressed down to one point.
+The spherical images below on the left are examples of this pinching
+using the rectangular texture also on the left.
+</p>
+
+<center><table><tr><td>
+<center><img src="leaf.gif" width=200 height=200></center>
+</td><td>
+<center><img src="leafpolar.gif" width=200 height=200></center>
+</td></tr>
+<tr><td>
+<center><img src="leafsphere.gif" width=281 height=281></center>
+</td><td>
+<center><img src="leafpolarsphere.gif" width=291 height=282></center>
+</td></tr></table></center>
+<p>
+
+<p align="justify">
+It is simple to correct for this by distorting the texture map. Assume
+the texture map is mapped vertically onto lines of latitude (theta)
+and mapped horizontally onto lines of longitude (phi). There is no
+need to modify theta but phi is scaled as we approach the two poles by
+cos(theta). The diagram below illustrates the conventions used here.
+</p>
+
+<center><p><img src="sketch.gif" width=600 height=253></center><p>
+
+<p align="justify">
+The pseudo-code for this distortion might be something like the following,
+note that the details of how to create and read the images are left up
+to your personal preferences.
+</p>
+<pre>
+   double theta,phi,phi2;
+   int i,i2,j;
+   BITMAP *imagein,*imageout;
+
+   Form the input and output image arrays
+   Read an input image from a file
+
+   for (j=0;j&lt;image.height;j++) {
+      theta = PI * (j - (image.height-1)/2.0) / (double)(image.height-1);
+      for (i=0;i&lt;image.width;i++) {
+         phi  = TWOPI * (i - image.width/2.0) / (double)image.width;
+         phi2 = phi * cos(theta);
+         i2  = phi2 * image.width / TWOPI + image.width/2;
+         if (i2 &lt; 0 || i2 &gt; image.width-1) {
+            newpixel = red;                         /* Should not happen */
+         } else {
+            newpixel = imagein[j*image.width+i2];
+         }
+         imageout[j*image.width+i] = image.newpixel;
+      }
+   }
+
+   Do something with the output image
+</pre>
+
+<p align="justify">
+Applying this transformation to a regular grid is show below.
+</p>
+
+<center><table><tr><td>
+<img src="grid1.gif" width=256 height=129>
+</td><td>
+<img src="polar1.gif" width=256 height=129>
+</td></tr></table></center>
+<p>
+
+<p align="justify">
+Perhaps a more illustrative example is given below for a "moon"
+texture. Note that in general if the texture tiles vertically and
+horizontally then after this distortion it will no longer tile
+horizontally. A number of tiling methods can be used to correct
+for this. One is to replicate and mirror the texture horizontally,
+since the distortion is symmetric about the horizontal center line
+of the image, the result will tile horizontally. Another method is
+to overlap two copies of the texture after the distortion with
+appropriate masks that fade the appropriate texture out at the
+non-tiling borders.
+</p>
+
+<center><table><tr><td>
+<center><img src="moon1.gif" width=256 height=128></center>
+</td><td>
+<center><img src="moon1p.gif" width=256 height=128></center>
+</td></tr>
+<tr><td>
+<center><img src="moon1s.gif"  width=256 height=249></center>
+</td><td>
+<center><img src="moon1ps.gif"  width=256 height=248></center>
+</td></tr></table></center>
+<p>
+
+<p align="justify">
+This final example illustrates how after the distortion the image
+detail is evenly spread over the spherical object instead of acting
+like lines of longitude that get closer near the poles.
+</p>
+
+<center><table><tr><td>
+<center><img src="cloth.gif" width=200 height=200></center>
+</td><td>
+<center><img src="clothpolar.gif" width=200 height=200></center>
+</td></tr>
+<tr><td>
+<center><img src="clothsphere.gif" width=256 height=251></center>
+</td><td>
+<center><img src="clothpolarsphere.gif" width=256 height=250></center>
+</td></tr></table></center>
+<p>
+
+<br><br><bR>
+
+<center>
+<a name="fisheye">
+<h1>Texture mapping a fisheye projection onto a hemisphere</h1>
+</a>
+Written by <a href="../index.html">Paul Bourke</a><br>
+April 2012
+</center>
+
+<p align="justify">
+The following illustrates how to calculate the texture coordinates for the vertices
+of a hemisphere such that a fisheye image can be applied as a texture with the "expected"
+results. To test the mathematics and code presented here the following texture image
+will be used, the expected result is for the hemisphere to be textured with lines
+of longitude and latitude.
+</p>
+<center><a href="fishtexture0.jpg">
+	<img src="fishtexture0_s.jpg" width=512 height=512 border=1>
+</a></center><p>
+
+
+<p align="justify">
+The texture coordinate for any vertex of the hemisphere mesh is calculated by
+determining the polar angles theta and phi. These can then be mapped directly
+into the fisheye texture plane. The equations are shown below and also in the source
+code provided.
+</p>
+
+<center>
+	<img src="fish3.png" width=600 height=636 border=0>
+</center><p>
+
+<p align="justify">
+Source code that illustrates this is give here (tab stops set to 3 for correct indenting):
+<a href="fishtexture.c">fishtexture.c</a>. It creates a textured hemisphere centered
+at the origin with unit radius described as an obj file:
+<a href="fishtexture.obj">fishtexture.obj</a> with associated material file:
+<a href="fishtexture.mtl">fishtexture.mtl</a>.
+</p>
+
+<p align="justify">
+Resulting views of the above obj file.
+</p>
+<center>
+	<img src="fish1.png" width=600 height=371 border=0>
+</center><p>
+
+<center>
+	<img src="fish2.png" width=600 height=550 border=0>
+</center><p>
+
+<br><br><bR>
+
+<center>
+<h1>Texture Mapping Schemes in Common Usage</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+March 1987
+</center>
+<p>
+
+<table width=100%><tr><td valign="top">
+<p align="justify">
+The following lists some of the most common texture
+mapping methods use by raytracing/rendering engines.
+The methods are illustrated by mapping the simple 
+rectangular tile texture on the right onto a 
+cube, sphere, and cylinder. Repeated tiling is used
+in all cases and where possible the tiling scale
+factors are kept constant.
+</p>
+</td><td valign="top" width=10>
+	&nbsp;
+</td><td valign="top">
+	<img src="texture1.gif" width=126 height=126 border=0>
+</td></tr></table>
+
+<h3>Planar</h3>
+<table width=100%>
+<tr><td width=33%>
+<img src="pcube.gif">
+</td><td width=33%>
+<img src="psphere.gif">
+</td><td width=33%>
+<img src="pcylinder.gif">
+</td></tr></table>
+
+<h3>Cubic</h3>
+<table width=100%>
+<tr><td width=33%>
+<img src="ccube.gif">
+</td><td width=33%>
+<img src="csphere.gif">
+</td><td width=33%>
+<img src="ccylinder.gif">
+</td></tr></table>
+
+<h3>Cylindrical</h3>
+<table width=100%>
+<tr><td width=33%>
+<img src="dcube.gif">
+</td><td width=33%>
+<img src="dsphere.gif">
+</td><td width=33%>
+<img src="dcylinder.gif">
+</td></tr></table>
+
+<h3>Rectangular Cylindrical</h3>
+<table width=100%>
+<tr><td width=33%>
+<img src="rcube.gif">
+</td><td width=33%>
+<img src="rsphere.gif">
+</td><td width=33%>
+<img src="rcylinder.gif">
+</td></tr></table>
+
+<h3>Spherical</h3>
+<table width=100%>
+<tr><td width=33%>
+<img src="scube.gif">
+</td><td width=33%>
+<img src="ssphere.gif">
+</td><td width=33%>
+<img src="scylinder.gif">
+</td></tr></table>
+
+<h3>Miscellaneous examples</h3>
+
+<center>
+<table width=100%><tr><td valign="center">
+Logo for the <br>
+The Australasian Society for Psychophysiology, Inc.
+</td><td valign="center">
+<img src="ASPlogo.gif">
+</td></tr></table>
+
+<table width=100%><tr><td valign="center">
+<a href="dodec.wrl">VRML</a> version of the cover for Neuroimage 8.
+For a paper entitled "Steady State Visually Evoked Potential Correlates
+of Auditory Hallucinations in Schizophrenia".
+</td><td valign="center">
+<img src="percover.gif">
+</td></tr></table>
+</center>
+
+</td></tr></table></center>
+</body>
+</html>
+

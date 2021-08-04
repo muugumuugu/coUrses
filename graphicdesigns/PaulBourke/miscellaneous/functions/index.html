@@ -1,0 +1,876 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Miscellaneous functions</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Miscellaneous functions</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+January 2001
+</center>
+
+<p><br><br><br><p>
+
+<h2>Zeta function</h2>
+<p><br><p>
+
+<p align="justify">
+The Zeta function (sometimes called the Riemann Zeta Function)
+was defined by Euler as
+</p>
+
+<center>
+<img src="http://paulbourke.net/miscellaneous/functions/zeta1.gif">
+</center>
+
+<p>
+Where z is a complex number with the real part greater than 1.
+<p>
+
+An alternating sign version is defined as
+<center>
+<img src="http://paulbourke.net/miscellaneous/functions/zeta2.gif">
+</center>
+
+<p align="justify">
+Where the real part of z must be greater than 0. This allows the
+zeta function to be defined for real values of z greater than 0
+but not 1 as follows.
+</p>
+
+<center>
+<img src="http://paulbourke.net/miscellaneous/functions/zeta3.gif">
+</center>
+
+<p align="justify">
+There are some special values of the zeta function that are known,
+for example zeta(2) = pi<sup>2</sup> / 6, zeta(4) = pi<sup>4</sup> / 90,
+zeta(6) = pi<sup>6</sup> / 945.
+For the alternating zeta function zeta_a(2) = pi<sup>2</sup> / 12,
+zeta_a(4) = 7 pi<sup>4</sup> / 720.
+</p>
+
+<p align="justify">
+A well known (and unproven) hypothesis is called the Reimann Hypothesis
+is that all values of z for which zeta(z) = 0 are of the form
+1/2 * i y. That is, a complex number with real part of 1/2.
+<p>
+
+<p><br><br><br><p>
+
+<h2>Alpha Function</h2>
+<p><br><p>
+
+<center><p>
+<img src="http://paulbourke.net/miscellaneous/functions/alpha2.gif">
+</center><p>
+
+<center><p>
+<img src="http://paulbourke.net/miscellaneous/functions/alpha1.gif">
+</center><p>
+
+<p><br><br><br><p>
+
+<h2>SINC function</h2>
+<p><br><p>
+
+The so called "sinc" function turns up in many application areas,
+perhaps most often in signal processing and Fourier analysis as
+it is the form of the Fourier transform of a rectangular pulse.
+The usual definition is
+<p><center><img src="http://paulbourke.net/miscellaneous/functions/sinc3.gif"><p></center>
+
+Typical features of the function are illustrated below.
+
+<p><center><img src="http://paulbourke.net/miscellaneous/functions/sinc1.gif"><p></center>
+
+<p><center><img src="http://paulbourke.net/miscellaneous/functions/sinc2.gif"><p></center>
+<p>
+
+Generating the function in software is straightforward noting the
+special case near the origin. Since sin(x) is very close to linear
+as x -> 0, there are no numerical problems using a low order polynomial
+expansion for sin(x) in this region.
+<p>
+
+<p><br><br><br><p>
+
+<h2>Factorial and the Gamma Function</h2>
+<p><br><p>
+
+The factorial of an integer n is normally written as n! and defined as<p>
+<center>
+n! = n (n-1) (n-2) (n-3) . . . 3 2 1
+</center>
+<p>
+
+<p align="justify">
+The factorial is a special case of the more general Gamma function
+which can be applied to any real (or complex) number. The Gamma
+function is defined as
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/gamma1.gif" width="166" height="68" alt="Equation 1">
+</center><p>
+
+<p align="justify">
+When the Gamma function is applied to the positive integers its
+relationship to factorials is as follows
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/gamma2.gif" width="112" height="28" alt="Equation 2">
+</center><p>
+
+Note:<p>
+<ul>
+<li><img src="http://paulbourke.net/miscellaneous/functions/gamma3.gif" width="155" height="29" alt="Equation 3"><p>
+
+<li>The gamma function of 0.5 is of pi<sup>1/2</sup><p>
+
+<li>Gamma(3/2) = 0.5 pi<sup>1/2</sup>
+</ul>
+
+A polynomial approximation with an error of less than 3x10<sup>-7</sup>
+for 0 <= x <= 1 is 
+<p>
+Gamma(x+1) = 1 - 0.577191652 x + 0.988205891 x<sup>2</sup> -
+0.897056937 x<sup>3</sup> + 0.918206857 x<sup>4</sup> -
+0.756704078 x<sup>5</sup> + 0.482199394 x<sup>6</sup> -
+0.193527818 x<sup>7</sup> + 0.035868343 x<sup>8</sup>
+</p>
+
+<center>
+<img src="http://paulbourke.net/miscellaneous/functions/gamma4.gif" alt="Figure gamma" width="600" height="375">
+<p>
+<img src="http://paulbourke.net/miscellaneous/functions/gamma5.gif" alt="Figure 1/gamma" width="600" height="387">
+</center>
+
+<b>C source implementation</b>
+<pre>
+/*
+   Natural log of the gamma function (xx > 0)
+   Derived from "Numerical Receipes in C"
+*/
+double LnGamma(double xx)
+{
+   int j;
+   double x,y,tmp,ser;
+   double cof[6] = {
+      76.18009172947146,    -86.50532032941677,
+      24.01409824083091,    -1.231739572450155,
+      0.1208650973866179e-2,-0.5395239384953e-5
+   };
+
+   y = x = xx;
+   tmp = x + 5.5 - (x + 0.5) * log(x + 5.5);
+   ser = 1.000000000190015;
+   for (j=0;j&lt;=5;j++)
+      ser += (cof[j] / ++y);
+   return(log(2.5066282746310005 * ser / x) - tmp);
+}
+</pre>
+
+<b>References</b><p>
+
+Handbook of Mathematical Functions<br>
+Abramowitz, M., and Stegan, I.A.<br>
+9th Edition, Chapter 6, pp 255.
+<p>
+
+<p><br><br><br><p>
+
+<h2>Gabor Function</h2>
+<p><br><p>
+
+<p align="justify">
+The Gabor function is the name given to a Gaussian weighted sinusoid.
+In higher dimensions the sinusoid only varies in one dimension while
+the Gaussian envelop applies in all dimensions. The function is named
+after Dennis Gabor who used this function in the 1940s and later J Daugman
+who proposed the function to describe the spatial 
+response of cells in visual stimuli experiments.
+</p>
+
+<b>1 Dimension</b>
+
+The equation in 1D is as follows<br>
+<center><img src="http://paulbourke.net/miscellaneous/functions/equation1d.gif" width="348" height="27"></center><p>
+
+<p align="justify">
+The center of the function is at "m", the width is given by the standard
+deviation "s" of the Gaussian, the number of cycles within the envelop
+is T.
+</p>
+
+<p>
+The function for various values of the cosine period "T".<br>
+<center><img src="http://paulbourke.net/miscellaneous/functions/gabor1d.gif" width="456" height="286"></center><p>  
+
+<b>2 Dimensions</b>
+
+The equation in 2D is as follows<br>
+<center><img src="http://paulbourke.net/miscellaneous/functions/equation2d.gif" width="506" height="31"></center><p>  
+<p align="justify">
+The parameters have a similar meaning in 2 dimensions except that now
+there are two parameters for the center (m<sub>x</sub>, m<sub>y</sub>)
+and standard deviation (s<sub>x</sub>, s<sub>y</sub>).
+</p>
+
+Top intensity shaded view<br>
+<center><img src="http://paulbourke.net/miscellaneous/functions/topview.gif" width="700" height="697"></center><p>  
+
+3D perspective surface<br>
+<center><img src="http://paulbourke.net/miscellaneous/functions/perspective.gif" width="700" height="532"></center><p>  
+
+<b>Note</b><br>
+<ul>
+<li>On occasion the periodic term contains a phase shift "p", 
+    for example, something of the form<br>
+    cos(2 pi (x - m) / T + p)
+<br>
+<li>In 2D it is possible to include an angle for the primary axis
+but it is more common to simply rotate the function
+above which is aligned along the x axis.
+</ul>
+
+<p><br><br><br><p>
+
+<h2>Sigmoid Function</h2>
+<p><br><p>
+
+<center><p>
+<img src="http://paulbourke.net/miscellaneous/functions/sigmoid2.gif">
+</center><p>
+
+<center><p>
+<img src="http://paulbourke.net/miscellaneous/functions/sigmoid1.gif">
+</center><p>
+
+This function arises in many dynamical systems because it is the
+solution to a first order differential equation<p>
+<center>
+dx / dt = k x - a x<sup>2</sup>
+</center>
+
+<p align="justify">
+This equation describes simple exponential growth dynamics with
+a linear limiting control, such systems are often called logistic
+growth or Verhulst growth. The solution is
+</p>
+<center>
+x(t) = k x(0) / [(k - a x(0))e<sup>-kt</sup> + a x(0)]
+</center>
+<p>
+
+<p><br><br><br><p>
+
+<h2>Gompertz Function</h2>
+<p><br><p>
+
+<p align="justify">
+The Gompertz equation arises from models of self-limited growth
+where the rate decreases exponentially with time, for example,
+as the solution to the first order differential equation
+</p>
+<center>
+dx / dt = k x e<sup>-at</sup>
+</center>
+<p>
+The solution is of the form<p>
+<center>
+x(t) = x(0) e<sup>k(1-e<sup>-at</sup>) / a</sup>
+</center>
+<p>
+where a and k are greater than 0.
+
+<p><center><img src="http://paulbourke.net/miscellaneous/functions/gompertz.gif"></center><p>
+
+<p><br><br><br><p>
+
+<h2>Biexponential Function</h2>
+<p><br><p>
+
+The biexponential function is defined as follows.
+<p><center><img src="http://paulbourke.net/miscellaneous/functions/biexp1.gif"></center><p>
+Where a,b,t greater than or equal to 0, a is not equal to b.
+<p>
+
+When a = b the function is f(t) = a<sup>2</sup> t e<sup>- a t</sup>
+
+<p>
+The form of the function for one value of a and a number of different
+values of b is shown below.
+<p><center><img src="http://paulbourke.net/miscellaneous/functions/biexp2.gif"></center><p>
+
+<b>Notes</b><p>
+<ul>
+<li>The constant ab / (a - b) serves to normalise the area
+	 under the function to unity.<p>
+<li>The maximum occurs at t = (b - a)<sup>-1</sup> log<sub>e</sub>(b / a)<p>
+<li>For a = b the maximum occurs at 1 / a<p>
+<li>If b is very much larger than a then the function approximates an
+    exponential.<p>
+</ul>
+
+<b>Convolution property</b><p>
+<p align="justify">
+There is a computationally nice result when using a biexponential in
+a convolution, say
+f<sub>t</sub> = biexp<sub>t</sub> * g<sub>t</sub>
+Normally one would need to remember the last N terms of g<sub>t</sub>
+where N is determined by how far along the biexponential one wished to
+perform the convolution. It can be shown however that the convolution can
+be performed with a minimum of storage as
+</p>
+<center>
+f<sub>t+1</sub> = dt a b (e<sup>-a dt</sup> A<sub>t</sub> 
+	- e<sup>-b dt</sup> B<sub>t</sub>) 
+	/ (a - b)
+</center>
+<p>
+Where<p>
+<center>
+A<sub>t</sub> = g<sub>t</sub>  + e<sup>-a dt</sup> A<sub>t-1</sub>
+</center>
+<p>
+and
+<center>
+B<sub>t</sub> = g<sub>t</sub> + e<sup>-b dt</sup> B<sub>t-1</sub>
+</center>
+<p>
+
+<p><br><br><br><p>
+
+<h2>Miscellaneous Series and Sequences</h2>
+"He must be a 'practical' man who can see no poetry in mathematics." 
+W.F. White
+<p><br><p>
+
+<b>Definitions</b><br>
+Sequence - An ordered list of numbers determined by some rule.<br>
+Series - Sum of the terms in a sequence.
+<p>
+
+<b>Arithmetic series</b><br>
+<pre>
+   a + (a+d) + (a+2d) + (a+3d) + ..... + (a+(n-1)d) = n (2 a + (n - 1) d) / 2
+</pre>
+
+<b>Geometric series</b><br>
+<pre>
+   a + ar + ar<sup>2</sup> + ar<sup>3</sup> + ..... + ar<sup>n-1</sup> = a (1 - r<sup>n</sup>) / (1 - r), for r not equal to 1
+</pre>
+
+<b>Exponential series</b><br>
+<pre>
+   1 + x + x<sup>2</sup>/2! + x<sup>3</sup>/3! + ..... = e<sup>x</sup>
+</pre>
+
+<b>Logarithmic series</b><br>
+<pre>
+   x + x<sup>2</sup>/2 + x<sup>3</sup>/3 - x<sup>4</sup>/4 + ..... = log<sub>e</sub>(1 + x)
+</pre>
+
+<b>Binomial series</b><br>
+<pre>
+   (1 + x)<sup>n</sup> = 1 + nx + n(n-1)x<sup>2</sup>/2! + n(n-1)(n-2)x<sup>3</sup>/3! + .....
+</pre>
+Converges for all x if n is positive.
+For negative n it converges if |x| is less than 1
+<p>
+
+<b>Sine and Cosine</b><br>
+<pre>
+   x - x<sup>3</sup>/3! + x<sup>5</sup>/5! - x<sup>7</sup>/7! + ... = sin(x)
+   1 - x<sup>2</sup>/2! + x<sup>4</sup>/4! - x<sup>6</sup>/6! + ... = cos(x) 
+</pre>
+
+<b>Harmonic Series</b><br>
+<pre>
+   1 + 1/2 + 1/3 + 1/4 + 1/5 + 1/6 + 1/7 + . . . . + 1/n + . . . = infinity
+</pre>
+The sum for large n is approximately ln(n) + 0.5772156649...
+(Eulers constant)
+<p>
+
+<b>Prime Harmonic Series</b><br>
+<pre>
+   1/2 + 1/3 + 1/5 + 1/7 + 1/11 + 1/13 + 1/17 + 1/19 + 1/23 + . . . .
+</pre>
+
+<!--
+<b>Factorial</b><br>
+<pre>
+   1/0! + 1/1! + 1/2! + 1/3! + 1/4! + . . . + 1/n! +  . . . = 0.5 * (e + sin(1) + cos(1))
+</pre>
+-->
+
+<b>Miscellaneous Algebraic Series</b><br>
+<pre>
+   1 + 2 + 3 + 4 + .... + n = n (n + 1) / 2
+   1<sup>2</sup> + 2<sup>2</sup> + 3<sup>2</sup> + 4<sup>2</sup> + ..... + n<sup>2</sup> = n (n + 1) (2 n + 1) / 6
+   1<sup>3</sup> + 2<sup>3</sup> + 3<sup>3</sup> + 4<sup>3</sup> + ..... + n<sup>3</sup> = n<sup>2</sup> (n + 1)<sup>2</sup> / 4 
+</pre>
+
+<b>Fibonacci sequence</b><br>
+<pre>
+   F[n] = F[n-1] + F[n-2]
+   for integers F[0] and F[1]
+   1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, . . .
+</pre>
+
+<b>Q sequence</b>
+<pre>
+   Q[n] = Q[n-Q[n-1]] + Q[n-Q[n-2]] 
+   Q[0] = 1, Q[1] = 1
+   1, 1, 2, 3, 3, 4, 5, 5, 6, 6, 6, 8, 8, 8, 10, 9, 10, 11, 11, 12, . . .
+</pre>
+<p>
+
+<b>Pascals triangle</b><br>
+<pre>
+               1
+             1   1
+           1   2   1
+         1   3   3   1
+       1   4   6   4   1
+     1   5   10  10  5   1
+   1   6   15  20  15  6   1
+   :   :   :   :   :   :   :
+</pre>
+Each number is the sum of the two numbers above it to the left and right.
+The triangle grows downwards.
+<p>
+
+<b>Perfect number sequence</b><br>
+Numbers in this sequence are those that are equal the 
+sum of every smaller integer that divides
+it without remainder. <br>
+eg: 6 = 1 + 2 + 3 and can be divided perfectly by 1, 2, and 3.<br>
+eg: 28 = 1 + 2 + 4 + 7 + 14
+<pre>
+   6, 28, 496, 8128, 33550336, 8589869056, 137438691328, 
+2305843008139952128, ...
+</pre>
+<p align="justify">
+These number all satisfy 2<sup>p-1</sup> (2<sup>p</sup>-1) where 
+2<sup>p</sup>-1 is prime, called a Mersenne prime. 
+Note: p will also be prime.
+</p>
+
+<p><br><br><br><p>
+
+<h2>Trigonometric Identities</h2>
+<p><br><p>
+
+<pre>
+sin(a +/- b) = sin(a) cos(b) +/- cos(a) sin(b)
+
+cos(a +/- b) = cos(a) cos(b) -/+ sin(a) sin(b)
+
+2 sin(a) cos(b) = sin(a + b) + sin(a - b)
+
+2 cos(a) cos(b) = cos(a + b) + cos(a - b)
+
+2 sin(a) sin(b) = cos(a - b) - cos(a + b)
+
+                tan(a) +/- tan(b) 
+tan(a +/- b) = -------------------
+               1 -/+ tan(a) tan(b)
+
+sin(2 a) = 2 sin(a) cos(a)
+
+cos(2 a) = 1 - 2 sin(a) sin(a) = cos(a) cos(a) - sin(a) sin(a) = 2 cos(a) cos(a) - 1
+
+               2 tan(a)
+tan(2 a) = -----------------
+           1 - tan(a) tan(a)
+     
+                        a + b      a - b
+sin(a) + sin(b) = 2 sin(-----) cos(-----)
+                          2          2
+
+                        a + b      a - b
+sin(a) - sin(b) = 2 cos(-----) sin(-----)
+                          2          2
+
+                        a + b      a - b
+cos(a) + cos(b) = 2 cos(-----) cos(-----)
+                          2          2
+
+                        a + b      a - b
+sin(a) - sin(b) = 2 sin(-----) sin(-----)
+                          2          2
+
+sin(a) sin(a) + cos(a) cos(a) = 1
+
+tan(a) tan(a) = sec(a) sec(a) - 1
+
+Substituting t = tan(a/2) then
+                 2 t                 1 - t t                 2 t
+      sin(a) = -------      cos(a) = -------      tan(a) = -------
+               1 + t t               1 + t t               1 - t t
+
+Definitions
+      sec(a) = 1 / cos(a)         cosec(a) = 1 / sin(a)
+      tan(a) = sin(a) / cos(a)    cot(a) = 1 / tan(a)
+
+e<sup>ia</sup> = cos(a) + i sin(a)    where i = sqrt(-1)
+</pre>
+
+<p><br><br><br><p>
+
+<a name="gaussian"><h2>Gaussian (Normal) Distribution</h2></a>
+<p><br><p>
+
+<p align="justify">
+The Normal or Gaussian distribution plays a central role in
+statistics and has been found to be a very good model for
+many continuous distributions that occur in real situations.
+The Gaussian function with mean (m) and standard deviation (s)
+is defined as follows:
+</p>
+<center><img src="http://paulbourke.net/miscellaneous/functions/gaussian3.gif" width="153" height="62"></center><p>
+
+<p align="justify">
+The function is symmetric about the mean, it gains its
+maximum value at the mean, the minimum value is  at
+plus and minus infinity.
+The distribution is often referred to as "bell shaped", it has the
+following typical form.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/gaussian2.gif" width="394" height="321"></center><p>
+
+<p align="justify">
+At one standard deviation from the mean the function has dropped
+to about 2 thirds of its maximum value, at two standard deviations
+it has fallen to about a seventh of its maximum value.
+</p>
+
+<p align="justify">
+The area under the function one standard deviation from the
+mean is about 0.682. Two standard deviations it is 0.9545,
+and three standard deviations it is 0.9973.
+The total area under the curve is 1, as the standard deviation is
+increased the curve broadens, for example the following shows
+the distribution for a number of values of s.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/gaussian1.gif" width="426" height="288"></center><p>
+
+<p><br><br><br><p>
+
+<h2>2D Gaussian</h2>
+<p><br><p>
+
+<p align="justify">
+For a radially symmetric 2D Gaussian centered at the origin (mean = 0)
+</p>
+<center><img src="http://paulbourke.net/miscellaneous/functions/gaussian4.gif" width="156" height="51"><p></center>
+
+For different standard deviations<p>
+<center><img src="http://paulbourke.net/miscellaneous/functions/gaussian5.gif" width="201" height="55"><p></center>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/gaussian6.gif" width="500" height="403"><p></center>
+
+<p align="justify">
+The total volume under a 2D Gaussian is 2 pi s<sub>x</sub> s<sub>y</sub>.
+</p>
+
+<p><br><br><br><p>
+
+<a name="poisson"><h2>Poisson Distribution</h2></a>
+<p><br><p>
+
+<p align="justify">
+The probability distribution function for a Poisson process is defined as
+</p>
+<center><img src="http://paulbourke.net/miscellaneous/functions/poisson1.gif" width="256" height="49"></center><p>
+
+Lambda is often a rate per unit time, distance, or area.<p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/poisson4.gif" width="472" height="349"></center><p>
+
+<p align="justify">
+It satisfies the main requirement for a probability density function,
+namely that
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/poisson2.gif" width="86" height="62"></center><p>
+
+<p align="justify">
+For the proof of this consider the Maclaurin infinite series expansion 
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/poisson3.gif" width="280" height="60"></center><p>
+
+<p align="justify">
+A binomial process with large n (number of samples or events) and
+small p (probability of an event) but such that the mean np is constant
+tends to Poisson. lambda = np.
+</p>
+
+The variance of a Poisson process is equal to the mean.
+<p>
+
+<b>Details - Factorial of a continuous variable</b>
+
+<p align="justify">
+y! for a continuous variable is defined using the gamma function,
+namely Gamma(y+1).<p>
+A snippet of C code based on the algorithm in "Numerical Recipes in C"
+is given below for computing the natural logarithm of Gamma(y) 
+for y > 0.
+</p>
+
+<pre>
+double LnGamma(double xx)
+{
+   int j;
+   double x,y,tmp,ser;
+   double cof[6] = {
+      76.18009172947146,    -86.50532032941677,
+      24.01409824083091,    -1.231739572450155,
+      0.1208650973866179e-2,-0.5395239384953e-5
+   };
+
+   y = x = xx;
+   tmp = x + 5.5 - (x + 0.5) * log(x + 5.5);
+   ser = 1.000000000190015;
+   for (j=0;j&lt;=5;j++)
+      ser += (cof[j] / ++y);
+   return(log(2.5066282746310005 * ser / x) - tmp);
+}
+</pre>
+
+<p><br><br><br><p>
+
+<a name="gamma"><h2>Gamma Distribution</h2></a>
+<p><br><p>
+
+<p align="justify">
+The probability density function for a gamma distribution is
+given in most general terms as
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/gammadist2.gif" width="483" height="122"></center><p>
+
+<p align="justify">
+where a and b are both greater than 0. The "standard" gamma function
+is often quoted as having B = 1.
+The gamma distribution formula above requires the evaluation of the
+gamma function defined as
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/gammadist1.gif" width="239" height="89"></center><p>
+
+<p align="justify">
+Examples of the gamma distribution for a range of values of a but a fixed
+value of B=1 are shown below. If a <= 1 then the distribution is always
+decreasing.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/gammadist3.gif" width="432" height="264"></center><p>
+
+<p align="justify">
+The following shows the gamma distribution with a fixed value of
+a=2 and various values of B. B acts mostly to stretch the distribution
+in the x direction.
+<p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/gammadist4.gif" width="431" height="266"></center><p>
+
+<p align="justify">
+The mean of a gamma distribution is the product of a and B. The
+variance is the product of a and the square of B.
+</p>
+
+<center>mean = a B<br> variance = a B<sup>2</sup></center><p>
+<p align="justify">
+The exponential distribution is a special case of the gamma distribution
+where a=1 and B = 1/lambda.
+</p>
+
+<p><br><br><br><p>
+
+<a name="exponential"><h2>Exponential Distribution</h2></a>
+<p><br><p>
+
+<p align="justify">
+The probability distribution function of an exponential distribution is
+given by 
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/expdist1.gif" width="320" height="71"></center><p>
+
+<p align="justify">
+The mean is 1/lambda, the variance is 1/lambda<sup>2</sup>
+Integrating the above gives the cumulative distribution
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/expdist3.gif" width="405" height="74"></center><p>
+
+<p align="justify">
+Some examples of the exponential distribution for various values
+of lambda are shown below:
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/expdist2.gif" width="441" height="266"></center><p>
+
+To generate an exponential distribution with a mean "m"
+from a uniform distribution "u" on (0,1) use -m ln(u).
+
+<p><br><br><br><p>
+
+<a name="rayleigh"><h2>Rayleigh Distribution</h2></a>
+<p><br><p>
+
+<p align="justify">
+The probability distribution of a narrow band noise process n(t) was
+formulated by Rice in papers published in the Bell Laboratories Journal, 1944
+and 1945. It can be derived by considering a complex phaser
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/rice1.gif" width="180" height="25"></center><p>
+
+<p align="justify">
+where r(t) is the magnitude or envelope and phi(t) is the phase. This
+can also be written in terms of its real and imaginary parts
+(in-phase and quadrature components) as
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/rice2.gif" width="182" height="72"></center><p>
+
+<p align="justify">
+If both random processes x(t) and y(t) are Gaussian distributed with
+the same variance and zero mean then the probability density functions
+P(x) and P(y) are given by
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/rice3.gif" width="197" height="87"></center><p>
+
+<p align="justify">
+Assuming x and y are statistically independent then
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/rice4.gif" width="202" height="65"></center><p>
+
+Transforming differential areas using
+<p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/rice5.gif" width="113" height="25"></center><p>
+
+gives the joint probability density function as
+<p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/rice6.gif" width="171" height="37"></center><p>
+
+<p align="justify">
+Since this is independent of phase the random variables r and phi are
+statistically independent and therefore
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/rice7.gif" width="142" height="21"></center><p>
+
+Then
+<p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/rice8.gif" width="275" height="185"></center><p>
+
+<p align="justify">
+This is normally called the Rayleigh Distribution. See figure A.1 for plots
+of this distribution for various values of the variance.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/fig1.gif" width="530" height="320"><p></center>
+
+<b>Note</b><br>
+<ul>
+<li> The random variable phi is uniformly distributed between 0 and 2 pi.<br>
+<li> The maximum of P(r) occurs when r = sigma, and
+<p>
+<center><img src="http://paulbourke.net/miscellaneous/functions/rice9.gif" width="102" height="40"></center><p>
+<li>Compared to the Gaussian Distribution P(r) is zero for negative r.
+</ul>
+
+<p><br><br><br><p>
+
+<a name="rice"><h2>Rice Distribution</h2></a>
+<p><br><p>
+
+<p align="justify">
+The probability distribution of a sinusoid plus narrow band noise is called
+the Rice Distribution. The expression for a cosinusoid of amplitude A and
+noise process, as for the Rayleigh distribution, can be written as
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/rice10.gif" width="289" height="22"></center><p>
+
+<p align="justify">
+The Rician probability density function is derived as for the Rayleigh
+distribution by considering the in-phase and quadrature components. The
+joint probability density function in this case is
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/rice11.gif" width="288" height="44"></center><p>
+
+<p align="justify">
+where now r and phi are no longer statistically independent variables.
+The envelope distribution P(r) is
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/rice12.gif" width="312" height="130"></center><p>
+
+<p align="justify">
+where I<sub>o</sub> is the zero order modified Bessel function of the
+first kind (Abramowitz 1970) given by
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/rice13.gif" width="245" height="47"></center><p>
+
+The phase distribution is
+<p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/rice14.gif" width="490" height="158"></center><p>
+
+where erf(x) is the error function (Abramowitz 1970) defined as
+<p>
+
+<center><img src="http://paulbourke.net/miscellaneous/functions/rice15.gif" width="154" height="43"></center><p>
+
+<p align="justify">
+Figure A.2 and A.3 show the Rice (magnitude and phase) distributions for
+various values of the signal-to-noise power ratio.
+</p>
+
+<center><p><img src="http://paulbourke.net/miscellaneous/functions/fig2.gif" width="540" height="315"><p></center>
+<center><p><img src="http://paulbourke.net/miscellaneous/functions/fig3.gif" width="533" height="319"><p></center>
+
+<b>Note:</b><p>
+<ul>
+<li>As A-&gt;0 the Rice distribution approaches the Rayleigh distribution
+as expected (there is no sinusoidal component.<br>
+<li>For large A the Rice distribution approaches a shifted Gaussian
+distribution centred at r = sigma.<br>
+<li>Again, P(r) is zero for negative r.
+</ul>
+
+</td></tr></table></center>
+</body>
+</html>
+

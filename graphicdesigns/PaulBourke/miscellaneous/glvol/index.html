@@ -1,0 +1,345 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Hardware accelerated volume rendering</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td valign="top">
+
+<center>
+<h1>Hardware accelerated volume rendering</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+November 2003
+</center>
+<p><br><p>
+
+<table width=100%><tr><td valign="top">
+
+<b>Introduction</b><p>
+
+<p align="justify">
+The following outlines a programming project aimed at making full use of
+OpenGL based accelerated hardware to render volume datasets at interactive
+frame rates (for example, greater than 10 frames per second). It was assumed
+that only datasets that fit into main memory would be considered, that is,
+disk spooling would not be considered. In addition to "normal" use on a workstation,
+another goal was for the software to support stereoscopic projection using either
+frame sequential or side-by-side stereo pairs commonly used in passive stereoscopic
+projection environments.
+</p>
+
+<b>Performance</b><p>
+
+<p align="justify">
+No matter how fast the graphics hardware there will always be volumes of
+sufficient resolution to make interactive rates impossible, at the time of writing
+and with the graphics cards (nVideo fx2000 and Wildcat 6110) 
+available this occurred around the 500x500x500 size.
+A number of approaches were taken to improve interactivity, they were:
+</p>
+<ul>
+<li><p align="justify">
+The operator may choose the level of subsampling of the native volume resolution.
+This is typically by a factor of 2, 4, or 8. This enables quick exploration,
+testing of voxel to colour mappings, and view point considerations. A single
+keystroke or menu selection changes the subsampling level.
+</p>
+<li><p align="justify">
+When the operator is interacting with the model it is subsampled by a factor
+of two in all dimensions, typically resulting in a factor of 8 performance
+improvement. Interestingly the subsampled data often reveals additional
+structure due to the increased transparency because there are half the number of
+contributing texture planes. 
+</p>
+<li><p align="justify">
+Instead of always looking at the whole volume, a smaller subvolume (shown in
+yellow in the images on the right) can be moved around the whole volumetric
+dataset (shown in grey on the right). This was initially chosen for performance
+reasons but turned out to be a powerful way of exploring large datasets when
+one was inside the data volume.
+</p>
+</ul>
+
+<b>Algorithm</b><p>
+
+<p align="justify">
+The algorithm uses texture mapped planes implemented in OpenGL.
+The textures are extracted from the volumetric data after applying a 
+colour/opacity mapping function. This function is shown in the lower left
+corner of the images on the right, the pink represents the volumetric data
+histogram, the colour map is along the bottom of the histogram and the white
+curve indicates the opacity. At the time of writing 8, 16, and 32 bit integer
+voxel value datasets are supported as per the 
+<a href="../../dataformats/volumetric/index.html">vol file format</a>.
+</p>
+
+<p align="justify">
+The orientation of the
+planes depend on the relative position of the virtual camera. One of three
+sets are used, each set is perpendicular to one of the axes of the volumetric
+cube. The orientation of the planes 
+used is the one that is closest to being perpendicular to the
+camera view direction, see figure 1 and 2 for examples of two
+of the three possible plane orientations (grey lines within yellow subcube). 
+As the camera passes between the 45 degree edges of the inspection sub volume
+the planes are swapped and the new texture set computed. As long as the camera
+stays within the current quadrant no reference need be made to the volumetric
+data.
+The textured planes are additionally
+drawn from the back to the front so that the OpenGL blend operators will
+work correctly (depth test is disabled).
+</p>
+<center>
+   <img src="http://paulbourke.net/miscellaneous/glvol/plane1.gif" width=300 height=308 border=1><br>
+   <smalltext>Figure 1: Orientation of planes</smalltext><p>
+   <img src="http://paulbourke.net/miscellaneous/glvol/plane2.gif" width=300 height=293 border=1><br>
+   <smalltext>Figure 2: Orientation of planes</smalltext><p>
+</center>
+
+<b>Details</b><p>
+<pre>
+Usage: glvol [options] volfile
+Options
+          -h     this text
+          -f     full screen
+          -s     active stereo
+         -ss     dual screen stereo
+          -m s   load map file
+          -M s   load marker file
+          -r n   initial resolution (1,2,3,4)
+         -vx n   initial view volume x size
+         -vy n   initial view volume y size
+         -vz n   initial view volume z size
+          -c s   load camera file
+          -a     start in auto rotate mode
+          -A n   set tween frames for animation
+Key Strokes
+  arrow keys     move inspection box
+       mouse     rotate/roll camera
+           h     move camera to home position
+           f     focus camera to current inspection cube
+           c     center inspection volume
+           w     write current window to a TGA file
+           W     write frames to TGA file continuously
+         i,k     translate, up/down
+         j,l     translate left/right
+ x,X,y,Y,z,Z     automatic scanning along axes
+         <,>     move camera forward/backward
+         +,-     change inspection box size
+          f1     toggle decoration display
+          f2     toggle texture display
+          f3     toggle histogram display
+          f4     toggle text information
+          f5     toggle camera tracking
+          f6     toggle autorotate
+          f7     toggle 3d cursor
+     1,2,3,4     set supsampling level to 1,2,4,8
+           q     quit
+</pre>
+
+</td><td width=10>&nbsp</td><td>
+</td><td valign="top" width=240>
+	<a href="http://paulbourke.net/miscellaneous/glvol/mri1.jpg"><img src="http://paulbourke.net/miscellaneous/glvol/mri1s.gif" width=300 height=210 border=1></a><p>
+	<a href="http://paulbourke.net/miscellaneous/glvol/mri2.jpg"><img src="http://paulbourke.net/miscellaneous/glvol/mri2s.gif" width=300 height=210 border=1></a><p>
+	<a href="http://paulbourke.net/miscellaneous/glvol/mri3.jpg"><img src="http://paulbourke.net/miscellaneous/glvol/mri3s.gif" width=300 height=210 border=1></a><br>
+	<smalltext>MRI data</smalltext><p>
+	<br><br>
+
+   <a href="http://paulbourke.net/miscellaneous/glvol/bt1.jpg"><img src="http://paulbourke.net/miscellaneous/glvol/bt1s.gif" width=300 height=210 border=1></a><p>
+   <a href="http://paulbourke.net/miscellaneous/glvol/bt3.jpg"><img src="http://paulbourke.net/miscellaneous/glvol/bt3s.gif" width=300 height=210 border=1></a><p>
+   <a href="http://paulbourke.net/miscellaneous/glvol/bt2.jpg"><img src="http://paulbourke.net/miscellaneous/glvol/bt2s.gif" width=300 height=210 border=1></a><br>
+	<smalltext>Volumetric data courtesy of Brent Tully</smalltext><p>
+	<br><br>
+
+   <a href="http://paulbourke.net/miscellaneous/glvol/helix1.jpg"><img src="http://paulbourke.net/miscellaneous/glvol/helix1s.gif" width=300 height=210 border=1></a><p>
+   <a href="http://paulbourke.net/miscellaneous/glvol/helix2.jpg"><img src="http://paulbourke.net/miscellaneous/glvol/helix2s.gif" width=300 height=210 border=1></a><br>
+   <smalltext>Helix waves</smalltext><p>
+   <br><br>
+
+   <center>
+   <a href="http://paulbourke.net/miscellaneous/glvol/2df.jpg"><img src="http://paulbourke.net/miscellaneous/glvol/2dfs.gif" width=300 height=210 border=1></a><br>
+	</center>
+   <smalltext>2dF subvolume</smalltext><p>
+	<br><br>
+
+   <center>
+   <a href="http://paulbourke.net/miscellaneous/glvol/screen.jpg"><img src="http://paulbourke.net/miscellaneous/glvol/screen_s.jpg" width=300 height=240 border=1></a><br>
+   </center>
+   <smalltext>Screen dump</smalltext><p>
+   <br><br>
+
+   <center>
+   <a href="http://paulbourke.net/miscellaneous/glvol/ducts1.jpg"><img src="http://paulbourke.net/miscellaneous/glvol/ducts1_s.jpg" width=300 height=215 border=1></a><br>
+   </center>
+   <smalltext>Ducts</smalltext><p>
+   <br><br>
+</tr>
+</table><p>
+
+
+<p><br><p>
+
+
+<center>
+<h1>Rendering and visualisation of furnace data</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+May 2004
+</center>
+</p><br><p>
+
+<table width=100%><tr><td>
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/glvol/volume2.jpg"><img src="http://paulbourke.net/miscellaneous/glvol/volume2s.gif" width=400 height=273 border=1><br>
+Temperature distribution
+</center><p>
+<br><br><br>
+</td><td>
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/glvol/volume3.jpg"><img src="http://paulbourke.net/miscellaneous/glvol/volume3s.gif" width=400 height=273 border=1><br>
+Oxidant distribution
+</center><p>
+<br><br><br>
+
+</td></tr><tr><td>
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/glvol/volume4.jpg"><img src="http://paulbourke.net/miscellaneous/glvol/volume4s.gif" width=400 height=293 border=1><br>
+Nitrous Oxide distribution
+</center><p>
+<br><br><br>
+
+</td><td>
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/glvol/vector2.gif"><img src="http://paulbourke.net/miscellaneous/glvol/vector2s.gif" width=273 height=400 border=1><br>
+Flow pattern
+</center><p>
+<br><br><br>
+</td></tr></table></center>
+
+
+<p><br><p>
+
+<center><table width=800><tr><td>
+<center>
+<h1>Visualisation of confocal microscope data</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+March 2000<p>
+Confocal microscope data from Swinburne University 
+<br>
+School of Biophysical Sciences and Electrical Engineering.
+</center>
+<p><br><p>
+
+<b>Introduction</b><p>
+<p align="justify">
+The following documents a visualisation exercise, namely to interactively
+explore 3D voxel based data from a confocal microscope. The software that
+came with the microscope provided the ability to view semi transparent
+rendered images but their generation was slow and the depth cues weren't
+strong. The goal then was to create interactive 3D models and present them
+in an existing 3D stereo pair projection environment.
+</p>
+
+<b>Slices</b><p>
+<p align="justify">
+The following illustrates the images as they are saved from the confocal
+microscope software. It saves a multilayer, 16bit tiff file. Selected
+slices from that file are presented below for the dataset being demonstrated
+here. The original images are
+512 pixels square while the examples below are presented at 200 pixels square.
+The original file consisted of 18 layers, as is typical of this sort
+of acquisition the sampling in one direction (18) is much less than
+the sampling in the other directions (512).
+</p>
+
+<table width=100%>
+<tr><td><img src="http://paulbourke.net/miscellaneous/glvol/frame1.gif" width="200" height="200">
+</td><td><img src="http://paulbourke.net/miscellaneous/glvol/frame2.gif" width="200" height="200">
+</td><td><img src="http://paulbourke.net/miscellaneous/glvol/frame3.gif" width="200" height="200">
+</td></tr>
+<tr><td><img src="http://paulbourke.net/miscellaneous/glvol/frame4.gif" width="200" height="200">
+</td><td><img src="http://paulbourke.net/miscellaneous/glvol/frame5.gif" width="200" height="200">
+</td><td><img src="http://paulbourke.net/miscellaneous/glvol/frame6.gif" width="200" height="200">
+</td></tr></table>
+<p>
+
+<b>Subsampling voxel space</b><p>
+
+<p align="justify">
+The first stage in processing the images was to subsample in the image
+plane by a factor of 8. It turns out that in this application the 
+in-plane dimensions are greatly oversampled and a factor of 8 is not
+unreasonable to smooth out the noise in the in-plane data. 
+It also conveniently brings the voxel cube into more appropriate/manageable 
+dimensions of 64x64x18.
+</p>
+
+<b>Marching cubes</b><p>
+
+<p align="justify">
+The marching cubes algorithm is applied to the voxel space to derive
+isocontour levels. Two examples are shown below, in the left example
+the resulting triangular facets are shown in wire frame. In the right
+hand image is the same data and view shown as a shaded model. The
+normal at each vertex is derived by averaging the normals of the faces
+that share the vertex.
+</p>
+
+<table width=100%><tr><td align="center">
+<a href="http://paulbourke.net/miscellaneous/glvol/confocal1.html">
+<img src="http://paulbourke.net/miscellaneous/glvol/confocal1small.gif" width="200" height="200"></a><br>
+Isolevel: 200
+</td><td align="center">
+<a href="http://paulbourke.net/miscellaneous/glvol/confocal2.html">
+<img src="http://paulbourke.net/miscellaneous/glvol/confocal2small.gif" width="200" height="200"></a><br>
+Isolevel: 200
+</td></tr></table>
+<p>
+
+<p align="justify">
+The noise that one sees in the top right image makes the 2D views
+very hard to interpret but it adds a visually powerful 3D stereo 
+effect and even makes the geometry of the rest of the structure clearer.
+These models have around 15,000 triangular facets, at this level they
+can easily be rotated interactively (around 20 frames per second) by
+the low performance end of the OpenGL card market.
+</p>
+
+<b>Multiple isosurfaces</b><p>
+
+<p align="justify">
+The following image on the right shows multiple isolevel surfaces
+each made semi transparent. While the structure isn't so clear from 
+this image, it is very clear when it can be interactively inspected
+in stereo (the extra contour levels only added another 10,1000 facets
+to the model).
+</p>
+
+<table width=100%><tr><td align="center">
+<a href="http://paulbourke.net/miscellaneous/glvol/confocal3.html">
+<img src="http://paulbourke.net/miscellaneous/glvol/confocal3small.gif" width="200" height="200"></a><br>
+Isolevel: 200
+</td><td align="center">
+<a href="http://paulbourke.net/miscellaneous/glvol/confocal4.html">
+<img src="http://paulbourke.net/miscellaneous/glvol/confocal4small.gif" width="200" height="200"></a><br>
+Isolevel: 120,160,200
+</td></tr></table>
+<p>
+
+</td></tr></table></center>
+</body>
+</html>

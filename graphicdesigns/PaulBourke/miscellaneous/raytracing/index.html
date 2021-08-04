@@ -1,0 +1,420 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Raytracing topics</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Simulating Depth of Field Blurring</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+January 1995
+</center>
+<p><br><p>
+
+<b>Introduction</b><p>
+Most raytracers do not and can not create the blurring effect that occurs with
+objects at very different distances from the camera compared to the object in
+focus. The reason most rendering packages cannot reproduce this is because they
+act as a pinhole camera, that is, they do not have a lens system and an
+associated focal point and focal depth. <p>
+This note describes a crude method of simulating this blurring effect that
+results with a real camera.<p>
+
+<b>Overview of the technique</b><p>
+
+The approach involves taking a number of renderings with the virtual camera
+positioned at random points about the desired camera position. The focal point
+of the camera is not changed. Each of the resulting renderings are then
+averaged (pixel by pixel) to form the final image.<p>
+
+<b>The displaced camera positions</b><p>
+
+The random distribution of displaced camera positions are taken in the plane
+perpendicular to the camera view direction. They are calculated such that they
+have a uniform angle distribution and a Gaussian length distribution.<br>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/raytracing/blur1.gif"></center>
+<p>
+
+The displacement vectors from the initial camera position <b>C</b>, the focal
+point <b>F</b>, and an up vector <b>U</b> are calculated as follows.<p>
+1) calculate the unit view direction vector<b><p>
+D</b> = || <b>F</b> - <b>C</b> ||<p>
+2) calculate the unit vector to the right of the view direction, this is the
+cross product of view direction vector and the up vector<b><p>
+R</b> = || <b>D</b> x <b>U</b> ||<p>
+3) calculate the unit vector perpendicular to the direction vector and right
+vector, from the cross product of the right vector and the direction
+vector<b><p>
+P</b> = || <b>R</b> x <b>D</b> ||<p>
+The vectors in <b>R</b> and <b>P</b> are unit vectors, perpendicular to each
+other, lying in the plane perpendicular to the view direction <b>D</b>. By
+taking Gaussian weighted combinations of these two vectors we get the desired
+distribution for the displaced camera positions. That is, they have a uniform
+distribution of angles about the original camera position and the distance from
+the original camera position is Gaussian distributed.<p>
+The width of the Gaussian distribution effectively varies the depth of field. A
+narrow Gaussian results in a broad depth of field, a wide Gaussian a narrow
+depth of field.<p>
+
+<b>The number of displaced camera positions</b><p>
+
+For each camera position (but the same focal point) the scene is rendered
+resulting in one image per displaced camera position. If there are N displaced
+camera positions then the resulting value at any pixel is the average of the
+appropriate pixel from all the N images. It is easy to see that if only two
+renderings are performed that the resulting image will just look like the
+overlap of the two renderings. As N gets to around 10 the ability to
+distinguish individual renderings starts to disappear and the objects distant
+from the focal point appear blurred. Of course the desired effect needs to be
+achieved with the minimal number of renderings since often a single rendering
+can be a sufficiently time consuming exercise.<p>
+<p>
+The following shows a test scene with images resulting from an increasing
+number of displaced camera positions.<br>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/raytracing/blur2.gif"></center><p>
+
+The following shows the same test scene with a range of Gaussian radii.<br>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/raytracing/blur3.gif"></center><p>
+
+<p><br><br><p>
+
+<center>
+<h1>Generating Hiddenline (wireframe) Images<br>with Rendering Software</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+March 1993<br>
+<a href="http://paulbourke.net/miscellaneous/raytracing/wireframe.tar.gz">Scripts for Radiance</a>
+</center>
+<p><br><p>
+
+<p align="justify">
+Most high quality rendering packages are designed to create photorealistic
+views of a scene and cannot be convinced to produce the more modest wireframe
+hiddenline images. The assumption is often made that the 3D modelling package
+that was used to create the scene description is capable of generating plans,
+elevations, axonometric, and perspective hiddenline views. This is usually the
+case but there are some situations when it is not true or convenient. The first
+is for those scenes that are generated partly or entirely "by hand" using the
+language of the rendering packages scene description. Another situation is when
+the user needs to create wireframe drawings that exactly match the views and
+camera attributes of the rendered images. Finally it is unfortunate that most
+3D modelling programs at one time or other have problems creating hiddenline
+images, that is, they make mistakes! 
+</p>
+
+<p align="justify"> 
+The following algorithm which is illustrated at each stage, can be used with
+all raytracing and radiosity rendering software to create hiddenline images.
+The example provided is shown rendered in figure 1, it was created using
+ArchiCAD as a 3D modeller and the Radiance package for the rendering.
+</p>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/raytracing/wireframe1.gif" width="300" height="210"></center>
+<p>
+
+<p align="justify">
+<b>Step 1</b><br>
+Render the image with no light sources, with all the textures
+(materials) removed and replaced with textures with no specularly or roughness
+and each one a unique colour. A relatively high ambient light should also be
+used, the example here had an ambient setting of 0.5. Figure 2 is our example
+rendered with these characteristics.
+</p>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/raytracing/wireframe2.gif" width="600" height="420"></center><p>
+
+<p align="justify">
+<b>Step 2</b>. <br>
+Pass an edge detection filter over the image. This may be something
+as crude as a 2x2 mask filter.
+</p>
+<pre>
+       -1
+
+   -1   4   -1
+
+       -1
+</pre>
+
+<p align="justify">
+The result of this should be converted to a black and white image with
+an appropriate cut-off level. The output from our example is shown in figure 3,
+a wireframe hiddenline view from a rendering package. 
+</p>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/raytracing/wireframe3.gif" width="500" height="350"></center><p>
+
+<p align="justify">
+<b>Note</b><br>
+The edge detection for
+the example was done using the "find edge" tool in the PhotoShop application.
+</p>
+
+<p><br><p>
+
+<center>
+<h1>Antialiasing and Raytracing</h1>
+Original by Chris Cooksey<br>
+Converted by <a href="../index.html">Paul Bourke</a><br>
+January 1994
+</center>
+<p><br><p>
+
+<b>Sampling Problems And Antialiasing</b><p>
+
+<p align="justify">
+Ray tracing is a point sampling process; the rays used to assess light
+intensities are infinitely thin. However, each pixel of a rendered image has a
+finite width. Ray tracing in its basic form overcomes this incompatibility by
+tracing a single primary ray through the centre of each pixel and using the
+colour of that ray as the colour of the entire pixel.
+</p>
+
+<p align="justify"> 
+Since the resultant colour of each pixel is based upon one infinitely small
+sample taken within the centre of each pixel and because pixels occur at
+regular intervals frequency based aliasing problems often arise. Aliasing
+refers to the inclusion of characteristics or artefacts in an image that could
+have come from more than one scene description. 
+</p>
+
+<b>Example</b><br>
+
+<table width="100%" cellpadding=0 cellspacing=0><tr><td>
+<p align="justify"> 
+The scene descriptions below both (a) and (b) lead to the same rendered image
+in (c). The scene in (a) and (b) consist of vertical bands of different
+widths, the dotted lines represent the pixel boundaries.
+</p>
+</td><td>
+<center><IMG SRC="http://paulbourke.net/miscellaneous/raytracing/aliasing1.gif"></center>
+</td></tr></table>
+<p>
+
+<b>Staircasing</b><p>
+
+<p align="justify"> 
+This is the most prevalent form of aliasing and occurs in regions of abrupt
+change in intensity. Examples of such regions are object or shadow boundaries
+or the boundaries of sharp highlights. The next figure illustrates the
+staircasing effect. (a) shows an example object as it should appear and (b)
+shows the rendered result. The dashed lines in are the pixel boundaries.. Most
+of the pixels spanning the object's boundaries end up being shaded incorrectly
+as either wholly within the object or not at all within the object. Note also
+that there are an infinite number of polygons which would generate the image in
+(b)
+</p>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/raytracing/aliasing2.gif"></center>
+<p>
+
+<b>Interference</b><p>
+
+<p align="justify"> 
+Another important aliasing problem occurs across whole regions of an image in
+which constituent objects alternate at a high frequency. The samples taken by a
+ray tracer can sometimes generate images containing what are called
+Moir&eacute; interference patterns. The following shows an example rendered
+image that contains Moir&eacute; interference patterns.
+</p>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/raytracing/aliasing3.gif"></center>
+<p>
+
+<b>Antialiasing</b><p>
+
+<p align="justify"> 
+Antialiasing is the name given to the process that attempts to eliminate or
+reduce the impact of aliasing artefacts in rendered images. Antialiasing
+algorithms can be classified as either analytic or discrete.
+</p>
+
+<p align="justify"> 
+Analytic algorithms perform a thorough analysis of the elements of a scene and
+filter out any high frequencies prior to sampling. Although very effective,
+these algorithms tend to be complicated and time consuming, requiring expensive
+analysis of the geometrical properties of the objects involved.
+</p>
+
+<p align="justify"> 
+Discrete methods such as ray tracing treat a scene as a set of unrelated
+intensity values. To avoid the complications of incorporating an analytic
+filter, methods have been devised to improve the nature of the actual sampling
+performed to help reduce aliasing effects.
+</p>
+
+<b>Supersampling</b><p>
+
+<p align="justify"> 
+The simplest discrete method available is known as supersampling. It involves
+casting more than one regularly spaced sample per pixel and using the average
+of the results for the pixel intensity. For example, a pixel could be
+subdivided into the grid illustrated in below. To render the pixel, primary
+rays are cast through each of the indicated sample points. The intensity value
+of the pixel is the average of all the samples.
+</p>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/raytracing/aliasing4.gif"></center>
+<p>
+
+<b>Adaptive Sampling</b><p>
+
+<p align="justify"> 
+Adaptive sampling is similar in nature to supersampling. Each pixel to be
+traced has a primary ray cast through each of its corners. If the intensity of
+any of the four rays varies significantly from the other three, then the pixel
+is split into four rectangular portions. Each of the new quadrants has primary
+rays cast through their corners. Any quadrant for which the new rays display
+any significant difference are further subdivided and the process is repeated
+for that quadrant. The subdivision process can be repeated to an arbitrary
+level. Note that quadrants at a new level have rays in common with the previous
+level and with each other thus reducing the amount of actual tracing that needs
+to be performed.
+</p>
+
+<p align="justify"> 
+Adaptive sampling works very well on boundary edges. However, certain scenes
+will still cause problems since they can cause the sampler's subdivision phase
+to stop prematurely, e.g. failing to notice gaps between similarly coloured
+objects. In these circumstances aliased artefacts can occur in the final
+image.
+</p>
+
+<b>Stochastic Sampling</b><p>
+
+<p align="justify"> 
+Stochastic sampling is another discrete antialiasing method. The method
+antialiases scenes through the use of a special sample distribution which
+replaces most aliased image artefacts with noise of the correct average
+intensity.
+</p>
+
+<p align="justify"> 
+In order to determine the colour of a particular pixel the pixel is subdivided
+into a grid of a preset number of cells. A primary ray is then traced through
+some randomly determined location in each of the cells as shown below. This
+type of sample distribution closely resembles the 'Poisson disk' distribution
+of photoreceptors found in the extrafoveal region of the human retina.
+</p>
+
+<center><IMG SRC="http://paulbourke.net/miscellaneous/raytracing/aliasing5.gif"></center>
+<p>
+
+<p align="justify"> 
+The samples are combined into one value for the pixel. The weighting given to
+each sample should depend in some way on its distance from the centre of the
+pixel, for example a Gaussian function. It is usually acceptable however to use
+a 'box' filter, i.e. apply an equal weighting to all the samples.
+</p>
+
+<p align="justify"> 
+Since the samples are not regularly spaced, aliasing artefacts that would
+otherwise have appeared in the image are for the most part converted to
+noise.
+</p>
+
+<p align="justify"> 
+In conclusion however it should be noted that aliasing is an inherent part of
+any discrete process, its effect can be minimised but not eliminated.
+</p>
+
+<b>References</b><p>
+
+Robert L. Cook and Thomas Porter and Loren Carpenter.
+Distributed Ray Tracing.
+Computer Graphics v 18 no 3, Jul 1984 (SIGGRAPH '84 Proceedings), pp 137-145
+<p>
+
+Robert L. Cook.
+Stochastic Sampling in Computer Graphics.
+ACM Transactions on Graphics, v 5 no 1, 1986, pp 51-72
+<p>
+
+
+<p><br><br><br><p>
+
+
+<center>
+<h1>Antialiasing Digital Images</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+January 1998<p>
+</center>
+<p><br><p>
+
+<p align="justify">
+Aliasing is a general term given to artefacts that occur when a 
+continuous signal or function is discretely sampled. This happens
+all the time when computers are used to acquire information from
+the real world for processing, a few examples:
+</p>
+
+<ul>
+<li>Digitising a time series such as speech or music for playback or
+    analysis. Note that there is not just quantisation in time but
+    also in the values to represent the signal which are typically
+    limited to a range of integers.<p>
+<li>Recording of high speed animation onto film (film uses a discrete
+    frame rate). Events that happen too fast in time cannot be
+    correctly captured, hence the backwards rotating wheels on
+    wagons in westerns.<p>
+<li>Digital cameras sample the scene onto a fixed grid. Multiple items that
+    get mapped onto a single grid cell (pixel) will not be resolved.<p>
+</ul>
+
+<p align="justify">
+Another artefact that occurs when objects are drawn onto a digital
+image (eg: the screen) is the so called "staircase" effect.
+Consider the drawing of a black line onto a white background at
+an angle other than horizontal or vertical. The line can only be drawn
+using the pixels of a finite size, this causes
+steps in the representation of the line. See the magnified version of the
+line in the following example and the curved parts of the letter "d".
+</p>
+
+<p><center><img src="http://paulbourke.net/miscellaneous/raytracing/image1.gif" border=1></center><p>
+
+<p align="justify">
+As with the first type of aliasing, this staircase effect can be
+reduced (although not removed) by sampling the image at a higher
+resolution and then subsampling, with averaging, to the desired
+resolution. In the image below the same elements as above are
+known geometrically, essentially at an infinite resolution. There are
+techniques that can render these geometric objects antialiased.
+</p>
+
+<p><center><img src="http://paulbourke.net/miscellaneous/raytracing/image2.gif" border=1></center><p>
+
+<p align="justify">
+The net effect is like a blurring of the object, note however that
+antialiasing cannot be performed by simply blurring the original image.
+Typically antialiasing of objects that aren't known to an infinite resolution
+is performed using original images 2, 3, or 4
+times the resolution of the final subsampled/averaged image.
+The relative gain diminishes as the image resolution is increased
+and obviously the process becomes more computationally unattractive
+as the resolution increases.<br>
+The following is a line subsampled from high resolution renderings,
+scale factors are shown below the line.
+</p>
+
+<p><center><img src="http://paulbourke.net/miscellaneous/raytracing/image3.gif" border=1></center><p>
+
+</td></tr></table></center>
+</body>
+</html>
+

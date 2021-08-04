@@ -1,0 +1,131 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Initial tests with the Kinect</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Initial tests with the Kinect</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+December 2010
+</center>
+<p><br><p>
+
+<p align="justify">
+The following is a brief report on the evaluation of the Kinect as a user-computer
+input device, examples and notes are given that may be helpful for others starting
+out in similar projects. The libraries used are those provided on 
+<a href="http://openkinect.org/">openkinect.org</a>, namely, 
+libfreenect. This history of these is relatively recent (at the time of writing), the
+open sourcing of the code from Hector Mart occurred only 6 weeks ago.
+</p>
+
+<center>
+<table><tr><td>
+	<center>
+	<img src="http://paulbourke.net/miscellaneous/kinect/kinect.png" width=500 height=145 border=0><br>
+	Kinect, technology licensed from Primesense
+	</center>
+</td><td>
+	<center>
+	<img src="http://paulbourke.net/miscellaneous/kinect/primesense.jpg" width=310 height=148 border=0><br><br>
+	Primesense
+	</center>
+</td></tr></table>
+</center><p>
+
+<p align="justify">
+One can request two "images" from the Kinect, one a standard image from a normal 
+camera and the other
+the depth map derived by a infra-red structured light emitter and camera. 
+The IR emitter is the left most circle (when viewed from the front), the central
+circle is the normal camera, and the rightmost circle is the IR camera.
+The resolution of the camera image is 640x480 at 30fps (there is a 1280x1024 mode that runs at
+15 fps. There are different
+formats the image data can be supplied as, for example: standard RGB, raw Bayer, or YUV. 
+</p>
+
+<p align="justify">
+The depth image
+is also supplied as 640x480 at 30fps, there is also a high resolution mode (1280x1024) at a lower
+frame rate, around 10fps if the high resolution camera data is also being acquired.
+The maximum dynamic range is 11 bit (2048 states).
+There is also control over the tilt of the Kinect, the appearance of the single LED
+light, and one can receive data from the accelerometer. These will not be discussed here.
+</p>
+
+<b>Single pointer example</b><p>
+<p align="justify">
+The first stage of any camera tracking is often background subtraction. With the Kinect
+the depth image makes this trivial and not susceptible to changes in lighting. In the
+following the algorithm is very simple, choose a depth (foreground hand in this example)
+and calculate the depth values within some tolerance of that depth (red), take a running
+average for a smooth tracked result (green ellipse).
+</p>
+<center>
+<a href="http://paulbourke.net/miscellaneous/kinect/pointer1.mov"><img src="http://paulbourke.net/miscellaneous/kinect/pointer1.jpg" width=647 height=508 border=1><br>
+<smalltext>Click for movie</smalltext></a>
+</center><p>
+
+<b>Two hand driver example</b><p>
+<p align="justify">
+The following is a simple angular interface using two hands, estimating their relative
+positions and deriving the angle from the horizon.
+An important feature of both these is how stable the derived statistics are and the
+minimal latency, the capture runs at 25 fps.
+</p>
+<center>
+<a href="http://paulbourke.net/miscellaneous/kinect/driver1.mov"><img src="http://paulbourke.net/miscellaneous/kinect/driver1.jpg" width=647 height=508 border=1><br>
+<smalltext>Click for movie</smalltext></a>
+</center><p>
+
+<b>Notes</b>
+<ul>
+<li><p align="justify">
+The white patches in the images/videos presented here are either those the
+IR camera cannot see due to obstruction by a closer object, 
+or IR cold objects (such as the large black
+leather couch).
+</p>
+<li><p align="justify">
+In my experience the whole dynamic range of 2048 was never encountered. I chose to maintain
+the range encountered so far and stored the depths in float buffer normalised from 0 to 1.
+Depth 2047 is reserved to indicate no reliable depth estimate.
+</p>
+<li><p align="justify">
+The image camera has a slightly wider (horizontal and vertical) field of view compared to the 
+depth camera. To correct for this a calibration process is required and a scaling (first approximation) 
+applied.
+</p>
+<li><p align="justify">
+While not employed in the examples here
+some improvement can be be achieved by performing a non-linear
+transformation of the depth values, essentially a gamma correction. A power of 3 is proposed.
+</p>
+<li><p align="justify">
+The skeleton model supported by the Kinect is not yet fully exposed through the library.
+The best source for this are the open source drivers from Primesense.
+</p>
+<li><p align="justify">
+For those who might think about mounting the Kinect on the ceiling pointing down, it appears
+the gears for tilting are not able to deal with that.
+</p>
+</ul>
+
+</td></tr></table></center>
+</body>
+</html>
+

@@ -1,0 +1,345 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle2.css" type="text/css" media=all>
+<title>Asteroid</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Generating Artificial Asteroids</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+February 2001
+</center>
+<p><br><p>
+
+<table width=100%><tr><td valign="top">
+<p align="justify">
+The following describes a method that was used to create a variety of
+forms resembling asteroids. 
+The asteroids were going to be rendered and for these
+examples PovRay did the rendering. The approach was to start with a 
+sphere and create a number of positive or negative bulges, 
+the bulges have a distribution of sizes (radii) and height/depth.
+</p>
+<p align="justify">
+If normal polar coordinate spheres were used a pinching would occur at
+the poles, in addition, that method doesn't make the most efficient use of
+polygons. For these reasons an approximately even distribution of
+triangular facets was used, this is created by iteratively tessellating
+platonic solids, in particular, 
+tetrahedra. All the examples here were made from unit spheres with either
+8*4<sup>6</sup> or 8*4<sup>7</sup> triangular facets.
+</p>
+</td><td align="right">
+<center><img src="http://paulbourke.net/miscellaneous/asteroid/asteroid0.gif" width="435" height="435"></center><p>
+</td></tr></table>
+
+<table width=100%><tr><td>
+<pre>global_settings {
+   ambient_light
+   rgb &lt;1.0,1.0,1.0&gt;
+}
+
+background {
+   color rgb &lt;0,0,0&gt;
+}
+
+light_source {
+   <0,3,-2>
+   color rgb &lt;1,1,1&gt;
+}
+
+camera {
+   location <0,0,-4>
+   up y
+   right 4*x/3
+   angle 60
+   sky <0,1,0>
+   look_at <0,0,0>
+}</pre>
+</td><td align="right">
+<center><img src="http://paulbourke.net/miscellaneous/asteroid/asteroid1.gif" width="368" height="368"></center><p>
+</td></tr></table>
+
+<p align="justify">
+To create a bulge an "impact" center is chosen at random on the surface of
+the current asteroid. All vertices within a chosen radius are perturbed
+normal to the surface, the degree of perturbation falls off linearly
+with distance away from the center of impact. The user controls the
+radius range, depth range, and the number of impacts. This seemed to give
+sufficient control over the final shape. Planet type objects are created
+with small shallow bulges (with respect to the initial sphere).
+More extreme cases are formed as the radius and depth are increased.
+</p>
+
+<table width=100%><tr><td valign="top" align="left">
+<center><img src="http://paulbourke.net/miscellaneous/asteroid/asteroid2.gif" width="340" height="340"></center><p>
+</td><td>
+<pre>#declare asteroidfinish = finish {
+   ambient 0.5
+   diffuse 1
+   specular 0.3
+   roughness .1
+}
+
+#declare asteroidnormal = normal {
+   bumps 0.5
+   scale 0.02
+}
+
+#declare asteroidmat = texture {
+   pigment {
+      color rgb &lt;0.5,0.5,0.5&gt;
+   }
+   finish { asteroidfinish }
+   normal { asteroidnormal }
+}</pre>
+</td></tr></table>
+
+<table width=100%><tr><td>
+<pre>mesh {
+   triangle {
+      &lt;0.5552, 0.0000,0.4155&gt;,
+      &lt;0.6057,-0.0145,0.4212&gt;,
+      &lt;0.5902, 0.0141,0.4120&gt;
+      texture { asteroidmat }
+   }
+   triangle {
+      &lt; 0.0000,0.6127,0.4415&gt;,
+      &lt; 0.0141,0.6311,0.4261&gt;,
+      &lt;-0.0145,0.6507,0.4377&gt;
+      texture { asteroidmat }
+   }
+   :
+   :
+   :
+   triangle {
+      &lt;-0.4130,-0.7390,-0.4550&gt;,
+      &lt;-0.4055,-0.7686,-0.4407&gt;,
+      &lt;-0.4227,-0.7487,-0.4349&gt;
+      texture { asteroidmat }
+   }
+   rotate &lt;clock*171.11,
+              clock*666.71,
+              clock*333.33&gt;
+}</pre>
+</td><td align="right" valign="top">
+<center><img src="http://paulbourke.net/miscellaneous/asteroid/asteroid3.gif" width="385" height="385"></center><p>
+</td></tr></table>
+<p>
+
+<p align="justify">
+Note the rotation at the end of the PovRay mesh primitive, it keeps the
+asteroid rotating in animation sequences without obvious cyclic
+repetition.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/asteroid/asteroid4.gif" width="492" height="492"></center><p>
+
+<b>The real thing</b><br>
+
+<center><p><table><tr><td>
+<img src="http://paulbourke.net/miscellaneous/asteroid/unnamed.gif" width="235" height="168">
+</td><td>
+<img src="http://paulbourke.net/miscellaneous/asteroid/ida.gif" width="250" height="156">
+</td></tr><tr><td>
+<img src="http://paulbourke.net/miscellaneous/asteroid/gaspra.gif" width="250" height="211">
+</td><td>
+<img src="http://paulbourke.net/miscellaneous/asteroid/toutatis.gif" width="246" height="176">
+</td></tr></table></center>
+<p>
+
+<b>Craters</b><br>
+<p align="justify">
+An attempt at craters was made by perturbing the surface with
+a radial Gaussian function. In order to achieve satisfactory
+resolution the triangle count was increased to about half a million,
+the rendering time was still under 1 minute per frame.
+</p>
+
+<center>
+<img src="http://paulbourke.net/miscellaneous/asteroid/crater2.gif" width=474 height=424><p>
+<img src="http://paulbourke.net/miscellaneous/asteroid/crater1.gif" width=511 height=511><p>
+<img src="http://paulbourke.net/miscellaneous/asteroid/crater0.gif" width=473 height=473><p>
+</center>
+
+<p align="justify">
+A better model of crater profile would undoubtedly help, for example
+the variation in shape can be seen from some of the moon craters 
+shown below.
+</p>
+<center>
+<img src="http://paulbourke.net/miscellaneous/asteroid/realcrater2.gif" width=460 height=460><p>
+<img src="http://paulbourke.net/miscellaneous/asteroid/realcrater1.gif" width=349 height=349><p>
+<img src="http://paulbourke.net/miscellaneous/asteroid/realcrater4.gif" width=466 height=446><p>
+<img src="http://paulbourke.net/miscellaneous/asteroid/realcrater3.gif" width=455 height=455><p>
+</center>
+
+<h3>Kleopatra "dog-bone" asteroid</h3>
+
+<p align="justify">
+The following asteroid is modelled after the 216 Kleopatra
+asteroid. The basic geometry is based upon the Cassini oval
+and bulges or craters are added to various extents. The source
+code that created the PovRay models is:
+<a href="http://paulbourke.net/miscellaneous/asteroid/gencassini.c">gencassini.c</a>.
+</p>
+
+<center>
+<img src="http://paulbourke.net/miscellaneous/asteroid/casini5.gif" width=421 height=413><p>
+<img src="http://paulbourke.net/miscellaneous/asteroid/casini0.gif" width=397 height=396><p>
+<img src="http://paulbourke.net/miscellaneous/asteroid/casini1.gif" width=384 height=408><p>
+<img src="http://paulbourke.net/miscellaneous/asteroid/casini2.gif" width=407 height=392><p>
+<img src="http://paulbourke.net/miscellaneous/asteroid/casini3.gif" width=382 height=385><p>
+<img src="http://paulbourke.net/miscellaneous/asteroid/casini4.gif" width=430 height=419><p>
+</center>
+
+<b>The real thing, asteroid 216 Kleopatra</b>
+<p align="justify">
+The so called "dog bone asteroid" shown below is imaged from
+Arecibo radar in Puerto Rico. (Image courtesy JPL).
+The asteroid is just over 210km long and at most 100km thick,
+and is located about 171,000,000km from Earth (around the same distance
+as Jupiter).
+</p>
+<center>
+<img src="http://paulbourke.net/miscellaneous/asteroid/kleo_arecibo.jpg" width=589 height=450>
+</center>
+
+<p><br><br><br><p>
+
+<center>
+<h1>Asteroid topology models</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+September 2002<p>
+Model sources from JPL NASA, S. Hudson,
+Mitchell, S. Ostro, and K. Rosema. 
+</center>
+<p><br><p>
+
+<b>2063 Bacchus</b> -- 
+<a href="http://paulbourke.net/miscellaneous/asteroid/bacchus.tri.gz">bacchus.tri</a> -- 
+<a href="http://paulbourke.net/miscellaneous/asteroid/bacchus.inc.gz">bacchus.pov</a><br>
+Discovered: April 24, 1977 by Charles Kowal<br>
+Size: 1.1km x 2.6km<br>
+Rotational period: 14.9 hours<br>
+Orbital period: 2.73735 years<br>
+<table width=100%><tr>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/bacchus0.gif" width=183 height=358></td>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/bacchus1.gif" width=213 height=207></td>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/bacchus2.gif" width=217 height=400></td>
+</tr></table><p>
+
+<b>4769 Castalia</b> --
+<a href="http://paulbourke.net/miscellaneous/asteroid/castalia.tri.gz">castalia.tri</a> --               
+<a href="http://paulbourke.net/miscellaneous/asteroid/castalia.inc.gz">castalia.pov</a><br>
+Discovered: August 9, 1989, by Eleanor Helin<br>
+Size: 1.8km x 0.8km<br>
+Rotational period: 4.07 hours<br>
+Orbital period: 1.1 years<br>
+<table width=100%><tr>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/castalia0.gif" width=219 height=348></td>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/castalia1.gif" width=233 height=250></td>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/castalia2.gif" width=190 height=341></td>
+</tr></table><p>
+
+<b>433 Eros</b> --
+<a href="http://paulbourke.net/miscellaneous/asteroid/eros.tri.gz">eros.tri</a> --               
+<a href="http://paulbourke.net/miscellaneous/asteroid/eros.inc.gz">eros.pov</a><br>
+Discovered: August 13, 1898, by Gustav Witt<br>
+Size: 33km x 13km x 13km<bR>
+Rotational period: 5.27 hours<bR>
+Orbital period: 1.76 years<br>
+<table width=100%><tr>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/eros0.gif" width=189 height=359></td>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/eros1.gif" width=192 height=244></td>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/eros2.gif" width=145 height=332></td>
+</tr></table><p>
+
+<b>1620 Geographos</b> --
+<a href="http://paulbourke.net/miscellaneous/asteroid/geographos.tri.gz">geographos.tri</a> --               
+<a href="http://paulbourke.net/miscellaneous/asteroid/geographos.inc.gz">geographos.pov</a><br>
+Discovered: September 14, 1951<br>
+Size: 5.1km x 1.8km<br>
+Rotational period: 5.22 hours<bR>
+Orbital period: 1.39 years<br>
+<table width=100%><tr>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/geographos0.gif" width=144 height=323></td>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/geographos1.gif" width=168 height=166></td>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/geographos2.gif" width=140 height=332></td>
+</tr></table><p>
+
+<b>6489 Golevka</b> --
+<a href="http://paulbourke.net/miscellaneous/asteroid/golevka.tri.gz">golevka.tri</a> --               
+<a href="http://paulbourke.net/miscellaneous/asteroid/golevka.inc.gz">golevka.pov</a><br>
+Discovered: May 10, 1991<br>
+Size: 0.35km x 0.25km<br>
+Rotational period: 6.0264 hours<bR>
+Orbital period: 3.98561 years<br>
+<table width=100%><tr>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/golevka0.gif" width=200 height=220></td>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/golevka1.gif" width=200 height=201></td>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/golevka2.gif" width=200 height=223></td>
+</tr></table><p>
+
+<b>216 Kleopatra</b> --
+<a href="http://paulbourke.net/miscellaneous/asteroid/kleopatra.tri.gz">kleopatra.tri</a> --               
+<a href="http://paulbourke.net/miscellaneous/asteroid/kleopatra.inc.gz">kleopatra.pov</a><br>
+Discovered: 1880<br>
+Size: 217km x 94km x 81km<br>
+Rotational period: 5.385 hours<br>
+<table width=100%><tr>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/kleopatra0.gif" width=159 height=333></td>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/kleopatra1.gif" width=205 height=221></td>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/kleopatra2.gif" width=147 height=329></td>
+</tr></table><p>
+
+<b>1998 Ky26</b> --
+<a href="http://paulbourke.net/miscellaneous/asteroid/ky26.tri.gz">ky26.tri</a> --               
+<a href="http://paulbourke.net/miscellaneous/asteroid/ky26.inc.gz">ky26.pov</a><br>
+Discovered: June 1, 1998<br>
+Size: 30m diameter<br>
+Rotational period: 10.7 minutes<br>
+Orbital period: 1.36766 years<br>
+<table width=100%><tr>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/ky260.gif" width=200 height=198></td>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/ky261.gif" width=200 height=200></td>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/ky262.gif" width=200 height=209></td>
+</tr></table><p>
+
+<b>4179 Toutatis</b> --
+<a href="http://paulbourke.net/miscellaneous/asteroid/toutatis.tri.gz">toutatis.tri</a> --               
+<a href="http://paulbourke.net/miscellaneous/asteroid/toutatis.inc.gz">toutatis.pov</a><br>
+Discovered: January 4, 1989 by C.Pollas.<br>
+Size: 4.6km x 2.4km x 1.9km<br>
+Rotational period: 5.4 and 7.3 Earth days<br>
+Orbital period: 3.98 years<br>
+<table width=100%><tr>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/toutatis0.gif" width=251 height=208></td>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/toutatis1.gif" width=209 height=401></td>
+<td><img src="http://paulbourke.net/miscellaneous/asteroid/toutatis2.gif" width=227 height=400></td>
+</tr></table><p>
+
+<p>
+<a href="http://paulbourke.net/miscellaneous/asteroid/readtri.ms">3D StudioMax script</a>
+that reads the ".tri" models found here.
+
+<p><b>Rapid prototype models</b><p>
+<center><img src="http://paulbourke.net/miscellaneous/asteroid/rp.jpg" border=1 width=800 height=583></center><p>
+
+</td></tr></table></center>
+</body>
+</html>
+

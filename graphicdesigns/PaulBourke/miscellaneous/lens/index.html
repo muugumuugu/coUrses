@@ -1,0 +1,677 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Lenses. Field of view and focal length</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Field of view and focal length</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+April 2003<p>
+</center>
+<p><br><p>
+
+<p align="justify">
+Camera and photography people tend to talk about lens characteristics in terms of
+"focal distance" while those involved in synthetic image generator (such as raytracing)
+tend to think in terms of field of view for a pinhole camera model.
+The following discusses (an idealised at least) way to estimate the field of
+from the focal distance.
+view
+</p>
+
+<p align="justify">
+The focal length of a lens is an inherent property of the lens, it is the distance from the
+center of the lens to the point at which objects at infinity focus. 
+Note: this is referred to as a rectilinear lens.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/lens/diagram.gif" width=500 height=298></center><p>
+
+<p align="justify">
+That there are three possible ways to measure field of view: horizontally, vertically,
+or diagonally. The horizontal field of view will be used here, the other two can be
+derived from this.
+From the figure above, simple geometry gives the horizontal field of view 
+</p>
+
+<center>
+horizontal field of view = 2 atan(0.5 width / focallength) 
+</center>
+
+<p align="justify">
+where "width" is the horizontal width of the sensor (projection plane). So for example, 
+for a 35mm film (frame is 24mm x 36mm), and a 20mm (focal length) lens, the horizontal
+FOV would be almost 84 degrees (vertical FOV of 62 degrees). The above formula
+can similarly be used to calculate the vertical FOV using the vertical height of the
+film area, namely:
+</p>
+
+<center>
+vertical field of view = 2 atan(0.5 height / focallength)
+</center>
+
+<p align="justify">
+So for example, for 120mm medium format film (height 56mm) and the same 20mm focal length
+lens as above, the vertical field of view is about 109 degrees.
+</p>
+
+<p><br><p>
+
+<center>
+<h1>Changing to/from vertical/horizontal field of view</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+March 2000<p>
+See also: <a href="index.html">Field of view and focal length</a>
+</center>
+<p><br><p>
+
+<p align="justify">
+PovRay measures its field of view (FOV) in the horizontal direction, that is,
+a camera FOV of 60 is the horizontal field of view. Some other
+packages (for example OpenGL gluPerspective()) 
+measure their FOV vertically.
+When converting camera settings from these other applications one
+needs to compute the corresponding horizontal FOV if one wants the
+views to match.
+</p>
+
+<p align="justify">
+It isn't difficult, here's the solution. By calculating the distance from
+the camera to the center of the screen one gets the following:
+</p>
+
+<center>
+height / tan(vfov/2) = width / tan(hfov/2)
+</center>
+
+<p>Solving this gives<p>
+
+<center>
+hfov = 2 atan[ width tan(vfov/2) / height]
+</center>
+<br>Or going the other way<br>
+<center>
+vfov = 2 atan[ height tan(hfov/2) / width]
+</center>
+<p>
+
+<center>
+<img src="http://paulbourke.net/miscellaneous/lens/aperture.gif" width=371 height=290>
+</center>
+<p>
+
+<p align="justify">
+Where width and height are the dimensions of the screen.
+For example, a camera specification to match an OpenGL camera FOV
+of 60 degrees might be:
+</p>
+
+<pre>
+camera {
+   location <200,3600,4000>
+   up y
+   right -width*x/height
+   angle 60*1.25293
+   sky <0,1,0>
+   look_at <200+10000*cos(-clock),3600+2500,4000+10000*sin(-clock)>
+}
+</pre>
+
+<p><br><p>
+
+<center>
+<h1>Lens Correction and Distortion</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+April 2002
+</center>
+<p><br><p>
+
+<p align="justify">
+The following describes how to transform a standard lens distorted
+image into what one would get with a perfect perspective projection
+(pin-hole camera). 
+Alternatively it can be used to turn a perspective projection into
+what one would get with a lens.
+</p>
+
+<p align="justify">
+To illustrate the type of distortion involved
+consider a reference grid, with a 35mm lens it would look something
+line the image on the left, a traditional perspective projection
+would look like the image on the right.
+</p>
+<center>
+<table><tr><td>
+	<center>
+	<img src="http://paulbourke.net/miscellaneous/lens/35test.gif" width=300 height=200> 
+	</center>
+</td><td width=20>
+	&nbsp;
+</td><td>
+	<center>
+	<img src="http://paulbourke.net/miscellaneous/lens/persptest.gif" width=300 height=200>
+	</center>
+</td></tr></table>
+</center>
+<p>
+
+<p align="justify">
+The equation that corrects (approximately) for the curvature of
+an idealised lens is below. For many lens projections a<sub>x</sub> and 
+a<sub>y</sub> will be the same, or at least related by the image
+width to height ratio (also taking the pixel width to height
+relationship into account if they aren't square). The more lens
+curvature the greater the constants a<sub>x</sub> and a<sub>y</sub>
+will be, typical value are between 0 (no correction) and 0.1 (wide
+angle lens). The "||" notation indicates the modulus of a vector,
+compared to "|" which is absolute value of a scalar. The vector
+quantities are shown in red, this is more important for the
+reverse equation.
+</p>
+<center><img src="http://paulbourke.net/miscellaneous/lens/forward.gif" width=180 height=80></center><p>
+
+<p align="justify">
+Note that this is a radial distortion correction.
+The matching reverse transform that turns a perspective
+image into one with lens curvature is, to a first approximation, 
+ as follows.
+</p>
+<center><img src="http://paulbourke.net/miscellaneous/lens/reverse.gif" width=279 height=131></center><p>
+
+<p align="justify">
+In practice if one is correcting a lens distorted image then one
+actually wants to use the reverse transform. This is because one doesn't
+normally transform the source pixels to the destination image but rather
+one wants to find the corresponding pixel in the source image
+for each pixel in the destination image.
+</p>
+
+<p align="justify">
+Note that in the above expression it is assumed one converts
+the image to a normalised (-1 to 1) coordinate system in both
+axes.
+</p>
+
+<table><tr>
+<td width="50%">
+	For example:<p> 
+	<center>
+	P<sub>x</sub> = (2 i - width) / width<br>
+	P<sub>y</sub> = (2 j - height) / height
+	</center>
+</td>
+<td width="50%">
+	and back the other way<p>
+	<center>
+	i = (P<sub>x</sub> + 1) width / 2<br>
+	j = (P<sub>y</sub> + 1) height / 2
+	</center>
+</td></tr></table>
+<p>
+
+<center><img src="http://paulbourke.net/miscellaneous/lens/coordinates.gif" width=561 height=218></center><p>
+
+<center>
+<table><tr><td width=50%>
+	<b>Example 1</b><p>
+	<p align="justify">
+	Original photo of reference grid with 35mm camera lens is shown
+	on the right. The corrected image is given below and the distortion
+	reapplied is at the bottom right. Note the transformation
+	is a contraction (for positive a<sub>x</sub> and a<sub>y</sub>), the
+	grey region corresponds to points that map from outside the original
+	image.
+	</p>
+</td><td width=50% valign="top">
+	Original<br>
+	<center>
+	<a href="http://paulbourke.net/miscellaneous/lens/35mm_original.jpg"><img src="http://paulbourke.net/miscellaneous/lens/35smm_original.jpg" width=300 height=128></a>
+	</center>
+</td></tr><tr><td width=50% valign="top">
+	Forward transform<br>
+	<center>
+	<a href="http://paulbourke.net/miscellaneous/lens/35mm_forward.jpg"><img src="http://paulbourke.net/miscellaneous/lens/35smm_forward.jpg"  width=300 height=128></a>
+	</center>
+</td><td width=50% valign="top">
+	Reverse applied to forward transform<br>
+	<center>
+	<a href="http://paulbourke.net/miscellaneous/lens/35mm_reverse.jpg"><img src="http://paulbourke.net/miscellaneous/lens/35smm_reverse.jpg" width=300 height=128></a>
+	</center>
+</td></tr></table>
+</center>
+<p>
+
+<center>
+<table><tr><td width=50%>
+<b>Example 2</b><p>
+<p align="justify">
+Original photo of reference grid with 50mm camera lens is shown
+on the right align with the corrected version below and the redistorted
+version bottom right.
+</p>
+</td><td width=50% valign="top">
+Original<br>
+<center>
+<a href="http://paulbourke.net/miscellaneous/lens/50mm_original.jpg"><img src="http://paulbourke.net/miscellaneous/lens/50smm_original.jpg" width=300 height=128></a>
+</center>
+</td></tr><tr><td width=50% valign="top">
+Forward transform<br>
+<center>
+<a href="http://paulbourke.net/miscellaneous/lens/50mm_forward.jpg"><img src="http://paulbourke.net/miscellaneous/lens/50smm_forward.jpg"  width=300 height=128></a>
+</center>
+</td><td width=50% valign="top">
+Reverse applied to forward transform<br>
+<center>
+<a href="http://paulbourke.net/miscellaneous/lens/50mm_reverse.jpg"><img src="http://paulbourke.net/miscellaneous/lens/50smm_reverse.jpg" width=300 height=128></a>
+</center>
+</td></tr></table>
+</center>
+<p>
+
+<b>Example code</b><br>
+<p align="justify">
+"Proof of concept code" is given here: <a href="http://paulbourke.net/miscellaneous/lens/map.c">map.c</a>
+As with all image processing/transformation processes one must
+perform antialiasing. A simple supersampling scheme is used in the
+above code, a better more efficient
+approach would be to include bicubic interpolation. 
+</p>
+
+<b>Adding distortion</b>
+<p align="justify">
+The effect of adding lens distortion to the image is shown below for
+a perspective projection of a Menger sponge by Angelo Pesce. The image
+on the left is the original from PovRay, the image on the right is
+the lens affected version. 
+(<a href="http://paulbourke.net/miscellaneous/lens/distort.c">distort.c</a>)
+</p>
+
+<center><table><tr><td>
+	<center>
+	<img src="http://paulbourke.net/miscellaneous/lens/normal.gif" width=300 height=300>
+	</center>
+</td><td width=20>
+	&nbsp;
+</td><td>
+	<center>
+	<img src="http://paulbourke.net/miscellaneous/lens/distorted.gif" width=300 height=300>
+	</center>
+</td></tr></table></center>
+<p>
+
+<b>References</b><p>
+
+F. Devernay and O. Faugeras.
+SPIE Conference on investigative and trial image processing.
+SanDiego, CA, 1995.
+Automatic calibration and removal of distortion from scenes of structured environments.<br>
+<p>
+
+H. Farid and A.C. Popescu.
+Journal of the Optical Society of America, 2001.
+Blind removal of Lens Distortion<br>
+<p>
+
+R. Swaminatha and S.K. Nayer.
+IEEE Conference on computer Vision and pattern recognition, pp 413, 1999.
+Non-metric calibration of wide angle lenses and poly-cameras<br>
+<p>
+
+G. Taubin.
+Lecture notes EE-148, 3D Photography, Caltech, 2001.
+Camera model for triangulation<br>
+<p>
+
+
+<p><br><br><br><p>
+
+
+
+<center>
+<h1>Non-linear Lens Distortion</h1>
+With an example using <a href="index.html#opengl">OpenGL</a>
+(<a href="http://paulbourke.net/miscellaneous/lens/lens.c">lens.c</a>, <a href="http://paulbourke.net/miscellaneous/lens/lens.h">lens.h</a>)<p>
+Written by <a href="../index.html">Paul Bourke</a><br>
+August 2000<p>
+</center>
+<p><br><p>
+
+<p align="justify">
+The following illustrates a method of forming arbitrary non linear
+lens distortions. It is straightforward to apply this technique to
+any image or 3D rendering, examples will be given here for a few mathematical
+distortion functions
+but the approach can use any function, the effects are limited only
+by your imagination. At the end an 
+<a href="index.html#opengl">OpenGL</a> application is given that
+implements the technique in real-time (given suitable OpenGL hardware
+and texture memory).
+</p>
+
+<table><tr><td valign="top" width=50% align="center">
+	<img src="http://paulbourke.net/miscellaneous/lens/0.gif" width="256" height="256">
+</td><td valign="top" width=50%>
+	<p align="justify">
+	This is the sample input image that will be used to illustrate a couple of
+	different distortion functions. <p>
+	Consider the linear function below:
+	</p>
+	<center>
+	<img src="http://paulbourke.net/miscellaneous/lens/f0.gif" width="185" height="177">
+	</center>
+</td></tr>
+
+<tr><td colspan=2>
+	<p align="justify"> 
+	The horizontal axes is the coordinate in the new image, the vertical
+	axis is the coordinate in the original image. To find the corresponding
+	pixel in the new image one locates the value on the horizontal axis and
+	moves up to the red line and reads off the value on the vertical axis.
+	The linear function above would result in an output image that looks
+	the same as the input image.
+	</p>
+</td></tr>
+
+<tr><td colspan=2>
+	<b>sine</b><br>
+	<p align="justify">
+	A more interesting example is based upon a sine curve. You should be
+	be able to convince yourself that this function will stretch values
+	near +1 and -1 while compressing values near the origin.
+	An important requirement for these distortion functions is they need to be
+	strictly one-to-one, that is, there is a unique vertical value for
+	each horizontal value (and visa-versa). If image flipping is disallowed
+	then this implies the distortion function is always increasing as one moves
+	from left to right along the horizontal axis.
+	</p>
+	<img src="http://paulbourke.net/miscellaneous/lens/f1.gif" width="185" height="177"><br>
+	<p align="justify">
+	There are two ways of applying this function to an image, the first shown on
+	the left in each example below applies the function to the 
+	horizontal and vertical coordinates
+	of the image. The example on the right applies the function to the 
+	radius from the center of the image, the angle is undistorted.
+	</p>
+</td></tr>
+<tr><td align="center">
+	<img src="http://paulbourke.net/miscellaneous/lens/1.gif" width="256" height="256">
+</td><td align="center">
+	<img src="http://paulbourke.net/miscellaneous/lens/m1.gif" width="256" height="256">
+</td></tr>
+
+<tr><td colspan=2>
+	<b>square</b><br>
+   <img src="http://paulbourke.net/miscellaneous/lens/f2.gif" width="185" height="177">
+	<p align="justify">
+	There are a number of ways the image coordinates are mapped onto
+	the function range. The approach used here was to scale and translate
+	the image coordinates so that 0 is in the center of the
+	image and the bounds of the image range from -1 to +1. This is done
+	twice, one to map the output image coordinates to the -1 to +1 range,
+	the function is then applied, and then the inverse transformation
+	maps the -1 to +1 range onto the range in the input image.
+	</p>
+	So if i<sub>out</sub> and j<sub>out</sub> 
+	are the coordinates of the output image, and w<sub>out</sub>
+	and h<sub>out</sub> the output image dimensions, then
+	the mapping onto the -1 to +1 range is<br>
+	<center>
+	x<sub>out</sub> = i<sub>out</sub> / (w<sub>out</sub>/2) - 1, 
+	and y<sub>out</sub> = j<sub>out</sub> / (h<sub>out</sub>/2) - 1
+	</center><br>
+	Applying the function to x<sub>in</sub> and y<sub>in</sub> gives
+	x<sub>new</sub> and y<sub>new</sub>.
+	The inverse mapping from the x<sub>new</sub> and y<sub>new</sub> 
+	gives i<sub>in</sub> and j<sub>in</sub> 
+	(the index in the input image with a width of 
+	w<sub>in</sub> and h<sub>in</sub>) is just<br>
+	<center>
+	i<sub>in</sub> = (x<sub>new</sub> + 1) * (w<sub>in</sub>/2), 
+	and j<sub>in</sub> = (y<sub>new</sub> + 1) * (h<sub>in</sub>/2)
+	</center><br>
+	Given i<sub>in</sub> and j<sub>in</sub> 
+	the colour in the input image can be applied
+	to pixel i<sub>out</sub>, j<sub>out</sub> in the output image.
+</td></tr>
+<tr><td align="center">
+	<img src="http://paulbourke.net/miscellaneous/lens/2.gif" width="256" height="256">
+</td><td align="center">
+	<img src="http://paulbourke.net/miscellaneous/lens/m2.gif" width="256" height="256">
+</td></tr>
+
+<tr><td colspan=2>
+	<b>asin</b><br>
+   <img src="http://paulbourke.net/miscellaneous/lens/f3.gif" width="185" height="177">
+	<p align="justify">
+	Applying the function to polar coordinates is only slightly different.
+	The radius and angle of a pixel is computed based up 
+	x<sub>out</sub> and y<sub>out</sub>. The radius
+	lies between 0 and 1 so the positive half of the function is used to
+	transform it. The pixel coordinates in the input image are calculated
+	using the new radius and the unchanged angle.
+	</p>
+	Using the conventions above:<br>
+	<center>
+	r<sub>out</sub> = sqrt(x<sub>out</sub><sup>2</sup> + 
+	y<sub>out</sub><sup>2</sup>), and 
+	angle<sub>out</sub> = atan2(y<sub>out</sub>,x<sub>out</sub>)
+	</center><br>	
+	The transformation is applied to r<sub>out</sub> to give
+	r<sub>new</sub>, x<sub>new</sub> and y<sub>new</sub> is calculated as<br>
+	<center>
+	x<sub>in</sub> = r<sub>new</sub> cos(angle<sub>out</sub>), 
+	and y<sub>in</sub> = r<sub>new</sub> sin(angle<sub>out</sub>)
+	</center><br>
+	i<sub>in</sub> and j<sub>in</sub> are calculated as before from 
+	x<sub>in</sub> and y<sub>in</sub>.
+	<p align="justify">
+	Note that in both cases (distorting the Cartesian coordinates or
+	polar coordinates) it is possible for there to be an unmappable
+	region, that is, coordinates in the new image which when distorted
+	lie outside the bounds of the input image.
+	</p>
+</td></tr>
+<tr><td align="center">
+	<img src="http://paulbourke.net/miscellaneous/lens/3.gif" width="256" height="256">
+</td><td align="center">
+	<img src="http://paulbourke.net/miscellaneous/lens/m3.gif" width="256" height="256">
+</td></tr></table>
+<p>
+
+<b>Notes on resolution</b>
+<p align="justify">
+   Some parts of the image are compressed and other parts inflated, the
+   inflated regions need a higher input image resolution in order to be
+   represented without aliasing effects. The above transformations cope with
+   the input and output images being different sizes, normally the input
+   image needs to be much larger than the output image. To minimise
+   aliasing the input image should be larger by a factor equal to the
+   maximum slope of the distorting function.
+   There are no noticeable artefacts in these example because the input
+   image was 10 times larger than the output image.
+</p>
+
+<a name="opengl">
+<b>OpenGL</b></a>
+<p align="justify">
+This OpenGL example implements the distortion functions above
+and distorts a grid and a model of a pulsar. It can readily be modified
+to distort any geometry. The guts of the algorithm can be found in the
+HandleDisplay() function. It renders the geometry as normal, then copies the
+resulting image and uses it as a texture that is applied to a regular
+grid. The texture coordinates of this grid are formed to give the 
+appropriate distortion.
+(<a href="http://paulbourke.net/miscellaneous/lens/lens.c">lens.c</a>, <a href="http://paulbourke.net/miscellaneous/lens/lens.h">lens.h</a>) 
+The left button rotates the camera around the model, the middle button
+rolls the camera, the right button brings up a few menus for changing the
+model and the distortion type. It should be quite easy for you to add
+your own geometry and to experiment with other distortion functions.<br>
+This example expects the Glut library to be available.<br>
+</p>
+<b>Improvements and exercises for the reader</b>
+<ul>
+<li><p align="justify">An improvement would be to render the texture
+at a larger size so that there is more resolution at those parts
+of the distorted image that are inflated. The note above on image
+resolution is clearly observed in this OpenGL implementation.
+</p>
+<li><p align="justify">Some OpenGL implementations will
+support non square power of 2 textures in which case the restrictions 
+on the window size can be removed. Many implementations also support 
+non square power of 2 textures if mipmapping is enabled.
+</p>
+<li><p align="justify">If you'd like to try some other interesting
+distortion functions then experiment with the following.<br>
+<img src="http://paulbourke.net/miscellaneous/lens/other.gif" width=587 height=188><br>
+The first is similar to the fisheye lens people used to attach to the
+window of their ute. The second is similar to the wave-like distorting
+mirrors found at carnival shows.
+</p>
+</ul>
+<p>
+
+<b>Feedback from Daniel Vogel</b>
+<p align="justify">
+One thing you might want to consider is using glCopyTexSubImage2D instead
+of doing a slow glReadPixels. Using the first allows me to play UT smoothly
+with distortion enabled.
+glReadPixels is a very slow operation on consumer level boards. And
+until there is a "rendering to texture" extension for OpenGL taking the
+texture directly from the back buffer is the fastest way - and it even
+is optimized.
+</p>
+
+
+<p><br><br><br><p>
+
+
+
+<center>
+<h1>Computer Generated Camera Projections and Lens Distortion</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+September 1992
+<p>
+See also
+<a href="../povexamples/index.html#beneventum">
+Projection types in PovRay</a>
+</center>
+
+<p><br><p>
+
+<p align="justify">
+Most users of 3D modelling and rendering software are familiar with
+parallel and perspective projections when they generate wire frame,
+hiddenline, simple shaded or highly realistic rendered images. It is
+possible to mathematically describe many other projections some of
+which may not be available, feasible, or even possible with
+conventional photographic equipment. Some of these techniques will be
+illustrated and discussed here using as an example a computer based
+model of Adolf Loos'
+Karntner bar. The 3D model was created by Matiu Carr in 1992 at
+the University of Auckland's School of Architecture, using Radiance.
+</p>
+
+<table><tr><td valign="top">
+<p align="justify">
+This image is an example of a conventional perspective
+projection (90 degree FOV, 17mm) of the sort offered by most
+rendering packages. The user is able to specify the position and
+direction of a virtual camera in the scene as well as other camera
+attributes such as FOV and depth of field.
+</p>
+</td><td>
+<center><img src="http://paulbourke.net/miscellaneous/lens/lens1.gif" width="300" height="300"></center><br>
+Figure: Perspective 90<p>
+</td></tr></table><p>
+
+<table><tr><td valign="top">
+<p align="justify">
+Virtual cameras don't suffer from some of the restrictions imposed
+by a real camera. This is an image using a 140 degree FOV which
+corresponds to approximately a 6mm lens.
+</p>
+</td><td>
+<center><img src="http://paulbourke.net/miscellaneous/lens/lens2.gif" width="300" height="300"></center><br>
+Figure: Perspective 140<p>
+</td></tr></table><p>
+
+<table><tr><td valign="top">
+<p align="justify">
+A hemispherical fisheye (180 degrees) maps the front hemisphere of
+the projection sphere onto a planar circular area on the image plane.
+The image shows everything in front of the camera position.
+</p>
+</td><td>
+<center><img src="http://paulbourke.net/miscellaneous/lens/lens3.gif" width="300" height="300"></center><br>
+Figure: Hemisphere 180<p>
+</td></tr></table><p>
+
+<table><tr><td valign="top">
+<p align="justify">
+This 360 degree fisheye is an unwrapping of the scene projected
+onto a sphere onto a circular image on the projection plane. Those
+parts of the scene behind the camera are severely distorted, so much
+so that the circumference of the image maps to a single point behind
+the camera.
+</p>
+</td><td>
+<center><img src="http://paulbourke.net/miscellaneous/lens/lens4.gif" width="300" height="300"></center><br>
+Figure: Fisheye 360<p>
+</td></tr></table><p>
+
+<p align="justify">
+The following is a 180 degree (vertically) by 360 degree
+(horizontally) angular fisheye. It unwraps a strip around the
+projection sphere onto a rectangular area on the image plane. The
+distance from the centre of the image is proportional to the angle
+from the viewing direction vector.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/lens/lens5.gif" width="400" height="200"></center><br>
+Figure: Fisheye 180<p>
+
+<p align="justify">
+90 degree (vertically) by 180 degree (horizontally) angular fisheye.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/lens/lens6.gif" width="400" height="100"></center><br>
+Figure: Fisheye 90<p>
+
+<p align="justify">
+A panoramic view is another method of creating a 360 degree view,
+it removes vertical bending but introduces other forms of distortion.
+This is created by using a virtual camera that has a 90 degree
+vertical field of view and a 2 degree horizontal field of view. The
+virtual camera is rotated about the vertical axis in 2 degree steps,
+the resulting 180 image strips are pasted together to form the
+following image.
+</p>
+
+<center><img src="http://paulbourke.net/miscellaneous/lens/lens7.gif" width="400" height="123"></center><br>
+Figure: Panoramic 360<p>
+
+Some other "real" examples<p>
+<center><img src="http://paulbourke.net/miscellaneous/lens/lens8.jpeg" width="800" height="152"></center><br>
+180 degree panoramic view of Auckland Harbour.<p>
+
+<center><img src="http://paulbourke.net/miscellaneous/lens/lens9.gif" width="600" height="167"></center><p>
+360 by 180 degree panoramic view created by a camera
+developed at Monash University, Melbourne.
+
+</td></tr></table></center><p>
+</body>
+</html>

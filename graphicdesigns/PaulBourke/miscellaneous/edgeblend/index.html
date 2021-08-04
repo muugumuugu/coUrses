@@ -1,0 +1,411 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Edge blending using commodity projectors</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Edge blending using commodity projectors</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+Assistance by Roberto Calati, and panoramic images by Peter Murphy<br>
+March 2004
+<p>
+Implementation for Quartz Composer contributed by Matthias Oostrik:
+<a href="http://paulbourke.net/miscellaneous/edgeblend/seb.zip">seb.zip</a>.<br>
+Includes a Core Image Filter and an example composition for a three projector
+display using a Matrox Triplehead2Go.
+</center>
+<p><br><p>
+
+<b>Introduction</b><p>
+<p align="justify">
+There are a number of applications which benefit from high resolution displays,
+for example, immersive virtual reality and scientific visualisation. Unfortunately
+projector technology is currently limited to around the XGA (1024x768) or SXGA
+(1280x1024) pixel resolution and at the time of writing the later are still rather
+expensive. The approach that can be taken then is to use low cast commodity
+projectors and tile a number of them together, each driven by either a 
+different computer or a different graphics pipe on the same computer.
+</p>
+<p align="justify">
+The first thing one discovers with commodity projectors is that, unlike the more
+expensive models, they don't have inbuilt support for tiled displays. In addition
+their optics is such that it isn't possible to reliably align multiple projectors
+in a pixel perfect way (or even close). With the tiling not 
+being pixel perfect one ends up with
+either a gap between the images or a double bright seam, both are quite objectionable
+especially so for content where the camera is panning or objects are moving across
+the seam.
+The solution is to overlap the two images by a significant amount and modify the
+pixels in the overlap region so as to make the overlap as invisible as possible.
+The reason why this works is that now any slight projector misalignment or lens
+aberration only reveals itself as a slight blurring of the image and not as a sharp
+seam or gap.
+</p>
+
+<b>Overlap</b><p>
+<p align="justify">
+The first part in the process then is to overlap the images, in this discussion
+a panoramic image of the interior of a Sydney landmark building will be used.
+The pixels in the overlap region will be blended across the overlap region, that
+is, the images will be faded to black.
+The general approach works equally well for any number of images and also for
+images that may not be aligned in a rectangular fashion. The projectors being
+used here are XGA (1024x768) and the overlap region is 256 pixels. The overlap
+need not strictly be a power of 2 but since the blending is performed using
+textures and OpenGL a power of 2 is the most efficient. The degree of overlap
+is dictated by the amount of gamma correction required (see later) and the 
+dynamic range of the blend function. For this exercise 128 pixels couldn't
+achieve as good as results as the 256 pixel overlap. The resulting image
+width is then 2 x 1024 - 256 = 1792 pixels, the height is 768 pixels.
+</p>
+
+<p align="justify">
+The image below shows the two projected images, as expected the overlap region
+is brighter than it should be because it is being contributed to by two
+projectors. The application being used to present this panoramic is a locally
+developed previewer for stereoscopic panoramic images written for OpenGL
+based graphics. Creating the two overlapped images using OpenGL is particularly
+simple as it only requires the appropriate change in the view frustum.
+Please note that the images presented here are digital photographs taken of the
+images in a darkened room, there are some challenges involved with that which
+means the colours seem a bit washed out.
+</p>
+
+<p><center>
+<img src="http://paulbourke.net/miscellaneous/edgeblend/original.jpg" width=800 height=362>
+</center><p>
+
+<b>Blending</b><p>
+<p align="justify">
+Blending involves multiplying each pixel in the overlap region 
+of one image by an
+amount such that when it is added to its corresponding pixel in the
+other image, the result is the intended pixel value. This is readily
+achieved by any function f(x) whose value lies between 0 and 1, the
+pixel from the right image say is multiplied by f(x) and the corresponding
+pixel from the left image multiplied by 1-f(x). The function used here
+is given below, there are lots of possible choices but this one was chosen
+because it allowed experimentation of the exact form of the function
+from linear to highly curved.
+</p>
+
+<center><table border=0 cellpadding=7>
+<tr><td valign="center">
+f(x) = 
+</td><td valign="center">
+0.5 (2 x) <sup>p</sup><p>
+1 - 0.5 (2 (1 - x)) <sup>p</sup>
+</td><td valign="center">
+for 0 <= x <= 0.5<p>
+for 0.5 <= x <= 1
+</td></tr></table></center><p>
+
+<p align="justify">
+Graphically the function looks as follows, note the coordinates are normalised
+to 0 (refers to the start of the edge blend region) and 1 (the end of the edge
+blend region). So consider the right image, a pixel in the first column is multiplied
+by 0 (it has no effect) a pixel on the right edge of the blend region (column 255)
+is multiplied by 1. 
+The blend function for the left hand image is 1 - the curve below. In the
+center of the blend region the curve passes through 0.5 which means each image pixel
+contributes the same amount to the final pixel value. The exact curvature is controlled
+by the parameter "p", the blending is linear for p=1, the transition around 0.5 becomes
+steeper as p increases. p=1 tends to result in a visible step at the edges of the blending
+region, p=2 is used for all examples in this document.
+</p>
+
+<p><center>
+<img src="http://paulbourke.net/miscellaneous/edgeblend/graph.gif" width=500 height=324>
+</center><p>
+
+<p align="justify">
+The edge blend is accomplished by placing a polygon with the edge blend function
+above represented as a grey scale 1 dimensional texture. This textured polygon
+is blended (OpenGL speak) appropriately so it scales the pixels in the image
+buffer. The nice thing about this method is that it can be trivially applied
+to any OpenGL application since it is a post processing stage applied after
+the normal geometry drawing is performed. The following image shows the mask
+region texture across the blend region.
+</p>
+
+<p><center>
+<img src="http://paulbourke.net/miscellaneous/edgeblend/mask.gif" width=800 height=300>
+</center><p>
+
+<p align="justify">
+The image below is a screen dump of what this looks like on the computer (which
+has a dual display), that is, the panoramic images multiplied by the mask above.
+</p>
+
+<p><center>
+<img src="http://paulbourke.net/miscellaneous/edgeblend/computer.jpg" width=800 height=300>
+</center><p>
+
+<p align="justify">
+The resulting projected image is given below, why is there a grey band?
+</p>
+
+<p><center>
+<img src="http://paulbourke.net/miscellaneous/edgeblend/blend.jpg" width=800 height=362>
+</center><p>
+
+<b>Gamma correction</b><p>
+<p align="justify">
+The reason the blend function above isn't enough and why there is a grey
+band in the previous image is that the technique described so far is adding
+pixel values. What really needs to be done is to add brightness levels.
+The main function that controls how pixels are mapped to brightness is the
+so called gamma function of the display, typically between 1.8 and 2.2.
+Gamma is how pixel values are related to output brightness, if G is the
+gamma function then the output brightness is the pixel value (normalised
+to 0 and 1) raised to the power of G.
+<p>
+
+<p align="justify">
+Fortunately, this is readily corrected by applying an inverse gamma power.
+The total transformation of the image pixels is then the function
+f(x)<sup>1/G</sup> and f(1-x)<sup>1/G</sup>. 
+</p>
+
+<p><center>
+<img src="http://paulbourke.net/miscellaneous/edgeblend/gammafcn.gif" width=400 height=330>
+</center><p>
+
+<p align="justify">
+The image below shows the gamma corrected
+edge blended image, note that in general the gamma correction needs to be 
+applied to each r,g,b value because of variations in the projectors used.
+</p>
+
+<p><center>
+<img src="http://paulbourke.net/miscellaneous/edgeblend/gamma.jpg" width=800 height=362>
+</center><p>
+
+<b>Further refinements</b>
+
+<p align="justify">
+A modification to the edge blend function that gives some luminance control
+in the center of the blend region is as follows. "a" ranges from 0 to 1,
+if it is greater than 0.5 then the center of blend region will brighten,
+if it is less than 0.5 then it will become darker.
+</p>
+
+<center><table border=0 cellpadding=7>
+<tr><td valign="center">
+f(x) =
+</td><td valign="center">
+a (2 x) <sup>p</sup><p>
+1 - (1 - a) (2 (1 - x)) <sup>p</sup>
+</td><td valign="center">
+for 0 <= x <= 0.5<p>
+for 0.5 <= x <= 1
+</td></tr></table></center><p>
+
+<center><img src="http://paulbourke.net/miscellaneous/edgeblend/fcn.gif" width=800 height=259></center><p>
+
+<b>Projector black level</b>
+<p align="justify">
+A major limiting factor to how well the blending can be made invisible is the
+degree to which the projector can create black. Typically CRT projectors have total black
+however these are undesirable for other reasons (bulk, calibration, low light
+levels). LCD projectors typically have very poor black levels. DLP projectors
+are better (DLP was used for these tests). The key indicator published by the
+manufacturer regarding black level is the contrast, at the time of writing
+there are a number of projectors rated around the 1500:1 and 2000:1. Some
+projectors are rated at 3000:1 or even 3500:1. Generally there is a trade-off
+between projector brightness and contrast, most customers want bright projectors
+and this comes at the cost of poorer black levels.
+</p>
+
+<p><center>
+<img src="http://paulbourke.net/miscellaneous/edgeblend/gamma2.jpg" width=800 height=365>
+</center><p>
+
+<b>References</b><p>
+
+Ruigang Yang, David Gotz, Justin Hensley, Herman Towles, Michael S. Brown, <br>
+PixelFlex: A Reconfigurable Multi-Projector Display System,<br> 
+Proceedings of IEEE Visualization, 2001.<p>
+
+R. Raskar, G. Welch, H. Fuchs<br>
+Seamless Projection Overlaps using Image Warping and Intensity Blending<br>
+Proceedings of the 4th International Conference on Virtual Systems
+and Multimedia, Gifu, Japan, Nov 1998<p>
+
+F. Schoffel, W. Kresse, S. Muller, and M. Unbescheiden, <br>
+Do IPT Systems Fulfill Application Requirements? 
+A Study on Luminance on Large-Scale Immersive Projection Devices, <br>
+Proceedings of the 3rd International IPT Workshop, Stuttgart, Germany. 1999.<p>
+
+W. Kresse, F. Schoffel, and S. Muller, <br>
+An Auto calibration Tool for the Photometric and Colorimetric Consistency of IPTs,<br>
+Proceedings of the 4th International IPT Workshop, Ames, Iowa. June 2000.<p>
+
+Ramesh Raskar, Jeroen van Baar, Jin Xiang Chai,<br>
+A Low-Cost Projector Mosaic with Fast Registration, <br>
+Mitsubishi Electric Research Laboratories Inc 201 Broadway, Cambridge, Massachusetts, February 2002<p>
+
+Aditi Majumder Zhu He Herman Towles GregWelch, <br>
+Achieving Color Uniformity Across Multi-Projector Displays,<br>
+IEEE Visualization 2000.<p>
+
+Aditi Majumder David Jones, Matthew McCrory, Michael E Papka, Rick Stevens,<br>
+Using a Camera to Capture and Correct Spatial 
+Photometric Variation in Multi-Projector Displays <br>
+IEEE International Workshop on Projector-Camera Systems October 12, 2003<p>
+
+Aditi Majumder, Rick Stevens, <br>
+Color Nonuniformity in Projection-Based Displays: Analysis and Solutions, <br>
+IEEE Transactions on visualization and computer graphics, 2003<p>
+
+M. Herald, I.R. Judson, J Paris, R.L. Stevens<br>
+Developing Tiled Projection Display Systems<br>
+Proceedings of the 4th International Immersive Projection
+Technology Workshop, June 2000<p>
+
+Mark Hereld, Ivan R. Judson, Rick L. Stevens,<br>
+Introduction to Building Projection-based Tiled Display Systems, <br>
+IEEE Computer Graphics and Applications August 2002<p>
+
+<b>Further examples/images</b><p>
+
+<center>
+Projector grids, 256 pixel overlap.<br>
+<a href="http://paulbourke.net/miscellaneous/edgeblend/grid.jpg"><img src="http://paulbourke.net/miscellaneous/edgeblend/grid_s.jpg" width=800 height=600 border=1></a><br>
+</center>
+
+<br><br><br>
+
+<center>
+Colour ramps for calibration.<br>
+<a href="http://paulbourke.net/miscellaneous/edgeblend/colourband.jpg"><img src="http://paulbourke.net/miscellaneous/edgeblend/colourband_s.jpg" width=800 height=600 border=1></a><br>
+</center>
+
+<br><br><br>
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/edgeblend/grave3.jpg"><img src="http://paulbourke.net/miscellaneous/edgeblend/grave3_s.jpg" width=800 height=600 border=1></a><br>
+<smalltext>(Peter Murphy)</smalltext>
+</center>
+
+<br><br><br>
+
+<center>
+<a href="http://paulbourke.net/miscellaneous/edgeblend/gpo1.jpg"><img src="http://paulbourke.net/miscellaneous/edgeblend/gpo1_s.jpg" width=800 height=600 border=1></a><br>
+<smalltext>(Peter Murphy)</smalltext>
+</center>
+
+<br><br><br>
+
+<p align="justify">
+<b>Work flow modifying a single wide image into an edge blended pair</b><p>
+Image from "Earth's Wild Ride" produced by the Houston Museum of Natural Science and Rice University.
+</a>
+<center><img src="http://paulbourke.net/miscellaneous/edgeblend/example.jpg" width=800 height=1220></center>
+
+
+<b>Note on surface properties</b><p>
+<p align="justify">
+The above makes an important assumption, that is, the surface has Lambertian reflection properties.
+Lambertian means that light is equally scattered in all directions. Without this, the reflected
+light reaching the observer varies depending on their position with respect to the edge blend zone and the
+projector positions. So in the extreme case of a highly reflective surface a successful edge blend can
+only be accomplished if the observer position is tracked and the correct edge blend computed dynamically.
+</p>
+
+<br><br><br>
+
+<center>
+<h3>Blending across left/right edge of a 360 degree panoramic image</h3>
+Written by <a href="../index.html">Paul Bourke</a><br>
+March 2006<p>
+See also: <a href="index.html">Edge blending</a>
+</center>
+<p><br><p>
+
+<p align="justify">
+Even with high end panoramic capture devices such as the Roundshot cameras, it is
+common for there to be an intensity variation between the left and right ends of
+the panoramic. This can arise due to a variety of reasons including but not limited
+to lighting changes, automatic adjustments by the camera, and variations in the
+scanning process (for high resolution film based capture).
+The following illustrates the straightforward and relatively simple approach to
+correct for this, the result being a imperceptible difference across the boundary.
+</p>
+
+<p align="justify">
+Note that this is essentially the same as edge blending for projected images
+except that it is less sensitive to the exact form of the blend function and gamma
+correction isn't necessary.
+</p>
+
+<b>Original image</b><p>
+<p align="justify">
+The following is an example used to illustrate the technique, note that it is necessary
+to have an overlap at either end, these are the regions that are blended together to form
+the final panoramic image in those regions.
+</p>
+<center><img src="http://paulbourke.net/miscellaneous/edgeblend/original2.jpg" width=800 height=137 border=1></center><p>
+<smalltext>Figure 1</smalltext><p>
+
+<b>Wrapping error across 0-360 degree boundary (left/right edge)</b><p>
+<p align="justify">
+If a strip from the left hand edge of the image above
+is placed next to the corresponding position from a strip on the right, the
+discontinuity is clear. (Note changes in brightness and changes in shadows).
+If used in a virtual environment this discontinuity would be an objectionable
+artefact.
+</p>
+<center><img src="http://paulbourke.net/miscellaneous/edgeblend/wraperror.jpg" width=204 height=800 border=1></center><p>
+<smalltext>Figure 2</smalltext><p>
+
+<b>Blending mask (multiplicative)</b><p>
+<p align="justify">
+The solution is to create a weighted sum of pixel values from the two overlap regions. 
+The following shows the weighting function, in this example a linear ramp is used.
+</p>
+<center><img src="http://paulbourke.net/miscellaneous/edgeblend/themask.jpg" width=800 height=137 border=1></center><p>
+<smalltext>Figure 3</smalltext><p>
+
+<b>Mask applied to panoramic image</b><p>
+<p align="justify">
+The following shows the mask applied to the input image. The weighting value W applied
+(multiplicative) to a pixel on one end is applied as (1-W) to the corresponding pixel
+at the other end of the panoramic image.
+</p>
+<center><img src="http://paulbourke.net/miscellaneous/edgeblend/maskapplied.jpg" width=800 height=137 border=1></center><p>
+<smalltext>Figure 4</smalltext><p>
+
+<b>Final panoramic image</b><p>
+<p align="justify">
+This shows the final image now less the overlap region, this is now the desired
+cylindrical panoramic image.
+</p>
+<center><img src="http://paulbourke.net/miscellaneous/edgeblend/finalpano.jpg" width=800 height=143 border=1></center><p>
+<smalltext>Figure 5</smalltext><p>
+
+<b>Resulting continuity across the 0-360 degree boundary</b><p>
+<p align="justify">
+The same procedure as figure 2, shows no perceptible discontinuity.
+</p>
+<center><img src="http://paulbourke.net/miscellaneous/edgeblend/result.jpg" width=204 height=800 border=1></center><p>
+<smalltext>Figure 6</smalltext><p>
+
+</td></tr></table></center>
+</body>
+</html>
+
