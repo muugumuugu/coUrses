@@ -1,0 +1,207 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Lace Attractor</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Lace Attractor</h1>
+Inspired by Roger Bagula<br>
+Graphics by <a href="../index.html">Paul Bourke</a><br>
+June 2001, images updated January 2018
+</center>
+<p><br><p>
+
+<center>
+	<a href="lace1.png">
+	<img src="lace1_s.png" width=800 height=800 border=1></a>
+</center>
+<p>
+
+<center>
+   <a href="lace2.png">
+   <img src="lace2_s.png" width=800 height=800 border=1></a>
+</center>
+<p>
+
+<center>
+   <a href="lace3.png">
+   <img src="lace3_s.png" width=800 height=800 border=1></a>
+</center>
+<p>
+
+<center>
+   <a href="lace4.png">
+   <img src="lace4_s.png" width=800 height=800 border=1></a>
+</center>
+<p>
+
+<!--
+<b>Contribution by Robert Rodgers</b><p>
+Evaldraw script: <a href="robert.kc">robert.kc</a><p>
+<center>
+<img src="robert.jpg" width=680 height=680>
+</center>
+-->
+
+<table width=100% cellspacing=0 cellpadding=0 border=0><tr>
+<td valign="top">
+<center>
+<h1>Attractor Islands</h1>
+Written by <a href="../index.html">Paul Bourke</a><p>
+September 2002
+</center>
+<p><br><p>
+<p align="justify">
+The following discusses a way of representing chaotic attractors
+so they look more interesting than the usual "points on a plane".
+The approach involves representing them as landscapes, or since the
+attractors are normally bounded, as islands. 
+</p>
+
+<p align="justify">
+The example used here is an iterated function system by Roger Bagula.
+A low resolution version of the function is shown on the right. Note that this is a 
+two state image, the pixels that are not black represent points on 
+the attractor and all other pixels are not on the attractor.
+</p>
+
+<p align="justify">
+If the attractor image was used
+by itself the cliffs would rise out of the water straight to their
+peaks. A base to the island was created by applying a Gaussian blur
+to the original attractor image, this is shown on the right. This
+is applied as a second height field, the PovRay code is given below.
+The two height maps used here (lace_a.tga and lace_b.tga)
+were both 2000 pixels square.
+</p>
+<pre>
+height_field {
+   tga
+   "lace_a.tga" /* Sharp attractor for cliffs */
+   pigment { }
+   finish { }
+   normal { }
+   scale <1,0.05,1>
+}
+height_field {
+   tga
+   "lace_b.tga" /* Smoothed surface for shoreline */
+   smooth
+   pigment { }
+   finish { }
+   normal { }
+   scale &lt;1,0.07,1&gt;
+}
+</pre>
+
+<p align="justify">
+The result of using these two height maps without any material definitions
+is shown on the right. The surfaces have the default PovRay surface
+definitions and are coloured 50% grey. The camera and lighting environment
+are below.
+</p>
+<pre>
+camera {
+   perspective
+   location &lt;0.7,0.7,-0.25&lt;
+   up y
+   right -4*x/3
+   angle 60
+   sky &lt;0,1,0&lt;
+   look_at &lt;0.5,0,0.4&lt;
+}
+global_settings {
+   ambient_light
+   rgb &lt;1.0,1.0,1.0&lt;
+}
+background {
+   color rgb &lt;0,0,0&lt;
+}
+light_source {
+   &lt;0,1,0&lt;
+   color rgb &lt;1,1,1&lt;
+}
+light_source {
+   &lt;1,2,0.5&gt;
+   color rgb &lt;0.5,0.5,0.5&lt;
+}
+</pre>
+
+<p align="justify">
+The image on the right is rendered using a particular material
+set, the sand fades to jungle, grass is growing at the top of the
+plateau, the ocean has depth variation, etc. The scene files are given here
+<a href="lace.ini">lace.ini</a> and
+<a href="lace.pov">lace.pov</a>.
+</p>
+
+<pre>
+#declare seapigment = pigment {
+   bozo
+   turbulence 2
+   octaves 6
+   lambda 3
+   omega 0.5
+   color_map {
+      [0.0 color rgbt &lt;0.3,0.3,0.7,0&gt; ]
+      [1.0 color rgbt &lt;0.5,0.5,1.0,0&gt; ]
+   }
+   scale 0.5
+}
+global_settings { number_of_waves 10 }
+#declare wavenormal = normal {
+    ripples 0.2
+    frequency 10
+    phase 0
+    scale 0.1
+    rotate &lt;0,0,13&gt;
+}
+polygon {
+   5
+   &lt;0,0.0001,0&lt;, 
+   &lt;1,0.0001,0&gt;, 
+   &lt;1,0.0001,1&gt;, 
+   &lt;0,0.0001,1&gt;, 
+   &lt;0,0.0001,0&gt;
+   pigment { seapigment }
+   normal { wavenormal }
+}
+</pre>
+</td><td width=10>&nbsp;</td><td valign="top" align="right" width=360>
+<img src="island1.gif" width=350 height=350><br>
+<font size=-1>Attractor</font>
+<p>
+<img src="island2.gif" width=350 height=350><br>
+<font size=-1>Blurred attractor for shoreline</font>
+<p>
+<a href="island4.gif">
+<img src="island4s.gif" width=350 height=350><br>
+<font size=-1>Rendering without materials</font></a>
+<p>
+<a href="island3.jpg">
+<img src="island3s.jpg" width=350 height=350><br>
+<font size=-1>Simple materials</font></a>
+<p>
+<a href="island5.jpg">
+<img src="island5s.jpg" width=350 height=350><br>
+<font size=-1>Higher quality rendering</font></a>
+</tr></table>
+
+</td></tr></table></center>
+</body>
+</html>
+

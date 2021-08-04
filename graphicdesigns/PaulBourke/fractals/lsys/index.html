@@ -1,0 +1,1152 @@
+<html>
+<head><link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>L-System manual</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center><H1>L-System User Notes</H1>
+(Lindenmayer Systems)<br>
+Written by <a href="../index.html">Paul Bourke</a><br>
+Version 2.5, July 1991<p>
+</center>
+
+<p>
+
+<b>Introduction</b>
+
+<p align="justify">
+This program implements some of the L-Systems discussed in "Lecture Notes in
+Biomathematics" by Przemyslaw Prusinkiewcz and James Hanan. A brief description
+of an 0L system will be presented here but for a more complete description the
+user should consult the literature.
+</p>
+
+<p align="justify">
+The application was initially written to investigate methods of incorporating
+objects with a large number of drawing elements (lines, polygons) into a CAD
+package. L Systems is one way for example of "generating" trees at the
+rendering stage but not during the editing stage where the image complexity
+will slow down the response time.
+</p>
+
+<b>Simple example of a 0L system</b><p>
+
+<p align="justify">
+A string of characters (symbols) is rewritten on each iteration according to
+some replacement rules. Consider an initial string (axiom)
+</p>
+
+<center>F+F+F+F</center><p>
+
+and a rewriting rule 
+<p>
+<center>
+F --&gt; F+F-F-FF+F+F-F
+</center>
+<p>
+
+After one iteration the following string would result
+<p>
+<center>
+F+F-F-FF+F+F-F + F+F-F-FF+F+F-F + F+F-F-FF+F+F-F + F+F-F-FF+F+F-F
+</center>
+<p>
+
+<p align="justify">
+For the next iteration the same rule is applied but now to the string resulting
+from the last iteration
+</p>
+
+F+ F-F-FF+ F+ F-F+ F+ F-F-FF+ F+ F-F-F+ F-F-FF+ F+ F-F-F+ F-F-FF+ F+ F-FF+
+F-F-FF+ F+ F-F+ F+ F-F-FF+ F+ F-F+ F+ F-F-FF+ F+ F-F-F+ F-F-FF+ F+ F-F+ F+
+F-F-FF+ F+ F-F+ F+ F-F-FF+ F+ F-F-F+ F-F-FF+ F+ F-F-F+ F-F-FF+ F+ F-FF+ F-F-FF+
+F+ F-F+ F+ F-F-FF+ F+ F-F+ F+ F-F-FF+ F+ F-F-F+ F-F-FF+ F+ F-F+ F+ F-F-FF+ F+
+F-F+ F+ F-F-FF+ F+ F-F-F+ F-F-FF+ F+ F-F-F+ F-F-FF+ F+ F-FF+ F-F-FF+ F+ F-F+ F+
+F-F-FF+ F+ F-F+ F+ F-F-FF+ F+ F-F-F+ F-F-FF+ F+ F-F+ F+ F-F-FF+ F+ F-F+ F+
+F-F-FF+ F+ F-F-F+ F-F-FF+ F+ F-F-F+ F-F-FF+ F+ F-FF+ F-F-FF+ F+ F-F+ F+ F-F-FF+
+F+ F-F+ F+ F-F-FF+ F+ F-F-F+ F-F-FF+ F+ F-F
+<p>
+
+<p align="justify">
+Some symbols are now given a graphical meaning, for example, F means move
+forward drawing a line, + means turn right by some predefined angle (90 degrees
+in this case), - means turn left.
+</p>
+
+<p align="justify">
+Using these symbols the initial string F+F+F+F is just a rectangle (&oslash; =
+90). The replacement rule F --&gt; F+F-F-FF+F+F-F replaces each forward
+movement by the following figure
+</p>
+
+<center><IMG HEIGHT="146" WIDTH="290" SRC="lsys01.gif"></center><p>
+
+<center><table width=100%><tr><td valign="top">
+The first iteration interpreted graphically is<p>
+</td><td>
+<center><IMG HEIGHT="261" WIDTH="261" SRC="lsys02.gif"></center>
+</td></tr></table></center><p>
+
+<center><table width=100%><tr><td valign="top">
+The next iteration interpreted graphically is:<p>
+</td><td>
+<center><IMG HEIGHT="261" WIDTH="261" SRC="lsys03.gif"></center><p>
+and so on.
+</td></tr></table></center><p>
+
+<table width="100%"><tr><td valign=top>
+<b>Example:</b><p>
+Axiom	X<br>
+F --&gt;	FF<br>
+X --&gt;	F-[[X]+X]+F[+FX]-X<br>
+&oslash; = 	22.5<br>
+</td><td valign=top>
+<center><IMG HEIGHT="261" WIDTH="177" SRC="lsys04.gif"></center>
+</td></tr></table>
+
+<table width="100%"><tr><td valign=top>
+<b>Example:</b><p>
+Axiom	F+F+F+F<br>
+F --&gt;	FF+F-F+F+FF<br>
+&oslash; =	90<br>
+</td><td valign=top>
+<center><IMG HEIGHT="257" WIDTH="257" SRC="lsys05.gif"></center>
+</td></tr></table>
+
+<b>Symbols</b>
+
+The following characters have a geometric interpretation.
+<pre>Character        Meaning
+   F	         Move forward by line length drawing a line
+   f	         Move forward by line length without drawing a line
+   +	         Turn left by turning angle
+   -	         Turn right by turning angle
+   |	         Reverse direction (ie: turn by 180 degrees)
+   [	         Push current drawing state onto stack
+   ]	         Pop current drawing state from the stack
+   #	         Increment the line width by line width increment
+   !	         Decrement the line width by line width increment
+   @	         Draw a dot with line width radius
+   {	         Open a polygon
+   }	         Close a polygon and fill it with fill colour
+   &gt;	         Multiply the line length by the line length scale factor
+   &lt;	         Divide the line length by the line length scale factor
+   &amp;	         Swap the meaning of + and -
+   (	         Decrement turning angle by turning angle increment
+   )	         Increment turning angle by turning angle increment
+</pre>
+
+<p align="justify">
+When drawing the graphical representation of the L string all other characters
+are ignored.
+The user may choose and use any other single printable characters for the
+replacement rules except, note: this excludes "white" characters such as spaces
+and tabs. For context sensitive L systems the * character is used to represent
+any match.
+</p>
+
+See the SYMBOL menu item for a summary of the reserved symbols.
+
+<b>Menus</b>
+
+<TABLE><TR><TD align="left">
+<IMG HEIGHT="49" WIDTH="154" SRC="lsys06.gif"><BR></TD>
+<TD align="left">
+<p align="justify">As
+with most applications the ABOUT menu item located in the Apple menu before the
+desk accessories displays information such as the version number and contact
+address of the developer.
+</p>
+</TD></TR>
+
+<TR><TD align="left">
+<IMG HEIGHT="196" WIDTH="113" SRC="lsys07.gif">
+</TD><TD align="left">
+<p align="justify">
+This
+is the standard FILE menu although some of the items are not implemented. <p>
+NEW resets all the variables including the rules to their default values.<p>
+OPEN to load a rule description file previously saved or possibly created with
+a text editor.
+</p>
+SAVE and SAVE AS create rule description files.<p>
+PRINT and PAGESETUP control direct printing.<p>
+QUIT to exit from the program when finished.<p>
+</TD></TR>
+
+<TR><TD align="left">
+<IMG HEIGHT="244" WIDTH="165" SRC="lsys08.gif">
+</TD><TD align="left">
+<p align="justify">
+The standard EDIT menu. The first 5 items are only included for compatibility
+reasons and do not apply to this application. (they are used with desk
+accessories in some cases)
+</p>
+<p align="justify">
+The two special copy items allow images to be transferred to other applications
+depending on the preferred data type. Line drawings should be copied for CAD
+packages and bitmaps for painting programs.
+</p>
+<p align="justify">
+Normally images will be scaled to fit the window, it is possible to zoom in or
+out of areas with the last two items.
+</p>
+</TD></TR>
+
+<TR><TD align="left">
+<IMG HEIGHT="295" WIDTH="176" SRC="lsys09.gif">
+</TD><TD align="left">
+This is the main menu for this application.
+<p align="justify">
+REDRAW updates the current display, for example, if the drawing was cancelled
+with clover-. (period)
+</p>
+<p align="justify">
+Menu items 2 through 4 control the iteration depth. RESET sets it to 0, the
+number of iterations to compute may be incremented, decremented, or set to any
+particular number.
+</p>
+<p align="justify">
+FRAME, FILL and BACKGROUND are pop-up menus that allow the colour of the lines,
+polygon fills and background to be set.
+</p>
+<p align="justify">
+PRODUCTIONS allows the current rules to be altered. AXIOM menu item sets the
+initial string. STATE menu item varies environment variables. SYMBOL LIST
+displays the meaning given to various predefined and reserved symbols.
+</p>
+The type of system is selectable from the last 3 items.
+</TD></TR>
+
+<TR><TD align="left">
+<IMG HEIGHT="132" WIDTH="156" SRC="lsys10.gif">
+</TD><TD align="left">
+<p align="justify">
+This
+contains a number of predefined image specifications grouped together in
+categories given by the pop-up menu names. 
+</p>
+Users are encouraged to submit further examples that can be added to this
+library.
+</TD></TR></TABLE>
+<p>
+
+<b>Advanced features/comments</b><p>
+
+<ul>
+<li><p align="justify">
+Always ensure that the '[' and ']' brackets match in number, ie: there
+should always be the same number of each type. If not a stack overflow will
+quickly occur, a message displayed, and the iteration depth decremented. Note:
+non matching brackets are not tested before the string in interpreted, a
+problem only occurs when a stack overflow situation is encountered.
+</p>
+
+<li><p align="justify">
+Polygons (using "{" and "}") cannot be nested, ie: there can only be one
+open at a time. If a polygon open symbol "{" is encountered while another
+polygon is still open it will be ignored. If a polygon is left open when the
+end of the string is reached it will be automatically closed.
+</p>
+
+<li><p align="justify">
+For a complete list of predefined symbol meanings look at the SYMBOL list
+under the ACTION menu.
+</p>
+
+<li><p align="justify">
+Best quality hardcopy line drawing images can be obtained by using
+MacDraw or Claris CAD. In both cases copy the image as a line drawing, paste it
+into MacDraw say, set the lines to black and line width 0.1mm, then print on a
+LaserWriter. Note: the number of lines can quickly approach the thousands and
+even tens of thousands, don't expect the printing to be fast.
+</p>
+
+<li><p align="justify">
+Time consuming drawing may be cancelled by typing clover-. (period)
+</p>
+
+<li><p align="justify">
+The maximum length of the strings generated is 300,000 symbols.
+Attempting to exceed this will give an error message and automatic decrementing
+of the iteration count.
+</p>
+
+<li><p align="justify">
+The maximum stack depth is 100. This means that a bracketed string cannot
+have brackets nested more than 100 deep. 
+</p>
+ie:	[	[	[	]	]	[	[	[	[	]	]	[	]	] 	] 	]
+<p>
+	1	2	3	2	1	2	3	4	5	4	3	4	3	2	1	0	is nested 5 deep
+<p>
+<p align="justify">
+If the maximum stack depth is exceeded an appropriate error message will be
+displayed and the iteration depth decremented until the stack no longer
+overflows.</p>
+
+<li><p align="justify">
+When copying to the clipboard as lines make the drawing window as large
+as possible for maximum resolution.
+</p>
+</ul>
+
+<b>References</b><p>
+
+Heinz-Otto and Deitmar Saupe.
+<i>The Science of Fractal Images</i>.
+Springer-Verlag<p>
+
+Przemyslaw Prusinkiewicz.
+<i>Application of L-Systems to Computer Imagery</i>.
+Lecture Notes in Computer Science #291, Pages 534-548<p>
+
+Przemyslaw Prusinkiewicz, James Hanan.
+<i>Lecture Notes in Biomathematics #79</i><p>
+
+Prusinkiewicz, P.
+<i>Graphical Applications of L-Systems</i>.
+Proc. of Graphics Interface 1986 - Vision Interface, 1986, Pages 247-253.<p>
+
+Smith, A.R.
+<i>Plants, Fractals, and Formal Languages</i>.
+Computer Graphics, 18, 3, 1984, Pages 1-10<p>
+
+Prusinkiewicz, P and Lindenmayer A.
+<i>The Algorithmic Beauty of Plants</i>.
+Springer Verleg, 1990, Pages 40-50<p>
+
+<br><br>
+
+<center>
+<h1>L-System Leaf</h1>
+Written by <a href="../index.html">Paul Bourke</a>
+</center>
+<p><br><p>
+
+<center><table width=100%><tr><td valign="top">
+axiom = a<br>
+F -&gt; &gt;F&lt;<br>
+a -&gt; F[+x]Fb<br>
+b -&gt; F[-y]Fa<br>
+x -&gt; a<br>
+y -&gt; b<br>
+angle = 45<br>
+length factor = 1.36<p>
+</td><td>
+<center>
+<img src="leaf_1.gif" width=446 border=0 height=650><br>
+</center>
+</td></tr></table></center>
+
+<br><br>
+
+<center>
+<h1>L-System Bushes</h1>
+Written by <a href="../index.html">Paul Bourke</a>
+</center>
+<p><br><p>
+
+<center><table width=100%><tr><td valign="top">
+axiom = Y<br>
+X -&gt; X[-FFF][+FFF]FX<br>
+Y -&gt; YFX[+Y][-Y]<br>
+angle = 25.7<br>
+</td><td>
+<center>
+<img src="busha_1.gif" width=436 height=650><br>
+</center>
+</td></tr></table></center>
+
+<br><br>
+
+<center><table width=100%><tr><td valign="top">
+axiom = F<br>
+F -&gt; FF+[+F-F-F]-[-F+F+F]<br>
+angle = 22.5<br>
+</td><td>
+<center>
+<img src="bushb_1.gif" width=423 height=650><br>
+</center>
+</td></tr></table></center>
+
+<br><br>
+
+<center><table width=100%><tr><td valign="top">
+axiom = F<br>
+F -&gt; F[+FF][-FF]F[-F][+F]F<br>
+angle = 35<br>
+</td><td>
+<center>
+<img src="bushc_1.gif" width=597 height=650><br>
+</center>
+</td></tr></table></center>
+
+<br><br>
+
+Attributed to Saupe<br>
+
+<center><table width=100%><tr><td valign="top">
+axiom = VZFFF<br>
+V -&gt; [+++W][---W]YV<br>
+W -&gt; +X[-W]Z<br>
+X -&gt; -W[+X]Z<br>
+Y -&gt; YZ<br>
+Z -&gt; [-FFF][+FFF]F<br>
+angle = 20<br>
+</td><td>
+<center>
+<img src="bushd_1.gif" width=650 height=570><br>
+</center>
+</td></tr></table></center>
+
+<br><br>
+
+<center><table width=100%><tr><td valign="top">
+axiom = FX<br>
+X -&gt; &gt;[-FX]+FX<br>
+angle = 40<br>
+</td><td>
+<center>
+<img src="bushe_1.gif" width=650 height=650><br>
+</center>
+</td></tr></table></center>
+
+<br><br>
+
+<center>
+<img src="bushf_1.gif" width=650 height=650><br>
+</center>
+
+<br><br>
+	<center><img src="realtree.png" width=800 height=364 border=0></center>
+<br><br>
+
+<center>
+<h1>L-System sticks</h1>
+Written by <a href="../index.html">Paul Bourke</a>
+</center>
+<p><br><p>
+
+<center><table width=100%><tr><td valign="top">
+axiom = X<br>
+F -&gt; FF<br>
+X -&gt; F[+X]F[-X]+X<br>
+angle = 20<br>
+</td><td>
+<center>
+<img src="sticks_1.gif" width=412 height=650><br>
+</center>
+</td></tr></table></center>
+
+<br><br>
+
+<center>
+<h1>L-System algae</h1>
+Written by <a href="../index.html">Paul Bourke</a>
+</center>
+<p><br><p>
+
+<center><table width=100%><tr><td valign="top">
+axiom = aF<br>
+a -&gt; FFFFFv[+++h][---q]fb<br>
+b -&gt; FFFFFv[+++h][---q]fc<br>
+c -&gt; FFFFFv[+++fa]fd<br>
+d -&gt; FFFFFv[+++h][---q]fe<br>
+e -&gt; FFFFFv[+++h][---q]fg<br>
+g -&gt; FFFFFv[---fa]fa<br>
+h -&gt; ifFF<br>
+i -&gt; fFFF[--m]j<br>
+j -&gt; fFFF[--n]k<br>
+k -&gt; fFFF[--o]l<br>
+l -&gt; fFFF[--p]<br>
+m -&gt; fFn<br>
+n -&gt; fFo<br>
+o -&gt; fFp<br>
+p -&gt; fF<br>
+q -&gt; rfF<br>
+r -&gt; fFFF[++m]s<br>
+s -&gt; fFFF[++n]t<br>
+t -&gt; fFFF[++o]u<br>
+u -&gt; fFFF[++p]<br>
+v -&gt; Fv<br>
+angle = 12<br>
+</td><td valign="top">
+<center>
+<img src="algaea_1.gif" width=650 height=650><br>
+</center>
+</td></tr></table></center>
+
+<br><br>
+
+<center><table width=100%><tr><td valign="top">
+axiom = aF<br>
+a -&gt; FFFFFy[++++n][----t]fb<br>
+b -&gt; +FFFFFy[++++n][----t]fc<br>
+c -&gt; FFFFFy[++++n][----t]fd<br>
+d -&gt; -FFFFFy[++++n][----t]fe<br>
+e -&gt; FFFFFy[++++n][----t]fg<br>
+g -&gt; FFFFFy[+++fa]fh<br>
+h -&gt; FFFFFy[++++n][----t]fi<br>
+i -&gt; +FFFFFy[++++n][----t]fj<br>
+j -&gt; FFFFFy[++++n][----t]fk<br>
+k -&gt; -FFFFFy[++++n][----t]fl<br>
+l -&gt; FFFFFy[++++n][----t]fm<br>
+m -&gt; FFFFFy[---fa]fa<br>
+n -&gt; ofFFF<br>
+o -&gt; fFFFp<br>
+p -&gt; fFFF[-s]q<br>
+q -&gt; fFFF[-s]r<br>
+r -&gt; fFFF[-s]<br>
+s -&gt; fFfF<br>
+t -&gt; ufFFF<br>
+u -&gt; fFFFv<br>
+v -&gt; fFFF[+s]w<br>
+w -&gt; fFFF[+s]x<br>
+x -&gt; fFFF[+s]<br>
+y -&gt; Fy<br>
+angle = 12<br>
+</td><td valign="top">
+<center>
+<img src="algaeb_1.gif" width=650 height=650><br>
+</center>
+</td></tr></table></center>
+
+<br><br>
+
+<center>
+<h1>L-System Weed</h1>
+Written by <a href="../index.html">Paul Bourke</a>
+</center>
+<p><br><p>
+
+<center><table width=100%><tr><td valign="top">
+axiom = F<br>
+F -&gt; FF-[XY]+[XY]<br>
+X -&gt; +FY<br>
+Y -&gt; -FX<br>
+angle = 22.5<br>
+</td><td>
+<center>
+<img src="weed_1.gif" width=263 height=650><br>
+</center>
+</td></tr></table></center>
+
+<br><br>
+
+<center>
+<h1>Triangle</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+July 1990
+</center>
+<p><br><p>
+
+<b>L-Systems</b><p>
+axiom = F+F+F<br>
+F -&gt; F-F+F<br>
+angle = 120<p>
+<center>
+<img src="triangle_1.gif" width=650 height=650><br>
+<img src="triangle_2.gif" width=650 height=650>
+</center>
+<p>
+
+<b>As an IFS</b><p>
+<center><img src="triangle_ifs.gif" width=600 height=583></center><p>
+
+The IFS equations are as follows
+<center>
+x<sub>n+1</sub> = a x<sub>n</sub> + b y<sub>n</sub> + e<p>
+y<sub>n+1</sub> = c x<sub>n</sub> + d y<sub>n</sub> + f<p>
+</center>
+
+The parameter table:
+<pre>
+                   set 1       set 2      set 3
+             a     0.0         0.0        0.0
+             b     0.577       0.577      0.577
+             c    -0.577      -0.577     -0.577
+             d     0.0         0.0        0.0
+             e     0.0951      0.4413     0.0952
+             f     0.5983      0.7893     0.9893
+   probability     1/3         1/3        1/3
+</pre>
+
+<br><br>
+
+<center>
+<h1>Quadratic Gosper</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 1990<br>
+Attributed to Dekking, 1982
+</center>
+<p><br><p>
+
+axiom = -YF<br>
+X -&gt; XFX-YF-YF+FX+FX-YF-YFFX+YF+FXFXYF-FX+YF+FXFX+YF-FXYF-YF-FX+FX+YFYF-<br>
+Y -&gt; +FXFX-YF-YF+FX+FXYF+FX-YFYF-FX-YF+FXYFYF-FX-YFFX+FX+YF-YF-FX+FX+YFY<br>
+angle = 90<p>
+
+<center><img src="qgosper_1.png" width=800 height=800 border=0></center><p>
+<center><img src="qgosper_2.png" width=800 height=800 border=0></center><p>
+<center><img src="qgosper_3.png" width=800 height=800 border=0></center><p>
+
+<br><br>
+
+<center>
+<h1>Square Sierpinski</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+August 1990<br>
+First reported circa 1912
+</center>
+<p><br><p>
+
+axiom = F+XF+F+XF<br>
+X -&gt; XF-F+F-XF+F+XF-F+F-X<br>
+angle = 90<p>
+
+<center><img src="ss_1.png" width=800 height=800></center><p>
+<center><img src="ss_2.png" width=800 height=800></center><p>
+<center><img src="ss_3.png" width=800 height=800></center><p>
+<center><img src="ss_4.png" width=800 height=800></center><p>
+<center><img src="ss_5.png" width=800 height=800></center><p>
+
+<br><br>
+
+<center>
+<h1>Crystal</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 1990
+</center>
+<p><br><p>
+
+axiom = F+F+F+F<br>
+F -&gt; FF+F++F+F<br>
+angle = 90<p>
+
+<center><img src="crystal_1.png" width=800 height=800 border=0></center><p>
+<center><img src="crystal_2.png" width=800 height=800 border=0></center><p>
+<center><img src="crystal_3.png" width=800 height=800 border=0></center><p>
+<center><img src="crystal_4.png" width=800 height=800 border=0></center><p>
+<center><img src="crystal_5.png" width=800 height=800 border=0></center><p>
+
+<br>
+<p><center>
+<a href="crystal_landscape.jpg">
+<img src="crystal_landscape_s.jpg" width=800 height=600 border=1>
+</a><br>
+Derby, Western Australia
+</center><p>
+
+<br><br>
+
+<center>
+<h1>Peano Curve</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 1990<br>
+First documented circa 1890
+</center>
+<p><br><p>
+
+axiom = X<br>
+X -&gt; XFYFX+F+YFXFY-F-XFYFX<br>
+Y -&gt; YFXFY-F-XFYFX+F+YFXFY<br>
+angle = 90<p>
+
+<center>
+<img src="peano_1.gif" width=650 height=650><br>
+<img src="peano_2.gif" width=650 height=650>
+</center>
+
+<br><br>
+
+<center>
+<h1>Quadratic Snowflake</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+July 1990
+</center>
+<p><br><p>
+
+axiom = F<br>
+F -&gt; F-F+F+F-F<br>
+angle = 90<p>
+
+<center><img src="qs_1.png" width=800 height=400 border=0></center><p>
+<center><img src="qs_2.png" width=800 height=400 border=0></center><p>
+<center><img src="qs_3.png" width=800 height=400 border=0></center><p>
+<center><img src="qs_4.png" width=800 height=400 border=0></center><p>
+<center><img src="qs_5.png" width=800 height=400 border=0></center><p>
+
+Variation by Hasan Hosam.<br>
+December 2018<br>
+axiom = FF+FF+FF+FF<br>
+F -&gt; F+F-F-F+F<br>
+angle = 90<p>
+<a href="hasan1.png"><img src="hasan1s.png" width=800 height=798 border=1></a><p>
+
+<br><br>
+
+<center>
+<h1>Quadratic Koch Island</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+July 1990
+</center>
+<p><br><p>
+
+axiom = F+F+F+F<br>
+F -&gt; F+F-F-FFF+F+F-F<br>
+angle = 90<br>
+String length: 63<p>
+
+<center><img src="qka_1.png" width=800 height=800 border=0></center><p>
+
+String length: 567<p>
+<center><img src="qka_2.png" width=800 height=800 border=0></center><p>
+
+String length: 5103<p>
+<center><img src="qka_3.png" width=800 height=800 border=0></center><p>
+
+String length: 45927<p>
+<center><img src="qka_4.png" width=800 height=800 border=0></center><p>
+
+<br><br>
+
+axiom = F+F+F+F<br>
+F -&gt; F-FF+FF+F+F-F-FF+F+F-F-FF-FF+F<br>
+angle = 90<p>
+
+<center><img src="qkb_1.png" width=800 height=800 border=0></center><p>
+<center><img src="qkb_2.png" width=800 height=800 border=0></center><p>
+<center><img src="qkb_3.png" width=800 height=800 border=0></center><p>
+
+Variation by Hasan Hosam.<br>
+December 2018<br>
+axiom = X+X+X+X+X+X+X+X<br>
+X -&gt; X+YF++YF-FX--FXFX-YF+X<br>
+Y -&gt; -FX+YFYF++YF+FX--FX-YF<br>
+angle = 45<p>
+<a href="hasan2.png"><img src="hasan2s.png" width=800 height=800 border=1></a><p>
+
+
+<br><br>
+
+<center>
+<h1>Koch Curve</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 1990<br>
+Fractal Dimension: 1.5
+</center>
+<p><br><p>
+
+axiom = F+F+F+F<br>
+F -&gt; F+F-F-FF+F+F-F<br>angle = 90<p>
+
+<center><img src="kochc_1.png" width=800 height=800></center><p>
+<center><img src="kochc_2.png" width=800 height=800></center><p>
+<center><img src="kochc_3.png" width=800 height=800></center><p>
+<center><img src="kochc_4.png" width=800 height=800></center><p>
+
+<br><br>
+
+<center>
+<h1>Board</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 1990
+</center>
+<p><br><p>
+
+axiom = F+F+F+F<br>
+F -&gt; FF+F+F+F+FF<br>
+angle = 90<p>
+
+<center><img src="board_1.png" width=800 height=800 border=0></center><p>
+<center><img src="board_2.png" width=800 height=800 border=0></center><p>
+<center><img src="board_3.png" width=800 height=800 border=0></center><p>
+<center><img src="board_4.png" width=800 height=800 border=0></center><p>
+
+<br><br>
+
+<center>
+<h1>Hilbert</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 1990<br>
+Attributed to the German mathematician David Hilbert, circa 1891
+</center>
+<p><br><p>
+
+axiom = X<br>
+X -&gt; -YF+XFX+FY-<br>
+Y -&gt; +XF-YFY-FX+<br>
+angle = 90<p>
+
+<center><img src="hilbert_2.png" width=800 height=800 border=0></center><p>
+<center><img src="hilbert_3.png" width=800 height=800 border=0></center><p>
+<center><img src="hilbert_4.png" width=800 height=800 border=0></center><p>
+<center><img src="hilbert_5.png" width=800 height=800 border=0></center><p>
+<center><img src="hilbert_6.png" width=800 height=800 border=0></center><p>
+
+<br><br>
+
+<center>
+<h1>Sierpinski Arrowhead</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 1990
+</center>
+<p><br><p>
+
+axiom = YF<br>
+X -&gt; YF+XF+Y<br>
+Y -&gt; XF-YF-X<br>
+angle = 60<p>
+
+YF+XF+YF-XF-YF-XF-YF+XF+YF
+<center>
+<img src="sa_2.png" width=800 height=600 border=0><p>
+</center>
+
+XF-YF-XF+YF+XF+YF+XF-YF-XF-YF+XF+YF-XF-YF-XF-YF+XF+YF-XF-YF-XF+YF+XF+YF+XF-YF-XF
+<center>
+<img src="sa_3.png" width=800 height=650 border=0><p>
+</center>
+
+YF+XF+YF-XF-YF-XF-YF+XF+YF+XF-YF-XF+YF+XF+YF+XF-YF-XF+YF+XF+YF-XF-YF-XF-YF+XF+YF
+-XF-YF-XF+YF+XF+YF+XF-YF-XF-YF+XF+YF-XF-YF-XF-YF+XF+YF-XF-YF-XF+YF+XF+YF+XF-YF-X
+F-YF+XF+YF-XF-YF-XF-YF+XF+YF+XF-YF-XF+YF+XF+YF+XF-YF-XF+YF+XF+YF-XF-YF-XF-YF+XF+YF
+<center>
+<img src="sa_4.png" width=800 height=620 border=0><p>
+</center>
+
+XF-YF-XF+YF+XF+YF+XF-YF-XF-YF+XF+YF-XF-YF-XF-YF+XF+YF-XF-YF-XF+YF+XF+YF+XF-YF-XF
++YF+XF+YF-XF-YF-XF-YF+XF+YF+XF-YF-XF+YF+XF+YF+XF-YF-XF+YF+XF+YF-XF-YF-XF-YF+XF+Y
+F+XF-YF-XF+YF+XF+YF+XF-YF-XF-YF+XF+YF-XF-YF-XF-YF+XF+YF-XF-YF-XF+YF+XF+YF+XF-YF-
+XF-YF+XF+YF-XF-YF-XF-YF+XF+YF+XF-YF-XF+YF+XF+YF+XF-YF-XF+YF+XF+YF-XF-YF-XF-YF+XF
++YF-XF-YF-XF+YF+XF+YF+XF-YF-XF-YF+XF+YF-XF-YF-XF-YF+XF+YF-XF-YF-XF+YF+XF+YF+XF-Y
+F-XF-YF+XF+YF-XF-YF-XF-YF+XF+YF+XF-YF-XF+YF+XF+YF+XF-YF-XF+YF+XF+YF-XF-YF-XF-YF+
+XF+YF-XF-YF-XF+YF+XF+YF+XF-YF-XF-YF+XF+YF-XF-YF-XF-YF+XF+YF-XF-YF-XF+YF+XF+YF+XF
+-YF-XF+YF+XF+YF-XF-YF-XF-YF+XF+YF+XF-YF-XF+YF+XF+YF+XF-YF-XF+YF+XF+YF-XF-YF-XF-Y
+F+XF+YF+XF-YF-XF+YF+XF+YF+XF-YF-XF-YF+XF+YF-XF-YF-XF-YF+XF+YF-XF-YF-XF+YF+XF+YF+
+XF-YF-XF
+<center>
+<img src="sa_5.png" width=800 height=620 border=0><p>
+</center>
+
+String length: 2186
+<center>
+<img src="sa_6.png" width=800 height=620 border=0><p>
+</center>
+
+String length: 6560
+<center>
+<img src="sa_7.png" width=800 height=620 border=0><p>
+</center>
+
+<br><br>
+
+<center>
+<h1>Von Koch Snowflake</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 1990<br>
+Fractal Dimension: log(4)/log(3) = 1.262
+</center>
+<p><br><p>
+
+<b>L-Systems</b><p>
+axiom = F++F++F<br>
+F -&gt; F-F++F-F<br>
+angle = 60<p>
+
+<center><img src="vk_1.png" width=800 height=800 border=0></center><p>
+<center><img src="vk_2.png" width=800 height=800 border=0></center><p>
+<center><img src="vk_3.png" width=800 height=800 border=0></center><p>
+<center><img src="vk_4.png" width=800 height=800 border=0></center><p>
+
+<b>IFS</b><p>
+<center><img src="vk_3.gif" width=650 height=187></center><p>
+
+The IFS equations are as follows
+<center>
+x<sub>n+1</sub> = a x<sub>n</sub> + b y<sub>n</sub> + e<p>
+y<sub>n+1</sub> = c x<sub>n</sub> + d y<sub>n</sub> + f<p>
+</center>
+
+The parameter table:
+<pre>
+                   set 1     set 2     set 3     set 4  
+             a     0.3330    0.3330    0.1670    0.1670 
+             b     0.0000    0.0000   -0.2890    0.2890 
+             c     0.0000    0.0000    0.2890   -0.2890 
+             d     0.3330    0.3330    0.1670    0.1670 
+             e    -0.3330    0.3330   -0.0830    0.0830 
+             f     0.0000    0.0000    0.1440    0.1440
+</pre>
+
+<br><br>
+
+<center>
+<h1>Cross</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 1990
+</center>
+<p><br><p>
+
+axiom = F+F+F+F<br>
+F -&gt; F+FF++F+F<br>
+angle = 90<p>
+
+<center><img src="ca_1.png" width=800 height=800 border=0></center><p>
+<center><img src="ca_2.png" width=800 height=800 border=0></center><p>
+<center><img src="ca_3.png" width=800 height=800 border=0></center><p>
+<center><img src="ca_4.png" width=800 height=800 border=0></center><p>
+<center><img src="ca_5.png" width=800 height=800 border=0></center><p>
+
+<br><br>
+
+<center>
+<h1>Cross</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+August 1990
+</center>
+<p><br><p>
+
+axiom = F+F+F+F<br>
+F -&gt; F+F-F+F+F<br>
+angle = 90<p>
+
+<center><img src="cb_1.png" width=800 height=800 border=0></center><p>
+<center><img src="cb_2.png" width=800 height=800 border=0></center><p>
+<center><img src="cb_3.png" width=800 height=800 border=0></center><p>
+<center><img src="cb_4.png" width=800 height=800 border=0></center><p>
+<center><img src="cb_5.png" width=800 height=800 border=0></center><p>
+
+<br><br>
+
+<center>
+<h1>Pentaplexity</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+September 1990
+</center>
+<p><br><p>
+
+axiom = F++F++F++F++F<br>
+F -> F++F++F|F-F++F<br>
+angle = 36<p>
+
+<center><img src="penta_1.png" width=800 height=800 border=0></center><p>
+<center><img src="penta_2.png" width=800 height=800 border=0></center><p>
+<center><img src="penta_3.png" width=800 height=800 border=0></center><p>
+<center><img src="penta_4.png" width=800 height=800 border=0></center><p>
+
+<br><br>
+
+<center>
+<h1>Tiles</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 1990<br>
+Fractal Dimension: log(7)/log(3) = 1.771
+</center>
+<p><br><p>
+
+axiom = F+F+F+F<br>
+F -&gt; FF+F-F+F+FF<br>
+angle = 90<p>
+
+<center><img src="tiles_1.png" width=800 height=800 border=0></center><p>
+<center><img src="tiles_2.png" width=800 height=800 border=0></center><p>
+<center><img src="tiles_3.png" width=800 height=800 border=0></center><p>
+<center><img src="tiles_4.png" width=800 height=800 border=0></center><p>
+<center><img src="tiles_5.png" width=800 height=800 border=0></center><p>
+
+<br><br>
+
+<center>
+<h1>Rings</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 1990
+</center>
+<p><br><p>
+
+axiom = F+F+F+F<br>
+F -&gt; FF+F+F+F+F+F-F<br>
+angle = 90<p>
+
+<center><img src="rings_1.png" width=800 height=800 border=0></center><p>
+<center><img src="rings_2.png" width=800 height=800 border=0></center><p>
+<center><img src="rings_3.png" width=800 height=800 border=0></center><p>
+<center><img src="rings_4.png" width=800 height=800 border=0></center><p>
+
+<br><br>
+
+<center>
+<h1>Dragon Curve</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+August 1990<br>
+Attributed to David and Knuth, 1970
+</center>
+<p><br><p>
+
+axiom = FX<br>
+X -&gt; X+YF+<br>
+Y -&gt; -FX-Y<br>
+angle = 90<p>
+
+<center><img src="dragon_4.png" width=800 height=800 border=0></center><p>
+<center><img src="dragon_6.png" width=800 height=800 border=0></center><p>
+<center><img src="dragon_8.png" width=800 height=800 border=0></center><p>
+<center><img src="dragon_10.png" width=800 height=800 border=0></center><p>
+<center><img src="dragon_12.png" width=800 height=800 border=0></center><p>
+<center><img src="dragon_14.png" width=800 height=800 border=0></center><p>
+
+<br><br>
+
+<center>
+<h1>Hexagonal Gosper</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+July 1990<br>
+Attributed to Mandelbrot, 1982
+</center>
+<p><br><p>
+
+axiom = XF<br>
+X -&gt; X+YF++YF-FX--FXFX-YF+<br>
+Y -&gt; -FX+YFYF++YF+FX--FX-Y<br>
+angle = 60<p>
+
+<center><img src="hg_1.png" width=800 height=800 border=0></center><p>
+<center><img src="hg_2.png" width=800 height=800 border=0></center><p>
+<center><img src="hg_3.png" width=800 height=800 border=0></center><p>
+<center><img src="hg_4.png" width=800 height=800 border=0></center><p>
+<center><img src="hg_5.png" width=800 height=800 border=0></center><p>
+
+<br><br>
+
+<center>
+<h1>L&eacute;vy curve</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+February 2019
+</center>
+<p><br><p>
+
+axiom = F<br>
+F -&gt; -F++F-<br>
+angle = 45<p>
+
+<center><img src="levy1.png" width=800 height=800 border=0></center><p>
+<center><img src="levy2.png" width=800 height=800 border=0></center><p>
+<center>
+	<a href="levy3.png"><img src="levy3s.png" width=800 height=800 border=1></a>
+</center><p>
+
+<br><br>
+
+
+<center>
+<h1>Classic Sierpinski Curve</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+Rules by Chris Wallace<br>
+November 2019
+</center>
+<p><br><p>
+
+axiom = F--XF--F--XF<br>
+X -&gt; XF+F+XF--F--XF+F+X<br>
+angle = 45<p>
+
+<center>
+   <a href="Sierpinski.png">
+	<img src="Sierpinski_s.png" width=800 height=454 border=1></a>
+</center><p>
+
+<br><br>
+
+
+<center>
+<h1>Krishna Anklets</h1>
+Written by <a href="../index.html">Paul Bourke</a>
+</center>
+<p><br><p>
+axiom = -X--X<br>
+X -> XFX--XFX<br>
+angle = 45<p>
+<center>
+<img src="ka_1.gif" width=650 height=650><br>
+<img src="ka_2.gif" width=650 height=650>
+</center>
+
+<br><br>
+
+<center>
+<h1>Mango Leaf</h1>
+Written by <a href="../index.html">Paul Bourke</a>
+</center>
+<p><br><p>
+axiom = Y---Y<br>
+X -> {F-F}{F-F}--[--X]{F-F}{F-F}--{F-F}{F-F}--<br>
+Y -> f-F+X+F-fY<br>
+angle = 60<p>
+<center>
+<img src="ml_1.gif" width=650 height=500><br>
+<img src="ml_2.gif" width=650 height=500>
+</center><p>
+
+<br><br>
+
+<center>
+<h1>Snake Kolam</h1>
+Written by <a href="../index.html">Paul Bourke</a>
+</center>
+<p><br><p>
+axiom = F+XF+F+XF<br>
+X -> X{F-F-F}+XF+F+X{F-F-F}+X<br>
+angle = 90<p>
+<center>
+<img src="snake_1.gif" width=650 height=650><br>
+<img src="snake_2.gif" width=650 height=650>
+</center>
+
+<br><br>
+
+<center>
+<h1>Kolam</h1>
+January 2019
+</center>
+<p><br><p>
+axiom = (-D--D)<br>
+A -> F++FFFF--F--FFFF++F++FFFF--F<br>
+B -> F--FFFF++F++FFFF--F--FFFF++F<br>
+C -> BFA--BFA<br>
+D -> CFC--CFC<br>
+angle = 45<p>
+<center>
+<a href="kolam1.png">
+<img src="kolam1s.png" width=800 height=800></a><br>
+</center>
+
+<b>Kolams from India</b>
+<p align="justify">
+Kolam patterns from the South of India, drawn by rice powder in front of
+houses every morning before the doorway is used.
+</p>
+<center>
+<table width=100%><tr><td>
+	<a href="indiakolam1.jpg"><img src="indiakolam1s.jpg" border=1 width=250 height=500></a>
+</td><td>
+   <a href="indiakolam2.jpg"><img src="indiakolam2s.jpg" border=1 width=250 height=500></a>
+</td><td>
+   <a href="indiakolam3.jpg"><img src="indiakolam3s.jpg" border=1 width=250 height=500></a>
+</td></tr></table>
+</center><p>
+
+</td></tr></table></center>
+</body></html>
