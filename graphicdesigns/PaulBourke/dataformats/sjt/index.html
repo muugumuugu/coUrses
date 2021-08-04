@@ -1,0 +1,148 @@
+<html>
+<head><link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>sjt SiroVision 3D image format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>sjt SiroVision 3D image format</h1>
+Documentation by <a href="../index.html">Paul Bourke</a><br>
+August 2008, updated November 2020
+</center>
+<p><br><p>
+
+<p align="justify">
+The SiroVision .sjt 3D image format is just a tiff file with CSIROs custom tags.
+Indeed in the early versions of SiroVision the file was just saved with the .tif extension,
+the image data could (and still can) be read with any tif reader which will skip over
+the unknown tags added by CSIRO.
+The custom tags contain the x,y,z vertex data of a regular mesh, the coordinates
+each in their own chunk. There can be multiple meshes in one file. The image data
+is stored as normal tiff layers, one per mesh contained in the file.
+Since the mesh is a regular gridded rectangle, the texture coordinates simply
+range from 0 to 1 across the width and height of the mesh.
+</p>
+
+<p align="justify">
+<b>Unfortunately CSIRO and Datamine chooses not to publish the details of the format, forcing developers
+to reverse engineer it. Fortunately it isn't difficult, but that makes it doubly shameful
+that CSIRO and Datamine don't facilitate with some documentation.</b>
+</p>
+
+<p align="justify">
+The author has developed a utility called siro2mesh that will extract the meshes and save as
+OBJ files with corresponding MTL files. One can extract the texture layers for each
+mesh with imagemagick as follows.
+</p>
+<pre>
+   cp somefilename.sjt somefilename.tif
+   convert somefilename.tif somefilename_%d.jpg
+</pre>
+<p align="justify">
+There are of course other options of separating a multilayer tiff into separate images.
+</p>
+
+<p align="justify">
+Each mesh section is stored in a separate IDF tag. The mesh and associated image both have their
+own dimensions
+</p>
+<pre>
+Processing TIFF File CompositeImage.sjt
+	File size = 127751282
+	IFDs: 2
+
+Processing IFD 0 
+TIFF data
+	Bits Per Sample = 8 x 8 x 8
+	Samples Per Pixel = 3 
+	Width = 5320
+	Length = 2071 
+Siro 3D data
+	Pixels Per Point = 3
+	Data Rows = 691
+	Data Cols = 1774
+	Top Left Image X = 1
+	Top Left Image Y = 1
+	Siro Spatial Data Points: 1225834
+
+Processing IFD 1 
+TIFF data
+	Bits Per Sample = 8 x 8 x 8
+	Samples Per Pixel = 3 
+	Width = 5203
+	Length = 1945 
+Siro 3D data
+	Pixels Per Point = 3
+	Data Rows = 649
+	Data Cols = 1735
+	Top Left Image X = 1
+	Top Left Image Y = 1
+	Siro Spatial Data Points: 1126015
+</pre>
+
+<p align="justify">
+An example of a .sjt 3D model is shown below, untextured mesh on the left
+and textured version on the right.
+</p>
+<center>
+<table><tr><tD>
+	<a href="http://paulbourke.net/dataformats/sjt/mesh.png">	
+	<img src="http://paulbourke.net/dataformats/sjt/mesh_s.png" width=400 height=275 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/dataformats/sjt/texture.png">  
+   <img src="http://paulbourke.net/dataformats/sjt/texture_s.png" width=400 height=275 border=1></a>
+</td></tr></table>
+</center>
+
+<p align="justify">
+The spatial data is arranged simply in planar format, the (u,v) being uniform across the mesh.
+</p>
+<pre>
+typedef struct {
+   uint32 nx;   // Will generally be nrows * ncolumns
+   uint32 ny;   // These will usually all be the same
+   uint32 nz;
+   double *xvalues;     
+   double *yvalues;    
+   double *zvalues;   
+} SIRO_Spatial_Struct;
+</pre>
+
+<p align="justify">
+The vertices of the mesh are arranged in columns and then by rows.
+</p>
+<pre>
+   for (j=0;j&lt;nrows;j++) {
+      for (i=0;i&lt;ncolumns;i++) {
+         index = i * nrows + j;
+         p.x = xvalues[index];
+         p.y = yvalues[index];
+         p.z = zvalues[index];
+         u = i/(double)ncolumns;
+         v = 1 - j/(double)nrows;
+         // do something with vertex p with texture coordinates (u,v)
+      }
+   }
+</pre>
+
+<p align="justify">
+A more recent addition to the SiroVision software uses the extension .sjtx, to date the
+details of that format is unknown. The file is no longer a valid tif file.
+Please contact the author if you have information on this (possibly eXtended) variation.
+</p>
+</td></tr></table></center>
+</body>
+</html>
+

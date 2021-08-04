@@ -1,0 +1,429 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Fisheye lens correction</title>
+</head>
+<body>
+
+<center><table width=800><tr><td>
+<center>
+<h1>Fisheye lens correction</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+Original November 2016, data being updated regularly<p>
+See also: <a href="fisheyerectify.pdf">fisheyerectify.pdf</a> (March 2018)
+</center>
+
+<p align="justify">
+<i>The source code implementing the projections below is only available
+on request for a small fee. It includes a demo application and an invitation to
+convert an image of your choice to verify the code does what you seek.
+For more information please contact the <a href="../../index.html">author</a>.</i>
+</p>
+
+<p><br><p>
+
+<p align="justify">
+A normal lens has pincushion or barrel distortion which can be
+corrected for to give a perfect perspective projection, a pin-hole camera.
+This is called "rectification" and is often applied before any warp/stitch/blending
+is applied, for example, in panoramic photography. 
+</p>
+<p align="justify">
+In the same way there is a perfect circular fisheye projection, that is, one in which the
+distance r from the center of the fisheye circle is linearly proportional to the 
+latitude of the corresponding 3D vector. Such a fisheye lens is often referred to
+as a "tru-theta" lens and while such lenses can and have been manufactured, in
+real life and for lower cost lenses the relationship is non-linear. The non-linearity
+normally occurs towards the periphery of the fisheye and results in a compression
+artefact.
+</p>
+
+<p align="justify">
+In many cases the lens manufacturer can supply data for the curve relating "r", the 
+distance on the sensor or fisheye circular image, to latitude of the 3D vector
+corresponding to that radius. In some cases for high grade lenses the manufacturer
+will supply curves for the particular lens in question, an acknowledgement that lenses
+can vary typically by 5% in the manufacturing process. In the situation where no such
+data is available one needs to construct a rig which when photographed will allow the
+angles to be measured.
+</p>
+
+<p align="justify">
+The approach to correcting for the non-linear relationship is to fit a suitable polynomial
+to the data points relating "r" to latitude. A general function for the latitude 
+&phi; might be
+</p>
+
+<center>
+&phi;(r) = 
+a<sub>0</sub> + a<sub>1</sub>r + a<sub>2</sub>r<sup>2</sup> + ... +
+a<sub>i</sub>r<sup>i</sup> + ... + a<sub>n</sub>r<sup>n</sup>
+</center><p>
+
+<p align="justify">
+Since the fisheye is assumed to be radially symmetric and r=0 is the center of the
+fisheye corresponding to a latitude of 0, a<sub>0</sub> is zero. In practice the highest
+order polynomial needed for the fitting is n=3, in some extreme examples a 4th order (n=4)
+is required. So the polynomial for a least squares fit
+is:
+</p>
+<center>
+&phi;(r) = 
+a<sub>1</sub>r + a<sub>2</sub>r<sup>2</sup> + a<sub>3</sub>r<sup>3</sup>
+</center><p>
+
+<p align="justify">
+The null case, where the fisheye already has a linear relationship would be
+a<sub>1</sub> = &phi;<sub>max</sub> / r<sub>max</sub>,
+a<sub>2</sub> = 0, and 
+a<sub>3</sub> = 0. Where &phi;<sub>max</sub> is the half the circular fisheye angle
+and r<sub>max</sub> the radius on the image or sensor corresponding to 
+&phi;<sub>max</sub>. Noting that the r is often normalised to 1, in which case
+r<sub>max</sub> = 1.
+</p>
+
+<p align="justify">
+As an example, the following data relating distance on the sensor to latitude is
+illustrated below, black curve, for a 196 degree fisheye. The blue line shows the
+tru-theta relationship for a true fisheye, and the relationship after the correction
+is applied. The horizontal axis is field of view (field angle) in degrees and the 
+vertical axis is normalised fisheye image coordinates.
+</p>
+<center>
+	<a href="http://paulbourke.net/dome/fisheyecorrect/fit1.png"><img src="http://paulbourke.net/dome/fisheyecorrect/fit1_s.png" width=600 height=424 border=1></a>
+</center><p>
+<center>
+a<sub>1</sub>r + b<sub>2</sub>r<sup>2</sup> + c<sub>3</sub>r<sup>3</sup>
+</center><p>
+
+<b>Usage</b><p>
+<pre>
+Usage: fishcorrect [options] tgafile
+Options
+   -w n        sets the output image size, default: same as input fisheye
+   -a n        sets antialiasing level, default: 2
+   -s n        fisheye field of view (degrees), default: 180
+   -t n        fisheye crop (degrees), default: 180
+   -c x y      fisheye center, default: center of image
+   -r n        fisheye radius, default: half the fisheye image width
+   -y n        roll angle about the fisheye center axis, default: 0
+   -p n n n n  fourth order correction terms, default: no correction
+   -o s        output filename, default: derived from input file
+   -n          save tiff file for STMap for Nuke, default: off
+   -d          debug mode
+</pre>
+<p>
+
+<p align="justify">
+Updates 2018
+</p>
+<ul>
+<li>Added fisheye cropping circle mask<br>
+<li>STmap file for Nuke<br>
+<li>Increased lens linearity correction to 4th order<br>
+</ul><p>
+
+<b>Example</b><p>
+<p align="justify">
+The following image is captured with a 210 degree fisheye which has
+quite significant compression
+towards the rim.
+</p>
+<center>
+<a href="http://paulbourke.net/dome/fisheyecorrect/example1.jpg"><img src="http://paulbourke.net/dome/fisheyecorrect/example1s.jpg" width=600 height=600 border=1></a>
+</center>
+<p align="justify">
+The following is the undistorted version, that is, radius on the fisheye images is
+now proportional to latitude.
+</p>
+<center>
+<a href="http://paulbourke.net/dome/fisheyecorrect/example1c.jpg"><img src="http://paulbourke.net/dome/fisheyecorrect/example1cs.jpg" width=600 height=600 border=1></a>
+</center>
+<p>
+<br><br>
+
+<b>Update, Oct 2017</b><p>
+
+<p align="justify">
+It was found that more lenses than expected did indeed require a 4th order correction
+and for numerical reasons it was better to map from radians rather than degrees.
+All the following examples follow this convention.
+</p>
+<center>
+a<sub>1</sub>r + b<sub>2</sub>r<sup>2</sup> + c<sub>3</sub>r<sup>3</sup>
+ + c<sub>4</sub>r<sup>4</sup>
+</center><p>
+
+<b>Entaniya M12 250 degree fisheye</b>
+<p align="justify">
+This lens curve seems to need a 4'th order term in order to get a good fit at the 
+extreme field of view angle of 125 degrees. Graph is radians horizontally, and normalised
+fisheye image (sensor) vertically.
+</p>
+<p>
+<center>
+	<a href="http://paulbourke.net/dome/fisheyecorrect/entaniya250.png">
+	<img src="http://paulbourke.net/dome/fisheyecorrect/entaniya250_s.png" width=600 height=499 border=1></a>
+</center><p>
+
+<b>Entaniya HAL 250 (3.0) degree fisheye</b><p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/entaniyahal250.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/entaniyahal250_s.png" width=600 height=595 border=1></a>
+</center><p>
+
+<b>Entaniya M12 220 degree fisheye</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/entaniya220.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/entaniya220_s.png" width=600 height=470 border=1></a>
+</center><p>
+
+<b>Entaniya HAL 200 5.0 fisheye</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/entaniya200.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/entaniya200_s.png" width=600 height=438 border=1></a>
+</center><p>
+
+<b>Entaniya M12 280 degree fisheye</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/entaniya280.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/entaniya280_s.png" width=600 height=487 border=1></a>
+</center><p>
+
+<b>Sigma f2.5, 4.5mm, 180 degrees</b><br>
+<p align="justify">
+Sigma seems to be one of those companies who refuse to provide linearity data on
+their lenses. Totally unreasonable, this is a fundamental characteristic of a lens
+that an owner has every right to insist upon. Fortunately one can determine it with
+only a modest effort. The equipment required is shown below, the procedure is as
+follows
+</p>
+<ul>
+<li><p align="justify">
+Determine the zero parallax position for the lens, this is the position the lens will
+be rotated about in subsequent steps. 
+The standard way of doing this is to line up a close object and a distant
+one, adjust the position of the camera on the slider rail until the two objects stay aligned
+despite rotations of the camera/lens. In the case here of the Sigma 4.5mm you can
+see below that zero parallax point is closer to the front of the lens than is usual.
+</p>
+<li><p align="justify">
+Choose an object in the scene and align it mid height and width on the lens. I do this
+with a simple Vuo composition with cross hairs and taking a live HDMI feed from the camera.
+But simpler, most cameras will have a cross hair or alignment grid.
+</p>
+<li><p align="justify">
+Rotate the camera/lens through the field of view of the lens in 5 degree (or 10 degree) steps
+and capture a photograph at each step. In the case of the Sigma 4.5mm this is 180 degrees.
+</p>
+<li><p align="justify">
+For each photograph (angle) measure the distance in pixels from the center horizontally to the
+object chosen, plot this
+distance against angle and fit a function of your choice. Note in this case I have rotated
+from -90 to 90 degrees, while the graphs found elsewhere in this document are from 0
+to half the field of view.
+</p>
+</ul>
+<center>
+	<img src="http://paulbourke.net/dome/fisheyecorrect/camera.jpg" width=600 height=338 border=1>
+</center>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/sigma45.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/sigma45_s.png" width=600 height=508 border=1></a>
+</center><p>
+
+<b>Sigma f3.5, 8mm, 180 degrees</b><p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/sigmaf35.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/sigmaf35_s.png" width=600 height=436 border=1></a>
+</center><p>
+
+<b>Canon 8-15mm, 8mm and 12mm position</b><br>
+<p align="justify">
+Canon is another company who behave badly and don't supply this fundamental information
+of their products. It is more complicated with this lens since the field of view and
+the curves change with different zoom values. So there is actually a whole family
+of curves required in order to deal with any particular zoom value, alternatively
+one could create a 3D surface fit. This could be automated given that the focal
+length is supplied in the exif data on the photograph.
+Two curves are provided, based upon the usual use of the lens by the author:
+fully zoomed out (8mm) and 12mm is the maximum zoom to fill full frame Canon5D Mk III sensor
+horizontally.
+</p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/canon8mm12mm.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/canon8mm12mm_s.png" width=600 height=491 border=1></a>
+</center><p>
+
+<p align="justify">
+While this distortion can be corrected for, it should be noted that the more curvature
+the less effective resolution one achieves for the widest angles. For many applications
+this is exactly where one does want resolution, for example, for feature point detection
+between multiple camera rigs. One should also be aware that if you need 220 degrees then
+for highly curved functions the relatively small number of pixels for those last 10 or
+20 degrees may effectivey mean you only really have a useful lower FOV lens. This can
+work in ones favour, for example if you only need a 180 degree lens then
+a 220 fisheye that is linear up to 180 may be a better choice than a 180 degree lens
+with curvature.
+</p>
+<b>iZugar MKX22, 220 degrees</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/izugar220.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/izugar220_s.png" width=600 height=415 border=1></a>
+</center><p>
+
+<b>iZugar MKX200, 200 degrees</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/izugarmkx200.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/izugarmkx200_s.png" width=600 height=506 border=1></a>
+</center><p>
+
+<b>iZugar MKX13, 185 degrees</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/izugarmkx13.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/izugarmkx13s.png" width=600 height=481 border=1></a>
+</center><p>
+
+<b>iZugar MKX19, 190 degrees</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/izugarmkx19.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/izugarmkx19s.png" width=600 height=481 border=1></a>
+</center><p>
+
+<a name="meike35"><b>Meike 3.5mm, 220 degree</b></a>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/meike35.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/meike35_s.png" width=600 height=442 border=1></a>
+</center><p>
+
+<b>Meike 6.5mm, 190 degree</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/meike65.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/meike65_s.png" width=600 height=422 border=1></a>
+</center><p>
+
+<b>DZO, VRCA 220 degree</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/VRCA220.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/VRCA220_s.png" width=600 height=493 border=1></a>
+</center><p>
+
+<b>Sunex miniature DSL315, 190 degree</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/sunex_DSL315.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/sunex_DSL315_s.png" width=600 height=463 border=1></a>
+</center><p>
+
+<b>Sunex miniature DSL239, 185 degree</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/sunex_DSL239.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/sunex_DSL239_s.png" width=600 height=462 border=1></a>
+</center><p>
+
+<b>Sunex miniature DSL415, 195 degree</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/sunex_DSL415.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/sunex_DSL415_s.png" width=600 height=473 border=1></a>
+</center><p>
+
+<b>Sunex Superfisheye DSLR01, 185 degree</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/sunex_DSLR01.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/sunex_DSLR01_s.png" width=600 height=457 border=1></a>
+</center><p>
+
+<b>Lensagon BF10M14522S118, 190 degrees</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/BF10M14522S118.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/BF10M14522S118_s.png" width=600 height=551 border=1></a>
+</center><p>
+
+<b>Lensagon BF16M220D, 220 degrees</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/BF16M220.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/BF16M220_s.png" width=600 height=471 border=1></a>
+</center><p>
+
+<b>Nikkor 8mm f2.8, 180 degrees</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/nikkor180.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/nikkor180_s.png" width=600 height=465 border=1></a>
+</center><p>
+
+<b>Omnitech ORIFL190-3, 190 degrees</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/ORIFL190.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/ORIFL190_s.png" width=600 height=430 border=1></a>
+</center><p>
+
+<b>Aico ACHIR01028B10M, 245 degree</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/ACHIR01028B10M.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/ACHIR01028B10M_s.png" width=600 height=508 border=1></a>
+</center><p>
+
+<b>Aico ACHIR01420B9M, 185 degree</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/ACHIR01420B9M.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/ACHIR01420B9M_s.png" width=600 height=564 border=1></a>
+</center><p>
+
+<b>Raynox DCR-CF187, 180 degrees</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/raynox.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/raynox_s.png" width=600 height=447 border=1></a>
+</center><p>
+
+<b>Laowa 4mm, 210 degrees</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/laowa4mm.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/laowa4mm_s.png" width=600 height=521 border=1></a>
+</center><p>
+
+<b>SMTEC SL-190, 180 degrees</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/SL190.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/SL190_s.png" width=600 height=480 border=1></a>
+</center><p>
+
+<b>Evetar E3267A, 250 degrees</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/evetar_E3267A.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/evetar_E3267A_s.png" width=600 height=445 border=1></a>
+</center><p>
+
+<b>Evetar E3279, 190 degrees</b>
+<p>
+<center>
+   <a href="http://paulbourke.net/dome/fisheyecorrect/evetar_E3279.png">
+   <img src="http://paulbourke.net/dome/fisheyecorrect/evetar_E3279_s.png" width=600 height=497 border=1></a>
+</center><p>
+
+</td></tr></table>
+</body>
+</html>

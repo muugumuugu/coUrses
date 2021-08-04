@@ -1,0 +1,202 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Image warping for offaxis fisheye lens/projectors</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+<center>
+<h1>Image warping for offaxis fisheye lens/projectors</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+Sept 2013
+</center>
+<p><br><p>
+
+<p align="justify">
+In what follows, the means by which one calculates the image warping required to
+project into a dome with a projector and fisheye lens where they are not located
+on the axis of the dome. The approach taken is in line with existing methods of
+hemispherical projection using a spherical mirror, that is, the frames of a fisheye
+movie are warped by being applied to a regular mesh consisting of vertices and texture
+coordinates. How to define the vertex coordinates and texture coordinates will be
+outlined here.
+</p>
+
+<center><table><tr><td>
+	<a href="http://paulbourke.net/dome/fisheyewarp/1_off.jpg"><img src="http://paulbourke.net/dome/fisheyewarp/1_off_s.jpg" width=400 height=225 border=1>
+</td><td>
+   <a href="http://paulbourke.net/dome/fisheyewarp/2_OS.jpg"><img src="http://paulbourke.net/dome/fisheyewarp/2_OS_s.jpg" width=400 height=225 border=1>
+</td></tr></table></center><p>
+
+<p align="justify">
+If the fisheye lens is an ideal fisheye and located at the correct position along the axis 
+of the dome then potentially no image warping is required (although see later where one
+may need to correct for non-ideal fisheye lenses). For all other cases it is
+required in order to achieve a correct undistorted image in the dome.
+The following outlines the steps for determining how to warp a fisheye 
+in such a way such that the result looks correct on the dome. This requires a knowledge of:
+</p>
+
+<ul>
+<li>The position of the fisheye circle in the projector frame.
+In particular the degree of offset from the centre. See diagram 1,
+in this idealised case the fisheye circle extends to the whole width of
+the projected frame, that would not normally be the case.<p>
+<li>The position of the projector with respect to the dome.
+While any position can be dealt with it is usual for the lens to be placed 
+such that the whole surface of the dome is illuminated and done so with an
+optimal use of the available pixels.<p>
+<li>Basic understanding of fisheye mathematics.<p>
+</ul><p>
+
+<p align="justify">
+The first step is determining the vector from the fisheye corresponding to any
+point in the image plane. This will be calculated for each vertex of the 
+warping texture mesh, the eventual goal being to determine the corresponding
+texture coordinate. Note that normalised screen coordinate will be used here as is
+standard with real-time APIs such as OpenGL which is the usual way real-time warping
+will be implemented. If nx and ny are the number of vertices in the warping mesh,
+horizontally and vertically, then the point p in normalised screen coordinates would
+be determines something like this, where "a" is the aspect ratio defines as the frame
+width divided by the frame height.
+</p>
+
+<pre>
+   for (i=0;i&lt;nx;i++) {
+      for (j=0;j&lt;ny;j++) {
+         p.x = 2 * a * (i / (nx-1) - 0.5);
+         p.y = 2 * (j / (ny-1) - 0.5);
+          :
+          :
+      }
+   }
+</pre>
+
+<center>
+	<img src="http://paulbourke.net/dome/fisheyewarp/diagram2.png" width=600 height=311 border=0><br>
+	<smalltext>Diagram 1</smalltext>
+</center><p>
+
+<p align="justify">
+An ideal (mathematical) fisheye projection is characterised by a linear relationship
+between the radius "r" of a point on the fisheye image (2D) to the angle phi of the vector
+(3D) it represents from the lens. While a fisheye is defined for any field of view, for
+a 180 degree fisheye the relationship is:
+</p>
+<center><img src="http://paulbourke.net/dome/fisheyewarp/equation1.png" width=70 height=47 border=0></center><p>
+
+<p align="justify">
+If p is a pixel in fisheye image space then it corresponds to vector P in 3D space
+as shown in diagram 2. (Assumes 180 degree fisheye and lens pointing down the y axis).
+</p>
+This 3D vector may be determined as follows
+<pre>
+          :
+          :
+         // Ray vector
+         p.x = p.x / a;
+         p.y = 0;
+         p.z = (p.y - o) / a;
+
+         // Determine unit vector into scene
+         r = sqrt(p.z * p.z + p.x * p.x);
+         phi = 0.5 * r * PI;
+         theta = atan2(p.z,p.x);
+         P.x = sin(phi) * cos(theta);
+         P.y = cos(phi);
+         P.z = sin(phi) * sin(theta);
+          :
+          :
+</pre>
+<center>
+	<img src="http://paulbourke.net/dome/fisheyewarp/diagram1.png" width=600 height=300 border=0><br>
+	<smalltext>Diagram 2</smalltext>
+</center><p>
+
+<p align="justify">
+Using the vector from the fisheye lens the next step is to relate that to
+the physical geometry/optics in the dome. Where this vector intersects the
+dome is where the point in the image plane will appear.
+One can form a ray given the projectors physical position and orientation, 
+the domes position, size and orientation, and the vector P above. See diagram 3.
+Computing the intersection of this line with the dome can be achieved by using the
+<a href="../../geometry/circlesphere/index.html">code found here</a>.
+</p>
+
+<center>
+	<img src="http://paulbourke.net/dome/fisheyewarp/diagram3.png" width=330 height=380 border=0><br>
+	<smalltext>Diagram 3</smalltext>
+</center><p>
+
+<p align="justify">
+Given this position on the dome, we know how the fisheye should map to that.
+If q is the intersection on the dome then the texture coordinate (u,v) corresponding
+to this position in the projected image is
+</p>
+<pre>
+          :
+          :
+         phi = atan2(sqrt(q.x*q.x+q.z*q.z),q.y);
+         r = 2 * phi / PI;
+         theta = atan2(q.z,q.x);
+         u = 0.5 * (1 + r * cos(theta));
+         v = 0.5 * (1 + r * sin(theta));
+          :
+          :
+</pre>
+<center>
+	<img src="http://paulbourke.net/dome/fisheyewarp/diagram4.jpg" width=300 height=294 border=0><br>
+	<smalltext>Diagram 4</smalltext>
+</center><p>
+
+<p align="justify">
+The image on the right below shows the standard polar grid alignment pattern.
+The warping can be verified by ensuring the pole is at the right place, radial
+lines (longitude) are straight, and lines of latitude are perfect circles.
+</p>
+
+<center><table><tr><td>
+   <a href="http://paulbourke.net/dome/fisheyewarp/3_grid.jpg"><img src="http://paulbourke.net/dome/fisheyewarp/3_grid_s.jpg" width=400 height=267 border=1>
+</td><td>
+   <a href="http://paulbourke.net/dome/fisheyewarp/4_aligned.jpg"><img src="http://paulbourke.net/dome/fisheyewarp/4_aligned_s.jpg" width=400 height=267 border=1>
+</td></tr></table></center><p>
+
+
+<p align="justify">
+An ideal (mathematical) fisheye projection is characterised by a linear relationship
+between the radius "r" of a point on the fisheye image (2D) to the angle phi of the vector
+(3D) it represents from the lens.
+Most lens do not have such a perfect linear relationship, those that do are sometimes
+referred to as f-theta lenses.
+The non-linearity is usually most
+obvious towards the rim of the lens where there is generally a compression.
+There are a number of ways of correcting for this, for the lens in question
+here the manufacturer provides the radial correction required, this is in
+the form of a fit to a polynomial.
+</p>
+<center><img src="http://paulbourke.net/dome/fisheyewarp/equation2.png" width=500 height=31 border=0></center><p>
+
+<center><table><tr><td>
+   <a href="http://paulbourke.net/dome/fisheyewarp/5_fire.jpg"><img src="http://paulbourke.net/dome/fisheyewarp/5_fire_s.jpg" width=400 height=267 border=1>
+</td><td>
+   <a href="http://paulbourke.net/dome/fisheyewarp/6_outback.jpg"><img src="http://paulbourke.net/dome/fisheyewarp/6_outback_s.jpg" width=400 height=267 border=1>
+</td></tr></table></center><p>
+
+<center>
+	<a href="http://paulbourke.net/dome/fisheyewarp/whiteboard.jpg"><img src="http://paulbourke.net/dome/fisheyewarp/whiteboard_s.jpg" width=800 height=722 border=1>
+</center><p>
+
+</td></tr></table></center><p>
+</body>
+</html>

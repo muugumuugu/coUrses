@@ -1,0 +1,144 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>FleetFeet/Volumental BMF file format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>FleetFeet/Volumental BMF file format</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+December 2020
+</center>
+<p><br><p>
+
+<p align="justify">
+The following defines the BMF format as used to represent foot scans by either, or both, 
+FleetFeet and Volumental. The format is, as far as the author is aware, not made available 
+publicly and what follows is a determination of the format using standard investigative methods. 
+</p>
+
+<center><table width=80><tr><td>
+   <img src="http://paulbourke.net/dataformats/bmf_2/foot1.png" width=400 height=400 border=0>
+</td><td>
+   <img src="http://paulbourke.net/dataformats/bmf_2/foot2.png" width=400 height=400 border=0>
+</td></tr></table></center><p>
+
+<p slign="justify">
+The files are required to define a 3D mesh which typically includes a list of the vertices and 
+triangular faces. The faces are defined, in efficient formats, in reference to the vertices. 
+This is exactly what the BMF format does, and it also defines a normal at each face vertex. 
+The high level layout of the file is as follows:
+</p>
+
+<ul>
+<li>Header<br>
+<li>The number of vertices followed by a list of vertices<br>
+<li>The number of faces followed by a list of faces<br>
+<li>The number of normals followed by a list of the normals<br>
+<li>Footer<br>
+</ul>
+
+<p align="justify">
+While not explicitly defined in the format, the units for the vertices are meters.
+More detail of the file format is shown in the figure below.
+</p>
+
+<center>
+	<img src="http://paulbourke.net/dataformats/bmf_2/format.png" width=509 height=559 border=0></a>
+</center><p>
+
+<b>Notes</b><p>
+<ul>
+<li><p align="justify">The x,y,z components of the vertices and normals 
+are 4 byte floating point values.</p>
+
+<li><p align="justify">The face vertex indices are 2 byte short ints, 
+mostly likely unsigned.</p>
+
+<li><p align="justify">Each data group (vertices, faces, normal) is 
+surrounded by a start and end identifier. For example, 
+SoV = Start of Vertices, SoF = Start of Faces, SoN = Start of Normals.</p>
+
+<li><p align="justify">The exact purpose of the SoG which is imagined 
+to be Start of Group is unknown. It possibly allows for the identification 
+of a different groups of faces within a single file. This is only a 
+theory until a file is produced that has multiple face collections 
+within the same file.</p>
+
+<li><p align="justify">The various instances of 2 byte short int 
+values that are always 0 would only seem to serve to realign the 
+file structure to 4 byte boundaries.</p>
+
+<li><p align="justify">The vertex indices defining the faces should 
+only require 2 byte short ints but instead use a pair of 2 byte 
+short ints. In all the files tested so far this second superfluous 
+short int is always zero so it is also possible just a filler to 
+realign to 4 byte boundaries.</p>
+
+<li><p align="justify">More usual for these types of 3D mesh 
+descriptions would be to define a normal for each vertex, rather 
+than for each vertex of a face. That is, shared vertices of a 
+face would normally share the same normal. So the method used 
+here is somewhat inefficient. It is postulated that there 
+will always be 3 times the number of normals as faces, since each 
+face is a triangle.</p>
+</ul>
+
+
+<p slign="justify">
+Sample file decomposed into sections, is shown below.
+</p>
+
+<pre>
+Magic number header: "BMF0"
+22064 ("V" "0" = 86 48)
+21359 ("S" "o" = 83 111) Start of vertices
+2550
+0
+
+          Read 2550 vertices
+
+22064 ("V" "0" = 86 48)
+17775 ("E" "o" = 69 111) End of vertices
+18224 ("G" "0" = 71 48)
+21359 ("S" "o" = 83 111) Start of group
+17968 ("F" "0" = 70 48)
+21359 ("S" "o" = 83 111) Start of faces
+5096
+
+          Read 5096 faces
+
+0
+17968 ("F" "0" = 70 48)
+17775 ("E" "o" = 69 111) End of faces?
+20016 ("N" "0" = 78 48)
+21359 ("S" "o" = 83 111) Start of Normals
+15288
+0
+
+          Read 15288 vertices
+
+20016 ("N" "0" = 78 48)
+17775 ("E" "o" = 69 111) End of Normals
+18224 ("G" "0" = 71 48)
+17775 ("E" "o" = 69 111) End of group
+Magic number EOF: "FMB0"
+</pre>
+
+</td></tr></table></center>
+</body>
+</html>
+

@@ -1,0 +1,298 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>AC3D File Format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>AC3D File Format</h1>
+By ac3d.org<p>
+Last updated 27th March 2003
+</center>
+<p><br><p>
+
+<p align="justify">
+The AC3D file format is ASCII text and is very simple to parse.  It's 
+also very easy to generate AC3D files from your own data.  This document 
+describes the structure of AC3D files.  Some simple examples are 
+included at the end.
+AC3D filenames usually have a '.ac' suffix.  For more information about 
+AC3D, see http://www.ac3d.org.
+</p>
+
+An AC3D file has this overall structure:
+
+<pre>
+(HEADER)
+(Materials - the palette)
+(objects)
+</pre>
+
+An AC3D file always starts with a header line e.g.:
+
+<pre>
+AC3Db
+</pre>
+
+<p align="justify">
+The first four characters are always 'AC3D' the next hex number following
+immediately defines the internal version of the file (0xb == 11).  
+If the version is later than the program knows about then it will probably
+may refuse to load it.  As new versions of the AC3D file format evolve, 
+this number is used to make the loading code backwards compatible.
+</p>
+
+To parse an AC3D file you need something like this:
+
+<pre>
+read the header (AC3Dx)
+while not end of file 
+    {
+    read a line
+    check first token on line 
+    handle this tokens values (this might involve reading more lines)
+    }
+</pre>
+
+<p align="justify">
+This is the basic structure.  %f indicates a floating point value, %d an
+integer and %s a string (must be surrounded by quotes " if it contains spaces).
+Lines beginning with a '*' indicate an optional section.  The tokens are
+case-sensitive.  The indentation is used to show the structure of the file - a
+real AC3D file has no indentation.
+</p>
+
+<pre>
+MATERIAL %s rgb %f %f %f  amb %f %f %f  emis %f %f %f  spec %f %f %f  shi %d  trans %f
+OBJECT %s
+	*name %s
+        *data %d
+	*texture %s
+	*texrep %f %f
+	*rot %f %f %f  %f %f %f  %f %f %f
+	*loc %f %f %f
+	*url %s
+	*numvert %d
+		numvert lines of %f %f %f
+	*numsurf %d
+		*SURF %d
+		*mat %d
+		refs %d
+                refs lines of %d %f %f
+	kids %d
+</pre>
+
+<pre>
+MATERIAL (name) rgb %f %f %f  amb %f %f %f  emis %f %f %f  spec %f %f %f  shi %d  trans %f
+</pre>
+
+<p align="justify">
+single line describing a material.  These are referenced by the "mat" 
+token of a surface.  The first "MATERIAL" in the file will be indexed as
+zero.  The materials are usually all specified at the start of the file,
+immediately after the header.  
+</p>
+
+<pre>
+OBJECT %s
+</pre>
+
+<p align="justify">
+Specifies the start of an object. The end of the object section must
+be a 'kids' line which indicates how many children objects (may be zero)
+follow.  The parameter is the object type - one of:  world, poly,
+group.
+</p>
+
+<pre>
+*name %s
+</pre>
+
+Optional - a name for the object
+
+<pre>
+*data %d
+</pre>
+
+<p align="justify">
+Optional - object data.  Usually the object-data string for an object.
+The parameter is an integer which specifies the number of characters
+(starting on the next line) to be read.
+</p>
+
+<pre>
+*texture %s
+</pre>
+
+<p align="justify">
+Optional - default is no texture. the path of the texture bitmap file for the texture of the current object.
+</p>
+
+<pre>
+*texrep %f %f
+</pre>
+
+<p align="justify">
+Optional - default 1.0,1.0 .  The texture repeat values for the tiling of a 
+texture on an object's surfaces.
+</p>
+
+<pre>
+*rot %f %f %f  %f %f %f  %f %f %f
+</pre>
+
+<p align="justify">
+The 3x3 rotation matrix for this objects vertices.  Note that the rotation is relative
+to the object's parent i.e. it is not a global rotation matrix.  If this token
+is not specified then the default rotation matrix is 1 0 0, 0 1 0, 0 0 1
+</p>
+
+<pre>
+*loc %f %f %f
+</pre>
+
+<p align="justify">
+The translation of the object.  Effectively the definition of the centre of the object.  This is
+relative to the parent - i.e. not a global position.  If this is not found then
+the default centre of the object will be 0, 0, 0.
+</p>
+
+<pre>
+*url %s
+</pre>
+
+The url of an object - default is blank.
+
+<pre>
+*numvert %d
+	numvert lines of %f %f %f
+</pre>
+
+<p align="justify">
+The number of vertices in an object.  Parameter specifies the number of 
+lines that follow.  If this token is read then you MUST read
+that many lines of (%f %f %f) - specifying each vertex point as a local 
+coordinate.  Some objects (e.g. groups) may not have a numvert token.
+</p>
+
+<pre>
+*numsurf %d
+</pre>
+
+<p align="justify">
+The number of surfaces that this object contains.  The parameter specifies
+the number of subsections that follow - each one being a different surface
+</p>
+
+<pre>
+SURF %d
+</pre>
+
+<p align="justify">
+The start of a surface.  The parameter specifies the surface type and flags.
+The first 4 bits (flags & 0xF) is the type (0 = polygon, 1 = closedline,
+2 = line).  The next four bits (flags >> 4) specify the shading and 
+backface.  bit1 = shaded surface bit2 = twosided.
+</p>
+
+<pre>
+*mat %d
+</pre>
+
+The index to the material that this surface has.
+
+<pre>
+refs %d
+    refs lines of %d %f %f
+</pre>
+
+<p align="justify">
+The number of vertices in the surface.  This number indicates the 
+number of lines following.  Each line contains an index to the 
+vertex and the texture coordinates for this surface vertex.
+</p>
+
+<pre>
+kids %d
+</pre>
+
+<p align="justify">
+This is the final token of an object section and it must exist.  If the 
+parameter
+is a number > 0 then more objects are recursively loaded as children of the 
+current object.
+</p>
+
+<b>Example</b><br>
+Here is an example file - a simple rectangle (white)
+
+<pre>
+AC3Db
+MATERIAL "" rgb 1 1 1  amb 0.2 0.2 0.2  emis 0 0 0  spec 0.5 0.5 0.5  shi 10  trans 0
+OBJECT world
+kids 1
+OBJECT poly
+name "rect"
+loc 1 0.5 0
+numvert 4
+-1 0.5 0
+1 0.5 0
+1 -0.5 0
+-1 -0.5 0
+numsurf 1
+SURF 0x20
+mat 0
+refs 4
+3 0 0
+2 1 0
+1 1 1
+0 0 1
+kids 0
+</pre>
+
+<b>Another example</b>
+<p align="justify">
+An object with 7 vertices (no surfaces, no materials defined)  
+This is a good way of getting point data into AC3D.  
+The Vertex->create convex-surface/object can be used on these 
+vertices to 'wrap' a 3d shape around them
+</p>
+<pre>
+AC3Db
+OBJECT poly
+numvert 7
+-0.83 -0.235 -0.04
+-0.63 0.185 -0.04
+-0.55 0.235 -0.25
+-0.33 0.235 0.29
+0.09 0.235 -0.29
+0.33 -0.195 -0.04
+0.83 0.005 -0.04
+kids 0
+</pre>
+
+<p align="justify">
+If you write a loader then you least you need is code to handle the object 
+token, and the objects numvert/vertice and numsurf/sufaces - esentially
+the geometry of the model.
+You can ignore any line that starts with a token other than these e,g textures,
+rotation, location etc.
+</p>
+
+</td></tr></table></center>
+</body>
+</html>
+

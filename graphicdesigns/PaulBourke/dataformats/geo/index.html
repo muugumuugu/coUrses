@@ -1,0 +1,272 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Videoscape GEO file format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Videoscape GEO file format</h1>
+Written by Max Gilead, 
+based on Blender manual<br>
+Thanks to Ton Roosendaal who wrote the paper docs<br>
+Additions by <a href="../index.html">Paul Bourke</a><br>
+</center>
+<p><br><p>
+
+<p align="justfiy">
+Videoscape file format was originally used by an early Amiga 
+animation package called "Videoscape 3D". It is now 
+used by Blender for importing/exporting meshes in text format. All compatibility is 
+tested with Blender. In fact, all info in this doc is taken from Blender manual.
+</p>
+
+<p align="justfiy">
+GEO files are ascii printable text only files, the first line of which 
+contains a single word that determines the type of file format that
+follows. The coordinate system is left handed, traditionally with the
+y axis as the default up or sky vector. Where appropriate, polygon vertices
+are ordered in a clockwise direction.
+Blank lines may be added to make file more readable but no comments 
+lines are allowable.
+</p>
+
+Files may be in four major flavours:
+<ol>
+<li><a href="index.html#1">Mesh with coloured faces</a><br>
+<li><a href="index.html#2">Mesh with coloured vertices</a><bR>
+<li><a href="index.html#3">Lamp</a><bR>
+<li><a href="index.html#4">Gouraud curves or NURBS surfaces</a><br>
+</ol>
+
+<p align="justify">
+Each flavour is identified by magic number (first line in file). 
+They are each listed in the following sections.
+</p>
+
+<a name="1"><b>1. Mesh with coloured faces</b></a><p>
+
+<pre>
+3DG1                     - magic number
+total_number_of_vertices - total number of vertices
+x1 y1 z1
+x2 y2 z2
+...                      - vertex coordinates
+number_of_vertices_in_face vertex_index_1 vertex_index_2 vertex_index_3 ... vertex_index_n color
+</pre>
+
+<p align="justify">
+Vertex index is counted starting from 0. Color is written in BGR format 
+(reverse order to RGB). Eg. red color in BGR is 0x0000FF.
+</p>
+
+<table width=100%><tr><td valign="top">
+Example file (simple gray plane) and screenshot:<p>
+<font color="#ff0000">
+<pre>
+3DG1
+4
+1.000000 1.000000 0.000000
+1.000000 -1.000000 0.000000
+-1.000000 -1.000000 0.000000
+-1.000000 1.000000 0.000000
+4 0 3 2 1 0xcccccc
+</pre>
+</font>
+</td><td valign="top">
+<center><img src="http://paulbourke.net/dataformats/geo/3dg1.gif"></center>
+</td></tr></table><p>
+
+<a name="2"><b>2. Mesh with coloured vertices</b></a><p>
+
+<p align="justify">
+Warning! This file flavour doesn't seem to be recognized or saved by Blender and is 
+here for completeness only.
+</p>
+
+<font color="#ff0000">
+<pre>
+GOUR                     - magic number
+total_number_of_vertices - total number of vertices
+x1 y1 z1 color
+x2 y2 z2 color
+...                      - vertex coordinates with color in BGR format
+number_of_vertices_in_face vertex_index_1 vertex_index_2 vertex_index_3 ... vertex_index_n
+</pre>
+</font>
+
+Example file:<p>
+<font color="#ff0000">
+<pre>
+GOUR
+4
+1.000000 1.000000 0.000000 0x0000ff
+1.000000 -1.000000 0.000000 0x00ff00
+-1.000000 -1.000000 0.000000 0xff0000
+-1.000000 1.000000 0.000000 0x00ffff
+4 0 3 2 1
+</pre>
+</font>
+
+<a name="3"><b>3. Lamp</b></a><p>
+
+<font color="#ff0000">
+<pre>
+3DG2 - magic number
+total_number_of_lamps - total number of lamps in file
+<i>for each lamp:</i>
+type               - lamp type (0 - point lamp, 1 - spot lamp, 2 - sun)
+spotsize spotblend - size of spot beam in degrees and intensity (length) of beam
+R G B E            - color (RGB) and (E)nergy of lamp
+x y z              - lamp coordinates
+vecx vecy vecz     - lamp direction vector
+</pre>
+</font>
+
+<table width=100%><tr><td valign="top">
+Example file (two lamps - one normal and one spot) and screenshot.<p>
+<font color="#ff0000">
+<pre>
+3DG2
+2
+0
+0.0 0.0
+1.0 1.0 1.0 1.0
+-4.0 4.0 2.0
+0.0 0.0 0.0
+1
+45.0 0.5
+0.5 1.0 1.0 1.0
+2.0 3.0 4.0
+0.4 0.3 0.6
+</pre>
+</font>
+</td><td valign="top">
+<center><img src="http://paulbourke.net/dataformats/geo/3dg2.gif"></center>
+</td></tr></table><p>
+
+<a name="4"><b>4. Gouraud curves or NURBS surfaces</b></a><p>
+
+This kind of file can describe both curves and surfaces.
+
+<font color="#ff0000">
+<pre>
+3DG3            - magic number
+type            - object type (5 is surface, other is bezier curve)
+number_of_items - number of curves or surfaces
+ext1 ext2       - extrude numbers also indicated for surfaces. These are NOT floats, they're integers divided by 500.
+Matrix [4][4]   - right-handed object matrix. Used to determine position, rotation and size
+
+<i>for each item:</i>
+type            - type (0 - poly, 1 - bezier, 4 - nurbs. Add 8 to this if curve is 2D.)
+pntsu pntsv     - numbers of vertices in u and v directions
+resolu resolv   - resulotion of u and v direction
+orderu orderv   - order in the u and v direction
+flagu flagv     - the 'cyclic' flag in u and v direction. If equal to 1 it is cyclic.
+
+<i>for bezier repeat this block </i>pntsu<i> times:</i>
+x y z
+x y z
+x y z           - three handle vertices
+h1 h2           - handle types (0 - free, 1 - auto, 2 - vector, 3 - aligned)
+
+<i>for other curve type or for surface repeat this block </i>pntsu*pntsv<i> times:</i>
+x y z w         - coordinates and weight of vertices
+
+<i>for other curve types add this block:</i>
+
+u1 u2 u3...     - knots in u direction
+
+<i>for surfaces add this block:</i>
+v1 v2 v3...     - knots in v direction
+</pre>
+</font>
+
+<p align="justify">
+The number of knots is a very precise value. If the value is not correct, 
+file will not be properly loaded. This is the calculation for the total
+number of knots = order + pnts + (order-1)*(flag&1)
+</p>
+
+If necessary, a series of increasing numbers can be filled in here.<p>
+
+<table width=100%><tr><td valign="top">
+Example bezier curve:<p>
+<font color="#ff0000">
+<pre>
+3DG3
+0
+1
+0 0
+1.0 0.0 0.0 0.0
+0.0 1.0 0.0 0.0
+0.0 0.0 1.0 0.0
+0.0 0.0 0.0 1.0
+9
+2 0
+32 0
+0 0
+0 0
+-3.0 -1.0 0.0
+-2.0 0.0 0.0
+-1.0 1.0 0.0
+3 3
+1.0 1.0 0.0
+2.0 0.0 0.0
+3.0 -1.0 0.0
+3 3
+</pre>
+</font>
+</td><td valign="top">
+<center><img src="http://paulbourke.net/dataformats/geo/3dg3-bezier.gif"></center>
+</td></tr></table><p>
+
+<table width=100%><tr><td valign="top">
+Example of NURBS surface:<p>
+<font color="#ff0000">
+<pre>
+3DG3
+5
+1
+0 0
+1.0 0.0 0.0 0.0
+0.0 1.0 0.0 0.0
+0.0 0.0 1.0 0.0
+0.0 0.0 0.0 1.0
+4
+4 2
+32 32
+4 2
+0 0
+-2.0 0.0 0.0 1.0
+-1.0 1.0 0.0 1.0
+2.0 0.0 0.0 1.0
+3.0 -1.0 0.0 1.0
+-2.0 0.0 1.0 1.0
+-1.0 1.0 1.0 1.0
+2.0 0.0  1.0 1.0
+3.0 -1.0 1.0 1.0
+1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0
+1.0 2.0 3.0 4.0
+</pre>
+</font>
+</td><td valign="top">
+<center><img src="http://paulbourke.net/dataformats/geo/3dg3-nurbs.gif"></center>
+</td></tr></table><p>
+
+</td></tr></table></center>
+</body>
+</html>
+

@@ -1,0 +1,736 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Converting a fisheye image to panoramic, spherical and perspective projection</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+
+<center>
+<h1>Converting a fisheye image into a panoramic, spherical or perspective projection</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+November 2004, updated July 2016<p>
+</center>
+<p align="justify">
+<i>The source code implementing the projections below is only available
+on request for a small fee. It includes a demo application and an invitation to
+convert an image of your choice to verify the code does what you seek. 
+For more information please contact the <a href="../../index.html">author</a>.</i>
+</p>
+<b>See also:
+<ul>
+<li><a href="../dualfish2sphere/index.html">
+Converting a pair of fisheye images to a 360 equirectangular panorama</a></b>.
+</li>
+<p>
+<li><a href="http://paulbourke.net/dome/fish2/instructions.pdf">Instructions for measuring fisheye center and radius, required
+if the fisheye is from a real camera sensor</a>
+</li>
+<p>
+<li><a href="../fisheyecorrect/index.html">Applying correction to convert a real fisheye to an idealised fisheye</a>
+</li>
+</ul>
+<p><br><p>
+
+<b>Index</b><p>
+<dd>
+<a href="index.html#1">Fisheye to perspective transformation</a><p>
+<a href="index.html#2">Front fisheye to panorama (superceeded)</a><p>
+<a href="index.html#3">Fisheye to (partial) spherical projection</a><p>
+<a href="index.html#4">Fisheye to (full) panorama</a><p>
+<a href="index.html#5">Fisheye to cube maps</a><p>
+</dd>
+
+<p><br><p>
+
+<p align="justify">
+The following documents various transformations from fisheye into other projection
+types, specifically standard perspective as per a pinhole camera, panorama and
+spherical projections.
+Fisheye images capture a wide field of view, traditionally one thinks of 180
+degrees but the mathematical definition extends past that and indeed there are
+many physical fisheye lenses that extend past 180 degrees. The two main applications
+for the following are: the inspection of images/video from security cameras where
+panorama or perspective views may be more natural to view, creating panorama or
+spherical images that are blended together to form even wider field of view images.
+</p>
+
+<p align="justify">
+The general options for the software include the dimensions of the output image as well
+as the field of view of the output panoramic or perspective frustum. Some other
+requirements arise from imperfect fisheye capture such as the fisheye not
+being centered on the input image, the fisheye not be aligned with the
+intended axis, and the fisheye being of any angle.
+Another characteristic of real fisheye images is their lack of linearity
+with radius on the image, while this is not addressed here as it requires
+a lens calibration, it is a straightforward correction to make.
+</p>
+
+<p align="justify">
+The usual approach for such image transformations is to perform the inverse mapping. That
+is, one needs to consider each pixel in the output image and map backwards to
+find the closest pixel in the input image (fisheye). In this way every pixel
+in the output image is found (compared to a forward mapping), it also means
+that the performance is governed by the resolution of the output image
+(and supersampling) irrespective of the size of the input image.
+A key aspect of these mappings is also to perform some sort of antialiasing, the
+solutions here use a simple supersampling approach.
+</p>
+
+<p align="justify">
+The code here are all plain vanilla C tested on Unix style gcc systems (specifically Mac and Linux),
+but the algorithms/code can readily be modified for other
+operating systems and programming languages.
+This is not meant to be a final application but rather something you integrate into your code base. 
+Having said that it is wrapped up in a simple TGA image reader/writer for the purposes of algorithm 
+testing, the intent is that one would be implementing the function into ones own code base. 
+They all operate on a RGB buffer (fisheye image) in memory.
+For each test utility the usage message is provided. The source images for the examples
+provided are provided along with the command line that generated them.
+</p>
+
+
+<p><br><br><p>
+
+<a name="1">&nbsp;</a><br>
+<h3>Fisheye to perspective transformation</h3>
+<b>Software:</b> fish2persp<p>
+
+<pre>
+Usage: fish2persp [options] fisheyeimage
+Options
+   -w n        perspective image width, default = 800
+   -h n        perspective image height, default = 600
+   -t n        field of view of perspective (degrees), default = 100
+   -s n        field of view of fisheye (degrees), default = 180
+   -c x y      center of the fisheye image, default is center of image
+   -r n        fisheye radius (horizontal), default is half width of fisheye image
+   -ry n       fisheye radius (vertical) for anamophic lens, default is circular fisheye
+   -x n        tilt angle (degrees), default: 0
+   -y n        roll angle (degrees), default: 0
+   -z n        pan angle (degrees), default: 0
+   -a n        antialiasing level, default = 2
+   -p n n n n  4th order lens correction, default: off
+   -d          verbose mode, default: off
+</pre>
+<p>
+
+<p align="justify">
+It should be noted at the outset that a fisheye projection is not a "distorted" image, 
+and the process isn't a "dewarping". 
+A fisheye like other projections is one of many ways of mapping a 3D world onto a 2D plane,  it is no 
+more or less "distorted" than other projections including a rectangular perspective projection ... 
+it is what it is.
+</p>
+
+<p align="justify">
+Example source fisheye image.
+</p>
+<center>
+	<img src="http://paulbourke.net/dome/fish2/fisheye.jpg" border=1 width=800 height=533>
+</center><p>
+
+<p align="justify">
+A critical consideration is antialiasing, required when sampling 
+any discrete signal. The approach here is a simple supersampling antialiasing, 
+that is,
+each pixel in the output image is subdivided into a 2x2, 3x3....grid and
+the inverse mapping applied to the subsamples. The final value for the output
+pixel is the weighted average of the inverse mapped subsamples.
+There is a sense in which the image plane is considered to be a continuous
+function. Since the number of samples that are inverse mapped 
+is the principle determinant of
+performance, high levels of antialiasing can be very expensive, typically
+2x2 or 3x3 are sufficient especially for images captured from video in which
+neighbouring pixels are not independent in the first place.
+For example a 3x3 antialiasing is 9 times slower than no antialiasing.
+In general the jagged edges are more noticeable in features
+with a sharp colour/intensity boundary.
+</p>
+
+<p align="justify">
+Default perspective view looking forwards, 100 degrees horizontal field of view.
+</p>
+<center>
+<img src="http://paulbourke.net/dome/fish2/persp1.jpg" border=1 width=800 height=600><br>
+fish2persp -w 800 -a 3
+</center><p>
+
+<p align="justify">
+The vertical aperture is automatically adjusted to match the width and height.
+Controls are provided for any angle fisheye as well as fisheyes that are not
+level or tilted, noting that the exact order of the correction rotations may
+need to be considered for particular cases.
+Note that a perspective projection is not defined for greater than 180 degrees,
+indeed it gets increasingly inefficient past around 140 degrees.
+The field of view can be adjusted as well as the viewing direction.
+The following example is a 120 degrees horizontal field of view and looking upwards 
+by 30 degrees.
+</p>
+<center>
+<img src="http://paulbourke.net/dome/fish2/persp2.jpg" border=1 width=800 height=600><br>
+fish2persp -w 800 -a 3 -x 30 -t 120
+</center>
+
+<p align="justify">
+If "straight" lines are not straight that normally means the fisheye center or radius are not 
+specified correctly or the angle is not defined correctly.
+Curvature in what should be straight lines near the rim of the fisheye normally means
+the fisheye lens has non-linearities near the rim (a deviation from the mathematically pure
+fisheye projection) and corrections need to be applied.
+The following is looking right by 40 degrees and a narrower field of view of 80 degrees.
+</p>
+<center>
+<img src="http://paulbourke.net/dome/fish2/persp3.jpg" border=1 width=800 height=600><br>
+fish2persp -w 800 -a 3 -z 40 -t 80 
+</center><p>
+
+<p align="justify">
+The center of the fisheye on the input image can be found by projecting
+lines along vertical structure in the scene. Where these lines intersect
+is a close approximation to the center of the fisheye, assuming the
+camera is mounted vertically. Alternatively, and perhaps easier, is to identify the edges of the
+fisheye and assume a perfect circular inscribed circle. Note that for the example utilities provided
+here the origin is assumed to be the bottom left corner, unlike the more common top right that
+image editing programs use.
+</p>
+
+<p align="justify">
+To test the algorithm a fisheye rendering inside a gridded cube is a good example,
+see image on left below. Any correct perspective projection should result in straight lines.
+</p>
+<center><table width=100%><tr><Td>
+   <a href="http://paulbourke.net/dome/fish2/cube_orig.jpg"><img src="http://paulbourke.net/dome/fish2/cube_origs.jpg" width=400 height=400 border=1></a><br>
+   Sample input image
+</td><td>
+   <a href="http://paulbourke.net/dome/fish2/cube_p1.jpg"><img src="http://paulbourke.net/dome/fish2/cube_p1s.jpg" width=400 height=400 border=1></a><br>
+	&nbsp;
+</td></tr></table></center><p>
+<center><table width=100%><tr><Td>
+   <a href="http://paulbourke.net/dome/fish2/cube_p2.jpg"><img src="http://paulbourke.net/dome/fish2/cube_p2s.jpg" width=400 height=400 border=1></a><br>
+	&nbsp;
+</td><td>
+   <a href="http://paulbourke.net/dome/fish2/cube_p3.jpg"><img src="http://paulbourke.net/dome/fish2/cube_p3s.jpg" width=400 height=400 border=1></a><br>
+	&nbsp;
+</td></tr></table></center><p>
+<A href="http://paulbourke.net/dome/fish2/fish2perspffmpeg.pdf">Instructions for converting movies using ffmpeg</a><p>
+
+<p><br><br><br><p>
+
+<a name="2">&nbsp;</a><p>
+<h3>Front fisheye to panorama</h3>
+<a href="index.html#4">Now superceeded by fish2pano</a><p>
+<b>Software:</b> frontfish2pano<p>
+
+<p align=justify">
+Update November 2016: frontfish2pano is now redundant, fisheye orientation can
+now be controlled with <a href="index.html#fish2pano">fish2pano</a>, see later.
+</p>
+
+<p align=justify">
+This case is developed mainly for "front pointing" fisheyes although it does have application
+for other orientations. The projection is more correctly called a cylindrical panorama.
+</p>
+
+<pre>
+Usage: frontfish2pano [options] fisheyeimage
+Options
+   -w n     panoramic image width, default = 800
+   -h n     panoramic image height, default = -1
+  -ap n     vertical aperture of panoramic, default = 100
+  -af n     aperture of fisheye (degrees), default = 180
+  -cf x y   center of the fisheye image, default is image center
+   -r n     radius of the fisheye image, default is half the image width
+  -fa n     angle for tilted fisheye, default = 0
+  -fb n     angle for rotated fisheye, default = 0
+   -a n     antialiasing level, default = 1 (no antialising)
+</pre>
+<p>
+
+<p align="justify">
+Source fisheye image.
+</p>
+<center>
+<img src="http://paulbourke.net/dome/fish2/inputfisheye.jpg" width=800 height=533 border=1>
+</center><p>
+
+<p align="justify">
+Transformation with the default settings is shown below.
+</p>
+<center>
+<img border=1 src="http://paulbourke.net/dome/fish2/test1b.jpg" width=800 height=444><br>
+frontfish2pano -a 3 -w 800 
+</center><p>
+
+<p align="justify">
+Correct for the fact that the camera is not quite horizontal, this is the
+reason the vertical structure doesn't appear vertical in the panoramic projection.
+Of course nothing is for free, one looses a bit of the image in the bottom
+left and right corners.
+</p>
+<center>
+<img border=1 src="http://paulbourke.net/dome/fish2/test4b.jpg" width=800 height=444><br>
+frontfish2pano -a 3 -w 800 -fa -20
+</center><p>
+
+<p align="justify">
+Set the vertical field of view of the panorama, in the following cases narrowed from
+the default of 100 degrees to 80 degrees. As with perspective projections there is a limit, 
+in this case, to the vertical field of view, a hard limit at 180 degrees but increasingly inefficient
+past 140 degrees.
+</p>
+<center>
+<img border=1 src="http://paulbourke.net/dome/fish2/test2b.jpg" width=800 height=355><br>
+frontfish2pano -a 3 -w 800 -fa -20 -ap 80
+</center><p>
+
+<!--
+<p align="justify">
+The coordinate system for fisheye and panoramic system is shown below.
+</p>
+<center><img src="image1.gif" width=500 height=207></center><p>
+<center><img src="image2.gif" width=700 height=359></center><p>
+<center><img src="image3.gif" width=450 height=391></center><p>
+-->
+
+
+<p><br><br><p>
+
+<a name="3">&nbsp;</a><p>
+<h3>Fisheye to (partial) spherical projection</h3>
+<a href="http://paulbourke.net/dome/fish2/fish2sphere.pdf">Additional notes on the algorithm</a><br>
+<a href="http://paulbourke.net/dome/fish2/fish2sphere_documentation.pdf">Notes on command line arguments</a><p>
+
+<b>Software:</b> fish2sphere<br>
+<p>
+
+<pre>
+Usage: fish2sphere [options] tgafile
+Options
+   -w n        sets the output image size, default: 4 fisheye image width
+   -a n        sets antialiasing level, default: 2
+   -s n        fisheye fov (degrees), default: 180
+   -c x y      fisheye center, default: center of image
+   -r n        fisheye radius, default: half the fisheye image width
+   -x n        tilt camera, default: 0
+   -y n        roll camera, default: 0
+   -z n        pan camera, default: 0
+   -blo n n    longitude range for blending, default: no blending
+   -bla n n    latitude range for blending, default: no blending
+   -lom n      +- maximum longitude range clipping, default: no clipping
+   -lam n      +- maximum latitude range clipping, default: no clipping
+   -bg r g b   set background colour, default: grey or black for blending
+   -p n n n n  4th order lens correction, default: off
+   -o n        create a textured mesh as OBJ model, three types: 0,1,2
+   -n          save tiff file for STMap for Nuke, default: off
+   -f          create PGM files for ffmpeg remap filter, default: off
+   -d          debug mode
+</pre>
+
+<p align="justify">
+Updates 2017
+</p>
+<ul>
+<li>Added export of textured hemisphere as OBJ file.<br>
+<li>Added variable order of rotations, occur in the order they appear in the command line.
+</ul><p>
+
+<p align="justify">
+Updates 2018
+</p>
+<ul>
+<li>Remap files for ffmpeg<br>
+<li>STmap file for Nuke<br>
+<li>Increased lens linearity correction to 4th order<br>
+<li>Added Hammer projection output<br>
+</ul><p>
+
+
+<p align="justify">
+Source fisheye image.
+</p>
+<center>
+	<img border=1 src="http://paulbourke.net/dome/fish2/spherical0.jpg" width=800 height=533 border=1>
+</center><p>
+
+<p align="justify">
+Transformation using the default settings. Since a 180 degree (in this case) fisheye
+captures half the visible universe from a single position, so it makes sense that it occupies
+half of a spherical (equirectangular) projection, which captures the entire visible
+universe from a single position.
+</p>
+<center>
+	<img border=1 src="http://paulbourke.net/dome/fish2/spherical1.jpg" width=800 height=400 border=1>
+</center><p>
+
+<p align="justify">
+In this case the camera is not perfectly horizontal, this and other adjustments
+can be made. In the example here the lens was pointing downwards slightly, the
+correction results in more of the south pole being visible and less of the north
+pole.
+</p>
+<center>
+   <img border=1 src="http://paulbourke.net/dome/fish2/spherical2.jpg" width=800 height=400 border=1>
+</center><p>
+
+<p align="justify">
+Note that the fisheye angle is not limited to 180 degrees, indeed one application
+for this is in the pipeline to create 360 spherical panoramas from 2 cameras, each
+with a fisheye lens with a field of view greater than 180 to provide a blend zone.
+</p>
+
+<p align="justify">
+This can be readily implemented in the OpenGL Shader Language, the following
+example was created in the 
+<a href="http://paulbourke.net/dome/fish2/fish2sphere.qtz.zip">Quartz Composer Core Image Filter</a>.
+</p>
+
+<pre>
+// Fisheye to spherical conversion
+// Assumes the fisheye image is square, centered, and the circle fills the image.
+// Output (spherical) image should have 2:1 aspect.
+// Strange (but helpful) that atan() == atan2(), normally they are different.
+
+kernel vec4 fish2sphere(sampler src)
+{
+	vec2 pfish;
+	float theta,phi,r;
+	vec3 psph;
+	
+	float FOV = 3.141592654; // FOV of the fisheye, eg: 180 degrees
+	float width = samplerSize(src).x;
+	float height = samplerSize(src).y;
+
+	// Polar angles
+	theta = 2.0 * 3.14159265 * (destCoord().x / width - 0.5); // -pi to pi
+	phi = 3.14159265 * (destCoord().y / height - 0.5);	// -pi/2 to pi/2
+
+	// Vector in 3D space
+	psph.x = cos(phi) * sin(theta);
+	psph.y = cos(phi) * cos(theta);
+	psph.z = sin(phi);
+	
+	// Calculate fisheye angle and radius
+	theta = atan(psph.z,psph.x);
+	phi = atan(sqrt(psph.x*psph.x+psph.z*psph.z),psph.y);
+	r = width * phi / FOV; 
+
+	// Pixel in fisheye space
+	pfish.x = 0.5 * width + r * cos(theta);
+	pfish.y = 0.5 * width + r * sin(theta);
+	
+	return sample(src, pfish);
+}
+</pre>
+
+<p align="justify">
+The transformation can be performed in realtime using warp mesh files for
+software such as <a href="../warpplayer/index.html">warpplayer</a> or the VLC 
+equivalent <a href="../VLCwarp/index.html">VLCwarp</a>. A sample mesh file is given
+here: <a href="http://paulbourke.net/dome/fish2/fish2sph.data">fish2sph.data</a>. Showing the result in action
+is below.
+</p>
+<center>
+<a href="http://paulbourke.net/dome/fish2/fishscreenshot.jpg"><img src="http://paulbourke.net/dome/fish2/fishscreenshotsmall.jpg" width=800 height=441
+border=1></a>
+</center><p>
+
+<!--
+<p align="justify">
+The maths is as folows.
+</p>
+<center>
+<img src="fishmaths.jpg" width=600 height=1508 border=1>
+</center><p>
+-->
+
+<center>
+<table>
+<tr><td colspan=2>Test cases for various fisheye apertures.</td></tr>
+<tr><td colspan=2>180 degree fisheye</td></tr>
+<tr>
+	<td><a href="http://paulbourke.net/dome/fish2/fish2sphere180.jpg"><img src="http://paulbourke.net/dome/fish2/fish2sphere180s.jpg" width=266 height=266 border=1></a>
+   <td><a href="http://paulbourke.net/dome/fish2/fish2sphere180b.jpg"><img src="http://paulbourke.net/dome/fish2/fish2sphere180bs.jpg" width=532 height=266 border=1></a>
+</tr>
+<tr><td colspan=2>120 degree fisheye</td></tr>
+<tr>
+   <td><a href="http://paulbourke.net/dome/fish2/fish2sphere120.jpg"><img src="http://paulbourke.net/dome/fish2/fish2sphere120s.jpg" width=266 height=266 border=1></a>
+   <td><a href="http://paulbourke.net/dome/fish2/fish2sphere120b.jpg"><img src="http://paulbourke.net/dome/fish2/fish2sphere120bs.jpg" width=532 height=266 border=1></a>
+</tr>
+<tr><td colspan=2>220 degree fisheye</td></tr>
+<tr>
+   <td><a href="http://paulbourke.net/dome/fish2/fish2sphere220.jpg"><img src="http://paulbourke.net/dome/fish2/fish2sphere220s.jpg" width=266 height=266 border=1></a>
+   <td><a href="http://paulbourke.net/dome/fish2/fish2sphere220b.jpg"><img src="http://paulbourke.net/dome/fish2/fish2sphere220bs.jpg" width=532 height=266 border=1></a>
+</tr>
+<tr><td colspan=2>220 degree fisheye and 90 degree latitude rotation</td></tr>
+<tr>
+<td colspan=2>
+	<center>
+	<a href="http://paulbourke.net/dome/fish2/polar220v90.jpg"><img src="http://paulbourke.net/dome/fish2/polar220v90s.jpg" width=600 height=300 border=1></a>
+	</center>
+</td>
+</tr>
+<tr><td colspan=2>220 degree fisheye and 60 degree latitude rotation</td></tr>
+<tr>
+<td colspan=2>
+	<center>
+   <a href="http://paulbourke.net/dome/fish2/polar220v60.jpg"><img src="http://paulbourke.net/dome/fish2/polar220v60s.jpg" width=600 height=300 border=1></a>
+	</center>
+</td>
+</tr>
+</table></center><p>
+
+<p align="justify">
+It can be illustrative to visualise where each part of the fisheye maps to especially
+for fisheyes greater than 180 degrees. The following image will be used to illustrate
+this, the image is surrounded by a red frame and the fisheye circle a blue frame. Note
+that the area between the blue and red frame can still be considered to be part of
+the fisheye, just with wider angles.
+</p>
+<center>
+<a href="http://paulbourke.net/dome/fish2/sample.jpg"><img src="http://paulbourke.net/dome/fish2/sample_small.jpg" width=600 height=600 border=1></a>
+</center><p>
+<p align="justify">
+Considering the fisheye circle to be 160, 180, 200, 220 degrees gives the following 
+equirectangular images. Note the light grey surround correspond to angles in the
+equirectangular that are not mapped.
+</p>
+<center><table width=100%>
+<tr><td>
+	160 degrees<br>
+	<a href="http://paulbourke.net/dome/fish2/160deg.jpg"><img src="http://paulbourke.net/dome/fish2/160deg_small.jpg" width=400 height=200 border=1></a>
+	<br>
+</td><td>
+	180 degrees<br>
+   <a href="http://paulbourke.net/dome/fish2/180deg.jpg"><img src="http://paulbourke.net/dome/fish2/180deg_small.jpg" width=400 height=200 border=1></a>
+	<br>
+</td></tr>
+<tr><td>
+	200 degrees<br>
+   <a href="http://paulbourke.net/dome/fish2/200deg.jpg"><img src="http://paulbourke.net/dome/fish2/200deg_small.jpg" width=400 height=200 border=1></a>
+</td><td>
+	220 degrees<br>
+   <a href="http://paulbourke.net/dome/fish2/220deg.jpg"><img src="http://paulbourke.net/dome/fish2/220deg_small.jpg" width=400 height=200 border=1></a>
+</td></tr>
+</table></center><p>
+
+<p align="justify">
+In addition to equirectangular projectiosn, there are of course a whole range of
+other projections that can represent wide fields of view, including the full sphere.
+One of these is the Hammer projection that represents projects the full 360x180 degree
+sphere onto a plane while preserving area. While a fisheye can not (usually) fill the
+equirectangular (or Hammer) domain, two fisheyes at 180 degrees to each other can.
+An example below from a dual fishey camera.
+</p>
+<center><table><tr><td>
+	<a href="http://paulbourke.net/dome/fish2/left.jpg"><img src="http://paulbourke.net/dome/fish2/left_s.jpg" width=400 height=400 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/dome/fish2/right.jpg"><img src="http://paulbourke.net/dome/fish2/right_s.jpg" width=400 height=400 border=1></a>
+</td></tr></table></center>
+<p align="justify">
+The corresponding Hammer projection of the two halves jointed together is as follows.
+</p>
+<center>
+	<a href="http://paulbourke.net/dome/fish2/hammer.jpg"><img src="http://paulbourke.net/dome/fish2/hammer_s.jpg" width=800 height=400 border=a></a>
+</center><p>
+<p align="justify">
+The mathematics is as follows for the reverse transformation, that is, given a pixel
+in Hammer space what is the corresponding longitude and latitude, these can then be used
+to sample the input fisheye for example.
+If x and y is the pixel position on the Hammer plane (2:1 aspect) 
+and each normalised to range from -sqrt(2) to sqrt(2) then define z as
+</p>
+<center>
+z = sqrt(1 - x<sup>2</sup>/4 - y<sup>2</sup>/4)
+</center><p>
+<p align="justify">
+then
+</p>
+<center>
+longitude = 2 atan(xz / (2z<sup>2</sup> - 1))<br>
+latitude = asin(yz)
+</center><p>
+<p align="justify">
+The ellipse cropping can be achieved by removing points where
+</p>
+<center>
+x<sup>2</sup> + y<sup>2</sup> > 2
+</center>
+
+<p><br><br><p>
+
+<a name="4">&nbsp;</a><p>
+<h3>Fisheye to (full) panorama</h3>
+<a name="fish2pano">
+<b>Software:</b> fish2pano
+<p>
+</a>
+
+<p align="justify">
+Update December 2016: This function now only creates cylindrical panoramas and fish2sphere
+only creates spherical (equirectangular) projections.
+</p>
+
+<p align="justify">
+The following is a slightly more general version of conversion to a panoramic projection.
+It creates cylindrical projections, handles different fisheye
+orientations but the main difference is it is designed to image into a full 360 projection obviously with
+parts not covered because of the limited field of view of a fisheye compared to a full
+spherical projection.
+</p>
+
+<pre>
+Usage: fish2pano [options] fisheyeimage
+Options
+   -w n        panoramic image width, default = 1024
+   -h n        panoramic image height, default = derived
+   -s n        fov of fisheye (degrees), default = 180
+   -c x y      center of the fisheye image, default is image center
+   -x n        tilt the fisheye about x (right) axis, default = 0
+   -y n        roll the fisheye about the y (forward) axis, default = 0
+   -z n        pan the fisheye about the z (up) axis, default = 0
+   -r n        horizontal radius of the fisheye image, default is half the image width
+   -r2 n       vertical radius of the fisheye if not circular, default is same as horizontal
+   -a n        antialiasing level, default = 2
+   -v n        vertical fov, default: 60
+   -la n n     latitude range in degrees, negative to positive angle, default: -30 to 30
+   -lo n n     longitude range in degrees, default: 0 to 360
+   -p n n n n  4th order lens correction, default: off
+   -o          enable textured mesh output, default: off
+   -2          enable split screen, half pano on top, half on bottom, default: off
+   -d          enable debug mode
+</pre>
+
+<p align="justify">
+Example 1: Source fisheye image.
+</p>
+<center>
+   <img border=1 src="http://paulbourke.net/dome/fish2/fisheyesample2.jpg" width=800 height=533 border=1>
+</center><p>
+
+<p align="justify">
+Black refers to the corners of the fisheye image and the grey to the unavailable data,
+that is, data outside the fisheye rectangle in which the circular fisheye is inscribed.
+Note that for a wider than 180 degree fisheye the black and grey regions will be 
+correspondingly smaller. The "x" axis is to the right, the 90 degree rotation here
+gives the desired result for a forward pointing fisheye. A fisheye pointing straight
+up or straight down would more normally be transformed with "-x 0".
+</p>
+<center>
+   <img border=1 src="http://paulbourke.net/dome/fish2/fish2pano1.jpg" width=800 height=400 border=1><br>
+	fish2pano -a 3 -w 800 -x 90
+</center><p>
+
+<p align="justify">
+Cylindrical projection, vertical field 60 degrees and 100 degrees respectively.
+The vertical extent of the image is, normally, determined correctly given the 
+vertical field of view requested but that can be overruled if desired.
+</p>
+<center>
+   <img border=1 src="http://paulbourke.net/dome/fish2/fish2pano3.jpg" width=800 height=133 border=1><br>
+   fish2pano -a 3 -w 800 -x 90 -c
+</center><p>
+<center>
+   <img border=1 src="http://paulbourke.net/dome/fish2/fish2pano4.jpg" width=800 height=222 border=1><br>
+   fish2pano -a 3 -w 800 -x 90 -c -v 100
+</center><p>
+
+<p align="justify">
+Example 2: Source fisheye image
+</p>
+<center>
+   <img border=1 src="http://paulbourke.net/dome/fish2/fisheyesample3.jpg" width=800 height=533 border=1>
+</center><p>
+
+<p align="justify">
+The default settings (no x axis rotation) provide what one expects for an upper hemisphere
+as per a standard Earth map. Note the apparent distortion towards the north pole, which again
+is not a strictly distortion but a natural consequence of the mathematics behind the projection.
+</p>
+<center>
+   <img border=1 src="http://paulbourke.net/dome/fish2/fish2pano2.jpg" width=800 height=400 border=1><br>
+   fish2pano -a 3 -w 800
+</center><p>
+
+<p align="justify">
+Cylindrical panorama with a 100 degree vertical field of view, that is, from the equator (0 degrees
+latitude) to 100 degrees latitude.
+</p>
+<center>
+   <img border=1 src="http://paulbourke.net/dome/fish2/fish2pano5.jpg" width=800 height=222 border=1><br>
+   fish2pano -a 3 -w 800 -c -v 100
+</center><p>
+
+<p><br><br><p>
+
+
+<a name="5">&nbsp;</a><p>
+<h3>Fisheye to cube maps</h3>
+<a name="fish2cube"><b>Software:</b></a> fish2cube
+<p>
+
+<pre>
+Usage: fish2cube [options] fisheyeimage
+Options
+   -w n    output image size, default: quarter fisheye width
+   -r n    radius of the fisheye circle, default: half fisheye height
+   -c n n  centre of the fisheye circle, default: center of fisheye image
+   -s n    field of view of fisheye (degrees), default: 180
+   -a n    antialiasing level, default: 2
+   -x n    rotate fisheye through right axis by n degrees (tilt)
+   -y n    rotate fisheye through forward axis by n degrees (roll)
+   -z n    rotate fisheye through up axis by n degreess (pan)
+</pre>
+
+<p align="justify">
+Front facing fisheye example, although note the fisheye can be rotated to any angle within
+the cube.
+</p>
+<p align="justify">
+Input image, a 220 degree fisheye pointing forwards.
+</p>
+<center>
+	<a href="http://paulbourke.net/dome/fish2/test220forward.jpg"><img src="http://paulbourke.net/dome/fish2/test220forward_s.jpg" width=800 height=800 border=1></a>
+</center><p>
+<p align="justify">
+The resulting cube maps with command line "fish2cube -w 1024 -s 220 test220.tga"
+noting that the faces are provided as separate files, they have been manually combined here.
+</p>
+<center>
+   <a href="http://paulbourke.net/dome/fish2/fish2cube_forward.jpg"><img src="http://paulbourke.net/dome/fish2/fish2cube_forward_s.jpg" width=800 height=600 border=1></a>
+</center><p>
+
+<p align="justify">
+Front facing fisheye example, although note the fisheye can be rotated to any angle within
+the cube.
+</p>
+<p align="justify">
+Input image, a 250 degree fisheye pointing upwards.
+</p>
+<center>
+   <a href="http://paulbourke.net/dome/fish2/test250up.jpg"><img src="http://paulbourke.net/dome/fish2/test250up_s.jpg" width=800 height=800 border=1></a>
+</center><p>
+<p align="justify">
+The resulting cube maps with command line "fish2cube -w 1024 -s 250 -x 90 test250up.tga".
+</p>
+<center>
+   <a href="http://paulbourke.net/dome/fish2/fish2cube_up.jpg"><img src="http://paulbourke.net/dome/fish2/fish2cube_up_s.jpg" width=800 height=600 border=1></a>
+</center><p>
+
+
+</td></tr></table></center>
+</body>
+</html>
+

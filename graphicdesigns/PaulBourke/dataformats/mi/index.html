@@ -1,0 +1,310 @@
+<html>
+<head><link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>MI format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>MI format (Mental Images)</h1>
+Written by <a href="../index.html">Paul Bourke</a>
+</center>
+<p><br><p>
+
+<h3>Introduction</h3>
+
+<p align="justify">
+MI files primarily describe a scene to be rendered for the
+Mental Ray rendering engine and are most often generated
+from the SoftImage modelling package.
+For a full description of the MI format see "SOFTIMAGE|3D,
+Mental Ray Programmer's Guide".
+</p>
+<p align="justify">
+The MI format uses a right handed coordinate system with
+x to the left, y upwards, and Z out of the page. The camera
+is fixed at the origin looking down the negative z axes,
+the objects in the scene are transformed so as to make this 
+the correct view.
+</p>
+
+<h3>General</h3>
+
+The overall structure of an MI file is a structure as follows
+<pre>
+list of commands
+frame number [time]
+   list of lights, textures, and materials
+   view description
+   list of lights, textures, materials, and objects
+end frame
+</pre>
+<p>
+An MI files can contain any number of these structures called
+frames, each frame describes one rendered image. The lights,
+textures, materials, and objects can appear in any order except
+that a view must precede the object definition.
+<br>
+Comments are indicated by a # and extend to the end of the line.
+<p>
+
+<h3>Commands</h3>
+
+$include "filename"<br>
+version "string"<br>
+verbose on | off<br>
+echo "message to echo"<br>
+system "shell command to execute"<br>
+memory amount_in_MB<br>
+code "filename"<br>
+link "filename"<br>
+declare "name of shader" (any_parameters)<br>
+
+<h3>Lights</h3>
+
+<p align="justify">
+Mental Ray knows about point light sources and infinite
+light sources (parallel rays in a particular direction).
+</p>
+
+<pre>
+light "name of light"
+   "shader (any_parameters)
+   [area_light_primitive]
+   [origin x y z]
+   [direction x y z]
+end light
+</pre>
+
+<p align="justify">
+Point light sources define an origin but no direction, the
+reverse applies to infinite light sources. An area_light_primitive
+is a way of applying a point source into an area light, it can be
+applied to either a rectangle, disc, or sphere.
+</p>
+
+<h3>Textures</h3>
+
+<p align="justify">
+MI supports two types of textures, images and procedural.
+The first is implemented with picture files, the second as
+a shading function. Textures can be used to specify scalars, 
+colours, or vectors.
+</p>
+
+<pre>
+scalar texture "texture name" [width hight [depth]] bytes ...
+[local] scalar texture "texture name" "filename"
+scalar texture "texture name" "shader name" (parameters)
+
+color texture "texture name" [width hight [depth]] bytes ...
+[local] color texture "texture name" "filename"
+color texture "texture name" "shader name" (parameters)
+
+vector texture "texture name" [width hight [depth]] bytes ...
+[local] vector texture "texture name" "filename"
+vector texture "texture name" "shader name" (parameters)
+</pre>
+
+<h3>Materials</h3>
+
+<p align="justify">
+Materials define the appearance of objects and is done entirely
+thought shaders.
+</p>
+
+<pre>
+material "material name" [nocontour] [opaque]
+   "material shader name" (parameters)
+   [displace "displacement shader name" (parameters)]
+   [shadow "shadow shader name" (parameters)]
+   [volume "volume shader name" (parameters)]
+   [environment "environment shader name" (parameters)]
+end material
+</pre>
+
+<h3>View</h3>
+
+<p align="justify">
+A view specifies an output file type to result from a rendering.
+It can be a image file or a filter that operates on the rendered
+image.
+</p>
+
+<pre>
+view
+   output_definitions
+   view_definitions
+end view
+</pre>
+
+The available view definitions are<br>
+focal nnn | infinity<br>
+aperture nnn<br>
+aspect nnn<br>
+resolution www yyy<br>
+window xmin ymin xamx ymax<br>
+transform 4x4_matrix<br>
+min samples nnn<br>
+max samples nnn<br>
+recursive on | off<br>
+samples nnn<br>
+adaptive on | off<br>
+contrast r g b [a]<br>
+time contrast r g b [a]<br>
+filter box | triangle | gauss width [height]<br>
+jitter nnn<br>
+shutter nnn<br>
+trace depth nnn<br>
+shadow_sort on | off<br>
+acceleration spatial subdivision<br>
+acceleration ray classification<br>
+max size nnn<br>
+max depth nnn<br>
+subdivision memory nnn<br>
+face front | back | both<br>
+clip hither yon<br>
+volume "shader name" (parameters)<br>
+environment "environment name" (parameters)<br>
+lens "lens name" (parameter)<br>
+shadow on | off<br>
+trace on | off<br>
+scanline on | off<br>
+desaturate on | off<br>
+dither on | off<br>
+gamma nnn<br>
+field even | odd | both<br>
+contour on | off<br>
+paper size "format"<br>
+paper cale nnn<br>
+discontinuity angle<br>
+contour line width nnn<br>
+contour depth nnn<br>
+paper transform nnn nnn<br>
+
+<h3>Objects</h3>
+
+<pre>
+object "name of object"
+   [visible]
+   [shadow]
+   [trace]
+   [tag label_number]
+   [transform 4x4_matrix]
+   [basis list]
+   group
+      [merge eps]
+      vector list
+      vertex list
+      geometry list
+   end group
+     :
+     :
+     further group definitions
+     :
+     :
+end object
+</pre>
+
+<p align="justify">
+For some strange reason the default is for an object to be
+invisible, the visible flag usually needs to be set.
+</p>
+
+<p align="justify">
+All group objects must contain a vector and vertex list. 
+The vector list is simply a list of triples, points in
+3D space. These points might represent vectors, normals,
+or texture coordinates. Vectors are usually stored as
+numbers represented as printable characters although MI
+does support a binary form of 12 bytes in IEEE 854, this
+is of course hardware (endian) dependent.
+</p>
+
+<p align="justify">
+Vertices are defined by reference to the vector list which
+is numbered from 0 upwards and the numbering restarts from
+0 for each group. A vertex list consists of a series of types
+with an associated index. The types may be 'v' for a point in 
+space, 'n' for a normal, 'm' for a motion vector, and 't' for 
+texture coordinate. A vertex starts with the type v and end
+at the occurrence of the next v.
+<br>
+For example, a square polygon with a gold texture might be 
+defined as follows
+</p>
+<pre>
+object "plane"
+   visible
+   shadow
+   group
+      0 0 0
+      0 1 0
+      1 1 0
+      1 0 0
+      0 0 1
+      v 0 n 4
+      v 1 n 4
+      v 2 n 4
+      v 3 n 4
+      p "goldmaterial" 0 1 2 3
+   end group
+end object
+</pre>
+
+<p align="justify">
+Two types of geometry can be defined, polygonal geometry as in
+the above example and free-form surfaces.
+</p>
+
+<p align="justify">
+<b>Polygonal geometry</b> can be one of three types. 'c' for
+convex polygons (also cp for backward compatibility), 'p' for
+concave polygons optionally with holes specified by the 'hole'
+keyword. All polygons are defined in terms of vertex numbers,
+numbered from 0 upwards.
+</p>
+<pre>
+   c  "material name" list_of_vertex_numbers
+   cp "material name" list_of_vertex_numbers
+   p  "material name" list_of_vertex_numbers
+   p  "material name" list_of_vertex_numbers hole list_of_vertex_numbers
+</pre>
+
+<p align="justify">
+<b>Free-form surface geometry</b> is beyond the scope of this
+document, please refer to the reference in the introduction.
+They can be polygonal patches up to a degree of 21, supported
+types are bezier, Taylor, B-Spline, cardinal, and general basis
+functional forms.
+</p>
+
+<p>
+<h3>Example</h3>
+<p align="justify">
+<a href="http://paulbourke.net/dataformats/mi/example.mi">This example</a> 
+might help you recognise MI files as well as illustrate
+the format with a concrete example (don't expect this to create a
+sensible scene!)
+</p>
+
+</td></tr></table></center>
+</body>
+</html>
+
+
+
+
+
+

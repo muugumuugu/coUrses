@@ -1,0 +1,479 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Dome projection on a budget (MirrorDome)</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1><font color="#770000">S p h e m i r</font></h1>
+<h3>Dome projection on a budget, also known as MirrorDome</h3>
+Written by <a href="../index.html">Paul Bourke</a><br>
+October 2003, updated December 2004<p>
+</center>
+<p><br><p>
+
+<p align="justify">
+The following illustrates a method of projecting onto a dome without the
+need for a full fisheye lens which are both rare and, those that do exist, 
+only fit to a narrow range of projectors. The approach here uses a mirror
+to reflect images from the projector onto most of the dome surface.
+</p>
+<center><img src="http://paulbourke.net/dome/mirrordome/drawing.gif" width=700 height=343></center><p>
+
+<p align="justify">
+Projecting a 4:3 image of a grid (below left) is shown below on the right.
+This is an optical simulation (dimensionally correct) given a particular 
+dome and mirror configuration, and using a real projector specification.
+</p>
+<center><table>
+<tr><td valign="top" align="center">
+<img src="http://paulbourke.net/dome/mirrordome/grid1b.jpg" width=400 height=300><br>
+Projected grid
+</td><td valign="top" align="center">
+<a href="http://paulbourke.net/dome/mirrordome/grid.jpg"><img src="http://paulbourke.net/dome/mirrordome/grid_s.jpg" width=400 height=300></a><br>
+Image on dome<br>
+Click for higher resolution
+</td></tr>
+</table></center><p>
+
+<b>Geometric correction</b><p>
+<p align="justify">
+To create an undistorted image on
+a dome using this mirrored system, the projected image needs to be 
+pre-distorted. The distortion required can be derived from the geometry, an 
+example of this is shown below on the left and the projection onto the dome
+on the right. As can be seen the image on the dome looks correct, the red
+are lines of longitude and latitude.
+</p>
+<center><table>
+<tr><td valign="top" align="center">
+<img src="http://paulbourke.net/dome/mirrordome/polar1b.jpg" width=400 height=300><br>
+Pre-distorted polar sphere
+</td><td valign="top" align="center">
+<a href="http://paulbourke.net/dome/mirrordome/polar.jpg"><img src="http://paulbourke.net/dome/mirrordome/polar_s.jpg" width=400 height=300></a><br>
+Image on dome<br>
+Click for higher resolution
+</td></tr>
+</table></center><p>
+<p align="justify">
+As with most dome image creation, one either renders a cubic environment
+(perspective projection to 5 sides of a cube) and then resamples onto
+an angular fisheye image, or if the rendering software supports it the
+fisheye image is rendered directly.
+The model used to create the image above is simply a sphere made up from
+a grid of lines of longitude (every 30 degrees) and latitude (every 20
+degrees). The cubic texture and spherical map are shown below, the distorted
+image above can be derived from either of these two representations.
+This is the obvious candidate for a test pattern because one knows the pole
+should be in the top/center of the dome and the lines of longitude and
+latitude should be straight, assuming the observer is located in the
+center of the hemisphere.
+</p>
+<center><table>
+<tr><td valign="top" align="center">
+<img src="http://paulbourke.net/dome/mirrordome/domecube.jpg" width=500 height=250><br>
+Cubic environment
+</td><td valign="top" align="center">
+<img src="http://paulbourke.net/dome/mirrordome/dome.jpg" width=250 height=250><br>
+Fisheye image
+</td></tr>
+</table></center><p>
+
+<b>Brightness correction</b><p>
+<p align="justify">
+There is a variation in the light path to different parts of the dome, this
+would normally result in an uneven brightness across the dome (brighter
+the shorter the light path). This is straightforward to correct for, see the
+brightness function below on the left and corrected image on the right.
+</p>
+<center><table>
+<tr><td valign="top" align="center">
+<img src="http://paulbourke.net/dome/mirrordome/brightness.jpg" width=400 height=300><br>
+Intensity map based on path length
+</td><td valign="top" align="center">
+<img src="http://paulbourke.net/dome/mirrordome/corrected.jpg" width=400 height=300></a><br>
+Final intensity corrected polar sphere
+</td></tr>
+</table></center><p>
+
+<b>Notes</b><p>
+<ul>
+<li><p align="justify">The one form of distortion that can't be corrected
+for is the variable light paths and the need for variable focus across the
+mirror. It is expected that the front/center of the image will be used as the
+region of sharpest focus. In practice this isn't a problem if a projector and
+lens combination is chosen with a good depth of focus.
+</p>
+<li><p align="justify">This exercise simply uses a spherical mirror, other
+shapes are equally valid. One might even design a special shape that minimises
+the unprojected areas shown on the dome in this example.</p>
+<li><p align="justify">The relative size of the spherical mirror in the
+drawings above is arbitrary and chosen for ease of illustration. The projector
+and mirror system can be simply scaled down together. Of course, smaller
+mirrors need to be of higher quality as does the projector optics.</p>
+<li><p align="justify">There is no reason why the required distortion
+can't be supported by OpenGL based interactive applications, this is 
+simply a modified set of texture coordinates on any existing interactive
+dome application.</p>
+<li><p align="justify">An alternative for ray traced rendering is to place
+an identical virtual mirror in the scene and arrange the virtual camera in
+the same relative position as the projector. This will capture the desired
+distorted image in one process. The only problems with this approach is to
+ensure the mirror is not captured by other reflective surfaces in the scene
+and to ensure the camera doesn't pass through objects.
+</p>
+</ul>
+
+<b>Further example</b><p>
+<center><table>
+<tr><td valign="top" align="center">
+<a href="http://paulbourke.net/dome/mirrordome/redentore.jpg"><img src="http://paulbourke.net/dome/mirrordome/redentore_s.jpg" width=400 height=300></a><br>
+Pre-distorted polar sphere
+</td><td valign="top" align="center">
+<a href="http://paulbourke.net/dome/mirrordome/red_dome.jpg"><img src="http://paulbourke.net/dome/mirrordome/red_dome_s.jpg" width=400 height=300></a><br>
+Image on dome<br>
+Click for higher resolution
+</td></tr>
+</table></center><p>
+
+<p align="justify">
+There are three ways of deriving the transformations required and shown on this page.
+One can derive the mapping analytically, while this may be possible for idealised
+arrangements, for other more real world situations it can be cumbersome. A second way is
+to develop an application that allows the mappings to be created interactively, by
+moving vertices and (u,v) coordinates of a mapping mesh until the correct mapping
+is achieved. The third way and the one used here is to simulate the projection
+environment. Trace rays from the projector through each pixel in 
+the image, reflect the ray off
+the mirror and onto the dome, once the position on the dome is known the mapping
+for the pixel in question can be calculated.
+</p>
+
+<b>Full dome and other configurations</b><br>
+<p align="justify">
+In the examples above the full dome is not illuminated, this is intentional and
+is similar to most fisheye projection solutions which project onto 3/4 of the dome
+surface. A dual projector arrangement with a single edge blend across the center
+is the simplest way to get complete dome coverage.
+There are many alternative arrangements, the following is one possible configuration
+for full dome using a central mirror. Similar arrangements for full domes can be achieved
+with the mirrors near the rims of the dome as before.
+</p>
+<center><table><tr><td colspan=2>
+<center>
+<a href="http://paulbourke.net/dome/mirrordome/dualprojector.gif"><img src="http://paulbourke.net/dome/mirrordome/dualprojector_s.gif" width=600 height=458"></a>
+</center>
+</td>
+</tr></tr>
+<td>
+<center><a href="http://paulbourke.net/dome/mirrordome/distort1.gif"><img src="http://paulbourke.net/dome/mirrordome/distort1_s.gif" width=475 height=267></center>
+</td><td>
+<center><a href="http://paulbourke.net/dome/mirrordome/corrected1.gif"><img src="http://paulbourke.net/dome/mirrordome/corrected1_s.gif" width=300 height=267></center>
+</td></tr></table></center><p>
+
+<b>Advantages over fisheye projection</b>
+<ul>
+<li><p align="justify">Cost.
+</p>
+<li><p align="justify">One is not limited to particular projectors for which fisheye lens
+can be fitted. Existing projectors can be used or a projector chosen for particular
+attributes such as brightness, resolution, or contrast.
+</p>
+<li><p align="justify">
+There is much less light loss than a fisheye lens, so almost the total projector brightness
+is being used.
+</p>
+<li><p align="justify">The center of the dome is freed up for the audience, this is
+particularly important for smaller domes. The center of the dome is usually the ideal
+viewing position.
+</p>
+<li><p align="justify">This mirror approach can be scaled to 2,3 or 4 projectors with
+the corresponding improvement in resolution.
+</p>
+<li><p align="justify">
+A common problem with fisheye lens is chromatic distortion at the rim of the fisheye, no 
+such chromatic distortion occurs with a good quality mirror.
+</p>
+</ul>
+<p>
+
+<b>Example 1 - Planetarium dome</b>
+<p align="justify">
+The first real tests of these ideas were conducted at the Wollongong (Australia)
+Science Centre using a very basic rig as shown below (Laptop, data projector, and
+1/4 sphere security/safety mirror). Software was developed that computes the 
+warping texture map from a simulation of the projector/mirror/dome arrangement.
+Software to view stills and animations plays fisheye movies and warps them in
+real time.
+</p>
+
+<center>
+<table cellpadding=0 cellspacing=0 border=0>
+<tr>
+<td>
+<a href="http://paulbourke.net/dome/mirrordome/redent_fish.jpg">
+<img src="http://paulbourke.net/dome/mirrordome/redent_fish_s.jpg" width=400 height=300 border=1></a><br>
+Single fisheye frame within warping software.
+</td>
+<td>&nbsp;</td>
+<td>
+<a href="http://paulbourke.net/dome/mirrordome/redent_warp.jpg">
+<img src="http://paulbourke.net/dome/mirrordome/redent_warp_s.jpg" width=400 height=300 border=1></a><br>
+Warped image to be projected.
+</td>
+</tr>
+</table><p></center>
+
+<center>
+<table cellpadding=0 cellspacing=0 border=0>
+<tr>
+<td align="left">
+<a href="http://paulbourke.net/dome/mirrordome/gear.jpg">
+<img src="http://paulbourke.net/dome/mirrordome/gear_s.jpg" width=250 height=333 border=1></a><br>
+Test gear: laptop, projector, mirror.
+</td>
+<td>&nbsp;</td>
+<td align="center">
+<img src="http://paulbourke.net/dome/mirrordome/polargrid_s.jpg" width=250 height=333 border=1><br>
+Test pattern: polar grid.
+</td>
+<td align="right">
+<img src="http://paulbourke.net/dome/mirrordome/redent2_s.jpg" width=250 height=333 border=1><br>
+Image on the dome.
+</td>
+</tr>
+</table></center><p>
+
+<p align="justify">
+Please note that while the two pictures in the dome (top right) appear
+to be distorted (eg: curved columns) that is because the images were taken
+down the corridor leading into the planetarium. From within the planetarium
+the images appear undistorted.
+</p>
+
+<b>Example 2 - Starlab dome</b>
+<center>
+<table cellpadding=0 cellspacing=0 border=0>
+<tr>
+<td>
+	<img src="http://paulbourke.net/dome/mirrordome/starlab1s.jpg" width=225 height=300 border=1></a><br>
+	Inflated dome<br>
+</td>
+<td>&nbsp;</td>
+<td>
+	<img src="http://paulbourke.net/dome/mirrordome/starlab2s.jpg" width=400 height=300 border=1><br>
+	Mac OS-X operating system, full dome!<br>
+</td>
+</tr><tr>
+<td>
+	<img src="http://paulbourke.net/dome/mirrordome/starlab3s.jpg" width=225 height=300 border=1><br>
+	Polar grid test pattern<br>
+</td>
+<td>&nbsp;</td>
+<td>
+   <img src="http://paulbourke.net/dome/mirrordome/starlab4s.jpg" width=400 height=300 border=1><br>
+   Polar grid test pattern<br>
+</td>
+</tr>
+</table><p>
+</center>
+
+<b>Example 3 - <a href="../iDome/index.html">Upright domes</a></b><p>
+
+<b>Example 4 - Tilted domes</b><p>
+<p align="justify">
+The following is a demonstration of how the full dome projection might work
+in a 45 degree tilted dome.
+Note that the warping is
+dependent on the projector being used, the simulations shown here are based
+upon a 4:3 SXGA+ resolution projector, namely the DELL 5100MP.
+</p>
+
+<center><img src="http://paulbourke.net/dome/mirrordome/mirror.jpg" width=300 height=300></center><p>
+
+<p align="justify">
+If you were to place a spherical mirror and projector as shown (not drawn to scale)
+and project a 
+regular grid (left) then the result on the dome would be as shown on the 
+center and right.
+Click to enlarge images. These are derived by my ray casting simulation software
+that also calculates the warping specification.
+</p>
+
+<table width=100%><tr><td>
+<img src="http://paulbourke.net/dome/mirrordome/squaregrid.jpg" width=240 height=240 border=2><br>
+<font size=-1>Projected image</font>
+</td><td>
+<a href="http://paulbourke.net/dome/mirrordome/grid1b.jpg"><img src="http://paulbourke.net/dome/mirrordome/grid1s.jpg" width=320 height=240 border=2></a><br>
+<font size=-1>Simulated result, perspective</font>
+</td><td>
+<a href="http://paulbourke.net/dome/mirrordome/grid2.jpg"><img src="http://paulbourke.net/dome/mirrordome/grid2s.jpg" width=320 height=240 border=2></a><br>
+<font size=-1>Simulated result, side orthographic</font>
+</td></tr></table><p>
+
+<p align="justify">
+Consider a polar grid (left) and 
+the warped polar grid below (center), when projected into the dome the
+correctly mapped image is achieved, namely lines of latitude and longitude.
+</p>
+
+<table width=100%><tr><td>
+<img src="http://paulbourke.net/dome/mirrordome/polargrid.jpg" width=240 height=240 border=2><br>
+<font size=-1>Input fisheye image</font>
+</td><td>
+<img src="http://paulbourke.net/dome/mirrordome/polar1.jpg" width=320 height=240 border=2><br>
+<font size=-1>Warped image that is projected</font>
+</td><td>
+<a href="http://paulbourke.net/dome/mirrordome/polar2.jpg"><img src="http://paulbourke.net/dome/mirrordome/polar2s.jpg" width=320 height=240 border=2></a><br>
+<font size=-1>Simulated result</font>
+</td></tr></table><p>
+
+<p align="justify">
+A real example, a single frame from "Moonlight" by Andrew Quinn. To create a warped
+movie one simply applies the warping to each frame of the movie.
+</p>
+
+<table width=100%><tr><td>
+<a href="http://paulbourke.net/dome/mirrordome/moon.jpg"><img src="http://paulbourke.net/dome/mirrordome/moons.jpg" width=240 height=240 border=2></a><br>
+<font size=-1>Input fisheye image</font>
+</td><td>
+<img src="http://paulbourke.net/dome/mirrordome/moon1s.jpg" width=320 height=240 border=2><br>
+<font size=-1>Warped image that is projected</font>
+</td><td>
+<a href="http://paulbourke.net/dome/mirrordome/moon2.jpg"><img src="http://paulbourke.net/dome/mirrordome/moon2s.jpg" width=320 height=240 border=2></a><br>
+<font size=-1>Simulated result</font>
+</td></tr></table><p>
+
+
+<b>Example 5: Full dome projection using two projectors and two spherical mirrors</b>
+<p>
+
+<p align="justify">
+The following illustrates how to achieve full dome projection using two projectors
+and two quarter hemisphere mirrors. While the mirrors can be located on the
+rim of the dome, here they are located in the center so the projected images
+are not blocked by a star projector located in the center. It should be noted
+that 3 and 4 projector/mirror configurations are equally possible with the corresponding
+improvements in resolution. 
+The two projector configuration shown here
+has the benefit of simplicity from the point of view of only requiring a single computer
+with a dual display graphics card for movie playback and interactive applications.
+</p>
+
+<center><table><tr><td valign="top">
+<img src="http://paulbourke.net/dome/mirrordome/diagram.gif" width=700 height=384 border=0>
+</td></tr></table></center><p>
+
+<p align="justify">
+The input imagery for a dome system is usually a fisheye image, an example is shown below
+(Royal Exhibition Building model, Melbourne, Australia)
+and it will be used for the subsequent examples.
+The approach proposed here warps the image (movie frames) 
+in real-time, relatively straightforward
+with todays graphics cards. The only trick is determining the warping function which
+is implemented using an OpenGL mesh with special texture coordinates, the fisheye images
+are applied as textures to this mesh.
+</p>
+
+<center><table><tr><td valign="top">
+<img src="http://paulbourke.net/dome/mirrordome/reb0.jpg" width=512 height=512 border=1><br>
+Input fisheye image or frame from a digital movie.
+</td></tr></table></center><p>
+
+<p align="justify">
+The following two images are created by applying the fisheye image above to a
+mesh with the appropriate texture coordinates, one for each projector. 
+The texture coordinates for the
+mesh are derived by accurately modelling the dome, mirrors, and projectors.
+Rays are forward traced
+from the projectors, through the mesh nodes, off the mirrors and onto the dome.
+Once the position of a mesh node on the dome is known, the texture coordinates
+for the mesh node can be calculated.
+</p>
+
+<center><table><tr><td valign="top">
+<a href="http://paulbourke.net/dome/mirrordome/warp1.html"><img src="http://paulbourke.net/dome/mirrordome/warp1s.jpg"  border=1 width=350 height=197></a><br>
+Image for first projector.
+</td><td valign="top">
+<a href="http://paulbourke.net/dome/mirrordome/warp2.html"><img src="http://paulbourke.net/dome/mirrordome/warp2s.jpg" border=1 width=350 height=197></a><br>
+Image for second projector.
+</td></tr></table></center><p>
+
+<p align="justify">
+The following are screen shots from the software that models the geometry of
+the environment and traces rays from the projector onto the dome. The zoomed
+in image on the right shows the projector frustum, the image projected
+onto the mirror surfaces, and the result on the dome. In the image on the
+bottom right the virtual camera is close to the center of the dome 
+so there is no distortion of the image on the dome, eg: the handrail is straight. 
+</p>
+
+<center><table><tr><td valign="top">
+<a href="http://paulbourke.net/dome/mirrordome/zoom1.html"><img src="http://paulbourke.net/dome/mirrordome/zoom1s.jpg" border=1 width=250 height=166></a><br>
+External view.
+</td><td valign="top">
+<a href="http://paulbourke.net/dome/mirrordome/zoom2.html"><img src="http://paulbourke.net/dome/mirrordome/zoom2s.jpg" border=1 width=250 height=166></a><br>
+Camera inside the dome.
+</td><td valign="top">
+<a href="http://paulbourke.net/dome/mirrordome/zoom3.html"><img src="http://paulbourke.net/dome/mirrordome/zoom3s.jpg" border=1 width=250 height=166></a><br>
+Closeup showing mirrors<br>and projection frustum.
+</td></tr></table></center><p>
+
+<p align="justify">
+A single <a href="../../miscellaneous/edgeblend/index.html">edge blend</a> 
+is required across the axis perpendicular to the projector
+axis. The two projected images are created so they overlap and a smooth 
+intensity ramp (gamma corrected) is applied across the overlap region so that
+the perceived brightness add together correctly to give a seamless effect.
+</p>
+
+<center><table><tr><td valign="top">
+<a href="http://paulbourke.net/dome/mirrordome/blend1.html"><img src="http://paulbourke.net/dome/mirrordome/blend1s.jpg" border=1 width=350 height=197></a><br>
+Image for one projector showing edge blending.
+</td><td valign="top">
+<a href="http://paulbourke.net/dome/mirrordome/blend2.html"><img src="http://paulbourke.net/dome/mirrordome/blend2s.jpg" border=1 width=350 height=197></a><br>
+Edge blended image on dome.
+</td></tr></table></center><p>
+
+<b>Notes</b><br>
+<ul>
+<li><p align="justify">
+The above is based upon 16:9 projectors, the most suitable for this application.
+For three and four projector/mirror configurations 4:3 aspect ratio
+projectors may be  more appropriate.
+</p>
+<li><p align="justify">
+The pixel efficiency is about 70%, that is, 70 percent of the pixels available
+are projected onto the dome. For standard consumer 1280x720 projectors this is
+about 1.3Mpixels.
+</p>
+<li><p align="justify">
+While interactive and movie content can be warped in real time
+using customised software, it is equally possible to
+predistort movies using the derived warping function. This would allow movie playback
+with any standard player that can play movies full screen
+across dual displays, eg: QuickTime Pro.
+</p>
+<li><p align="justify">
+For unidirectional domes (forward facing seats) where full dome projection may not be necessary, 
+a single projector/mirror may be appropriate.
+</p>
+</ul>
+
+</td></tr></table></center>
+</body>
+</html>
+

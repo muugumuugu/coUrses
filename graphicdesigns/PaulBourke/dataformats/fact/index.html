@@ -1,0 +1,185 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>FACT format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>FACT from ElectricImage</h1>
+Contributed by Dr. Edward Smith-Rowland<p>
+<a href="http://paulbourke.net/dataformats/fact/fact2vrml.pl">Perl script</a> to translate a FACT file to Inventor/VRML
+</center>
+<p><br><p>
+
+<p align="justify">
+The Electric Image .fact format is an IFF type format.
+In other words it follows similar conventions as the 
+<a href="../lightwave/index.html">Lightwave object file format</a>.
+</p>
+
+<b>Summary of IFF</b>
+<p align="justify">
+The IFF file metaformat is summarized as follows:
+The file must start with the keyword FORM and an unsigned long indicating the
+size of the file in bytes (excepting the 8 bytes already read).
+Then there must be a four byte ASCII file type ID indicating the type of 
+IFF file.
+If you don't recognize the file type you can punt.
+Then follow chunks of data.  Each chunk consists of a four byte ASCII chunk ID
+followed by a four-byte unsigned long indicating the length of the data in bytes
+to corresponding to the chunk (again excepting the 8-byte header).  If you don't
+recognize the chunk type you can skip it.  In this way, 
+IFF files are extensible.
+All numerical fields in an IFF file are big-endian (the high-order bytes
+occur earlier in the file).
+</p>
+
+<b>ElectricImage .fact format</b>
+<p>
+The file type ID for the Electric Image .fact file is 3DFL.
+<p>
+
+<p align="justify">
+The large scale structure of the file is a file header chunk identified by FORM
+followed by a tree-like structure of part chunks also identified by FORM.
+</p.
+
+<p align="justify">
+The file header chunk ID (FORM) is followed by the size and the form header ID FHDR.
+Then follows the FINF chunk and it's size.
+The FINF chunk consists of three unsigned longs indicating the number
+of vertices in the whole model, the number of facets in the whole model,
+and the number of groups (parts) in the whole model.  This is followed by
+six floats describing the bounding box of the whole model.  Last is four longs
+that seem to be zeroed out.
+</p>
+
+<p align="justify">
+The data is contained in a sequence of group header chunks with ID GRUP.
+The file header chunk ID (FORM) is followed by the form size and the form ID GHDR.
+Then follows the GINF and it's size.
+The GINF chunk consists of three unsigned longs indicating the number
+of vertices in the group, the number of facets in the group, and the number
+of subgroups in the group.  Then there are six floats describing the bounding box
+of the object.  After four bytes of crud there is 1 char indicating the length of
+the object name followed by the object name in ASCII with a bunch of null padding.
+The last four bytes in this chunk seem to have something in them.
+</p>
+
+<p align="justify">
+The the GATR chunk follows with its size and can be skipped
+(or parsed by someone smarter than me).  Then follows the geometry data in CORD
+and ELEM chunks.
+</p>
+
+<p align="justify">
+The vertex coordinate chunk has the ID CORD. The size of the CORD chunk
+should be such that size/12 = n_grp_points where n_grp_points is the number of
+vertices specified in the corresponding group header.  The CORD chunk size is
+immediately followed by triplets of vertex coordinates in IEEE floating
+point format (4-bytes) for the X, Y, and Z coordinates.
+</p>
+
+<p align="justify">
+The element (facet) chunk has the ID ELEM.  Each facet begins with a 6-byte
+header whose meaning is not entirely clear to me except that there is an
+ID (byte 2) indicating whether the element is a quad (id = 0) or a polygon (id = 1).
+If the element is  a polygon then the size of the rest of the data in bytes appears
+in byte 6 of the header and can be divided into polygon vertices.
+</p>
+
+<p align="justify">
+For quads, the element header is followed by
+four unsigned integers indicating the unit-offset vertex indices
+into the list of vertices.  The vertex indices are NOT byte offsets but
+indicate the vertex number.  Index 0 (zero) indicates an invalid index so that
+if the last index of the four in a facet is zero then the facet is a triangle
+indexed by the first three indices.  (I don't know if wires or points are allowed.)
+The trick is that the byte size of the indices is determined by the
+number of vertices in the group.  If the number of vertices in the group is less
+than 256 then the vertex indices are unsigned char.  If the number of vertices
+ in the group is less than 65536 then the vertex indices are unsigned short.
+ If the number of vertices in the group is less than 4294967296 then the vertex
+indices are unsigned long.
+</p>
+
+<p align="justify">
+For polygons the first 8 bytes of data following the header is unknown (by me).
+The rest of the stream consists of integer indices into the vertex array defining
+the polygon.  The integer size follows the same conventions as for quads.
+</p>
+
+<p align="justify">
+It seems that Z points into the screen
+and that the polygons are specified with clockwise vertex order.
+I will negate all Z coordinates and bounding box components so that facets
+have normals facing outwards and so that the Z bounding box coordinates
+have z_max > z_min.
+</p>
+
+<b>Example</b><p>
+
+Here is a hex dump for your viewing pleasure:
+<pre>
+0000000 464f524d 0007d13a 3344464c 464f524d
+         F O R M  file_sz  3 D F L  F O R M
+0000020 00000040 46484452 46494e46 00000034
+                  F H D R  F I N F      len
+0000040 000043b4 00005452 00000006 c1b921f9
+           n_pts   n_fcts   n_prts    min_x
+0000060 c1217666 426f9fb3 41b92321 405a532a
+           min_y    min_z    max_x    max_y
+0000100 c2855c71 00000000 00000000 00000000
+           max_z      pad      pad      pad
+0000120 00000000 464f524d 00001176 47525550
+             pad  F O R M      len  G R U P
+0000140 464f524d 00000086 47484452 47494e46
+         F O R M      len  G H D R  G I N F
+0000160 0000004e 000000b8 000000d2 00000000
+         n_g_pts n_g_fcts n_g_prts      pad
+0000200 c08652e3 bf9b87f9 c23cdb28 40861355
+         min_g_x  min_g_y  min_g_z  max_g_x
+0000220 3feeb94e c24a2ea8 71000000 04657965
+         max_g_y  max_g_z           4 e y e // char size of ascii object name and string.
+0000240 73000000 00000000 00000000 00000000
+         s                                 
+0000260 00000000 00000000 00000000 000037cf
+                                           
+0000300 cdac4741 54520000 00242280 ff000000
+             G A  T R                      
+0000320 ff000000 ff202020 4063ab85 1eb851ec
+                                             
+0000340 ffff0000 003ff000 00000000 0000434f
+                                        C O
+0000360 52440000 08a0c07a 8eeb3fa4 80d8c243
+         R D          x_1      y_1      z_1
+0000400 eef8c086 52e33f2a ec39c244 0630c081
+             x_2      y_2      z_2      x_3
+
+. . . . .
+
+0004600 13553f2a ec39c244 06de4086 1355bc91
+                                        x_N
+0004620 2fd3c244 06de454c 454d0000 08340000
+     yN       zN      E L  E M      len&lt;---
+0004640 ff7f7f7f 01020304 0000ff7f 7f7f0506
+        q_head-&gt; &lt;q_vrts&gt; &lt;-q_head --&gt;&lt;
+</pre>
+
+</td></tr></table></center>
+</body>
+</html>
+

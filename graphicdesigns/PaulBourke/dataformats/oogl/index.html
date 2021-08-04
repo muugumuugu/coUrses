@@ -1,0 +1,1500 @@
+<html>
+<head><link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>OOGL file format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>OOGL format</h1>
+From the GeomView manual.<br>
+Edited by <a href="../index.html">Paul Bourke</a><br>
+October 1996<p>
+Support libraries:
+<a href="http://paulbourke.net/dataformats/oogl/offlib.c">offlib.c</a>,
+<a href="http://paulbourke.net/dataformats/oogl/offlib.h">offlib.h</a>, and
+<a href="http://paulbourke.net/dataformats/oogl/simplex.h">simplex.h</a>.
+</center>
+<p><br><p>
+
+The objects that you can load into Geomview are called OOGL objects.
+OOGL stands for "Object Oriented Graphics Library"; it is the library
+upon which Geomview is built.
+<P>
+There are many different kinds of OOGL objects.  This chapter gives
+syntactic descriptions of file formats for OOGL objects.
+<P>
+<H2>Conventions</h2>
+<P>
+<H3>Syntax Common to All OOGL File Formats</H3>
+<P>
+Most OOGL object file formats are free-format ASCII -- any amount of
+white space (blanks, tabs, newlines) may appear between tokens (numbers,
+key words, etc.).  Line breaks are almost always insignificant, with a
+couple of exceptions as noted.  Comments begin with # and continue to
+the end of the line; they're allowed anywhere a newline is.
+<P>
+Binary formats are also defined for several objects; 
+See section on binary format, and the individual object descriptions.
+<P>
+Typical OOGL objects begin with a key word designating object type,
+possibly with modifiers indicating presence of color information etc.
+In some formats the key word is optional, for compatibility with file
+formats defined elsewhere.  Object type is then determined by
+guessing from the file suffix (if any) or from the data itself.
+<P>
+Key words are case sensitive.  Some have optional prefix letters
+indicating presence of color or other data; in this case the order of
+prefixes is significant, e.g. <CODE>CNMESH</CODE> is meaningful but
+<CODE>NCMESH</CODE> is invalid.
+<P>
+<h3>File Names</H3>
+<P>
+When OOGL objects are read from disk files, the OOGL library uses the
+file suffix to guess at the file type.
+<P>
+If the suffix is unrecognized, or if no suffix is available (e.g. for an
+object being read from a pipe, or embedded in another OOGL object), all
+known types of objects are tried in turn until one accepts the data as
+valid.
+<P>
+<h3>Vertices</H3>
+<P>
+Several objects share a common style of representing vertices with
+optional per-vertex surface-normal and color.  All vertices within an
+object have the same format, specified by the header key word.
+<P>
+All data for a vertex is grouped together (as opposed to e.g. giving
+coordinates for all vertices, then colors for all vertices, and so on).
+<P>
+The syntax is
+<P>
+<DL COMPACT>
+<DT><SAMP>`<VAR>x</VAR>  <VAR>y</VAR>  <VAR>z</VAR>'</SAMP>
+<DD>(3-D floating-point vertex coordinates) or
+<DT><SAMP>`<VAR>x</VAR>  <VAR>y</VAR>  <VAR>z</VAR>  <VAR>w</VAR>'</SAMP>
+<DD>(4-D floating-point vertex coordinates)
+</DL>
+<P>
+optionally followed by
+<P>
+<DL COMPACT>
+<DT><SAMP>`<VAR>nx</VAR>  <VAR>ny</VAR>  <VAR>nz</VAR>'</SAMP>
+<DD>(normalized 3-D surface-normal if present)
+</DL>
+<P>
+optionally followed by
+<P>
+<DL COMPACT>
+<DT><SAMP>`<VAR>r</VAR>  <VAR>g</VAR>  <VAR>b</VAR>  <VAR>a</VAR>'</SAMP>
+<DD>(4-component floating-point color if present, each component in range
+0..1.  The <VAR>a</VAR> (alpha) component represents opacity: 0 transparent, 1
+opaque.)
+<P>
+optionally followed by
+<DT><SAMP>`<VAR>s</VAR> <VAR>t</VAR>'</SAMP>
+<DD><DT><SAMP>`or'</SAMP>
+<DD><DT><SAMP>`<VAR>s</VAR> <VAR>t</VAR> <VAR>u</VAR>'</SAMP>
+<DD></DL>
+<P>
+(two or three texture-coordinate values).
+<P>
+Values are separated by white space, and line breaks
+are immaterial.
+<P>
+Letters in the object's header key word must appear in a specific order;
+that's the reverse of the order in which the data is given for each vertex.
+So a <SAMP>`CN4OFF'</SAMP> object's vertices contain first the 4-component space
+position, then the 3-component normal, finally the 4-component color.
+You can't change the data order by changing the header key word; an
+<SAMP>`NCOFF'</SAMP> is just not recognized.
+<P>
+<h3>Surface normal directions</H3>
+<P>
+Geomview uses normal vectors to determine how an object is shaded.
+The direction of the normal is significant in this calculation.
+<P>
+When normals are supplied with an object, the direction of the normal
+is determined by the data given.
+<P>
+When normals are not supplied with the object, Geomview computes normal
+vectors automatically; in this case normals point toward the side from
+which the vertices appear in counterclockwise order.
+<P>
+On parametric surfaces (Bezier patches), the normal at point P(u,v)
+is in the direction dP/du cross dP/dv.
+<P>
+<h3>Transformation matrices</H3>
+<P>
+Some objects incorporate 4x4 real matrices for homogeneous object
+transformations.  These matrices act by multiplication on the right of
+vectors.  Thus, if p is a 4-element row vector representing homogeneous
+coordinates of a point in the OOGL object, and A is the 4x4 matrix, then
+the transformed point is p' = p A.  This matrix convention is common in
+computer graphics; it's the transpose of that often used in mathematics,
+where points are column vectors multiplied on the right of matrices.
+<P>
+Thus for Euclidean transformations, the translation components appear in
+the fourth row (last four elements) of A.  A's last column (4th, 8th,
+12th and 16th elements) are typically 0, 0, 0, and 1 respectively.
+<P>
+<h3>Binary format</H3>
+<P>
+Many OOGL objects accept binary as well as ASCII file formats.
+These files begin with the usual ASCII token (e.g. <CODE>CQUAD</CODE>)
+followed by the word <CODE>BINARY</CODE>.
+Binary data begins at the byte following the first newline after
+<CODE>BINARY</CODE>.  White space and a single comment may intervene, e.g.
+<P>
+<PRE>
+OFF BINARY	# binary-format "OFF" data follows 
+</PRE>
+<P>
+Binary data comprise 32-bit integers and 32-bit IEEE-format floats, both
+in big-endian format (i.e., with most significant byte first).  This is
+the native format for 'int's and 'float's on Sun-3's, Sun-4's, and
+Irises, among others.
+<P>
+Binary data formats resemble the corresponding ASCII formats, with ints
+and floats in just the places you'd expect.  There are some exceptions
+though, specifically in the <CODE>QUAD</CODE>, <CODE>OFF</CODE> and <CODE>COMMENT</CODE>
+file formats.  Details are given in the individual file format
+descriptions.  See section on QUAD: collection of quadrilaterals, 
+See section on OFF Files, and 
+See section on COMMENT Objects.
+<P>
+Binary OOGL objects may be freely mixed in ASCII object streams:
+<P>
+<PRE>
+LIST
+{ = MESH BINARY
+... binary data for mesh here ...
+}
+{ = QUAD
+	1 0 0   0 0 1   0 1 0  0 1 0
+}
+</PRE>
+<P>
+Note that ASCII data resumes immediately following the last byte of
+binary data.
+<P>
+Naturally, it's impossible to embed comments inside a binary-format OOGL
+object, though comments may appear in the header before the beginning of
+binary data.
+<P>
+<h3>Embedded objects and external-object references</H3>
+<P>
+Some object types (<CODE>LIST</CODE>, <CODE>INST</CODE>) allow references to other
+OOGL objects, which may appear literally in the data stream, be loaded
+from named disk files, or be communicated from elsewhere via named
+objects.  Gcl commands also accept geometry in these forms.
+<P>
+The general syntax is
+<P>
+<PRE>
+ &#60;oogl-object&#62;  ::=
+	[ "{" ]
+	    [ "define" <CODE>symbolname</CODE> ]
+	    [ "appearance" <CODE>appearance</CODE> ]
+	    [ ["="] <CODE>object-keyword</CODE> ...
+		 | "&#60;" <CODE>filename</CODE>
+		 | ":" <CODE>symbolname</CODE> ]
+	[ "}" ]
+</PRE>
+<P>
+where "quoted" items are literal strings (which appear without the
+quotes), [bracketed] items are optional, and | denotes alternatives.
+Curly braces, when present, must match; the outermost set of curly
+braces is generally required when the object is in a larger context,
+e.g. when it is part of a larger object or embedded in a Geomview
+command stream.
+<P>
+For example, each of the following three lines:
+<PRE>
+	{ define fred   QUAD 1 0 0  0 0 1  0 1 0  1 0 0 }
+
+	{ appearance { +edge } LIST { &#60; "file1" } { : fred } }
+
+	VECT 1 2 0   2 0   0 0 0   1 1 2
+</PRE>
+is a valid OOGL object.  The last example is only valid when it is
+delimited unambiguously by residing in its own disk file.
+<P>
+The "&#60;" construct causes a disk file to be read.  Note that this isn't a
+general textual "include" mechanism; a complete OOGL object must appear
+in the referenced file.
+<P>
+Files read using "&#60;" are sought first in the directory of the file which
+referred to them, if any; failing that, the normal search path (set by
+Geomview's <CODE>load-path</CODE> command) is used.  The default search looks
+first in the current directory, then in the Geomview data directories.
+<P>
+The ":" construct allows references to symbols, created with
+<CODE>define</CODE>.  A symbol's initial value is a null object.  When a
+symbol is (re)defined, all references to it are automatically changed;
+this is a crucial part of the support for interprocess communication.
+Some future version of the documentation should explain this better...
+<P>
+Again, white space and line breaks are insignificant, and "#" comments
+may appear anywhere.
+<P>
+<h3>Appearances</H3>
+<P>
+Geometric objects can have associated "appearance" information,
+specifying shading, lighting, color, wireframe vs. shaded-surface
+display, and so on.  Appearances are inherited through object
+hierarchies, e.g. attaching an appearance to a <CODE>LIST</CODE> means that the
+appearance is applied to all the <CODE>LIST</CODE>'s members.
+<P>
+Some appearance-related properties are relegated to "material" and
+"lighting" substructures.  Take care to note which properties belong to
+which structure.
+<P>
+Here's an example appearance structure including values for all
+attributes.  Order of attributes is unimportant.  As usual, white space
+is irrelevant.  Boolean attributes may be preceded by "+" or "-" to turn
+them on or off; "+" is assumed if only the attribute name appears.
+Other attributes expect values.
+<P>
+A "*" prefix on any attribute, e.g. "*+edge" or "*linewidth 2"
+or "material { *diffuse 1 1 .25 }", selects "override" status for
+that attribute.
+<P>
+<PRE>
+appearance {
+  +face               # (Do) draw faces of polygons.  On by default.
+  -edge               # (Don't) draw edges of polygons
+  +vect               # (Do) draw VECTs.  On by default.
+  -transparent        # (Disable) transparency. enabling transparency 
+                      # does NOT result in a correct Geomview picture, 
+                      # but alpha values are used in RenderMan snapshots.
+  -normal             # (Do) draw surface-normal vectors
+  normscale 1         # ... with length 1.0 in object coordinates
+
+  +evert              # do evert polygon normals where needed so as
+                      #   to always face the camera
+
+  -texturing          # (Disable) texture mapping
+  -backcull           # (Don't) discard clockwise-oriented faces
+  -concave            # (Don't) expect and handle concave polygons
+  -shadelines	      # (Don't) shade lines as if they were lighted cylinders
+		      # These four are only effective where the graphics system
+		      # supports them, namely on GL and Open GL.
+
+  -keepcolor	      # Normally, when N-D positional coloring is enabled as
+		      # with geomview's (ND-color ...) command, all
+		      # objects' colors are affected.  But, objects with the
+		      # "+keepcolor" attribute are immune to N-D coloring.
+
+  shading smooth      # or "shading constant" or "shading flat" or
+                      # or "shading csmooth".
+                      # smooth = Gouraud shading, flat = faceted,
+                      # csmooth = smoothly interpolated but unlighted.
+
+  linewidth 1         # lines, points, and edges are 1 pixel wide.
+
+  patchdice 10 10     # subdivide Bezier patches this finely in u and v
+
+  material {         # Here's a material definition;
+                      # it could also be read from a file as in
+                      #  "material &#60; file.mat"
+
+      ka  1.0         # ambient reflection coefficient.
+      ambient .3 .5 .3 # ambient color (red, green, blue components)
+                      # The ambient contribution to the shading is
+                      # the product of ka, the ambient color,
+                      # and the color of the ambient light.
+
+      kd  0.8         # diffuse-reflection coefficient.
+      diffuse .9 1 .4 # diffuse color.
+                        # (In "shading constant" mode, the surface
+                        # is colored with the diffuse color.)
+
+      ks 1.0          # specular reflection coefficient.
+      specular 1 1 1  # specular (highlight) color.
+      shininess  25   # specular exponent; larger values give
+                      # sharper highlights.
+
+      backdiffuse .7 .5 0 # back-face color for two-sided surfaces
+                        # If defined, this field determines the diffuse
+                        # color for the back side of a surface.
+                        # It's implemented by the software shader, and
+                        # by hardware shading on GL systems which support
+                        # two-sided lighting, and under Open GL.
+
+      alpha   1.0     # opacity; 0 = transparent (invisible), 1 = opaque.
+                      # Ignored when transparency is disabled.
+
+      edgecolor   1 1 0  # line &#38; edge color
+
+      normalcolor 0 0 0  # color for surface-normal vectors
+  }
+
+  lighting {         # Lighting model
+
+      ambient  .3 .3 .3  # ambient light
+
+      replacelights   # "Use only the following lights to
+                      # illuminate the objects under this
+                      # appearance."
+                      # Without "replacelights", any lights listed
+                      # are added to those already in the scene.
+
+                      # Now a collection of sample lights:
+      light { 
+          color  1 .7 .6      # light color
+          position  1 0 .5 0  # light position [distant light]
+                              # given in homogeneous coordinates.
+                              # With fourth component = 0,
+                              # this means a light coming from
+                              # direction (1,0,.5).
+      }
+
+      light {                        # Another light.
+          color 1 1 1
+          position  0 0 .5 1  # light at finite position ...
+          location camera     # specified in camera coordinates.
+                              # (Since the camera looks toward -Z,
+                              # this example places the light
+                              # .5 unit behind the eye.)
+          # Possible "location" keywords:
+          #  global    light position is in world coordinates
+          #             This is the default if no location specified.
+          #  camera   position is in the camera's coordinate system
+          #  local    position is in the coordinate system where
+          #                   the appearance was defined
+      }
+  }                   # end lighting model
+  texture {
+        clamp st               # or "s" or "t" or "none"
+        file lump.tiff         # file supplying texture-map image
+        alphafile mask.pgm.Z   # file supplying transparency-mask image
+        apply blend            # or "modulate" or "decal"
+        transform  1 0 0 0     # surface (s,t,0,1) * tfm -&#62; texture coords
+                   0 1 0 0
+                   0 0 1 0
+                  .5 0 0 1
+
+        background 1 0 0 1     # relevant for "apply blend"
+  }
+}                     # end appearance
+</PRE>
+<P>
+There are rules for inheritance of appearance attributes when several
+are imposed at different levels in the hierarchy.
+<P>
+For example, Geomview installs a backstop appearance which provides
+default values for most parameters; its control panels install other
+appearances which supply new values for a few attributes; user-supplied
+geometry may also contain appearances.
+<P>
+The general rule is that the child's appearance (the one closest to the
+geometric primitives) wins.
+Further, appearance controls with "override" status
+(e.g. *+face or material { *diffuse 1 1 0 })
+win over those without it.
+<P>
+Geomview's appearance controls use the "override" feature so as to be
+effective even if user-supplied objects contain their own appearance settings.
+However, if a user-supplied object contains an appearance field with
+override status set, that property will be immune to Geomview's controls.
+<P>
+<h3>Texture Mapping</H3>
+<P>
+Some platforms support texture-mapped objects.
+(On those which don't, attempts to use texture mapping are silently
+ignored.)  A texture is specified as part of an appearance structure,
+as in See section on appearances.  Briefly, one provides a texture image,
+which is considered to lie in a square in <CODE>(s,t)</CODE> parameter space in
+the range 0 &#60;= s &#60;= 1, 0 &#60;= t &#60;= 1.  Then one provides a geometric primitive,
+with each vertex tagged with <CODE>(s,t)</CODE> texture coordinates.  If texturing
+is enabled, the appropriate portion of the texture image is pasted onto
+each face of the textured object.
+<P>
+There is (currently) no provision for inheritance of part of a texture
+structure; if the <CODE>texture</CODE> keyword is mentioned in an appearance,
+it supplants any other texture specification.
+<P>
+The appearance attribute <CODE>texturing</CODE> controls whether textures are
+used; there's no performance penalty for having texture { ... } fields
+defined when texturing is off.
+<P>
+The available fields are:
+<P>
+<PRE>
+clamp	none  -or-  s  -or-  t  -or-  st
+  Determines the meaning of texture coordinates outside the range 0..1.
+  With <CODE>clamp none</CODE>, the default, coordinates are interpreted
+  modulo 1, so (s,t) = (1.25,0), (.25,0), and (-.75,0) all refer to
+  the same point in texture space.  With <CODE>s</CODE> or <CODE>t</CODE> or
+  <CODE>st</CODE>, either or both of s- or t-coordinates less than 0 or
+  greater than 1 are clamped to 1 or 0, respectively.
+
+file	filename
+alphafile	filename
+  Specifies image file(s) containing the texture.
+  The <CODE>file</CODE> file's image specifies color or lightness information;
+  the <CODE>alphafile</CODE> if present, specifies a transparency ("alpha") mask;
+  where the mask is zero, pixels are simply not drawn.
+  Several image file formats are available; the file type must be
+  indicated by the last few characters of the file name:
+    .ppm or .ppm.Z or .ppm.gz  24-bit 3-color image in PPM format
+    .pgm or .pgm.Z or .pgm.gz  8-bit grayscale image in PGM format
+    .tiff 		       8-bit or 24-bit TIFF image
+    .gif		       GIF image
+    .sgi		       8-bit or 24-bit SGI image
+  (Though 4-channel TIFF and SGI images are possible, and could
+  represent both color and transparency information in one image,
+  that's not supported in geomview at present.)
+  For this feature to work, some programs must be available in
+  geomview's search path:
+    zcat  for .Z files
+    gzip  for .gz files
+    tifftopnm for .tiff files
+    giftoppm for .gif files
+    convert (from the ImageMagick package) for .sgi files
+
+  If an <CODE>alphafile</CODE> image is supplied, it must be the same size
+  as the <CODE>file</CODE> image.
+
+
+apply	modulate  -or-  blend  -or-  decal
+  Indicates how the texture image is applied to the surface.
+  Here the "surface color" means the color that surface would have
+  in the absence of texture mapping.
+
+  With <CODE>modulate</CODE>, the default, the texture color (or lightness,
+  if textured by a gray-scale image) is multiplied by the surface color.
+
+  With <CODE>blend</CODE>, texture blends between the <CODE>background</CODE> color
+  and the surface color.  The <CODE>file</CODE> parameter must specify a
+  gray-scale image.  Where the texture image is 0, the surface color is
+  unaffected; where it's 1, the surface is painted in the color given
+  by <CODE>background</CODE>; and color is interpolated for intermediate values.
+
+  With <CODE>decal</CODE>, the <CODE>file</CODE> parameter must specify a
+  3-color image.  If an <CODE>alphafile</CODE> parameter is present,
+  its value interpolates between the surface color (where alpha=0)
+  and the texture color (where alpha=1).  Lighting does not affect the
+  texture color in <CODE>decal</CODE> mode; effectively the texture is
+  constant-shaded.
+
+background  R G B A
+  Specifies a 4-component color, with R, G, B, and A floating-point
+  numbers normally in the range 0..1, used when <CODE>apply blend</CODE>
+  is selected.
+
+transform <CODE>transformation-matrix</CODE>
+  Expects a list of 16 numbers, or one of the other ways of representing
+  a transformation (<CODE>: handlename</CODE> or <CODE>&#60; filename</CODE>).
+  The 4x4 transformation matrix is applied to texture coordinates,
+  in the sense of a 4-component row vector (s,t,0,1) multiplied on
+  the left of the matrix, to produce new coordinates (s',t')
+  which actually index the texture.
+</PRE>
+<P>
+<h2>Object File Formats</H2>
+<P>
+<h3>QUAD: collection of quadrilaterals</H3>
+<P>
+The conventional suffix for a <CODE>QUAD</CODE> file is <TT>`.quad'</TT>.
+<P>
+The file syntax is
+<P>
+<PRE>
+   [C][N][4]QUAD  -or-  [C][N][4]POLY		   # Key word
+   <VAR>vertex</VAR>  <VAR>vertex</VAR>  <VAR>vertex</VAR>  <VAR>vertex</VAR>  # 4*N vertices for some N
+   <VAR>vertex</VAR>  <VAR>vertex</VAR>  <VAR>vertex</VAR>  <VAR>vertex</VAR>
+   ...
+</PRE>
+<P>
+The leading key word is <CODE>[C][N][4]QUAD</CODE> or <CODE>[C][N][4]POLY</CODE>,
+where the optional <CODE>C</CODE> and <CODE>N</CODE> prefixes indicate that each vertex
+includes colors and normals respectively.  That is, these files
+begin with one of the words
+<P>
+<CODE>QUAD</CODE> <CODE>CQUAD</CODE> <CODE>NQUAD</CODE> <CODE>CNQUAD</CODE> <CODE>POLY</CODE>
+<CODE>CPOLY</CODE> <CODE>NPOLY</CODE> <CODE>CNPOLY</CODE>
+<P>
+(but not <CODE>NCQUAD</CODE> or <CODE>NCPOLY</CODE>).  <CODE>QUAD</CODE> and <CODE>POLY</CODE>
+are synonymous; both forms are allowed just for compatibility with
+ChapReyes.
+<P>
+Following the key word is an arbitrary number of groups of four
+vertices, each group describing a quadrilateral.  See the Vertex syntax
+above.  The object ends at end-of-file, or with a closebrace if
+incorporated into an object reference (see above).
+<P>
+A <CODE>QUAD BINARY</CODE> file format is accepted; 
+See section on the binary format.  The
+first word of binary data must be a 32-bit integer giving the number of
+quads in the object; following that is a series of 32-bit floats,
+arranged just as in the ASCII format.
+<P>
+<h3>MESH: rectangularly-connected mesh</H3>
+<P>
+The conventional suffix for a <CODE>MESH</CODE> file is <TT>`.mesh'</TT>.
+<P>
+The file syntax is
+<P>
+<PRE>
+[U][C][N][Z][4][u][v][n]MESH # Key word
+[<VAR>Ndim</VAR>]                 # Space dimension, present only if nMESH
+<VAR>Nu</VAR> <VAR>Nv</VAR>            # Mesh grid dimensions
+                             # <VAR>Nu</VAR>*<VAR>Nv</VAR> vertices, in format specified
+                             # by initial key word
+<VAR>vertex</VAR>(u=0,v=0)  <VAR>vertex</VAR>(1,0)  ... <VAR>vertex</VAR>(<VAR>Nu</VAR>-1,0)
+<VAR>vertex</VAR>(0,1) ...    <VAR>vertex</VAR>(<VAR>Nu</VAR>-1,1)
+...
+<VAR>vertex</VAR>(0,<VAR>Nv</VAR>-1) ... <VAR>vertex</VAR>(<VAR>Nu</VAR>-1,<VAR>Nv</VAR>-1)
+</PRE>
+<P>
+The key word is  <CODE>[U][C][N][Z][4][u][v][n]MESH</CODE>.
+The optional prefix characters mean:
+<P>
+<DL COMPACT>
+<DT><SAMP>`U'</SAMP>
+<DD>Each vertex includes a 3-component texture space parameter.
+The first two components are the usual <CODE>S</CODE> and <CODE>T</CODE> texture
+parameters for that vertex; the third should be specified as zero.
+<DT><SAMP>`C'</SAMP>
+<DD>Each vertex (see Vertices above) includes a 4-component color.
+<DT><SAMP>`N'</SAMP>
+<DD>Each vertex includes a surface normal vector.
+<DT><SAMP>`Z'</SAMP>
+<DD>Of the 3 vertex position values, only the Z component is present; X and
+Y are omitted, and assumed to equal the mesh (u,v) coordinate so X
+ranges from 0 .. (Nu-1), Y from 0 .. (Nv-1) where Nu and Nv are the mesh
+dimensions -- see below.
+<DT><SAMP>`4'</SAMP>
+<DD>Vertices are 4D, each consists of 4 floating values.  <CODE>Z</CODE> and
+<CODE>4</CODE> cannot both be present.
+<DT><SAMP>`u'</SAMP>
+<DD>The mesh is wrapped in the u-direction, so the 
+(0,v)'th vertex is connected to the (<VAR>Nu</VAR>-1,v)'th for all v.
+<DT><SAMP>`v'</SAMP>
+<DD>The mesh is wrapped in the v-direction, so the (u,0)'th vertex is
+connected to the (u,<VAR>Nv</VAR>-1)'th for all u.  Thus a u-wrapped or
+v-wrapped mesh is topologically a cylinder, while a uv-wrapped mesh is a
+torus.
+<DT><SAMP>`n'</SAMP>
+<DD>Specifies a mesh whose vertices live in a higher dimensional space.
+The dimension follows the "MESH" keyword.  Each vertex then has <VAR>Ndim</VAR>
+components.
+</DL>
+<P>
+Note that the order of prefix characters is significant; a coloured,
+u-wrapped mesh is a <CODE>CuMESH</CODE> not a <CODE>uCMESH</CODE>.
+<P>
+Following the mesh header are integers <VAR>Nu</VAR> and <VAR>Nv</VAR>,
+the dimensions of the mesh.
+<P>
+Then follow <VAR>Nu</VAR>*<VAR>Nv</VAR> vertices, each in the form given by the header.
+They appear in v-major order, i.e. if we name each vertex by (u,v)
+then the vertices appear in the order
+<P>
+<PRE>
+(0,0) (1,0) (2,0) (3,0) ...  (<VAR>Nu</VAR>-1,0)
+(0,1) (1,1) (2,1) (3,1) ...  (<VAR>Nu</VAR>-1,1)
+...
+(0,Nv-1)		...  (<VAR>Nu</VAR>-1,<VAR>Nv</VAR>-1)
+</PRE>
+<P>
+A <CODE>MESH BINARY</CODE> format is accepted; 
+See section on the binary format.  The
+values of <VAR>Nu</VAR> and <VAR>Nv</VAR> are 32-bit integers; all other values
+are 32-bit floats.
+<P>
+<h3>Bezier Surfaces</H3>
+<P>
+The conventional file suffixes for Bezier surface files are <TT>`.bbp'</TT>
+or <TT>`.bez'</TT>.  A file with either suffix may contain either type of
+patch.
+<P>
+Syntax:
+<P>
+<PRE>
+  [ST]BBP -or- [C]BEZ&#60;<VAR>Nu</VAR>&#62;&#60;<VAR>Nv</VAR>&#62;&#60;<VAR>Nd</VAR>&#62;[_ST]
+			# <VAR>Nu</VAR>, <VAR>Nv</VAR> are u- and v-direction 
+			# polynomial degrees in range 1..6
+			# <VAR>Nd</VAR> = dimension: 3-&#62;3-D, 4-&#62;4-D (rational)
+			# (The '&#60;' and '&#62;' do not appear in the input.)
+			# <VAR>Nu</VAR>,<VAR>Nv</VAR>,<VAR>Nd</VAR> are each a single decimal digit.
+			# BBP form implies <VAR>Nu</VAR>=<VAR>Nv</VAR>=<VAR>Nd</VAR>=3 so BBP = BEZ333.
+
+		# Any number of patches follow the header
+			# (<VAR>Nu</VAR>+1)*(<VAR>Nv</VAR>+1) patch control points
+			# each 3 or 4 floats according to header
+  <VAR>vertex</VAR>(u=0,v=0)  <VAR>vertex</VAR>(1,0) ... <VAR>vertex</VAR>(<VAR>Nu</VAR>,0)
+  <VAR>vertex</VAR>(0,1)			   ... <VAR>vertex</VAR>(<VAR>Nu</VAR>,1)
+  ...
+  <VAR>vertex</VAR>(0,<VAR>Nv</VAR>)		   ... <VAR>vertex</VAR>(<VAR>Nu</VAR>,<VAR>Nv</VAR>)
+
+			# ST texture coordinates if mentioned in header
+  <CODE>S</CODE>(u=0,v=0)	<CODE>T</CODE>(0,0)	<CODE>S</CODE>(0,<VAR>Nv</VAR>) <CODE>T</CODE>(0,<VAR>Nv</VAR>)
+  <CODE>S</CODE>(<VAR>Nu</VAR>,0)	<CODE>T</CODE>(<VAR>Nu</VAR>,0)	<CODE>S</CODE>(<VAR>Nu</VAR>,<VAR>Nv</VAR>) <CODE>T</CODE>(<VAR>Nu</VAR>,<VAR>Nv</VAR>)
+
+			# 4-component float (0..1) R G B A colors
+			# for each patch corner if mentioned in header
+  <CODE>RGBA</CODE>(0,0)   <CODE>RGBA</CODE>(0,<VAR>Nv</VAR>)
+  <CODE>RGBA</CODE>(<VAR>Nu</VAR>,0)  <CODE>RGBA</CODE>(<VAR>Nu</VAR>,<VAR>Nv</VAR>)
+</PRE>
+<P>
+These formats represent collections of Bezier surface patches, of
+degrees up to 6, and with 3-D or 4-D (rational) vertices.
+<P>
+The header keyword has the forms <CODE>[ST]BBP</CODE> or
+<CODE>[C]BEZ&#60;<VAR>Nu</VAR>&#62;&#60;<VAR>Nv</VAR>&#62;&#60;<VAR>Nd</VAR>&#62;[_ST]</CODE> (the '&#60;' and '&#62;' are
+not part of the keyword.
+<P>
+The <CODE>ST</CODE> prefix on <CODE>BBP</CODE>, or <CODE>_ST</CODE> suffix on
+<CODE>BEZuvn</CODE>, indicates that each patch includes four pairs of
+floating-point texture-space coordinates, one for each corner of the
+patch.
+<P>
+The <CODE>C</CODE> prefix on <CODE>BEZuvn</CODE> indicates a coloured patch,
+including four sets of four-component floating-point colors (red, green,
+blue, and alpha) in the range 0..1, one color for each corner.
+<P>
+<VAR>Nu</VAR> and <VAR>Nv</VAR>, each a single digit in the range 1..6, are the
+patch's polynomial degree in the u and v direction respectively. 
+<P>
+<VAR>Nd</VAR> is the number of components in each patch vertex, and must be
+either <CODE>3</CODE> for 3-D or <CODE>4</CODE> for homogeneous coordinates, that
+is, rational patches.
+<P>
+<CODE>BBP</CODE> patches are bicubic patches with 3-D vertices, so <CODE>BBP</CODE>
+= <CODE>BEZ333</CODE> and <CODE>STBBP</CODE> = <CODE>BEZ333_ST</CODE>.
+<P>
+Any number of patches follow the header.  Each patch comprises a series
+of patch vertices, followed by optional (s,t) texture coordinates,
+followed by optional (r,g,b,a) colors.
+<P>
+Each patch has (<VAR>Nu</VAR>+1)*(<VAR>Nv</VAR>+1) vertices in v-major order, so that if we
+designate a vertex by its control point indices (u,v) the order is
+<PRE>
+     (0,0) (1,0) (2,0) ...  (<VAR>Nu</VAR>,0)
+     (0,1) (1,1) (2,1) ...  (<VAR>Nu</VAR>,1)
+     ...
+     (0,<VAR>Nv</VAR>)            ...  (<VAR>Nu</VAR>,<VAR>Nv</VAR>)
+</PRE>
+with each vertex containing either 3 or 4 floating-point numbers
+as specified by the header.
+   
+If the header calls for ST coordinates, four pairs of floating-point
+numbers follow: the texture-space coordinates for the (0,0),
+(<VAR>Nu</VAR>,0), (0,<VAR>Nv</VAR>), and (<VAR>Nu</VAR>,<VAR>Nv</VAR>) corners of the
+patch, respectively.
+<P>
+If the header calls for colors, four four-component (red, green, blue,
+alpha) floating-point colors follow, one for each patch corner.
+<P>
+The series of patches ends at end-of-file, or with a closebrace if
+incorporated in an object reference.
+<P>
+<a name="OFF">
+<h3>OFF Files</H3></a>
+<P>
+The conventional suffix for <CODE>OFF</CODE> files is <TT>`.off'</TT>.
+<P>
+Syntax:
+<P>
+<PRE>
+[ST][C][N][4][n]OFF	# Header keyword
+[<VAR>Ndim</VAR>]		# Space dimension of vertices, present only if nOFF
+<VAR>NVertices</VAR>  <VAR>NFaces</VAR>  <VAR>NEdges</VAR>   # NEdges not used or checked
+
+<VAR>x</VAR>[0]  <VAR>y</VAR>[0]  <VAR>z</VAR>[0]	# Vertices, possibly with normals,
+			# colors, and/or texture coordinates, in that order,
+			# if the prefixes <CODE>N</CODE>, <CODE>C</CODE>, <CODE>ST</CODE>
+			# are present.
+			# If 4OFF, each vertex has 4 components,
+			# including a final homogeneous component.
+			# If nOFF, each vertex has <VAR>Ndim</VAR> components.
+			# If 4nOFF, each vertex has <VAR>Ndim</VAR>+1 components.
+...
+<VAR>x</VAR>[<VAR>NVertices</VAR>-1]  <VAR>y</VAR>[<VAR>NVertices</VAR>-1]  <VAR>z</VAR>[<VAR>NVertices</VAR>-1]
+
+    			# Faces
+    			# <VAR>Nv</VAR> = # vertices on this face
+    			# <VAR>v</VAR>[0] ... <VAR>v</VAR>[<VAR>Nv</VAR>-1]: vertex indices
+    			#		in range 0..<VAR>NVertices</VAR>-1
+<VAR>Nv</VAR>  <VAR>v</VAR>[0] <VAR>v</VAR>[1] ... <VAR>v</VAR>[<VAR>Nv</VAR>-1]  <VAR>colorspec</VAR>
+...
+    			# <VAR>colorspec</VAR> continues past <VAR>v</VAR>[<VAR>Nv</VAR>-1]
+    			# to end-of-line; may be 0 to 4 numbers
+    			# nothing: default
+    			# integer: colormap index
+    			# 3 or 4 integers: RGB[A] values 0..255
+			# 3 or 4 floats: RGB[A] values 0..1
+</PRE>
+<P>
+<CODE>OFF</CODE> files (name for "object file format") represent collections
+of planar polygons with possibly shared vertices, a convenient way to
+describe polyhedra.  The polygons may be concave but there's no
+provision for polygons containing holes.
+<P>
+An <CODE>OFF</CODE> file may begin with the keyword <CODE>OFF</CODE>; it's
+recommended but optional, as many existing files lack this keyword.
+<P>
+Three ASCII integers follow: <VAR>NVertices</VAR>, <VAR>NFaces</VAR>, and
+<VAR>NEdges</VAR>.  These are the number of vertices, faces, and edges,
+respectively.  Current software does not use nor check <VAR>NEdges</VAR>; it
+needn't be correct but must be present.
+<P>
+The vertex coordinates follow: dimension * <VAR>Nvertices</VAR>
+floating-point values.  They're implicitly numbered 0 through
+<VAR>NVertices</VAR>-1.  dimension is either 3 (default) or 4 (specified by
+the key character <CODE>4</CODE> directly before <CODE>OFF</CODE> in the keyword).
+<P>
+Following these are the face descriptions, typically written
+with one line per face.  Each has the form
+<PRE>
+<VAR>N</VAR>  <VAR>Vert1</VAR> <VAR>Vert2</VAR> ... <VAR>VertN</VAR>  [<VAR>color</VAR>]
+</PRE>
+Here <VAR>N</VAR> is the number of vertices on this face,
+and <VAR>Vert1</VAR> through <VAR>VertN</VAR> are indices into the list of
+vertices (in the range 0..<VAR>NVertices</VAR>-1).
+<P>
+The optional <VAR>color</VAR> may take several forms.  Line breaks are
+significant here: the <VAR>color</VAR> description begins after <VAR>VertN</VAR>
+and ends with the end of the line (or the next # comment).  A
+<VAR>color</VAR> may be:
+<P>
+<DL COMPACT>
+<DT>nothing
+<DD>the default color
+<DT>one integer
+<DD>index into "the" colormap; see below
+<DT>three or four integers
+<DD>RGB and possibly alpha values in the range 0..255
+<DT>three or four floating-point numbers
+<DD>RGB and possibly alpha values in the range 0..1
+</DL>
+<P>
+For the one-integer case, the colormap is currently read from the file
+<TT>`cmap.fmap'</TT> in Geomview's <TT>`data'</TT> directory.  Some better
+mechanism for supplying a colormap is likely someday.
+<P>
+The meaning of "default color" varies.  If no face of the object has a
+color, all inherit the environment's default material color.  If some
+but not all faces have colors, the default is gray (R,G,B,A=.666).
+<P>
+A <CODE>[ST][C][N][n]OFF BINARY</CODE> format is accepted; 
+See section on the binary format.  It
+resembles the ASCII format in almost the way you'd expect, with 32-bit
+integers for all counters and vertex indices and 32-bit floats for
+vertex positions (and texture coordinates or vertex colors or normals if
+<CODE>COFF</CODE>/<CODE>NOFF</CODE>/<CODE>CNOFF</CODE>/<CODE>STCNOFF</CODE>/etc. format).
+<P>
+Exception: each face's vertex indices are followed by an integer
+indicating how many color components accompany it.  Face color
+components must be floats, not integer values.  Thus a colourless
+triangular face might be represented as
+<P>
+<PRE>
+int int int int int
+3   17   5   9   0
+</PRE>
+<P>
+while the same face coloured red might be
+<P>
+<PRE>
+int int int int int float float float float
+ 3  17   5   9   4   1.0   0.0   0.0   1.0
+</PRE>
+<P>
+<h3>VECT Files</H3>
+<P>
+The conventional suffix for <CODE>VECT</CODE> files is <TT>`.vect'</TT>.
+<P>
+Syntax:
+<P>
+<PRE>
+[4]VECT
+<VAR>NPolylines</VAR>  <VAR>NVertices</VAR>  <VAR>NColors</VAR>
+
+<VAR>Nv[0]</VAR> ... <VAR>Nv[NPolylines-1]</VAR>     # number of vertices
+                                           # in each polyline
+
+<VAR>Nc[0]</VAR> ... <VAR>Nc[NPolylines-1]</VAR>     # number of colors supplied
+                                           # in each polyline
+
+<VAR>Vert[0]</VAR> ... <VAR>Vert[NVertices-1]</VAR>  # All the vertices
+                                           # (3*NVertices floats)
+
+<VAR>Color[0]</VAR> ... <VAR>Color[NColors-1]</VAR>  # All the colors
+                                           # (4*NColors floats, RGBA)
+</PRE>
+<P>
+<CODE>VECT</CODE> objects represent lists of polylines (strings of connected
+line segments, possibly closed).  A degenerate polyline can be used to
+represent a point.
+<P>
+A <CODE>VECT</CODE> file begins with the key word <CODE>VECT</CODE> or <CODE>4VECT</CODE>
+and three integers: <VAR>NLines</VAR>, <VAR>NVertices</VAR>, and <VAR>NColors</VAR>.
+Here <VAR>NLines</VAR> is the number of polylines in the file,
+<VAR>NVertices</VAR> the total number of vertices, and <VAR>NColors</VAR> the
+number of colors as explained below.
+<P>
+Next come <VAR>NLines</VAR> integers
+<P>
+<VAR>Nv[0]</VAR> <VAR>Nv[1]</VAR> <VAR>Nv[2]</VAR> ... <VAR>Nv[NLines-1]</VAR>
+<P>
+giving the number of vertices in each polyline.  A negative number
+indicates a closed polyline; 1 denotes a single-pixel point.  The sum
+(of absolute values) of the <VAR>Nv[i]</VAR> must equal <VAR>NVertices</VAR>.
+<P>
+Next come <VAR>NLines</VAR> more integers Nc[i]: the number of colors in
+each polyline.  Normally one of three values:
+<P>
+<DL COMPACT>
+<DT>0
+<DD>No color is specified for this polyline.  It's drawn in the same color
+as the previous polyline.
+<DT>1
+<DD>A single color is specified.  The entire polyline is drawn in that
+color.
+<DT>abs(<VAR>Nv[i]</VAR>)
+<DD>Each vertex has a color.  Either each segment is drawn in the
+corresponding color, or the colors are smoothly interpolated along the
+line segments, depending on the implementation.
+</DL>
+<P>
+The sum of the <VAR>Nc[i]</VAR> must equal <VAR>NColors</VAR>.
+<P>
+Next come <VAR>NVertices</VAR> groups of 3 or 4 floating-point numbers: the
+coordinates of all the vertices.  If the keyword is <VAR>4VECT</VAR> then
+there are 4 values per vertex.  The first abs(<VAR>Nv[0]</VAR>) of them form
+the first polyline, the next abs(<VAR>Nv[1]</VAR>) form the second and so on.
+<P>
+Finally <VAR>NColors</VAR> groups of 4 floating-point numbers give red,
+green, blue and alpha (opacity) values.  The first <VAR>Nc[0]</VAR> of them
+apply to the first polyline, and so on.
+<P>
+A <VAR>VECT BINARY</VAR> format is accepted; 
+See section on the binary format.  The
+binary format exactly follows the ASCII format, with 32-bit ints where
+integers appear, and 32-bit floats where real values appear.
+<P>
+<h3>SKEL Files</H3>
+<P>
+<CODE>SKEL</CODE> files represent collections of points and polylines, with
+shared vertices.
+The conventional suffix for <CODE>SKEL</CODE> files is <TT>`.skel'</TT>.
+<P>
+Syntax:
+<P>
+<PRE>
+[4][n]SKEL
+[<VAR>NDim</VAR>]                    # Vertex dimension, present only if nSKEL
+<VAR>NVertices</VAR>  <VAR>NPolylines</VAR>
+
+<VAR>x</VAR>[0]  <VAR>y</VAR>[0]  <VAR>z</VAR>[0]      # Vertices
+				    # (if nSKEL, each vertex has NDim components)
+...
+<VAR>x</VAR>[<VAR>NVertices</VAR>-1]  <VAR>y</VAR>[<VAR>NVertices</VAR>-1]  <VAR>z</VAR>[<VAR>NVertices</VAR>-1]
+
+                        # Polylines
+                        # <VAR>Nv</VAR> = # vertices on this polyline (1 = point)
+                        # <VAR>v</VAR>[0] ... <VAR>v</VAR>[<VAR>Nv</VAR>-1]: vertex indices                        #               in range 0..<VAR>NVertices</VAR>-1
+<VAR>Nv</VAR>  <VAR>v</VAR>[0] <VAR>v</VAR>[1] ... <VAR>v</VAR>[<VAR>Nv</VAR>-1]  [<VAR>colorspec</VAR>]
+...
+                        # <VAR>colorspec</VAR> continues past <VAR>v</VAR>[<VAR>Nv</VAR>-1]
+                        # to end-of-line; may be nothing, or 3 or 4 numbers.
+                        # nothing: default color
+			# 3 or 4 floats: RGB[A] values 0..1
+</PRE>
+<P>
+The syntax resembles that of <CODE>OFF</CODE> files, with a table of vertices
+followed by a sequence of polyline descriptions, each referring to vertices
+by index in the table.  Each polyline has an optional color.
+<P>
+For <CODE>nSKEL</CODE> objects, each vertex has <VAR>NDim</VAR> components.
+For <CODE>4nSKEL</CODE> objects, each vertex has <VAR>NDim+1</VAR> components;
+the final component is the homogeneous divisor.
+<P>
+No <CODE>BINARY</CODE> format is implemented as yet for <CODE>SKEL</CODE> objects.
+<P>
+<h3>SPHERE Files</H3>
+<P>
+The conventional suffix for <CODE>SPHERE</CODE> files is <TT>`.sph'</TT>.
+<P>
+<PRE>
+SPHERE
+<VAR>Radius</VAR>
+<VAR>Xcenter</VAR> <VAR>Ycenter</VAR> <VAR>Zcenter</VAR>
+</PRE>
+<P>
+Sphere objects are drawn using rational Bezier patches, which are diced into
+meshes; their smoothness, and the time taken to draw them, depends on the
+setting of the dicing level, 10x10 by default.
+From Geomview, the <CODE>(dice N)</CODE> GCL command or <CODE>&#60;N&#62;ad</CODE> keyboard
+command sets this; within the OOGL libraries, use <CODE>GeomDice()</CODE>.
+<P>
+<h3>INST Files</H3>
+<P>
+The conventional suffix for a <CODE>INST</CODE> file is <TT>`.inst'</TT>.
+<P>
+There is no INST BINARY format.
+<P>
+An <CODE>INST</CODE> applies a 4x4 transformation to another OOGL object.  It
+begins with <CODE>INST</CODE> followed by these sections which may appear in
+any order:
+<PRE>
+geom <VAR>oogl-object</VAR>
+</PRE>
+specifies the OOGL object to be instantiated.  
+See section on embedded objects and external-object references, for
+the syntax of an <VAR>oogl-object</VAR>.  The keyword <CODE>unit</CODE> is a
+synonym for <CODE>geom</CODE>.
+<PRE>
+transform   ["{"] <CODE>4x4 transform</CODE> ["}"]
+</PRE>
+specifies a single transformation matrix.  Either the
+matrix may appear literally as 16 numbers, or there may be
+a reference to a "transform" object, i.e.
+<PRE>
+"&#60;" file-containing-4x4-matrix
+</PRE>
+or
+<PRE>
+":" symbol-representing-"transform"-object&#62;
+</PRE>
+<P>
+Another way to specify the transformation is
+<P>
+<PRE>
+transforms
+    <VAR>oogl-object</VAR>
+</PRE>
+<P>
+The <VAR>oogl-object</VAR> must be a <CODE>TLIST</CODE> object (list of
+transformations) object, or a <CODE>LIST</CODE> whose members are ultimately
+<CODE>TLIST</CODE> objects.  In effect, the <CODE>transforms</CODE> keyword takes a
+collection of 4x4 matrices and replicates the <CODE>geom</CODE> object, making
+one copy for each 4x4 matrix.
+<P>
+If no <CODE>transform</CODE> nor <CODE>transforms</CODE> keyword appears, no
+transformation is applied (actually the identity is applied).  You could
+use this for, e.g., wrapping an appearance around an externally-supplied
+object, though a single-membered LIST would do this more efficiently.
+<P>
+See section on transformation matrices, for the matrix format.
+<P>
+Two more INST fields are accepted: <CODE>location</CODE> and <CODE>origin</CODE>.
+<P>
+<PRE>
+location [global or camera or ndc or screen or local]
+</PRE>
+Normally an INST specifies a position relative to its parent object;
+the <CODE>location</CODE> field allows putting an object elsewhere.
+<UL>
+<LI>
+<CODE>location global</CODE> attaches the object to the global coordinate system --
+the same as that in which geomview's World objects, alien geometry,
+and cameras are placed.
+<LI>
+<CODE>location camera</CODE> places the object relative to the camera.
+(Thus if there are multiple views, it may appear in a different 
+spatial position in each view.)  The center of the camera's view
+is along its negative Z axis; positive X is rightward, positive Y upward.
+Normally the units of camera space are the same as global coordinates.
+When a camera is reset, the global origin is at (0,0,-3.0).
+<LI>
+<CODE>location ndc</CODE> places the object relative to the normalized unit
+cube into which the camera's projection (perspective or orthographic)
+maps the visible world.  X, Y, and Z are each in the range from -1 to +1,
+with Z = -1 the near and Z = +1 the far clipping plane, and X and Y
+increasing rightward and upward respectively.
+Thus something like
+<PRE>
+INST  transform  1 0 0 0  0 1 0 0  0 0 1 0  -.9 -.9 -.999 1
+      location ndc
+      geom &#60; label.vect
+</PRE>
+pastes <CODE>label.vect</CODE> onto the lower left corner of each window,
+and in front of nearly everything else, assuming <CODE>label.vect</CODE>'s
+contents lie in the positive quadrant of the X-Y plane.
+It's tempting to use -1 rather than -.999 as the Z component of the
+position, but that may put the object just nearer than the near clipping
+plane and make it (partially) invisible, due to floating-point error.
+<LI>
+<CODE>location screen</CODE> places the object in screen coordinates.
+The range of Z is still -1 through +1 as for ndc coordinates;
+X and Y are measured in pixels, and range from (0,0) at the <EM>lower left</EM>
+corner of the window, increasing rightward and upward.
+</UL>
+<P>
+<CODE>location local</CODE> is the default; the object is positioned relative
+to its parent.
+<P>
+<PRE>
+origin [global or camera or ndc or screen or local] x y z
+</PRE>
+The <CODE>origin</CODE> field translates the contents of the INST to
+place the origin at the specified point of the given coordinate system.
+Unlike <CODE>location</CODE>, it doesn't change the orientation, only the choice
+of origin.  Both <CODE>location</CODE> and <CODE>origin</CODE> can be used together.
+<P>
+So for example
+<PRE>
+{ INST
+  location screen
+  origin ndc 0 0 -.99
+  geom { &#60; xyz.vect }
+  transform { 100 0 0 0  0 100 0 0  0 0 -.009 0   0 0 0 1 }
+}
+</PRE>
+<P>
+places xyz.vect's origin in the center of the window, just beyond the
+near clipping plane.  The unit-length X and Y edges are scaled to be just 100
+screen units -- pixels -- long, regardless of the size of the window.
+<P>
+<H4>INST Examples</H4>
+<P>
+Here are some examples of <CODE>INST</CODE> files
+<P>
+<PRE>
+INST
+     unit &#60; xyz.vect
+     transform {
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        1 3 0 1
+     }
+</PRE>
+<P>
+<PRE>
+{ appearance { +edge  material { edgecolor 1 1 0 } }
+    INST geom &#60; mysurface.quad }
+</PRE>
+<P>
+<PRE>
+{INST transform {: T} geom {&#60;dodec.off}}
+</PRE>
+<P>
+<PRE>
+{ INST
+     transforms
+         { LIST
+     	{ &#60; some-matrices.prj }
+     	{ &#60; others.prj }
+     	{ TLIST &#60;still more of them&#62; }
+     	
+         }
+     geom
+         { # stuff replicated by all the above matrices
+     	...
+         }
+}
+</PRE>
+<P>
+This one resembles the <CODE>origin</CODE> example in the section above,
+but makes the X and Y edges be 1/4 the size of the window (1/4, not 1/2,
+since the range of ndc X and Y coordinates is -1 to +1).
+<PRE>
+{ INST
+  location ndc
+  geom { &#60; xyz.vect }
+  transform { .5 0 0 0  0 .5 0 0  0 0 -.009 0   0 0 -.99 1 }
+}
+</PRE>
+<H3>LIST Files</H3>
+<P>
+The conventional suffix for a <CODE>LIST</CODE> file is <TT>`.list'</TT>.
+<P>
+A list of OOGL objects
+<P>
+Syntax:
+<P>
+<PRE>
+LIST
+    <VAR>oogl-object</VAR>
+    <VAR>oogl-object</VAR>
+    ...
+</PRE>
+<P>
+Note that there's no explicit separation between the oogl-objects, so
+they should be enclosed in curly braces ({ }) for sanity.  Likewise
+there's no explicit marker for the end of the list; unless appearing
+alone in a disk file, the whole construct should also be wrapped in
+braces, as in:
+<P>
+<PRE>
+   { LIST { QUAD ... } { &#60; xyz.quad } }
+</PRE>
+<P>
+A <CODE>LIST</CODE> with no elements, i.e. <CODE>{ LIST }</CODE>, is valid, and is
+the easiest way to create an empty object.  For example, to remove a
+symbol's definition you might write
+<P>
+<PRE>
+   { define somesymbol  { LIST } }
+</PRE>
+<P>
+<H3>TLIST Files</H3>
+<P>
+The conventional suffix for a <CODE>TLIST</CODE> file is <TT>`.grp'</TT> ("group")
+or or <TT>`.prj'</TT> ("projective" matrices).
+<P>
+Collection of 4x4 matrices, used in the <CODE>transforms</CODE> section of and
+<CODE>INST</CODE> object.
+<P>
+Syntax:
+<P>
+<PRE>
+TLIST			# key word
+
+&#60;4x4 matrix (16 floats)&#62;
+...				# Any number of 4x4 matrices
+</PRE>
+<P>
+<CODE>TLIST</CODE>s are used only within the <CODE>transforms</CODE> clause of an
+<CODE>INST</CODE> object.  They cause the <CODE>INST</CODE>s <CODE>geom</CODE> object to
+be instantiated once under each of the transforms in the <CODE>TLIST</CODE>.
+The effect is like that of a <CODE>LIST</CODE> of <CODE>INST</CODE>s each with a
+single transform, and all referring to the same object, but is more
+efficient.
+<P>
+Be aware that a <CODE>TLIST</CODE> is a kind of geometry object, distinct from a 
+<CODE>transform</CODE> object.  Some contexts expect one type of object,
+some the other.  For example in
+<PRE>
+INST transform { : <VAR>myT</VAR> } geom { ... }
+</PRE>
+<VAR>myT</VAR> must be a transform object, which might have been
+created with the gcl
+<PRE>
+(read transform { define myT 1 0 0 1 ... })
+</PRE>
+while in
+<PRE>
+    INST transforms { : <VAR>myTs</VAR> } geom { ... }
+or  INST transforms { LIST {: <VAR>myTs</VAR>} {&#60; more.prj} } geom { ... }
+</PRE>
+<VAR>myTs</VAR> must be a geometry object, defined e.g. with
+<PRE>
+    (read geometry { define <VAR>myTs</VAR> { TLIST 1 0 0 1 ... } })
+</PRE>
+<P>
+A <CODE>TLIST BINARY</CODE> format is accepted.  Binary data begins with a
+32-bit integer giving the number of transformations, followed by that
+number of 4x4 matrices in 32-bit floating-point format.  The order of
+matrix elements is the same as in the ASCII format.
+<P>
+<H3>GROUP Files</H3>
+<P>
+This format is obsolete, but is still accepted.  It combined the
+functions of <CODE>INST</CODE> and <CODE>TLIST</CODE>, taking a series of
+transformations and a single Geom (<CODE>unit</CODE>) object, and replicating
+the object under each transformation.
+<P>
+<PRE>
+GROUP ... &#60; matrices &#62; ... unit { <VAR>oogl-object</VAR> }
+</PRE>
+<P>
+is still accepted and effectively translated into
+<P>
+<PRE>
+INST
+	transforms { TLIST ... &#60;matrices&#62; ... }
+	unit { <VAR>oogl-object</VAR> }
+</PRE>
+<P>
+<H3>DISCGRP Files</H3>
+<P>
+This format is for discrete groups, such as appear in the theory of
+manifolds or in symmetry patterns.  This format has its own man page.
+See discgrp(5).
+<P>
+<H3>COMMENT Objects</H3>
+<P>
+The COMMENT object is a mechanism for encoding arbitrary data within an
+OOGL object. It can be used to keep track of data or pass data back and
+forth between external modules. 
+<P>
+Syntax:
+<P>
+<PRE>
+COMMENT                 # key word
+			
+<VAR>name</VAR> <VAR>type</VAR>   # individual name and type specifier
+{ ... }             # arbitrary data
+</PRE>
+<P>
+The data, which must be enclosed by curly braces, can include anything
+except unbalanced curly braces.  The <VAR>type</VAR> field can be used to
+identify data of interest to a particular program through naming
+conventions. 
+<P>
+<CODE>COMMENT</CODE> objects are intended to be associated with other objects
+through inclusion in a <CODE>LIST</CODE> object. 
+(See section on LIST Files)  The "#" OOGL
+comment syntax does not suffice for data exchange since these comments
+are stripped when an OOGL object is read in to Geomview.  The
+<CODE>COMMENT</CODE> object is preserved when loaded into Geomview and is
+written out intact.
+<P>
+Here is an example associating a WorldWide Web URL with a piece of
+geometry:
+<P>
+<PRE>
+{ LIST 
+ { &#60; Tetrahedron} 
+ {COMMENT GCHomepage HREF { http://www.geom.umn.edu/ }}
+}
+</PRE>
+<P>
+A binary <CODE>COMMENT</CODE> format is accepted. Its format is not consistent
+with the other OOGL binary formats. 
+See section on the binary format. The
+<CODE>name</CODE> and <CODE>type</CODE> are followed by
+<P>
+<PRE>
+<VAR>N</VAR> <VAR>Byte1</VAR> <VAR>Byte2</VAR> ... <VAR>ByteN</VAR>
+</PRE>
+ 
+instead of data enclosed in curly braces. 
+<P>
+<H2>Non-geometric objects</H2>
+<P>
+The syntax of these objects is given in the form used in
+See section on Embedded objects and external-object references, 
+where "quoted" items should appear literally but
+without quotes, square bracketed ([ ]) items are optional, and | separates
+alternative choices.
+<P>
+<H3>Transform Objects</H3>
+<P>
+Where a single 4x4 matrix is expected -- as in the
+<CODE>INST</CODE> <CODE>transform</CODE> field, the camera's <CODE>camtoworld</CODE> transform
+and the Geomview <CODE>xform*</CODE> commands -- use a transform object.
+<P>
+Note that a transform is distinct from a <CODE>TLIST</CODE>, which is a type
+of geometry.  <CODE>TLIST</CODE>s can contain one or more 4x4 transformations;
+"transform" objects must have exactly one.
+<P>
+Why have both?  In many places -- e.g. camera positioning -- it's only
+meaningful to have a single transform.  Using a separate object type
+enforces this.
+<P>
+Syntax for a transform object is
+<P>
+<PRE>
+&#60;transform&#62; ::= 
+  [ "{" ]             (curly brace, generally needed to make
+                       the end of the object unambiguous.)
+
+   [ "transform" ]    (optional keyword; unnecessary if the type
+                       is determined by the context, which it
+                       usually is.)
+   [ "define" &#60;name&#62; ]
+                      (defines a transform named &#60;name&#62;, setting
+                       its value from the stuff which follows)
+
+      &#60;sixteen floating-point numbers&#62;
+                      (interpreted as a 4x4 homogeneous transform
+		       given row by row, intended to apply to a
+                       row vector multiplied on its LEFT, so that e.g.
+                       Euclidean translations appear in the bottom row)
+   | 
+      "&#60;" &#60;filename&#62;  (meaning: read transform from that file)
+   |
+      ":" &#60;name&#62;      (meaning: use variable &#60;name&#62;,
+                        defined elsewhere; if undefined the initial
+                        value is the identity transform)
+
+ [ "}" ]              (matching curly brace)
+</PRE>
+<P>
+The whole should be enclosed in { braces }.  Braces are not essential
+if exactly one of the above items is present, so e.g. a 4x4 array of
+floats standing alone may but needn't have braces.
+<P>
+Some examples, in contexts where they might be used:
+<P>
+<PRE>
+# Example 1: A gcl command to define a transform
+# called "fred"
+
+(read transform { transform  define fred
+         1 0 0 0
+         0 1 0 0
+         0 0 1 0
+        -3 0 1 1
+    }
+)
+</PRE>
+<P>
+<PRE>
+# Example 2:  A camera object using transform
+# "fred" for camera positioning
+# Given the definition above, this puts the camera at
+# (-3, 0, 1), looking toward -Z.
+
+{ camera
+        halfyfield 1
+        aspect 1.33
+        camtoworld { : fred }
+}
+</PRE>
+<P>
+<H3>Cameras</H3>
+<P>
+A camera object specifies the following properties of a camera:
+<P>
+<DL COMPACT>
+<DT>position and orientation
+<DD>specified by either a camera-to-world or world-to-camera transformation;
+this transformation does not include the projection, so it's typically
+just a combination of translation and rotation.  Specified as a
+transform object, typically a 4x4 matrix.
+<DT>"focus" distance
+<DD>Intended to suggest a typical distance from the camera to the object of
+interest; used for default camera positioning (the camera is placed at
+(X,Y,Z) = (0,0,focus) when reset) and for adjusting field-of-view when
+switching between perspective and orthographic views.
+<DT>window aspect ratio
+<DD>True aspect ratio in the sense &#60;Xsize&#62;/&#60;Ysize&#62;.  This normally should
+agree with the aspect ratio of the camera's window.  Geomview normally
+adjusts the aspect ratio of its cameras to match their associated
+windows.
+<DT>near and far clipping plane distances
+<DD>Note that both must be strictly greater than zero.  Very large
+&#60;far&#62;/&#60;near&#62; distance ratios cause Z-buffering to behave badly; part of
+an object may be visible even if somewhat more distant than another.
+<DT>field of view
+<DD>Specified in either of two forms.
+<DL COMPACT>
+  @item fov 
+is the field of view -- in degrees if perspective, or linear
+distance if orthographic -- in the <EM>shorter</EM> direction.
+  @item halfyfield 
+is half the projected Y-axis field, in world coordinates (not angle!),
+at unit distance from the camera.  For a perspective camera, halfyfield
+is related to angular field:
+<P>
+halfyfield = tan( Y_axis_angular_field / 2 )
+<P>
+while for an orthographic one it's simply:
+<P>
+halfyfield = Y_axis_linear_field / 2
+<P>
+</DL>
+<P>
+This odd-seeming definition is (a) easy to calculate with and
+(b) well-defined in both orthographic and perspective views.
+</DL>
+<P>
+The syntax for a camera is:
+<P>
+<PRE>
+&#60;camera&#62; ::=
+
+   [ "camera" ]			(optional keyword)
+    [ "{" ]			(opening brace, generally required)
+	[ "define" &#60;name&#62; ]
+
+	"&#60;" &#60;filename&#62;
+      |
+	":" &#60;name&#62;
+      |
+				(or any number of the following,
+				 in any order...)
+
+	"perspective"  {"0" | "1"}		(default 1)
+					(otherwise orthographic)
+
+	"stereo"       {"0" | "1"}		(default 0)
+					(otherwise mono)
+
+	"worldtocam" &#60;transform&#62;	(see transform syntax above)
+
+	"camtoworld" &#60;transform&#62;
+				(no point in specifying both
+				 camtoworld and worldtocam; one is
+				 constrained to be the inverse of						 the other)
+
+	"halfyfield" &#60;half-linear-Y-field-at-unit-distance&#62;
+				(default tan 40/2 degrees)
+
+	"fov"		(angular field-of-view if perspective,
+			 linear field-of-view otherwise.
+			 Measured in whichever direction is smaller,
+			 given the aspect ratio.  When aspect ratio
+			 changes -- e.g. when a window is reshaped --
+			 "fov" is preserved.)
+
+	"frameaspect" &#60;aspect-ratio&#62;	(X/Y) (default 1.333)
+
+	"near"  &#60;near-clipping-distance&#62;	(default 0.1)
+	
+	"far"	&#60;far-clipping-distance&#62;		(default 10.0)
+
+	"focus" &#60;focus-distance&#62;		(default 3.0)
+
+	
+     [ "}" ]				(matching closebrace)
+</PRE>
+<P>
+<H3>Window</H3>
+<P>
+A window object specifies size, position, and other window-system
+related information about a window in a device-independent way.
+<P>
+The syntax for a window object is:
+<P>
+<PRE>
+window ::=
+
+	[ "window" ]			(optional keyword)
+	  [ "{" ]			(curly brace, often required)
+
+	    			(any of the following, in any order)
+
+		"size"  &#60;xsize&#62; &#60;ysize&#62;
+				(size of the window)
+
+		"position"  &#60;xmin&#62; &#60;xmax&#62; &#60;ymin&#62; &#60;ymax&#62;
+				(position &#38; size)
+
+
+		"noborder"
+				(specifies the window should
+				 have no window border)
+
+		"pixelaspect"  &#60;aspect&#62;
+			    (specifies the true visual aspect ratio
+			     of a pixel in this window in the sense
+			     xsize/ysize, normally 1.0.
+			     For stereo hardware which stretches the
+			     display vertically by a factor of 2,
+			     "pixelaspect 0.5" might do.
+			     The value is used when computing the
+			     projection of a camera associated with
+			     this window.)
+
+	  [ "}" ]			(matching closebrace)
+</PRE>
+<P>
+Window objects are used in the Geomview <CODE>window</CODE> and
+<CODE>ui-panel</CODE> commands to set default properties for future windows or
+to change those of an existing window.
+<P>
+
+</td></tr></table></center>
+</body>
+</html>

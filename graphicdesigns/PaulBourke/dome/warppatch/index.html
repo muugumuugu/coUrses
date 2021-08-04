@@ -1,0 +1,287 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Warp Patch for Quartz Composer</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Warp mesh patch for Quartz Composer</h1>
+<b>Intended primarily for 
+<a href="../../papers/planetarian1/index.html">fulldome projection using a spherical mirror</a></b><br>
+<b>Also used as a <a href="../../papers/auc2007/index.html">navigable movie player</a></b><br>
+<b>Modelled after the <a href="../warpplayer/index.html">warpplayer</a> application</b><p>
+Written by Christopher Wright @ Kineme<br>
+Design by <a href="../index.html">Paul Bourke</a><p>
+</center>
+<p>
+
+<center>
+<table width=600><tr><td>
+<p align="justify">
+<font color="#992222">
+Please note that at the time of writing (August 2019), Quartz Composer is
+largely a dead product as Apple has stopped supporting it. As such this document
+is largely of historical interest only. While there are a few alternatives, the
+author suggests using Vuo to implement similar realtime warping capabilities. 
+</font>
+</p>
+</td></tr></table>
+</center>
+<p>
+
+<p align="justify">
+The Quartz Composer patch discussed here warps an image (or movie) in an arbitrary way
+as specified by a user generated mesh stored in a simple text file. There are many
+potential applications for this but the motivation for this capability arose from a
+very precise requirement, namely the warping of images for projection into immersive
+spaces by using a projector and a spherical mirror.
+</p>
+
+<p align="justify">
+This document assumes the reader is familiar with the topics listed above, namely the
+use of a spherical mirror as a low cost single projector solution for immersive displays.
+And that this technique requires image warping such that the result appears correct on
+the final surface. Additionally, the concept of navigable movies ... movies where each
+frame consists of more than a limited perspective projection and the viewer may change
+his/her view while the movie plays.
+</p>
+
+<p align="justify">
+In all the above applications an image is warped (distorted) using a regular mesh
+consisting of vertex coordinates (x,y), texture coordinates (u,v) and an intensity
+mapping (i). The patch described here adds this warping support to Quartz Composer and
+is a direct analog to the existing stand alone application "warpplayer" 
+(it uses the exact same warp mesh file format) except that
+it adds the enormous additional functionality of Quartz Composer to create more
+dynamic/interactive experiences. The rest of this document will concentrate on applications
+intended by the original designer of the patch, every attempt has been made to keep it
+general so that hopefully other uses will rise.
+</p>
+
+<h3>Description of inputs</h3>
+<table width=100%><tr><td width=128>
+	<img src="patch.jpg" width=128 height=182 border=0>
+</td><td>
+
+<ul>
+<li><p align="justify">
+<b>Mesh file</b>: file name of ASCII warp mesh, if the file name starts with "/" then
+it is an absolute file path, if it starts with a "~" then it is relative to the users
+home directory, otherwise relative to the current Quartz Composition directory. For
+portability reasons the last option is usually the preferred one.
+</p>
+
+<li><p align="justify">
+<b>Texture control u, v</b>: either clamp or wrap. 
+</p>
+
+<li><p align="justify">
+<b>X,Y,Z position</b>: provided for generality, not used for the purposes discussed here.
+</p>
+
+<li><p align="justify">
+<b>Width, Height</b>: this controls the width and height of the panel the image/movie
+is displayed on. For the purposes discussed here one is always running in full screen
+mode, for the image/movie to fill the frame the width and height should be the inverse
+of the aspect ratio. So for 4:3 aspect the width and height should be 0.75, for 16:9
+it should be 0.5625.
+</p>
+
+<li><p align="justify">
+<b>Delta u,v</b>: These modify the mesh texture coordinates of the warping mesh. 
+Not all adjustments make sense,
+the most common for panoramic images/movies is to map the mouse movement to the delta u
+input to enable horizontal panning.
+</p>
+
+<li><p align="justify">
+<b>Theta</b>: This also modifies the texture coordinates of the warping mesh. For the
+applications discussed here it is mostly used for rotating a fisheye projection for 
+planetarium content.
+</p>
+
+<li><p align="justify">
+<b>Image</b>: This is the input port for the image (or movie).
+</p>
+
+</ul>
+</td></tr></table><p>
+
+<h3>Examples</h3>
+
+<b>Fisheye</b><br>
+<center><table width=700>
+<tr><td>
+<p align="justify">
+This is perhaps the most common type of application for 
+<a href="../domeinstall/timon1.jpg">planetariums</a> using the
+spherical mirror projection technique. The input image is a fisheye and the only
+sensible navigation is rotation about the center of the fisheye.
+Note the use of the intensity mapping to compensate for the variable density of
+pixels, and hence light level on parts of the dome.
+</p>
+   <center>
+	<a href="http://paulbourke.net/dome/warppatch/fisheye.png"><img src="http://paulbourke.net/dome/warppatch/fisheye_s.png" width=700 height=795 border=1></a>
+	</center><br>
+	Example: Moonlight courtesy Andrew Quinn<br>
+   Sample mesh file: <a href="http://paulbourke.net/dome/warppatch/fisheye.data">fisheye.data</a><br>
+</td></tr>
+</table></center><p>
+
+<b>Spherical</b><br>
+<center><table width=700>
+<tr><td>
+<p align="justify">
+This example also uses a spherical mirror and a single projector but it is for a dome
+<a href="../iDome/index.html">orientated 90 degrees to a planetarium dome</a>.
+The warp map below takes a full spherical projection (image or movie) and warps it
+for a 16:9 projector and spherical mirror. Varying "Delta u" allows one to pan left/right
+while the movie is playing ... hence a navigable movie.
+</p>
+   <center>
+   <a href="http://paulbourke.net/dome/warppatch/spherical.png"><img src="http://paulbourke.net/dome/warppatch/spherical_s.png" width=700 height=856 border=1></a>
+   </center><br>
+	Example: Hawkesbury River courtesy Volker Kuchelmeister using the Ladybug camera<br>
+   Sample mesh file: <a href="http://paulbourke.net/dome/warppatch/spherical.data">spherical.data</a><br>
+</td></tr>
+</table></center><p>
+
+<b>Cylindrical</b><br>
+<center><table width=700>
+<tr><td>
+<p align="justify">
+The following warps a cylindrical panoramic projection (image or movie) to a perspective
+projection. In the case of a movie made up of cylindrical panoramic frames this
+is another example of a navigable movie. Varying "Delta u" also achieves the panning left and
+right, adjusting "Delta v" is a vertical pan up or down.
+</p>
+   <center>
+   <a href="http://paulbourke.net/dome/warppatch/cylindrical.png"><img src="http://paulbourke.net/dome/warppatch/cylindrical_s.png" width=700 height=836 border=1></a>
+   </center><br>
+	Example: Place-Hampi courtesy Sarah Kenderdine, Jeffrey Shaw.<br>
+   Sample mesh file: <a href="http://paulbourke.net/dome/warppatch/cylindrical.data">cylindrical.data</a><br>
+</td></tr>
+</table></center><p>
+
+<b>Planar</b><br>
+<center><table width=700>
+<tr><td>
+<p align="justify">
+This last example is a large "standard" movie, a perspective projection. Here the
+mesh simply implements a 8 times zoom, varying "Delta u" and "Delta v" allows one
+to pan around within the larger movie.
+</p>
+	<center>
+	<a href="http://paulbourke.net/dome/warppatch/planar.png"><img src="http://paulbourke.net/dome/warppatch/planar_s.png" width=700 height=818 border=1></a>
+	</center><br>
+	Example: "6dF: Beyond the Crux" by Paul Bourke<br>
+	Sample mesh file: <a href="http://paulbourke.net/dome/warppatch/planar.data">planar.data</a><br>
+</td></tr>
+</table></center><p>
+
+
+<h3>Download</h3>
+<dd>
+<a href="http://paulbourke.net/dome/warppatch/PBMesh.plugin.zip">PBMesh.plugin.zip</a><p>
+</dd>
+
+<h3>Notes</h3>
+<ul>
+<li><p align="justify">
+The patch has been tested so far with Leopard and QC3, as well as SnowLeopard
+and QC4. Noting however that for many movie intensive compositions QC3 is often
+much higher performing.
+</p>
+
+<li><p align="justify">
+It should be installed in "/Library/Graphics/Quartz Composer Patches" directory.
+</p>
+
+<li><p align="justify">
+The trick of course is how to generate the mesh file for a particular purpose. In
+some cases (eg: cylindrical to perspective) there is a clear mathematical relationship.
+In other cases, such as the spherical mirror based projections, one needs a calibration
+program where one aligns a known test pattern while adjusting the mesh to give the
+right transformation. This, <a href="../meshmapper/index.html">meshmapper</a>, is an example
+of such an alignment program.
+</p>
+
+<li><p align="justify">
+The mesh file format is quite straightforward. The first line of the file indicates the
+type of image format the mesh is designed for. For example: 1=planar, 2=fisheye,
+3=cylindrical panorama, 4=spherical panorama. The second line indicates the dimensions
+of the mesh. The remaining lines describe each node of the mesh, they include the
+(x,y) position in normalised screen coordinates, (u,v) texture coordinates, and
+(i) a multiplicative intensity value.
+</p>
+
+<li><p align="justify">
+The image quality seems to vary significantly with codec. Photo-JPEG seems to work
+particularly well, Motion-JPEG seems to be particularly poor quality even though
+this isn't evident with the QTPlayer or warpplayer.
+<p>
+
+<li><p align="justify">
+There would also seem to be a bug in Apples QuickTime API for movies of width 4096
+pixels, namely it mangles the 4096th column on nVidia cards but it works fine with ATI
+cards. In both cases the cards tested have a maximum texture size of 4096.
+Note that this happens in the QuickTime player from Apple, as well as warppatch.
+</p>
+</ul>
+
+<h3>Example: PufferSphere display balls</h3>
+
+<p align="justify">
+The Puffersphere displays employ a fisheye lens located at the radius of a
+semitransparent sphere. The exact geometry varies depending on the radius of the
+spheres and the projector being used. The challenge is to distort a spherical
+projection into the fisheye format such that the result on the sphere appears
+as a spherical projection should.
+</p>
+
+<p align="justify">
+Sample input image from a video sequence of the LadyBug-3.
+</p>
+<center>
+	<a href="http://paulbourke.net/dome/warppatch/puff3.jpg"><img src="http://paulbourke.net/dome/warppatch/puff3s.jpg" width=800 height=400 border=1></a>
+</center>
+
+<p align="justify">
+The resulting fisheye image, navigation is currently limited to rotations
+about the north pole (center of the image).
+</p>
+
+<center>
+	<img src="http://paulbourke.net/dome/warppatch/puff2.jpg" width=800 height=590 border=1>
+</center>
+
+<p align="justify">
+The QC composition.
+Note that this was additionally verification of pbmesh running with Snow Leopard and
+the associated new version of Quartz Composer.
+A simple example is given here:
+<a href="http://paulbourke.net/dome/warppatch/pufferfishpackage.zip">pufferfishpackage.zip</a>. Note that this is designed for the
+0.8m sphere, the field of view for the fisheye is different for the other radii versions.
+</p>
+
+<center>
+	<img src="http://paulbourke.net/dome/warppatch/puff1.jpg" width=689 height=505 border=1><br>
+</center>
+
+</td></tr></table></center>
+</body>
+</html>
+

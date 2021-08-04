@@ -1,0 +1,311 @@
+<html>
+<head><link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>YAODL format (for SGI PowerFlip)</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>YAODL Format (for SGI PowerFlip)</h1>
+<h3>Yet Another Object Description Language</h3>
+From SGI man page<br>
+Edited by <a href="../index.html">Paul Bourke</a><br>
+November 1996
+</center>
+
+<p><br>
+<pre>
+NAME
+     YAODL - the 3D data format used by the powerflip demo
+
+DESCRIPTION
+     YAODL stands for 'Yet Another Object Description Language', and is a
+     format for three-dimensional models that supports NURBS, polygons, and
+     quad-meshes, and object properties such as facet or vertex normals,
+     texture coordinates, and object, facet and vertex colors.  It also
+     supports hierarchical models, coordinate transformations (rotations,
+     scales, translations), and instancing (using the same data more than
+     once).  It is not an official data format of Silicon Graphics, it is just
+     a data format created for the powerflip demo program.  This document is
+     intended for intrepid programmers who want to display their data using
+     the powerflip program, and for the terminally curious.
+
+     A YAODL file consists of several YAODL objects separated by commas.  A
+     YAODL object has one of the following forms:
+     (object_type  argument1, argument2, ...)
+     (object_type  argument1, ...  :  property1, property2, ... )
+     integer integer integer ...
+     float float float ...
+     "Some Charater String"
+     name = {one of the forms above}
+     name
+     There is also a binary form that is described below.
+
+     The set of object types and their expected arguments is described more
+     fully below.  It will be simplest to start with a few examples of YAODL
+     objects:
+     red = (colors 1.0 0.0 0.0),
+     This defines a color called 'red'.  It might be used later like this:
+     (polygons (vertices -1. -1. 0.     1. -1. 0.
+        1.  1. 0.    -1.  1. 0.),
+        : red),
+     This defines one red square.  Red is a property of the polygon, so it
+     must be specified after the ':' in the polygons object.  Properties
+     affect only the object they are associated with (if there were other
+     objects after the red square, the red color would not affect them).
+
+     Why was the type of red 'colors' instead of 'color'?  In the YAODL file
+     format, almost all types are plural; a 'colors' object can contain more
+     than one color.  When matching up objects with their properties, they
+     must have the same plurality.  So, for the red polygon example, there was
+     one polygon (with 4 vertices) that matches up with one color.  If,
+     instead, we wanted one polygon with a different color at each of its
+     vertices we could have said:
+     (polygons (vertices
+       -1. -1. 0.      1. -1. 0.
+        1.  1. 0.     -1.  1. 0.,
+      : colors
+          1. 0. 0.       0. 1. 0.
+          0. 0. 1.       1. 1. 1.,
+     ))
+     Note that both the 'vertices' and the 'colors' types take one argument (a
+     list of floating point values), and each 3 values define one vertex
+     position or one RGB color.  Integers are not automatically converted to
+     floating point values, so make sure your colors and vertices have decimal
+     points in them.
+
+SCOPE RULES
+     Each set of curly-braces defines a scope.  Names defined inside a scope
+     are local to that scope and over-ride names in higher scopes. Names must
+     be declared before they are referenced.
+
+     A few more notes about syntax before describing the types more fully.
+     There are two styles of comments allowed in a YAODL file; C-style
+     (beginning with '/*' and ending with '*/' anywhere in the file) and
+     Shell-style (beginning with '#' as the first character on the line and
+     extending to the end of the line.  Comments are treated as whitespace,
+     along with blanks, tabs, and new-lines, and are ignored by the parser,
+     serving only to separate elements.
+
+TYPES
+     group
+          Group is used to construct an object hierarchy.  Groups have an
+          arbitrary number of arguments, each of which can be any YAODL
+          object.  If there are properties associated with the group, then
+          each property must have as many items as there are number of items
+          in the group.  For example, if the YAODL object is (group  object1,
+          object2 : colors) then there must be two colors in the colors array
+          (the first will be the color of object1, then second the color of
+          object2).
+
+     vertices
+          take a list of floats as an argument.  Every 3 floats defines one
+          vertex.  Vertices don't mean anything by themselves; they are used
+          as part of more complicated geometric type.  Normals, colors and
+          texture coordinates are often used as properties of vertices.
+
+     polygons
+          take a series of vertices as arguments.  Each vertices type defines
+          one polygon.  Polygons are very inefficient; use of them is not
+          recommended.  Wherever possible, use the more efficient
+          indexpolygons (see below).  Normals and colors are often used as
+          properties of polygons.  Example:
+          /* Define two polygons, one red and one blue */
+          (polygons
+            (vertices  1.0 0.0 0.0  0.0 1.0 0.0  0.0 0.0 1.0),
+            (vertices  1.0 0.0 0.0  0.0 1.0 0.0  3.2 0.0 1.0),
+           : colors 1.0 0.0 0.0   0.0 1.0 0.0,
+          ),
+
+     indices
+          takes an arbitrary number of arguments, each of which is a list of
+          integers.  Indices are used in the indexpolygons type to re-use
+          vertices in a list.
+
+     indexpolygons
+          takes two arguments; first a vertices object, and then an indices
+          object.  The indices are used to form polygons out of the vertices
+          in the vertex list.  The greatest integer in the indices list must
+          be less than the number of vertices in the vertex list or an error
+          will occur.  Normals and colors may be associated with the polygons
+          (there must be as many normals or colors as there are arguments to
+          the indices object).
+          (indexpolygons
+            vertices  1.0 0.0 0.0   0.0 1.0 0.0  0.0 0.0 1.0  3.2 0.0 1.0,
+            (indices  0 1 2,  0 1 3),   /* Two triangles */
+          ),
+
+     regularMesh
+          Defines a regular 3D mesh.  It expects two arguments.  The first
+          argument is a list of 2 integers specifying how many rows and
+          columns the mesh has.  The second is a vertices objects that must
+          have rows*columns vertices in it.  The vertices are connected to
+          form a grid in three-space.  The regularMesh primitive ignores any
+          attributes associated with it, but you may associate colors and
+          normals and texture coordinates with the vertices of the mesh, or
+          encapsulate the mesh in a group and associate a color (or a texture
+          or a contour) with the group.
+
+     colors
+          takes a list of floats.  Every 3 floats defines an RGB color.
+          Colors should be associated with vertices, polygons, indexpolygons,
+          or groups.  Example:
+          (indexpolygons
+            vertices  1.0 0.0 0.0   0.0 1.0 0.0  0.0 0.0 1.0  3.2 0.0 1.0,
+            (indices  0 1 2,  0 1 3),
+            : colors 1.0 0.0 0.0  0.0 1.0 0.0 /* Red and blue flat-shaded tris
+          */
+          ),
+
+     normals
+          take a list of floats.  Every 3 floats defines a normal vector.
+          Normals should be associated with vertices or polygons.
+
+     translates
+          takes a list of floats.  Every 3 floats defines an XYZ translation.
+          Translates are best associated with groups of objects.  Example:
+          # Use the same object twice; once translated:
+          wheel = ( ... some indexpolygons or something ...),
+          wheel, (group  wheel : (translates 1.0 0.0 0.0)),
+
+     scales
+          takes a list of floats.  Every 3 floats defines how much to scale in
+          the X, Y, and Z directions.  Scales are best associated with groups.
+
+     rotates
+          takes a list of floats.  Every 4 floats defines an angle and an
+          axis; the rotation will be a right-handed rotation of angle degrees
+          about the given axis.  Rotates are best associated with groups.
+
+     nurbs
+          defines a NURBS surface.  It takes 4 arguments; a list of S knots, a
+          list of T knots, 3 integers describing the number of control point
+          in the S and T directions and the number of coordinates per control
+          point (3 if it is a non-rational NURB, 4 if it is a rational NURB),
+          and, finally, the control points themselves.  Normals and texture
+          coordinates are automatically generated for the surface (YAODL does
+          not allow you to change the default mapping).  The only object you
+          may associate with a nurb is one or more trimcurves objects.  If you
+          want to associate a texture or color with a nurb, encapsulate the
+          nurb in a group and associate the texture or color with the group.
+
+     trimcurves
+          defines a trimming curve for a NURBS surface.  It takes three
+          arguments; a list of knots (floats), the number of control points
+          and number of coordinates per control point (integers), and the
+          control points (floats).  Trimcurves must be associated with a nurbs
+          surface.  Example:
+          (group
+            nurbs
+            -1. -1. -1. -1. 1. 1. 1. 1.,     /* S knots */
+            1. -1. -1. -1. 1. 1. 1. 1., /* T knots */
+            4 3,    /* Number of S control pts, number of T control pts,
+                   * number of coordinates per control point
+                   */
+            -2.5 -3.7 1.0   -1.5  -3.7  3.0 /* Control points */
+            1.5 -3.7 -2.5   2.5  -3.7  -.75
+            -2.5 -2.0 3.0   -1.5  -2.0  4.0
+            1.5 -2.0 -3.0   2.5  -2.0  0.0
+            -2.5 2.0 1.0   -1.5 2.0  0.0
+            1.5 2.0 -1.0   2.5  2.0  2.0
+            -2.5 2.7 1.25   -1.5  2.7  .1
+            1.5 2.7 -.6    2.5 2.7  .2,
+            : (trimcurves
+            0. 0. 0.  1. 1.  2. 2.  3. 3.   4. 4. 4.,  /* knots */
+            9 3,    /* Number of control points, floats per pt */
+            1.0 0.0 1.0   1.0 1.0 1.0   /* Control points
+            0.0 2.0 2.0  -1.0 1.0 1.0
+            -1.0 0.0 1.0 -1.0 -1.0 1.0
+            0.0 -2.0 2.0  1.0 -1.0 1.0
+            1.0 0.0 1.0),
+            ),
+            scales 0.2 0.2 0.2, textures "henry.rgb"),
+
+     textures
+          takes a series of character strings, each of which is the name of an
+          image file (in libimage.a format; the same format used by snapshot,
+          etc) to be used as a texture map.  Textures should be associated
+          with groups of objects.
+
+     texcoords
+          takes floats as it argument.  Each 2 floats defines s and t
+          coordinates; texcoords should be associated with vertices.
+
+     contours
+          Contours is a way of automatically generating texture coordinates
+          from a geometry.  There are three modes available, corresponding to
+          the three GL texgen(3G) function.  It expects 3 arguments; the first
+          is a string, either "contour", "linear", "spheremap" or "off".  The
+          second argument is also a character string; either "eye" or
+          "object", specifying which space the texture coordinates should be
+          specified in.  The third argument is a list of 4 floating point
+          values, specifying the plane equation for "linear" and "contour"
+          mode (the values are ignored for "off" and "spheremap" modes, but
+          must still be present).  See the GL texgen() manual page for more
+          information.
+
+BINARY FORMAT
+     A binary object can appear anywhere in a YAODL file; ASCII and binary may
+     be freely intermixed (so, for example, you can 'cat' together an ASCII
+     and binary yaodl file and get a valid YAODL file).  Binary objects have
+     two main advantages over their ASCII form; they are much, much faster to
+     read in and they generally take up about half the space.  The main
+     disadvantage is that the binary format is unportable.  Since it isn't
+     expected that YAODL will migrate to any other computer architectures,
+     this shouldn't be a problem.
+
+     A binary object starts with an '@' character.  Following the '@'
+     character is a NULL-terminated string which identifies the type of the
+     object (one of the types mentioned above), and a long (8-byte) integer
+     which specifies how many bytes of raw binary data follows.  The format of
+     the raw data depends on the type; the following types implement their own
+     binary formats:
+
+      float
+          This type is just the list of floating point values type.  The
+          spaces before and after the class name identify it as a basic,
+          built-in type.  The format of the data is just raw floating point
+          values; number_of_bytes/sizeof(float) values will be read (where
+          number_of_bytes is the long integer that follows the type name).
+
+      int This is the built-in integer class.  The data is just raw integers;
+          number_of_bytes/sizeof(int) integer values follow.
+
+     indices
+          The binary format for the indices type is layed out as follows:
+          '@'  "indices" number_of_bytes  number_of_lists
+          lengths[number_of_lists]  data
+          The number_of_lists specifies how many arguments (groups of
+          integers) this object has.  It is an integer.  Next, the length of
+          each group of integers is given (these lengths are also integers).
+          Finally, the data in all of the lists is given; the first lengths[0]
+          items in the data array are the first argument, the next lengths[1]
+          items are the second, etc.  These data values are also integers.
+
+BUGS
+     There are probably a lot of bugs lurking in YAODL.  It is probably
+     possible to work around most of them.
+
+     There is also a lot of missing functionality in YAODL.  It is expected
+     that future software products from Silicon Graphics will make YAODL
+     obsolete and fill in the missing functionality.
+</pre>
+
+<b>Example</b><p>
+<dd>
+<a href="http://paulbourke.net/dataformats/yaodl/example.txt">Example.txt</a><br>
+</dd>
+
+</td></tr></table></center>
+<p></body></html>

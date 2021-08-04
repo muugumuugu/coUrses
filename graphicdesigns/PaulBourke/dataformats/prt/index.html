@@ -1,0 +1,263 @@
+<html>
+<head><link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>PRT format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>PRT INPUT FILE FORMAT</h1>
+Version 1.0<br>
+Copyright (C) Kory Hamzeh, 1990.
+</center>
+<p><br><p>
+
+<p align="justify">
+Initially prt used the NFF file format. Then I started adding features to it,
+and decided not to call it NFF since it wasn't NFF anymore (makes sense,
+doesn't it?).
+</p>
+<pre>
+Here is a list of keywords:
+
+	from
+	at
+	up
+	angle
+	resolution
+	light
+	background
+	surface
+	cone
+	sphere
+	hsphere
+	polygon
+	ring
+	quadric
+	instance
+	end_instance
+	instance_of
+
+Here is an explanation of each keyword:
+
+----------
+
+Each input file must begin with the following keywords:
+
+    from %g %g %g
+    at %g %g %g
+    up %g %g %g
+    angle %g
+    resolution %d %d
+
+The parameters are:
+
+    From:  the eye location in XYZ.
+    At:    a position to be at the center of the image, in XYZ world
+	   coordinates.  A.k.a. "lookat".
+    Up:    a vector defining which direction is up, as an XYZ vector.
+    Angle: in degrees, defined as from the center of top pixel row to
+	   bottom pixel row and left column to right column.
+    Resolution: in pixels, in x and in y.
+
+----------
+
+Light sources:
+
+	light X Y Z
+
+Format:
+
+	light %g %g %g
+
+This keyword defines the position of the light sources. All light sources
+must be defined before any objects are defined.
+
+----------
+
+Background color:
+
+	background R G B y
+
+Format:
+
+	background %g %g %g y
+
+The background color in RGB. The last field is used for color cueing which
+is not implemented yet and must always be 'y'.
+
+----------
+
+Surface properties:
+
+	surface Rr Rg Rb Ks  Fr Fg Fb T  Ar Ag Ab  Dr Dg Db  Sr Sg Sb P Ior
+
+Format:
+
+	surface %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g
+
+The parameters are:
+
+	Rr Rg Rb	The reflective color triplet. This value should always
+			be 1 1 1 unless you want this surface to reflect 
+			different percentage per color component.
+	Ks		The specular component. This value is the percentage
+			of light that is reflected from this object. A value
+			of 0 means no reflection, and a value of 1 means a 
+			perfect reflector (mirror).
+	Fr Fg Fb	The refractive color triplet. This value should always
+			be 1 1 1 unless you want this surface to refract
+			different percentage per color component.
+	T		Transparency value. The amount of light that can go
+			through this object. A value of 0 means a totally opaque
+			object. A value of 1 means a totally transparent object.
+	Ar Ag Ab	The ambient color for this object. This means the color
+			of an object if it were fully shadowed. All objects are
+			assigned this color before any shading algorithm is
+			started. 
+	Dr Dg Db	The diffuse color component.
+	Sr Sg Sb	This value is the color of the specular highlights.
+			Usually it should be 1 1 1.
+	P		The Phong cosine power for highlights. The higher the
+			number (for example 100), the smaller the highlight.
+	Ior		Index of refraction.
+
+---------
+
+Cylinder or cone:
+
+	cone
+	base.x base.y base.z base_radius
+	apex.x apex.y apex.z apex_radius
+
+Format:
+
+    cone
+    %g %g %g %g
+    %g %g %g %g
+
+
+--------
+
+Sphere:
+
+	sphere center.x center.y center.z radius
+
+Format:
+
+	sphere %g %g %g %g
+
+
+--------
+
+Hollow sphere:
+
+	sphere center.x center.y center.z radius thickness
+
+Format:
+
+	sphere %g %g %g %g %g
+
+--------
+
+Polygon:  A polygon is defined by a set of vertices.  With these databases,
+	a polygon is defined to have all points coplanar.  A polygon has only
+	one side, with the order of the vertices being counterclockwise as you
+	face the polygon (right-handed coordinate system).  The first two edges
+	must form a non-zero convex angle, so that the normal and side 
+	visibility can be determined.  Description:
+
+	polygon total_vertices
+	vert1.x vert1.y vert1.z
+	[etc. for total_vertices vertices]
+
+Format:
+
+	polygon %d
+	[ %g %g %g ] <-- for total_vertices vertices
+
+--------
+
+Ring:
+	A ring is a flat coplaner round shaped object. For a ring object,
+	you must specify the center, 2 points on the surface of the ring,
+	the inner radius, and the outer radius. If the inner radius is non-zero,
+	then the ring will have a hole in the middle with the given radius.
+
+	ring center.x center.y center.z p1.x p1.y p1.z p2.x p2.y p2.z or ir
+
+Format:
+
+	ring %g %g %g  %g %g %g  %g %g %g  %g  %g
+
+----------
+
+Quadratic:
+
+	You can raytrace any quadratic object by specifying the center,
+	min, max, and coefficients. This is a very powerful object type.
+	It can do ellipsoids, hyperbolas, and any other quadratic surface.
+
+	quadric center.x center.y center.Z
+	min.x min.y min.z max.x max.y max.z
+	a b c d e 
+	f g h i j
+
+	The fields "a" through "j" are the coefficients.
+
+Format:
+
+	quadric %g %g %g
+	%g %g %g  %g %g %g
+	%g %g %g %g %g
+	%g %g %g %g %g
+
+----------
+
+Object instances.
+
+Defining an object instance:
+
+	You may define a group of objects (and surface properties) to an 
+	instance and assign a name to that instance. When the instance
+	is then used, all the objects in that instance will be placed
+	relative to the given origin. Note that instances by themselves
+	do not create any objects; the objects are created when the 
+	instance is referenced. Instances can not be nested.
+
+	Instances are used as follows:
+
+		instance nameofthisinstance
+
+			[ objects and surface properties ]
+
+		end_instance
+
+	where "nameofthisinstance" is a user assigned name such
+	as, for example, "tile_pattern".
+
+	An instance is referenced as follows:
+
+		instance_of nameofinstance loc.x loc.y loc.z
+
+	where
+
+		nameofinstance is the name assigned to a previously
+		defined object instance.
+		loc.x, loc.y, loc.z, the location of this object group.
+</pre>
+
+</td></tr></table></center>
+</body>
+</html>

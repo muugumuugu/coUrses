@@ -1,0 +1,379 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>IRIT format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<H1>IRIT Data File Format</h1>
+<p>
+This section describes the data file format used <br>
+to exchange data between IRIT and its accompanying tools.
+<br>
+By Gershon Elber 
+</center>
+<p><br><p>
+
+<PRE>
+ [OBJECT {ATTRS} OBJNAME
+     [NUMBER n]
+
+   | [POINT x y z]
+
+   | [VECTOR x y z]
+
+   | [CTLPT POINT_TYPE {w} x y {z}]
+
+   | [STRING "a string"]
+
+   | [MATRIX m00 ... m03
+             m10 ... m13
+             m20 ... m23
+             m30 ... m33]
+
+     ;A polyline should be drawn from first point to last. Nothing is drawn
+     ;from last to first (in a closed polyline, last point is equal to first).
+   | [POLYLINE {ATTRS} #PTS                   ;#PTS = number of points.
+         [{ATTRS} x y z]
+         [{ATTRS} x y z]
+            .
+            .
+            .
+         [{ATTRS} x y z]
+     ]
+
+     ;Defines a closed planar region. Last point is NOT equal to first,
+     ;and a line from last point to first should be drawn when the boundary
+     ;of the polygon is drawn.
+   | [POLYGON {ATTRS} #PTS
+         [{ATTRS} x y z]
+         [{ATTRS} x y z]
+            .
+            .
+            .
+         [{ATTRS} x y z]
+     ]
+
+     ;Defines a "cloud" of points.
+   | [POINTLIST {ATTRS} #PTS
+         [{ATTRS} x y z]
+         [{ATTRS} x y z]
+            .
+            .
+            .
+         [{ATTRS} x y z]
+     ]
+
+     ;Defines an instance - a geometry reference (by name, SRF13 below)
+     ;and a transformation matrix to apply to this geoemtry
+   | [INSTANCE SRF13
+             m00 ... m03
+             m10 ... m13
+             m20 ... m23
+             m30 ... m33]
+
+     ;Defines a Bezier curve with #PTS control points. If the curve is
+     ;rational, the rational component is introduced first.
+   | [CURVE BEZIER {ATTRS} #PTS POINT_TYPE
+         [{ATTRS} {w} x y z ...]
+         [{ATTRS} {w} x y z ...]
+            .
+            .
+            .
+         [{ATTRS} {w} x y z ...]
+     ]
+
+     ;Defines a Bezier surface with #UPTS * #VPTS control points. If the
+     ;surface is rational, the rational component is introduced first.
+     ;Points are printed row after row (#UPTS per row), #VPTS rows.
+   | [SURFACE BEZIER {ATTRS} #UPTS #VPTS POINT_TYPE
+         [{ATTRS} {w} x y z ...]
+         [{ATTRS} {w} x y z ...]
+            .
+            .
+            .
+         [{ATTRS} {w} x y z ...]
+     ]
+
+     ;Defines a Bezier triangular surface with (#PTS + 1) * #PTS / 2 control
+     ;points, of order ORDER. If the surface is rational, the rational
+     ;component is introduced first. Note #PTS holds number of points along
+     ;an edge and is exactly equal to ORDER. Points are printed sequentially.
+   | [TRISRF BEZIER {ATTRS} #PTS POINT_TYPE
+         [{ATTRS} {w} x y z ...]
+         [{ATTRS} {w} x y z ...]
+            .
+            .
+            .
+         [{ATTRS} {w} x y z ...]
+     ]
+
+     ;Defines a Bezier trivariate with #UPTS * #VPTS * #WPTS control
+     ;points. If the trivariate is rational, the rational component is
+     ;introduced first. Points are printed row after row (#UPTS per row),
+     ;#VPTS rows, #WPTS layers (depth).
+   | [TRIVAR BEZIER {ATTRS} #UPTS #VPTS #WPTS POINT_TYPE
+         [{ATTRS} {w} x y z ...]
+         [{ATTRS} {w} x y z ...]
+            .
+            .
+            .
+         [{ATTRS} {w} x y z ...]
+     ]
+
+     ;Defines a Bspline curve of order ORDER with #PTS control points. If the
+     ;curve is rational, the rational component is introduced first.
+     ;Note length of knot vector is equal to #PTS + ORDER.
+     ;If curve is periodic KVP prefix the knot vector that has length of
+     ;'Length + Order + Order - 1'.
+   | [CURVE BSPLINE {ATTRS} #PTS ORDER POINT_TYPE
+         [KV{P} {ATTRS} kv0 kv1 kv2 ...]                    ;Knot vector
+         [{ATTRS} {w} x y z ...]
+         [{ATTRS} {w} x y z ...]
+            .
+            .
+            .
+         [{ATTRS} {w} x y z ...]
+     ]
+
+     ;Defines a Bspline surface with #UPTS * #VPTS control points, of order
+     ;UORDER by VORDER. If the surface is rational, the rational component
+     ;is introduced first.
+     ;Points are printed row after row (#UPTS per row), #VPTS rows.
+     ;If surface is periodic in some direction KVP prefix the knot vector
+     ;that has length of 'Length + Order + Order - 1'.
+   | [SURFACE BSPLINE {ATTRS} #UPTS #VPTS UORDER VORDER POINT_TYPE
+         [KV{P} {ATTRS} kv0 kv1 kv2 ...]                ;U Knot vector
+         [KV{P} {ATTRS} kv0 kv1 kv2 ...]                ;V Knot vector
+         [{ATTRS} {w} x y z ...]
+         [{ATTRS} {w} x y z ...]
+            .
+            .
+            .
+         [{ATTRS} {w} x y z ...]
+     ]
+
+     ;Defines a Bspline triangular surface with (#PTS + 1) * #PTS / 2 control
+     ;points, of order ORDER. If the surface is rational, the rational
+     ;component is introduced first.
+     ;Points are printed sequentially.
+   | [TRISRF BSPLINE {ATTRS} #PTS ORDER POINT_TYPE
+         [KV {ATTRS} kv0 kv1 kv2 ...]                   ;Knot vector
+         [{ATTRS} {w} x y z ...]
+         [{ATTRS} {w} x y z ...]
+            .
+            .
+            .
+         [{ATTRS} {w} x y z ...]
+     ]
+
+     ;Defines a Bspline trivariate with #UPTS * #VPTS * #WPTS control
+     ;points. If the trivariate is rational, the rational component is
+     ;introduced first. Points are printed row after row (#UPTS per row),
+     ;#VPTS rows, #WPTS layers (depth).
+     ;If trivariate is periodic in some direction KVP prefix the knot vector
+     ;that has length of 'Length + Order + Order - 1'.
+   | [TRIVAR BSPLINE {ATTRS} #UPTS #VPTS #WPTS UORDER VORDER WORDER POINT_TYPE
+         [KV{P} {ATTRS} kv0 kv1 kv2 ...]                ;U Knot vector
+         [KV{P} {ATTRS} kv0 kv1 kv2 ...]                ;V Knot vector
+         [KV{P} {ATTRS} kv0 kv1 kv2 ...]                ;W Knot vector
+         [{ATTRS} {w} x y z ...]
+         [{ATTRS} {w} x y z ...]
+            .
+            .
+            .
+         [{ATTRS} {w} x y z ...]
+     ]
+
+     ;Defines a trimmed surface. Encapsulates a surface (can be either a
+     ;Bspline or a Bezier surface) and prescribes its trimming curves.
+     ;There can be an arbitrary number of trimming curves (either Bezier
+     ; or Bspline). Each trimming curve contains an arbitrary number of
+     ;trimming curve segments, while each trimming curve segment contains
+     ;a parameteric representation optionally followed by a Euclidean
+     ;representation of the trimming curve segment.
+   | [TRIMSRF
+         [SURFACE ...
+         ]
+         [TRIMCRV
+             [TRIMCRVSEG
+                 [CURVE ...
+                 ]
+             ]
+                .
+                .
+                .
+             [TRIMCRVSEG
+                 [CURVE ...
+                 ]
+             ]
+         ]
+             .
+             .
+             .
+         [TRIMCRV
+             [TRIMCRVSEG
+                 [CURVE ...
+                 ]
+             ]
+                .
+                .
+                .
+             [TRIMCRVSEG
+                 [CURVE ...
+                 ]
+             ]
+         ]
+     ]
+ ]
+
+ POINT_TYPE -> E1 | E2 | E3 | E4 | E5 | E6 | E7 | E8 | E9 |
+               P1 | P2 | P3 | P4 | P5 | P6 | P7 | P8 | P9
+
+ ATTRS -> [ATTRNAME ATTRVALUE]
+          | [ATTRNAME]
+          | [ATTRNAME ATTRVALUE] ATTRS
+
+</PRE><BR>
+
+<b>Some notes:</b><p>
+
+ * This definition for the text file is designed to minimize the
+   reading time and space. All information can be read without backward
+   or forward referencing.
+
+<p>
+ * An OBJECT must never hold different geometry types or other entities.
+   I.e. CURVEs, SURFACEs, and POLYGONs must all be in different OBJECTs.
+
+<p>
+ * Attributes should be ignored if not needed. The attribute list may have
+   any length and is always terminated by a token that is NOT '['. This
+   simplifies and disambiguates the parsing.
+
+<p>
+ * Comments may appear between '[OBJECT ...]' blocks, or
+   immediately after OBJECT OBJNAME, and only there.
+
+<p>
+   A comment body can be anything not containing the '[' or the
+   ']' tokens (signals start/end of block). Some of the comments in
+   the above definition are illegal and appear there only of the sake
+   of clarity.
+
+<p>
+ * It is preferred that geometric attributes such as NORNALs will be saved in
+   the geometry structure level (POLYGON, CURVE or vertices) while graphical
+   and others such as COLORs will be saved in the OBJECT level.
+
+<p>
+ * Objects may be contained in other objects to an arbitrary level.
+
+<p>
+ Here is an example that exercises most of the data format:
+
+<p>
+<PRE>
+ This is a legal comment in a data file.
+ [OBJECT DEMO
+     [OBJECT REAL_NUM
+         And this is also a legal comment.
+         [NUMBER 4]
+     ]
+
+     [OBJECT A_POINT
+         [POINT 1 2 3]
+     ]
+
+     [OBJECT A_VECTOR
+         [VECTOR 1 2 3]
+     ]
+
+     [OBJECT CTL_POINT
+         [CTLPT E3 1 2 3]
+     ]
+
+     [OBJECT STR_OBJ
+         [STRING "string"]
+     ]
+
+     [OBJECT UNIT_MAT
+         [MATRIX
+            1 0 0 0
+            0 1 0 0
+            0 0 1 0
+            0 0 0 1
+         ]
+     ]
+
+     [OBJECT [COLOR 4] POLY1OBJ
+         [POLYGON [PLANE 1 0 0 0.5] 4
+             [-0.5 0.5 0.5]
+             [-0.5 -0.5 0.5]
+             [-0.5 -0.5 -0.5]
+             [-0.5 0.5 -0.5]
+         ]
+         [POLYGON [PLANE 0 -1 0 0.5] 4
+             [0.5 0.5 0.5]
+             [-0.5 0.5 0.5]
+             [-0.5 0.5 -0.5]
+             [0.5 0.5 -0.5]
+         ]
+     ]
+
+     [OBJECT [COLOR 63] ACURVE
+         [CURVE BSPLINE 16 4 E2
+             [KV 0 0 0 0 1 1 1 2 3 4 5 6 7 8 9 10 11 11 11 11]
+             [0.874 0]
+             [0.899333 0.0253333]
+             [0.924667 0.0506667]
+             [0.95 0.076]
+             [0.95 0.76]
+             [0.304 1.52]
+             [0.304 1.9]
+             [0.494 2.09]
+             [0.722 2.242]
+             [0.722 2.318]
+             [0.38 2.508]
+             [0.418 2.698]
+             [0.57 2.812]
+             [0.57 3.42]
+             [0.19 3.572]
+             [0 3.572]
+         ]
+     ]
+
+     [OBJECT [COLOR 2] SOMESRF
+         [SURFACE BEZIER 3 3 E3
+             [0 0 0]
+             [0.05 0.2 0.1]
+             [0.1 0.05 0.2]
+
+             [0.1 -0.2 0]
+             [0.15 0.05 0.1]
+             [0.2 -0.1 0.2]
+
+             [0.2 0 0]
+             [0.25 0.2 0.1]
+             [0.3 0.05 0.2]
+         ]
+     ]
+ ]
+</PRE>
+
+</td></tr></table></center>
+</body>
+</html>

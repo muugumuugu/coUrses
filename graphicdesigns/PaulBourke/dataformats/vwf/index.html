@@ -1,0 +1,164 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>vwf - Vioso warp/blend data</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>vwf - Vioso warp/blend data</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 2018<p>
+Example file for a 4096x2160 projector, one of two for a twin
+projector dome system: <a href="http://paulbourke.net/dataformats/vwf/example.vwf.gz">example.vwf.gz</a>
+</center>
+<p><br><p>
+
+<p align="justify">
+VWF files from Vioso describe warping and blending for their range of
+multiple projector solutions where, for example, images need to be transformed
+(warped) and blended together with neighbouring projections. In their most general
+form they can contain multiple warp meshes and blend images, in the discussion
+here the minimum will be presented, namely, one warp mesh and one blend image.
+The general form of the file is as follows, each header section contains information
+(magic string) of the type of block and information on where the start and what the length
+of the data is.
+</p>
+
+<center>
+<img src="http://paulbourke.net/dataformats/vwf/structure.jpg" width=300 height=669 border=0>
+</center><p>
+
+<pre>
+typedef struct {
+   char           magicNumber[4];
+   unsigned int   numBlocks;         // szhdr
+   unsigned int   offs;              // flags
+   unsigned int   reserved;          // hMonitor
+} VWB_WarpSetFileHeader;
+</pre>
+
+<pre>
+typedef struct {
+   char           magicNumber[4];
+   unsigned int   szHdr;
+   unsigned int   flags;
+   unsigned int   hMonitor;
+   unsigned int   size;   
+   int            width;
+   int            height;
+   float          white[4];
+   float          black[4];
+   float          reserved[16];
+   char           name[256];
+} VWB_WarpFileHeader;
+</pre>
+
+<pre>
+typedef struct {
+   char           magicNumber[4];
+   unsigned int   szHdr;
+   unsigned int   flags;
+   unsigned int   hMonitor;
+   unsigned int   size;
+   int            width;
+   int            height;
+   float          white[4];
+   float          black[4];   
+   float          splitRowIndex;   
+   float          splitColumnIndex;
+   float          splitRows;   
+   float          splitColumns;   
+   float          splitTotalWidth;
+   float          splitTotalHeight;
+   float          typeCalib;
+   float          offsetX;
+   float          offsetY;   
+   float          blackOffset;
+   float          blackGain;
+   float          blackCut;
+   float          compoundID;
+   float          vReserved[3];
+   char           name[256];        // To the end of VWB_WarpFileHeader
+   char           ident[4096];
+   unsigned long  tmIdent;
+   float          vCntDispPx[7];
+   float          vPartialCnt[9];                     
+   char           primName[256];
+   float          vReserved2[16];
+   unsigned short displayID[256];
+   char           hostname[256];
+} VWB_WarpFileHeader4;
+</pre>
+
+<p align="justify">
+The warp record for a straightforward lookup consists of two floating point values (u,v)
+for each pixel in the destination (warped) image, the (u,v) relate obviously to the
+input image. As an example the following is visualised with u mapped to red and v
+mapped to green.
+</p>
+
+<center>
+<a href="http://paulbourke.net/dataformats/vwf/warp.jpg"><img src="http://paulbourke.net/dataformats/vwf/warp_s.jpg" width=600 height=316 border=1></a>
+</center><p>
+
+<pre>
+typedef struct {
+   float  x;
+   float  y;
+   float  z;
+   float  w;
+} VWB_WarpRecord;
+</pre>
+
+<p align="justify">
+The blend data is simply a BMP file, the grey level being a multiplicative factor on
+the intensity at the corresponding pixel. Both the warp and blend data blocks are at the
+resolution of the output images, typically the resolution of the data projector.
+</p>
+
+<center>
+<a href="http://paulbourke.net/dataformats/vwf/blend.jpg"><img src="http://paulbourke.net/dataformats/vwf/blend_s.jpg" width=600 height=316 border=1></a>
+</center><p>
+
+<pre>
+typedef struct {
+   unsigned short int type;         // Magic identifier
+   unsigned int size;               // File size in bytes
+   unsigned short int reserved1;
+   unsigned short int reserved2;
+   unsigned int offset;             // Offset to image data, bytes
+} BMPHEADER;
+</pre>
+
+<pre>
+typedef struct {
+   unsigned int   size;             // Header size in bytes
+   int            width,height;     // Width and height of image 
+   unsigned short planes;           // Number of colour planes
+   unsigned short bits;             // Bits per pixel 
+   unsigned int   compression;      // Compression type 
+   unsigned int   imagesize;        // Image size in bytes 
+   int            xresolution;      // Pixels per meter, x
+   int            yresolution;      // Pixels per meter, y
+   unsigned int   ncolours;         // Number of colours 
+   unsigned int   importantcolours; // Important colours
+} BMPINFOHEADER;
+</pre>
+
+</td></tr></table></center>
+</body>
+</html>
+

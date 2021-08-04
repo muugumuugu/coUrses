@@ -1,0 +1,102 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Adobe Photoshop PSD and PSB File Formats</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Adobe Photoshop PSD and PSB File Formats</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 2015
+<p>
+<a href="http://paulbourke.net/dataformats/psdpsb/index_sw.html">Swedish translation</a> by Catherine Desroches. Aug 2017
+</center>
+<p><br><p>
+
+<p align="justify">
+Adobe PhotoShop PSD and PSB (large document format) are convenient formats for exporting image data,
+particularly 16 or 32 bit high dynamic range data.
+The following gives a brief overview of the minimum requirements to create a legal (Adobe PhotoShop
+will read it) file, a more complete reference is provided
+<a href="http://paulbourke.net/dataformats/psdpsb/psdpsb.html">here</a>.
+</p>
+
+<p align="justify">
+A PSD or PSB file consists of a simple header followed by 4 sections, fortunately all the section
+data can be left empty by specifying 0 in the section length
+except for the last section which is the image data.
+The header consists of the usual suspects
+</p>
+<ul>
+<li>a magic string to ensure correct file identification, usually "8BPS".<p>
+<li>a version number, usually 1.<p>
+<li>the number of channels.<p>
+<li>the height and width of the image data.<p>
+<li>the colour depth of each channel in bits, usually 1, 8, 16 or 32.<p>
+<li>the colour mode, usually
+ Bitmap, Grayscale, Indexed, RGB, CMYK, Multichannel, Duotone or Lab.
+</ul>
+<p>
+
+<p align="justify">
+The image data can be raw (now compression), rle or zip compressed.
+In all cases the data is presented in planar (as opposed to interleaved) form.
+</p>
+
+<p align="justify">
+An (incomplete) example creating a 16bit greyscale PSD file
+is illustrated below, the functions WriteXXX() write binary data to
+a file file performing an option byte swap to handle big or little endian data.
+</p>
+<pre>
+   FILE *fptr;
+   int i,j;
+   char header[8] = "8BPS";
+   unsigned short int version = 1,channels = 1,zero = 0;
+   unsigned int width = 150,height = 200;
+   unsigned int zerolength = 0;
+   unsigned short depth = 16,colourmode = 1,compression = 0;
+   unsigned short intvalue = 0;
+
+   fptr = fopen("test.psd","w");
+
+   // Header
+   fwrite(header,4,1,fptr);
+   WriteShort(fptr,version,TRUE);
+   for (i=0;i&lt;3;i++)
+      WriteShort(fptr,zero,TRUE);
+   WriteShort(fptr,channels,TRUE);
+   WriteInt(fptr,height,TRUE);
+   WriteInt(fptr,width,TRUE);
+   WriteShort(fptr,depth,TRUE);
+   WriteShort(fptr,colourmode,TRUE);
+   WriteInt(fptr,zerolength,TRUE); // Colour mode data
+   WriteInt(fptr,zerolength,TRUE); // Image resource data
+   WriteInt(fptr,zerolength,TRUE); // Layer and mask section
+   // Image data
+   WriteShort(fptr,compression,TRUE);
+   for (j=0;j&lt;height;j++) {
+      for (i=0;i&lt;width;i++) {
+         intvalue = j * 65535 / height;
+         WriteShort(fptr,intvalue,TRUE);
+      }
+   }
+   fclose(fptr);
+</pre>
+</td></tr></table></center>
+</body>
+</html>
+

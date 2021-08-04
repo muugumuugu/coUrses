@@ -1,0 +1,922 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Stellarium and NightShade</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<h1>Stellarium and NightShade resources</h1>
+Written by <a href="../index.html">Paul Bourke</a><p>
+<p>
+<b>New</b>: <a href="index.html#may2012">Update for Stellarium and NightShade, May 2012</a><br>
+<b>New</b>: <a href="index.html#elevenone">Update for Stellarium version 11.1</a><br>
+<b>New</b>: <a href="index.html#ninezero">Update for version 0.9</a>
+
+<p><br><p>
+
+<h3>Stellarium warped for spherical mirror projection</h3>
+
+<p align="justify">
+Please note that the configuration options discussed here have been tested
+on the Mac OS-X version 0.8 of Stellarium unless otherwise noted. 
+The config file on that platform is
+located in the directory (~/Library/Preferences/Stellarium). In general they
+have also only been tested with the projector-mirror-dome are arranged in the
+orientation preferred by the author, it is also the optimal setup for a number
+of reasons.
+</p>
+
+<p align="justify">
+The following are some brief notes and recommendations on how to configure Stellarium so that it
+warps images correctly for projection using a spherical mirror.
+For more details on this form of projection see the following:
+<a href="../index.html">dome projection on a budget</a>. It is not intended for this
+document to discuss
+details of dome design, what projector models work best, what mirror size to choose, or
+how to source first surface mirrors, and so on ....
+for a discussion of these and other questions
+please contact the <a href="../../index.html">author</a>.
+</p>
+
+<p align="justify">
+At the time of writing the latest version of Stellarium was 0.8.2, as such these comments
+refer to that version. This was the first version with spherical mirror distortion support and
+there are still issues to be resolved, hopefully in the release of the next version
+at which point this document will be updated. The current implementation is at least 
+functional.
+</p>
+
+<b>Recommended configuration</b>
+<p align="justify">
+There are a large number of ways the spherical mirror and projector can be arranged within
+the dome space. One of the key advantages of this technique, compared to fisheye solutions,
+is that the projection gear can be moved to the edge of the dome thus freeing up the
+best viewing position, the center. 
+Therefore the recommended mirror position is up against the rim
+of the dome, the projector will be placed some distance along the line from the mirror center
+to the dome center. The exact position depends on the size of the mirror, the throw and
+zoom of the projector, and the degree of dome coverage you with to achieve. Typically I use
+and recommend mirrors with a radius of 0.37m or larger (smaller than this limits the
+choice of projectors due to focus limitations). The projector, if it has the throw of most
+commodity projectors, will typically be located around 1m away from the mirror. In the case
+of Stellarium, and indeed for almost all spherical mirror style projection, the center of
+the mirror, the center of the dome, the center of the light source, the zenith of the
+dome and the optical axis of the projector, are all assumed to lie in the same plane.
+</p>
+
+<p align="justify">
+The coverage of the projector frustum on the mirror is of course variable and controls
+the amount of dome coverage. There is a trade off between dome coverage and the pixel
+efficiency (ie: image resolution and therefore perceived quality). In other words, if only
+a small portion of the mirror is used the dome coverage will be lower but at a higher
+resolution than if a larger portion of the spherical mirror is used. As a starting point
+and the coverage recommended by the author as a good compromise is as follows: align
+the lower row of pixels from the projector to lie along the mirror equator, position and/or
+zoom the projector so that the center of the 
+upper row of pixels lie along the top of the mirror. Note
+that the mirror shown is of the security/safety type that is less than a 1/4 sphere, for
+images and measurements see <a href="../faq/mirrorshape.pdf">this</a>.
+</p>
+<center><img src="http://paulbourke.net/dome/stellarium/projector_mirror_frame.jpg"></center><p>
+
+<b>Stellarium configuration 0.8.2</b>
+<p align="justify">
+In Stellarium V0.8.2 the option for running in spherical mirror mode can be found in the
+configuration menu (video tab), 
+the option can be made permanent within the config.ini file. The later
+file also allows one to set up the geometric parameters required for a correctly warped result.
+In general, for a successful result you will need to run Stellarium in full screen mode.
+</p>
+<pre>
+[video]
+fullscreen                     = true
+distorter                      = fisheye_to_spheric_mirror
+</pre>
+
+<p align="justify">
+One usually will want to limit the fisheye image to the unit circle, this option 
+(viewport) is also available through the configuration window.
+</p>
+<pre>
+[projection]
+type                           = fisheye
+viewport                       = disk
+</pre>
+
+<p align="justify">
+The screen width and height options should be set to the native resolution of your 
+projector. You will however get better results if you set the resolution higher as long as:
+</p>
+<ul>
+<li>Your monitor can handle the resolution (likely, and almost certain for CRT)<br>
+<li>Your projector can accept and downscale the resolution to its native resolution (usually the case, within reason, for current projectors)<br>
+<li>You retain the aspect ratio of your projector, eg: 4:3
+</ul>
+<p align="justify">
+This "trick" in order to get higher quality results depends on the scalar found
+within the projector and may not be required in the next release of Stellarium.
+</p>
+
+<p align="justify">
+Given the configuration described above and a 5m radius dome, the following would be
+a convenient starting point for the warping parameters. Please note that the flipping
+options will only work in the next release, at that time one will be able to view and drive
+using the computer display. The mirroring will be achieved by setting the projector to 
+horizontal flip mode (eg: "floor-rear" configuration, the exact terminology
+may change depending on the projector manufacturer).
+</p>
+
+<pre>
+[spheric_mirror]
+projector_gamma                = 0.3
+projector_position_x           = 0.0
+projector_position_y           = 4.0
+projector_position_z           = 0
+mirror_position_x              = 0.0
+mirror_position_y              = 5.0
+mirror_position_z              = 0.0
+mirror_radius                  = 0.37
+dome_radius                    = 5
+zenith_y                       = 0
+scaling_factor                 = 1.2
+flip_horz                      = true
+flip_vert                      = false
+</pre>
+
+<p align="justify">
+Most of the above are self explanatory. The position of the projector is a little
+ambiguous because it isn't always obvious where the focal point is, as a rough measure
+a position 5cm behind the front of the lens will be close. In order to align the imagery
+more precisely on the dome I suggest turning on the azimuthal grid (z key) and look straight
+up. The pole can be aligned to the pole of the dome and the horizon line aligned to
+the rim of the dome. Achieve this by varying the "scaling_factor" and the "zenith_y".
+The scaling factor is essentially adjusting for the projector zoom and throw. The
+zenith_y is adjusting the overall tilt of the projector frustum.
+</p>
+
+<p align="justify">
+For example, if the zoom is increased in the above configuration to 1.0 the result
+is shown in the image on the left below. the vertical zenith value can be dropped to
+lower and correctly position the bottom of the image to the spring line (as described above)
+of the dome.
+</p>
+<center><table><tr><td>
+	<a href="http://paulbourke.net/dome/stellarium/stellarium0.jpg"><img src="http://paulbourke.net/dome/stellarium/stellarium0s.jpg" width=350 border=1 height=263>
+</td>
+<td width=50>&nbsp;</td>
+<td>
+   <a href="http://paulbourke.net/dome/stellarium/stellarium1.jpg"><img src="http://paulbourke.net/dome/stellarium/stellarium1s.jpg" width=350 border=1 height=263>
+</td></tr></table></center><p>
+
+<p align="justify">
+When doing the alignment it is helpful to make the azimuthal grid as clear as possible.
+The following is one way to do this.
+</p>
+<pre>
+projector_gamma                = 0
+azimuthal_color                = 1.0,1.0,1.0
+</pre>
+
+<p align="justify">
+The next most common adjustment is to reduce the projector position to be below the 
+mirror so that light
+can be reflected over the top without causing a shadow (projector_position_z < 0).
+While this can be a rather tedious and repetitive process (adjusting both scaling and
+zenith value to get the right result), 
+it only has to be performed once for a given configuration.
+</p>
+
+<p align="justify">
+In the navigation section I suggest the following.
+</p>
+<pre>
+[navigation]
+init_fov                       = 180
+init_view_pos                  = 0.000001,0,0.99999
+</pre>
+
+<p align="justify">
+In general one wants to remove any menus that may overlap into the fisheye circle.
+</p>
+<pre>
+[gui]
+flag_show_fps                  = false
+flag_menu                      = false
+flag_help                      = false
+flag_infos                     = false
+flag_show_topbar               = false
+flag_show_time                 = true
+flag_show_date                 = true
+flag_show_appname              = false
+flag_show_fov                  = false
+flag_show_selected_object_info = true
+flag_show_flip_buttons         = false
+flag_show_script_bar           = false
+flag_script_allow_ui           = false
+</pre>
+<p>
+
+<a name="ninezero"><b>Stellarium configuration 0.9</b></a> 
+(<a href="http://paulbourke.net/dome/stellarium/config.ini.zip">Sample configuration file</a>)<p>
+<p align="justify">
+With the release of Stellarium 0.9, support for spherical mirror projection is greatly
+improved, although there are still some rather frustrating aspects to a number of their
+implementation choices. I will not repeat the settings above that version 0.8 and 0.9
+have in common, the spherical mirror section that gives the right results for the 
+standard spherical mirror projection arrangement is as follows:
+</p>
+<pre>
+[spheric_mirror]
+projector_gamma                = 0.3
+projector_position_x           = 0
+projector_position_y           = 4
+projector_position_z           = 0
+mirror_position_x              = 0
+mirror_position_y              = 5
+mirror_position_z              = 0
+mirror_radius                  = 0.37
+dome_radius                    = 5.0
+image_distance_div_height      = 2.67
+projector_delta                = 10.6
+projector_alpha                = 0
+projector_phi                  = 0
+flip_horz                      = false
+flip_vert                      = false
+distorter_max_fov              = 180
+texture_triangle_base_length   = 8
+flag_use_ext_framebuffer_object = true
+</pre>
+
+<p align="justify">
+In the video section, most modern graphics cards and drivers have no issue with
+non power of two textures. Somewhat smoother operation can be achieved by matching
+the maximum frame rate to the vertical refresh of the projector, this is usually
+60Hz and this should also be set in the monitors control panel for the display. 
+In any case, since locking to vertical refresh should be enabled to avoid tearing, 
+there is no possibility of frame rates above the refresh setting of (typically 
+60 to 85 Hz for digital displays and pretty much exclusively 60Hz for digital
+projectors).
+</p>
+<pre>
+horizontal_offset              = 0
+vertical_offset                = 0
+minimum_fps                    = 10
+maximum_fps                    = 60
+distorter                      = fisheye_to_spheric_mirror
+non_power_of_two_textures      = true
+</pre>
+<p>
+
+Notes:<br>
+
+<ul>
+<li><p align="justify">
+The flipping is rather redundant, one normally wants to see the image correct on
+the monitor and flipped digitally using the projector controls (image flipping is
+supported in all known data projectors).
+</p>
+
+<li><p align="justify">
+The throw is defined differently to convention, it is normally quoted and measured
+as the projector/image distance divided by the image width. In any case, the difference
+between the conventional definition and the one here is just a factor of the projector
+aspect ratio. So commodity projectors (depending on the zoom have a throw of between 1.6
+and 2.4 (depending on the zoom), this corresponds to a "image_distance_div_height" of
+between 2.1 and 3.2 for a 4:3 aspect ratio. In the above 2.67 corresponds to a throw of 2.0.
+</p>
+
+<li><p align="justify">
+Data projectors (except for very wide angle lens) generally have an offset lens. The
+degree of offset, except in projectors with mechanical lens shift, is fixed. The usual
+way of specifying this is as a percentage of the half image height, 
+0% is the on axis case, 100% is where the
+image starts at the center of the lens. Generally projectors with standard lens 
+have an offset of between 90 and 110%. DLP projectors (usually favoured for dome
+projection due to high contrast ratios) commonly have offsets slightly above 100%,
+additionally ideal for spherical mirror projector since it allows the light to pass over the top
+of a level projector.
+</p>
+<center><img src="http://paulbourke.net/dome/stellarium/offset.gif"></center><p>
+<p align="justify">
+Stellarium defines this offset as an angle, so for example in the above example with
+a throw of 2.0, the image height if the projector is 1m away is (1/2)*(3/4) = 0.375.
+For a projector with a 100% offset, the angle should be atan(0.375/2) = 10.6 degrees.
+</p>
+
+<li><p align="justify">
+In the "standard" (recommended) arrangement of the mirror with respect to the dome,
+the radius of the dome is not relevant.
+</p>
+
+<li><p align="justify">
+The texture triangle length should be reduced to 4 or 8 for improved quality. While
+this should have little performance issues for modern hardware, it may well be an
+issue on some machine configurations.
+</p>
+
+<li><p align="justify">
+Unfortunately the developers have chosen to implement their own warp mesh approach
+and file format rather the more general one employed by my
+existing software tools (and implemented by other developers). This precludes 
+the elegant idea of having one mesh file for all applications at a particular site.
+Fortunately the above geometric approach is perfectly satisfactory for standard dome
+configurations. 
+</p>
+
+<li><p align="justify">
+When starting up in warped fisheye mode there is a bug if flag_use_ext_framebuffer_object
+is set to true. 
+</p>
+
+<li><p align="justify">
+On PPC and Intel Macs, running Stellarium in warped fisheye mode results in a crash
+on quitting, the OS reports 
+"The application Stellarium quit unexpectedly." error message. 
+Not a serious issue since one was quitting anyway, just an annoying error message.
+</p>
+</ul>
+<p>
+
+
+<a name="elevenone"><b>Stellarium configuration 11.1</b></a>
+<p align="justify">
+The configuration file now seems to reside in "Library/Application Support/Stellarium"
+within the users home directory.
+</p>
+
+<p align="justify">
+Unfortunately while the warping was never ideal, it is now broken on a couple of fronts.
+My understanding is that the last correctly operating version in this regard was 10.2.
+<p>
+
+<p align="justify">
+Landscapes are handled a little different, they reside in 
+"Library/Application Support/Stellarium/landscapes/"
+in the users home directory. At the bare minimum they require a spherical projection and a landscape.ini
+file. Note that other projections are supported besides spherical, but that is the most general
+and recommended by the author.
+An example is given in this zip file: <a href="http://paulbourke.net/dome/stellarium/polargrid.zip">polargrid.zip</a>. This
+version of Stellarium allows one to add the landscape through the gui rather than adding
+manually. See "Sky and Viewing Options menu", and choose the "Landscape" tab.
+</p>
+
+
+<h3>Miscellaneous</h3>
+
+<b>Colour calibration</b>
+<p align="justify">
+While not related to Stellarium, I cannot emphasise enough the importance of performing
+a computer/projector colour calibration when projecting fulldome. 
+This is straightforward if you are using Mac OS-X, see
+the displays control panel. Creating and using a correct colour profile significantly
+improves the colour and contrast levels. In general data projectors have a
+very high (or low depending on which way you define it) gamma. Values of more than 3
+are not uncommon, this corresponds to 1/3 in the Stellarium gamma correction setting.
+</p>
+
+<b>Gain and black levels</b>
+<p align="justify">
+Note also that by its very nature there is a lot of light inter-reflection inside a dome
+onto other surfaces of the dome. Ideally dome surfaces have gains 
+that are as low as 0.5 and projectors with
+good black levels make a big difference to the final image contrast. For this reason one
+tries to use a projector with a contrast ratio of at least 2000:1, this normally
+is only available in DLP projectors ... at least in the commodity projector range.
+</p>
+
+<b>Aspect ratio</b>
+<p align="justify">
+In general, wide screen 16:9 projectors offer higher pixel efficiency when using a
+spherical mirror.
+</p>
+
+<b>Sample screen shots</b> (Click to enlarge)<p>
+<center><table>
+<tr>
+<td>
+	<a href="http://paulbourke.net/dome/stellarium/1.html"><img src="http://paulbourke.net/dome/stellarium/1s.jpg" width=300 height=225 border=1></a><br>
+</td>
+<td width=50>&nbsp;</td>
+<td>
+   <a href="http://paulbourke.net/dome/stellarium/2.html"><img src="http://paulbourke.net/dome/stellarium/2s.jpg" width=300 height=225 border=1></a><br>
+</td>
+</tr>
+
+<tr>
+<td colspan=3>
+<br><br>
+</td>
+</tr>
+
+<tr>
+<td>
+   <a href="http://paulbourke.net/dome/stellarium/3.html"><img src="http://paulbourke.net/dome/stellarium/3s.jpg" width=300 height=225 border=1></a><br>
+</td>
+<td width=50>&nbsp;</td>
+<td>
+   <a href="http://paulbourke.net/dome/stellarium/4.html"><img src="http://paulbourke.net/dome/stellarium/4s.jpg" width=300 height=225 border=1></a><br>
+</td> 
+</tr>
+
+<tr>
+<td colspan=3>
+<br><br>
+</td>
+</tr>
+
+<tr>
+<td>
+   <a href="http://paulbourke.net/dome/stellarium/5.html"><img src="http://paulbourke.net/dome/stellarium/5s.jpg" width=300 height=225 border=1></a><br>
+</td>
+<td width=50>&nbsp;</td>
+<td>
+   <a href="http://paulbourke.net/dome/stellarium/6.html"><img src="http://paulbourke.net/dome/stellarium/6s.jpg" width=300 height=225 border=1></a><br>
+</td>
+</tr>
+
+<tr>
+<td colspan=3>
+<br><br>
+</td>
+</tr>
+
+<tr>
+<td>
+   <a href="http://paulbourke.net/dome/stellarium/7.html"><img src="http://paulbourke.net/dome/stellarium/7s.jpg" width=300 height=280 border=1></a><br>
+</td>
+<td width=50>&nbsp;</td>
+<td>
+   <a href="http://paulbourke.net/dome/stellarium/8.html"><img src="http://paulbourke.net/dome/stellarium/8s.jpg" width=300 height=280 border=1></a><br>
+</td>
+</tr>
+
+</table></center>
+<p>
+
+Photos using an upright hemispherical dome.<p>
+<center><table>
+
+<tr>
+<td><a href="http://paulbourke.net/dome/stellarium/upright5.jpg"><img src="http://paulbourke.net/dome/stellarium/upright5s.jpg" width=300 height=225 border=1></a></td>
+<td width=50>&nbsp;</td>
+<td><a href="http://paulbourke.net/dome/stellarium/upright2.jpg"><img src="http://paulbourke.net/dome/stellarium/upright2s.jpg" width=300 height=225 border=1></a></td>
+</tr>
+<tr>
+<td colspan=3>
+<br><br>
+</td>
+</tr>
+<tr>
+<td><a href="http://paulbourke.net/dome/stellarium/upright4.jpg"><img src="http://paulbourke.net/dome/stellarium/upright4s.jpg" width=300 height=225 border=1></a></td>
+<td width=50>&nbsp;</td>
+<td><a href="http://paulbourke.net/dome/stellarium/upright3.jpg"><img src="http://paulbourke.net/dome/stellarium/upright3s.jpg" width=300 height=225 border=1></a></td>
+</tr>
+</table></center>
+
+
+
+<h3>Landscape images</h3>
+Compiled/rendered by <a href="../index.html">Paul Bourke</a><br>
+Available with different (lower) fields of view or higher resolution on request.<p>
+
+Examples<br>
+<center><table><tr><td>
+<a href="http://paulbourke.net/dome/stellarium/ground1.jpg"><img src="http://paulbourke.net/dome/stellarium/ground1_s.jpg" width=350 height=263 border=1></a>
+</td><td>
+<a href="http://paulbourke.net/dome/stellarium/ground2.jpg"><img src="http://paulbourke.net/dome/stellarium/ground2_s.jpg" width=350 height=263 border=1></a>
+</td></tr></table></center><p>
+
+<center><table>
+
+<tr>
+<td><b>Location</b></td>
+<td></td>
+<td><b>Preview</b></td>
+<td></td>
+<td><b>landscape.ini</b></td>
+</tr>
+
+<tr>
+<td>&nbsp;</td>
+<td></td>
+<td>&nbsp;</td>
+<td></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<td valign="top">
+Cahill, Sydney, Australia<br>
+Photographer: Peter Murphy
+</td>
+<td width=20>&nbsp;</td>
+<td valign="top">
+<a href="http://paulbourke.net/dome/stellarium/cahill_1024.png"><img src="http://paulbourke.net/dome/stellarium/cahill_s.jpg" width=300 height=300 border=1></a>
+</td>
+<td width=20>&nbsp;</td>
+<td valign="top">
+<pre>
+[cahill]
+name = Cahill
+type = fisheye
+maptex = landscapes/cahill_1024.png
+texturefov = 360
+</pre>
+</td>
+</tr>
+
+<tr>
+<td valign="top">
+Eliza, Sydney, Australia<br>
+Photographer: Peter Murphy
+</td>
+<td width=20>&nbsp;</td>
+<td valign="top">
+<a href="http://paulbourke.net/dome/stellarium/eliza_1024.png"><img src="http://paulbourke.net/dome/stellarium/eliza_s.jpg" width=300 height=300 border=1></a>
+</td>
+<td width=20>&nbsp;</td>
+<td valign="top">
+<pre>
+[eliza]
+name = Eliza
+type = fisheye
+maptex = landscapes/eliza_1024.png
+texturefov = 360
+</pre>
+</td>
+</tr>
+
+<tr>
+<td valign="top">
+Coogee Cementary, Sydney, Australia<br>
+Photographer: Peter Murphy
+</td>
+<td width=20>&nbsp;</td>
+<td valign="top">
+<a href="http://paulbourke.net/dome/stellarium/coogee_1024.png"><img src="http://paulbourke.net/dome/stellarium/coogee_s.jpg" width=300 height=300 border=1></a>
+</td>
+<td width=20>&nbsp;</td>
+<td valign="top">
+<pre>
+[coogee]
+name = Coogee
+type = fisheye
+maptex = landscapes/coogee_1024.png
+texturefov = 360
+</pre>
+</td>
+</tr>
+
+<tr>
+<td valign="top">
+<a href="../../geometry/star_polar/index.html">Star Sphere</a><br>
+Mathematics: Dan Thomasson
+</td>
+<td width=20>&nbsp;</td>
+<td valign="top">
+<a href="http://paulbourke.net/dome/stellarium/spheres_1024.png"><img src="http://paulbourke.net/dome/stellarium/spheres_s.jpg" width=300 height=300 border=1></a>
+</td>
+<td width=20>&nbsp;</td>
+<td valign="top">
+<pre>
+[spheres]
+name = Spheres
+type = fisheye
+maptex = landscapes/spheres_1024.png
+texturefov = 360
+</pre>
+</td>
+</tr>
+
+<tr>
+<td valign="top">
+Bayon, Cambodia<br>
+Photographer: Peter Murphy
+</td>
+<td width=20>&nbsp;</td>
+<td valign="top">
+<a href="http://paulbourke.net/dome/stellarium/bayon_1024.png"><img src="http://paulbourke.net/dome/stellarium/bayon_s.jpg" width=300 height=300 border=1></a>
+</td>
+<td width=20>&nbsp;</td>
+<td valign="top">
+<pre>
+[bayon]
+name = Bayon
+type = fisheye
+maptex = landscapes/bayon_1024.png
+texturefov = 360
+</pre>
+</td>
+</tr>
+
+<tr>
+<td valign="top">
+Angkor Wat, Cambodia<br>
+Photographer: Peter Murphy
+</td>
+<td width=20>&nbsp;</td>
+<td valign="top">
+<a href="http://paulbourke.net/dome/stellarium/angkor_1024.png"><img src="http://paulbourke.net/dome/stellarium/angkor_s.jpg" width=300 height=300 border=1></a>
+</td>
+<td width=20>&nbsp;</td>
+<td valign="top">
+<pre>
+[angkor]
+name = Angkor
+type = fisheye
+maptex = landscapes/angkor_1024.png
+texturefov = 360
+</pre>
+</td>
+</tr>
+
+<tr>
+<td valign="top">
+Bakheng, Cambodia<br>
+Photographer: Peter Murphy
+</td>
+<td width=20>&nbsp;</td>
+<td valign="top">
+<a href="http://paulbourke.net/dome/stellarium/bakheng_1024.png"><img src="http://paulbourke.net/dome/stellarium/bakheng_s.jpg" width=300 height=300 border=1></a>
+</td>
+<td width=20>&nbsp;</td>
+<td valign="top">
+<pre>
+[bakheng]
+name = Bakheng
+type = fisheye
+maptex = landscapes/bakheng_1024.png
+texturefov = 360
+</pre>
+</td>
+</tr>
+
+<tr>
+<td valign="top">
+Hampi, India<br>
+Courtesy: Sarah Kenderdine
+</td>
+<td width=20>&nbsp;</td>
+<td valign="top">
+<a href="http://paulbourke.net/dome/stellarium/hampi_1024.png"><img src="http://paulbourke.net/dome/stellarium/hampi_s.jpg" width=300 height=300 border=1></a>
+</td>
+<td width=20>&nbsp;</td>
+<td valign="top">
+<pre>
+[hampi]
+name = Hampi
+type = fisheye
+maptex = landscapes/hampi_1024.png
+texturefov = 360
+</pre>
+</td>
+</tr>
+
+<tr>
+<td>
+Antarctica<br>
+Courtesy: Peter Morse
+</td>
+<td colspan=3>&nbsp;</td>
+<td>
+<pre>
+[landscape]
+name = Antartica
+author = Peter Morse
+description = Antarctica
+type = spherical
+maptex = artic.png
+</pre>
+</td></tr>
+<tr><td colspan=5>
+<center>
+<a href="http://paulbourke.net/dome/stellarium/artic1.png"><img src="http://paulbourke.net/dome/stellarium/artic1s.jpg" width=800 height=74</a>
+</center>
+</td></tr>
+
+</table></center>
+
+
+<a name="quality">
+<h3>Stellarium: Warping quality comparisons</h3>
+</a>
+
+<p align="justify">
+The following comparisons are provided in an attempt to address some confusion over
+how the image quality of a fisheye frame is affected by the warping process applied
+for projection using a spherical mirror. The image on the left is the fisheye frame
+from Stellarium. The image on the right is an optimal warping of the identical view
+settings. The algorithm is not particularly special, the fisheye is rendered to a
+texture slightly larger (by between 30 to 50%) than the screen height. This resulting
+fisheye texture is then mapped onto a mesh with appropriate vertex and texture coordinates 
+to accomplish the correct distortion. The slightly larger image rendering and the
+texture mapping has a negligible performance hit on modern graphics cards.
+</p>
+
+<center><table border=0 cellpadding=4>
+
+<tr><td valign="top">
+	<center>
+   <b>Fisheye</b>
+	</center>
+</td><td valign="top"> 
+	<center>
+   <b>Warped fisheye</b>
+	</center>
+</td></tr>
+
+<tr><td valign="top">
+	<center>
+	XGA (768x768)<br>
+	<a href="http://paulbourke.net/dome/stellarium/XGA.png"><img src="http://paulbourke.net/dome/stellarium/XGA_s.png" width=300 height=300 border=1></a>
+	</center>
+</td><td valign="top">
+	<center>
+	XGA (1024x768)<br>
+	<a href="http://paulbourke.net/dome/stellarium/w_XGA.png"><img src="http://paulbourke.net/dome/stellarium/w_XGA_s.png" width=400 height=300 border=1></a>
+	</center>
+</td></tr>
+
+<tr><td valign="top">
+	<center>
+   SXGA+ (1050x1050)<br>
+   <a href="http://paulbourke.net/dome/stellarium/SXGAplus.png"><img src="http://paulbourke.net/dome/stellarium/SXGAplus_s.png" width=300 height=300 border=1></a>
+	</center>
+</td><td valign="top"> 
+	<center>
+   SXGA+ (1400x1050)<br>
+   <a href="http://paulbourke.net/dome/stellarium/w_SXGAplus.png"><img src="http://paulbourke.net/dome/stellarium/w_SXGAplus_s.png" width=400 height=300 border=1></a>
+	</center>
+</td></tr>
+
+<tr><td valign="top">
+	<center>
+   HD (1080x1080)<br>
+   <a href="http://paulbourke.net/dome/stellarium/HD.png"><img src="http://paulbourke.net/dome/stellarium/HD_s.png" width=300 height=300 border=1></a>
+	</center>
+</td><td valign="top"> 
+	<center>
+   HD (1920x1080)<br>
+   <a href="http://paulbourke.net/dome/stellarium/w_HD.png"><img src="http://paulbourke.net/dome/stellarium/w_HD_s.png" width=533 height=300 border=1></a>
+	</center>
+</td></tr>
+
+</table></center>
+<p>
+
+<b>Notes</b><br>
+<ul><li><p align="justify">
+The thickening of the lines/text towards the top of the image should not be interpreted
+as a thickening of the corresponding image on the dome. 
+All the lines appear the same thickness irrespective of where they are on the dome.
+</p>
+<li><p align="justify">
+Star fields are very hard to successfully project with a single projector, this is
+especially so with only an XGA projector, fisheye or spherical mirror. As might be imagined
+while an HD projector is of little use for full fisheye projection using a fisheye lens,
+it is ideal for the spherical mirror which can take advantage of the additional width.
+</p>
+<li><p align="justify">
+Better results can be achieved with a fisheye lens configured in a truncated
+arrangement which is a closer match to the spherical mirror in terms of dome coverage.
+</p>
+<li><p align="justify">
+If the images are zoomed in there is an obvious difference between the sharp pixel
+edges in the fisheye and the slightly blurred lines in the warped image. In reality this
+is not necessarily a bad thing given that the lines are not inherently thicker, in 
+computer graphics speak it is known as antialiasing and usually considered desirable. Indeed in
+my opinion the quality of both images would be improved if Stellarium performed antialiasing
+itself.
+</p>
+<li><p align="justify">
+It goes without saying that in order to get an exact image with a spherical mirror (the same as
+image on the dame as with a fisheye) a precise warping mesh is required. That is, one
+created specifically for the particular hardware being used.
+</p>
+</ul>
+
+<center>
+<a href="http://paulbourke.net/dome/stellarium/idomephoto.jpg"><img src="http://paulbourke.net/dome/stellarium/idomephoto_s.jpg" width=800 height=531 border=1></a><br>
+Photograph of Stellarium image in the iDome (Photographic difficulties accepted)
+</center>
+<p>
+
+<a name="may2012">
+<b>Nightshade version 10.2.1. Mac OS: Lion</b></a>
+[Website downlink says 11.12.1]<p>
+
+<p align="justify">
+The configuration file for Nightshade is now located in the users home directory
+in a hidden folder called .nightshade. For those familiar with the UNIX command line
+it is ~/.nightshade/config.ini. A sample config file is given here:
+<a href="http://paulbourke.net/dome/stellarium/config1021.ini">config1021.ini</a>.
+</p>
+
+<p align="justify">
+The settings relating to the spherical mirror are given below.
+These are similar to the "standard 16 x 9" warp file others use/distribute.
+The approach is generally to adjust the scaling until the horizontal span is
+right and then adjust the zenith to raise or lower the horizon.
+</p>
+<dd>
+<pre>
+[spheric_mirror]
+projector_position_x           = 0.0
+projector_position_y           = 3.5
+projector_position_z           = 0.0
+mirror_position_x              = 0.0
+mirror_position_y              = 5.0
+mirror_position_z              = 0.0
+mirror_radius                  = 0.35
+dome_radius                    = 5.0
+zenith_y                       = 0.05
+scaling_factor                 = 1.3
+projector_gamma                = 0.3
+flip_horz                      = true
+flip_vert                      = false
+
+[init_location]
+name                           = perth
+latitude                       = -28d48'0.0"
+longitude                      = +115d55'55.20"
+altitude                       = 0
+landscape_name                 = forest
+home_planet                    = Earth
+</pre>
+</dd>
+
+<p><center>
+   <img src="http://paulbourke.net/dome/stellarium/conventions.png" width=600 height=365 border=0>
+</center><p>
+<p align="justify">
+The two outstanding variables are "zenith" and "scaling".
+zenith seems to try and compensate for lens offset and projector tilt.
+scaling seems to relate to the projector throw/zoom.
+The x axis is perpendicular to the page in the image above, I doubt very much whether
+anyone mounts the projector/mirror at other than perpendicular to dome. If they
+did I would doubt very much whether the correct warping would be performed. The
+basis for this believe is that it does not seem possible for the two
+variables zenith and scale
+to be able to cope with projector lens offset, rotation, and throw.
+</p>
+
+<p align="justify">
+Remaining issues, comments ...
+</p>
+<ul>
+<li><p align="justify">
+The texture resolution for the warping is far too low, it introduces obvious creases
+in the image. I estimate at least twice the resolution is required, ideally it would
+be a config file variable.
+</p>
+<li><p align="justify">
+What happened to the ability to flip the image horizontally. Currently the image is
+reversed on the display, how strange! Ideally the default would be the opposite,
+correct on the display and use the projectors horizontal flipping to get the right
+effect in the dome. 99% of projectors have horizontal flipping in order to be used
+with rear projection screens.
+</p>
+<li><p align="justify">
+Turning on antialiasing (current MacBook Pro) didn't have any effect. A shame
+given the importance of antialiasing for good quality/appearing lines and text.
+</p>
+<li><p align="justify">
+Recommending users install the Mac version using MacPorts and use the command line
+to launch it is rather unfriendly and unnecessary. Convenient if
+you live in that world, rather antiquated otherwise. Cannot think of any other non-developer
+orientated product that does that.
+</li>
+</ul>
+
+<b>Stellarium version 11.2. Mac OS: Lion</b><p>
+<p align="justify">
+The configuration file (config.ini)
+for Stellarium is located in the user directory, Library directory,
+Application Support directory, Stellarium directory. Somewhat inconvenient to new
+users since the Library directory is hidden by default.
+For those familiar with the UNIX command line it would be
+~/Library/Application\ Support/Stellarium/.
+</p>
+
+<center>
+<b>Unfortunately the resulting warping is still not correct, seems to
+have been broken since version 10.2</b>
+</center>
+<p>
+
+</td></tr></table></center>
+</body>
+</html>
+

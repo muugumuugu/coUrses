@@ -1,0 +1,294 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Fisheye warping for spherical mirror fulldome projection</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Fisheye warping for spherical mirror fulldome projection</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+July 2012
+<p>
+Swedish translation by 
+<a href="http://paulbourke.net/dome/warpingfisheye/index_sw.html">Marie Stefanova</a>, August 2017
+</center>
+<p><br><p>
+
+<p align="justify">
+The following is an attempt at a technical description of how fisheye images are warped
+for use in a dome using the spherical mirror projection technique. There are currently
+a number of packages that support this warping, they include the authors own
+<a href="../warpplayer/index.html">warpplayer</a>, World Wide Telescope, Software Bisque, a patch
+for <a href="../warppatch/index.html">Quartz Composer</a>, Blender, and Unity3D implementations ... and others.
+</p>
+
+<p align="justify">
+Before introducing the warping a short discussion of how fisheye and warped fisheye based
+projections are generally configured in a planetarium (or other domes such as the iDome).
+Depending on whether the computer incorporates a display (laptops or the iMac) or whether
+it is a computer with a graphics card and two graphics pipes, the operator does not (in general) use
+the dome to navigate but rather a personal flat display. The two most common modes of operation
+then are as follows:
+</p>
+<ul>
+<li><p align="justify">
+The operators display and the projected display are mirrored.
+The GUI elements should not be warped, it is the operators responsibility to
+keep the appearance of such elements out of the view of the audience viewing the dome. The
+software developers should be providing keystroke or scripting support to facilitate this.
+An alternative strategy is to attempt to place the GUI elements outside the fisheye circle.
+Since the mirroring is performed by the OS, it is important that the operators display is
+the same resolution or greater as the projector, that is, 
+in most implementation of mirroring the final resolution on the
+dome will be the lower of the display and  projector resolution.
+</p>
+<li><p align="justify">
+The two displays are not mirrored, in this case the operator view may be different to
+the projected imagery. In the case of warping this allows the operators view to potentially
+be an unwarped fisheye. 
+The GUI elements should not be warped.
+Please note that it is not generally optimal to capture the fisheye
+from the operators display and warp to the projector display, this is because the resolution
+of the warped fisheye will be limited to the vertical resolution of the operators display which
+will rarely be adequate.
+</p>
+</ul>
+<p align="justify">
+It is the authors advice that the fisheye should be rendered to a texture of sufficient
+resolution (see later) and then presented/warped onto both the operator and projected display.
+Whether the operators display is fisheye and the projector display is warped, or both warped
+is a matter for the software developers based upon ease of implementation and/or performance,
+both are acceptable.
+Note that data projectors have the ability of mirror the image vertically or horizontally,
+thus this need not be the concern of the software. However in order to facilitate compatibility
+with other software, horizontal mirroring to the projector display may be helpful.
+In any case the image on the operator display must not be mirrored.
+</p>
+
+<p align="justify">
+This discussion will start from the position of having a fisheye image, the techniques for
+creating a fisheye using current real time graphics APIs (eg: OpenGL and DirectX) is a separate
+discussion. They generally involve either multipass rendering of cubic faces (environment maps) that
+are then assembled into a fisheye, or involve a vertex shader. Some discussion of this is given
+here for <a href="../UnityiDome/index.html">Unity3D</a> and here for <a href="../BlenderiDome/index.html">Blender</a>.
+</p>
+
+<p align="justify">
+The motivation for this arose from the developers of Stellarium and NightShade, two astronomy
+visualisation packages that while they have included patchy support for spherical mirror, it was
+implemented in a different fashion. The proposed method takes the fisheye image, generally it would
+be rendered to an off-screen texture, this texture is then applied to a mesh which implements the
+desired warping. There are some very important consequences to this:
+</p>
+
+<ul>
+<li><p align="justify">
+The software does not need to know anything about the optics or geometry of the system, it simply
+applies the fisheye as a texture to a mesh where the mesh nodes and texture coordinates determine
+the final warped result.
+</p>
+<li><p align="justify">
+The technique is much more general than just for use with a spherical mirror. It can be used for
+warp fisheye images and correct for non-linear relationships between latitude and radius on the fisheye
+image, it can deal with any truncated fisheye arrangement (as opposed to treating these as special
+cases), it can even do weird things like warp into other shapes like rectangular rooms (bedroom planetarium).
+</p>
+</ul>
+
+<center>
+   <img src="http://paulbourke.net/dome/warpingfisheye/figure2.png" width=700 height=963 border=0><br>
+</center><p>
+
+<p align="justify">
+The "magic" obviously occurs in the details of the mesh file. The author will include some default
+mesh files currently in common usage. However ideally a mesh file needs to be generated with a knowledge
+of the projector/mirror/dome geometry as well as the optics of some of those components.
+In the current version of Stellarium and Nightshade, the geometry and optical specification of the
+projection system is embedded into the code, the user enters a number of parameters until the image
+looks correct on the dome. The author maintains the best way to do this is to have an external application
+that creates warp mesh files (for those cases where the sample mesh files are inadequate), this way
+all applications can share one warping description. It should be noted that the current parameter set
+in Stellarium and Nightshade is inadequate on two fronts: there are parameters relevant to the projection
+optics that are not covered; and the parameters used are somewhat arbitrary in the sense that they do
+not follow standard methods for describing projector optics.
+At the moment there are at least three options for creating precise warp mesh files, one is based upon
+Blender, and one is the authors own <a href="../meshmapper/index.html">meshmapper</a> that is supplied with the
+warpplayer software.
+</p>
+
+<p align="justify">
+Below are some "standard" mesh files which have been used up to now. Noting that having standard warp
+mesh files means the physical geometry of the projector and mirror needs to be adjusted, whereas the
+custom mesh file calibration approach means that a mesh file can be created that targets a particular
+geometric/optical arrangement. In general standard mesh files are often satisfactory for inflatable
+domes whereas fixed domes warrant a better result. 
+</p>
+
+<center>
+<table width=50% border=1 cellspacing=0 cellpadding=4>
+<tr><td>
+	<b>Mesh file</b>
+</td><td>
+	<b>Projector resolutions</b>
+</td></tr>
+
+</td><td>
+	<a href="http://paulbourke.net/dome/warpingfisheye/standard_4x3.data">4x3</a>
+</td><td>
+	XGA: 1024x768 (Not recommended)<br>
+	SXGA+: 1400x1050
+</td></tr>
+
+<tr><td>
+   5x4
+</td><td>
+	SXGA: 1280x1024
+</td></tr>
+
+<tr><td>
+	<a href="http://paulbourke.net/dome/warpingfisheye/standard_16x9.data">16x9</a>
+</td><td>
+	WXGA: 1280x720 (Not recommended)<br>
+	HD: 1920x1080
+</td></tr>
+
+<tr><td>
+	<a href="http://paulbourke.net/dome/warpingfisheye/standard_16x10.data">16x10</a>
+</td><td>
+	UXGA+: 1920x1200
+</td></tr>
+</table>
+</center><p>
+
+<p align="justify">
+Please note that spherical mirror projection only makes sense for data projection and then when the projector
+is operated in fullscreen mode. The form of
+the mesh is not a function of the projector resolution but rather of the aspect ratio. This explains why
+there are only three standard warp files listed above, they correspond to the three most prevalent data
+projector aspect ratios. An aspect of 5x4 is not included as those are relatively unusual today and
+not ideal the spherical mirror projection.
+</p>
+
+<p href="justify">
+If the reader downloads one of the warp mesh files above they will be observed to be plain ASCII text
+files. The first line indicates the input image type, which is "2" for fisheye images ... remember this
+basic technique can be used for input image projections other that fisheye, for example standard
+perspective files, spherical (equirectangular) projections, cylindrical, etc. But in the case of a 
+planetarium and warping a fisheye image the first line is always "2", this can optionally be used as
+test that a chosen warp file is appropriate. The second line contains two numbers indicating the dimensions
+of the 2D mesh, the first number is the number of nodes horizontally (Nx) and the second the number of nodes 
+vertically (Ny).
+This and other aspects are illustrated in the next figure.
+The subsequent lines of the file each contain 5 numbers they are:
+</p>
+<ul>
+<li>The position of the node (x,y). These are given in normalised screen coordinates, so the horizontal
+range will be -aspect to aspect, the vertical range will be -1 to 1. Normalised coordinates ensures that
+if the mesh is viewed with an orthographic camera of width -aspect to aspect horizontally and -1 to 1
+vertically then the mesh will fill a screen of the same aspect. In OpenGL this camera might be something
+like:
+</p>
+<pre>
+   glViewport(0,0,width,height);
+   glOrtho(-width/(double)height,width/(double)height,-1.0,1.0,0.1,10);
+</pre>
+<li><p align="justify">
+The texture coordinate (u,v) of the node, each of these range of 0 to 1 and apply to the fisheye
+image that will applied to the mesh.
+</p>
+<li><p align="justify">
+A multiplicative intensity value in the range of 0 to 1, this allows one to cope with brightness
+control for different light path lengths and densities on the dome (for example: fading the image towards
+the "back" of the dome).
+Note that a negative value of this intensity value indicated the mesh node should not be drawn, indeed
+the whole mesh grid quad (or triangles) should not be draw.
+</p>
+</ul>
+
+<center>
+	<img src="http://paulbourke.net/dome/warpingfisheye/figure1.png" width=600 height=592 border=0><br>
+	<p align="justify">
+	Note that while the (x,y) positions of the nodes here form a regular grid, they need not.
+	Sometimes it is easier to implement the warp with a regular (x,y) grid and varying (u,v),
+	sometimes a variable (x,y) arrangement is preferable, even though it is still topologically
+	a grid.
+	</p>
+</center><p>
+
+<p align="justify">
+There are only two parameters the user needs to specify, they are:
+</p>
+<ul>
+<li><p align="justify">
+The resolution in pixels of the off-screen texture to
+which the fisheye is being rendered. The exact value may be modified for performance reasons, but for
+HD or UXGA+ projector resolutions the recommended default would be 2048 (if powers of 2 are required) or 1600 pixels
+(if powers of two are not required).
+</p>
+<li><p align="justify">
+The name of the mesh warp file, optionally including the path if that is not prescribed.
+</p>
+</ul><p>
+
+<b>Mouse selection</b><p>
+<p align="justify">
+Mouse clicking on a warped fisheye needs some special handling.
+While there are a number of different ways object selection can be handled in real time
+APIs, it is generally the case that they require the pixel position before warping. So here
+it will assumed the application can already handle mouse click and object selection in
+fisheye space, the following will then describe how to derive the pixel position in
+fisheye given a pixel position in warped fisheye.
+</p>
+
+<center>
+	<img src="http://paulbourke.net/dome/warpingfisheye/figure3.png" width=700 height=901 border=0>
+</center><p>
+
+<p align="justify">
+Given the convention in the above figure the procedure is as follows.
+</p>
+
+<ul>
+<li>Let (i<sub>w</sub>,j<sub>w</sub>) be the clicked pixel position in the warped image.
+they respectively range from 0 to the display width and height.<p>
+<li>Convert these to normalised screen coordinates x<sub>w</sub> and y<sub>w</sub> as follows<br>
+<center>
+x<sub>w</sub> = 2 * aspect * (i<sub>w</sub> / displaywidth - 1/2)<br>
+y<sub>w</sub> = 2 * (j<sub>w</sub> / displayheight - 1/2)
+</center><p>
+<li>Now x<sub>w</sub> and y<sub>w</sub> are in the same coordinate system as the (x,y) coordinates of the mesh,
+one now needs to find the quad or the triangle of the mesh that contains the point (x<sub>w</sub>,y<sub>w</sub>).<p>
+<li>Once the quad or triangle has been found the exact corresponding texture  coordinate corresponding to
+the point (x<sub>w</sub>,y<sub>w</sub>) can be interpolated by considering the relative (x,y) position of the
+point in the quad or triangle, and the (u,v) texture coordinates at each vertex.<p>
+<li>This texture coordinate (u<sub>f</sub>,v<sub>f</sub>) is the index into the fisheye image, it just needs
+to be transformed to give the image coordinate (i<sub>f</sub>,j<sub>f</sub>) for the fisheye, 
+since u<sub>f</sub> and v<sub>f</sub> both range from 0 to 1 this is simply<br>
+<center>
+i<sub>f</sub> = fisheyewidth * u<sub>f</sub><br>
+j<sub>f</sub> = fisheyeheight * v<sub>f</sub><br>
+</center><p>
+</ul>
+
+</td></tr></table></center<p>
+</body>
+</html>
+
+
+
+
+
+

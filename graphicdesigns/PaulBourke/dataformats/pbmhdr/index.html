@@ -1,0 +1,95 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Unofficial PBM format for HDR images, PFM (Portable Float Map) </title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Unofficial PBM format for HDR images, PFM (Portable Float Map)</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+May 2003
+</center>
+<p><br><p>
+
+<p align="justify">
+PFM (Portable Float Map) is an
+unofficial extension to the pbm image format collection that supports HDR imaging, namely
+a floating point value per r,g,b [or a single floating point value for grey scale
+HDR images].
+</p>
+
+<h3>Identifier</h3><p>
+<p align="justify">
+The identifier for a PBM HDR image is either "PF" or "Pf" depending on whether it
+is r,g,b or grey scale.
+</p>
+
+<h3>Dimensions</h3>
+<p align="justify">
+The next three values correspond to the width, height, and aspect ratio of the
+pixels. These can be on one, two or three lines ... there seems to be no agreed 
+standard except that there is a newline character at the end of the third value.
+The aspect ratio is floating point (usually 1) but it also encodes the endian
+status of the following floating point binary numbers. A negative aspect ratio
+indicates little endian, otherwise big endian.
+So depending on the endian of the machine being used to read the file a byte
+may ormay need to be performed. 
+</p>
+ 
+<h3>Pixel data</h3>
+<p align="justify">
+The pixel data is stored as width * height floating point r,g,b or single
+grey scale values, encoded as IEEE floating points values with the specified
+endian status.
+</p>
+
+<pre>
+typedef struct {
+   float r,g,b;
+} HDRPIXEL;</pre>
+</pre>
+
+<pre>
+/*
+   Read a possibly byte swapped floating point number
+   Assume IEEE format
+*/
+int ReadFloat(FILE *fptr,float *n,int swap)
+{
+   unsigned char *cptr,tmp;
+
+   if (fread(n,4,1,fptr) != 1)
+      return(FALSE);
+   if (swap) {
+      cptr = (unsigned char *)n;
+      tmp = cptr[0];
+      cptr[0] = cptr[3];
+      cptr[3] =tmp;
+      tmp = cptr[1];
+      cptr[1] = cptr[2];
+      cptr[2] = tmp;
+   }
+   return(TRUE);
+}
+</pre>
+
+</td></tr></table></center><p>
+</body>
+</html>
+
+
+
+

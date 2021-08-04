@@ -1,0 +1,266 @@
+<html>
+<head><link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Digistar II VLA file format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Digistar II VLA file format</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 2002
+</center>
+<p><br><p>
+
+<p align="justify">
+A Digistar II VLA file is supported by a number of utilities supplied
+with the Digistar system, it facilitates the migration of geometry
+from third party applications to the Digistar planetarium dome
+projection. The files are text (ascii) only, they consist of a
+header section followed by the coordinate information. The text in
+a VLA file is case insensitive. A line starting with a semicolon ";"
+is taken to be a comment, these may appear anywhere and the comment
+continues until the end of the line.
+</p>
+
+<b>Header</b><p>
+<p align="justify">
+The header consists of a number of keywords indicating different
+header information, each line is of the following form.
+</p>
+<pre>
+   set keyword data_for_this_keyword
+</pre>
+<p align="justify">
+The keywords can be from the following list, they can appear in
+any order, not all are required eg: author, 
+and some can occur many times, eg: comments.
+</p>
+<ul>
+<li><b>comment</b><br>
+<p align="justify">
+Any comment follows to the end of the line.
+Note that unlike ";" comments, these are intended to convey higher
+level information about the model while the ";" comments are lower
+level and related more to the actual geometric elements.
+</p>
+<li><b>author</b><br>
+<p align="justify">
+Intended to be used for the author of the file, may be a
+program name.
+</p>
+<li><b>site</b><br>
+<p align="justify">
+Intended for the location the file is created at or where
+it is intended for.
+</p>
+<li><b>coordsys</b><br>
+<p align="justify">
+This may either be RIGHT (default) or LEFT, this not only sets the
+coordinate system to a right or left handed one but also
+sets how the coordinates are interpreted. Left assumes
+meters, right assumes light years. 
+</p>
+<li><b>intensity</b><br>
+<p align="justify">
+Either EXPLICIT or FULL, the later ignores the intensity setting
+provided with the geometry.
+</p>
+<li><b>defaultdraw</b><br>
+<p align="justify">
+Options: stellar, obstinate, galactic and precess.
+Obstinate files are not affected by any motion of the observer.
+Galactic files are affected by viewer rotations but not translations. 
+Precess files are the same as galactic, except that over time they 
+precess with the Earth.
+</p>
+<li><b>filetype</b><br>
+<p align="justify">
+Either OLD or NEW, this relates to the version of vla file. The format
+discussed here is the "new" format, the older format 
+was used for the Digistar I.
+</p>
+<li><b>filecontent</b><br>
+<p align="justify">
+This can be either DOTS or LINES, the former indicates
+that only dots are used, the later allows both dots and
+lines.
+</p>
+<li><b>parametric</b><br>
+<p align="justify">
+This is set to either PARAMETRIC or NON_PARAMETRIC.
+A parametric file has an offset for each point in the
+file, this is the step size that can be used to linearly interpolate
+points in a line, possibly morphing from one form to another.
+</p>
+<li><b>depthcue</b><br>
+<p align="justify">
+This expects a number as an argument and 
+sets a intensity falloff with distance from the viewer.
+The intensity falloff is 1/r<sup>n</sup>, so "set depthcue 0" results
+in no intensity drop with distance, 1 is a 1/r dependence, etc.
+</p>
+<li><b>library_id</b><br>
+<p align="justify">
+</p>
+</ul>
+
+<b>Coordinate data</b>
+<p align="justify">
+Each line contains one geometric element consisting of the following
+fields.
+</p>
+<pre>
+   datatype  x  y  z  intensity
+</pre>
+<p align="justify">
+The datatype can be one of the following, it is based upon the
+notion of moving a beam in either an on or off state in a similar
+way to pen plotters for example.
+</p>
+<ul>
+<li><b>D</b> (Dot)<br>
+<p align="justify">
+Draw a dot at the position specified by the (x,y,z) coordinate
+and with the intensity supplied. The intensity ranges from 0 (no light)
+to 1 (brightest).
+</p>
+<li><b>P</b> (Position)<br>
+<p align="justify"> 
+Move the beam to the position specified (the intensity is ignored).
+The (x,y,z) coordinates in any of these geometry types can be
+specified in scientific notation where "e" represents powers
+of ten, for example: 1.23456e5 is the same as 12345.
+</p>
+<li><b>L</b> (Line)<br>
+<p align="justify"> 
+Draw a line segment from the current beam position to the position
+specified on this line, use the intensity specified. So to draw a
+single line segment one needs to ussue a "P" followed by a "L"
+command. Connected line segments can be drawn with subsequent "L"
+commands.
+</p>
+<li><b>V</b> (Variation)<br>
+<p align="justify">
+This is the step size along each coordinate (dx,dy,dz) for
+parametric files. For some parameter "u" between 0 and 1,
+the next point will be (x + u dx,y + u dy,z + u dz). This
+only applies to parametric files and this variation must
+be defined for every point in the geometry section.
+See parametric header keyword.
+</p>
+</ul>
+
+<b>Cube example</b>
+<p align="justify">
+The following is a simple example of a unit cube sitting
+on the x-y plane. Note that this could be made much more
+efficient by reducing the number of "P" commands and
+drawing longer sequences of connected lines, this is
+an important consideration for more complicated models
+where the vector throughput may limit the data rate.
+</p>
+<pre>
+set comment cube.vla created by IVCON.
+set intensity EXPLICIT
+set parametric NON_PARAMETRIC
+set filecontent LINES
+set filetype NEW
+set depthcue 0
+set defaultdraw STELLAR
+set coordsys RIGHT
+set author IVCON
+set site Buhl Planetarium
+set library_id UNKNOWN
+P -0.500000 -0.500000 1.000000 1.00
+L 0.500000 -0.500000 1.000000 1.00
+L 0.500000 0.500000 1.000000 1.00
+L -0.500000 0.500000 1.000000 1.00
+L -0.500000 -0.500000 1.000000 1.00
+P 0.500000 -0.500000 0.000000 1.00
+L -0.500000 -0.500000 0.000000 1.00
+L -0.500000 0.500000 0.000000 1.00
+L 0.500000 0.500000 0.000000 1.00
+L 0.500000 -0.500000 0.000000 1.00
+P -0.500000 -0.500000 0.000000 1.00
+L -0.500000 -0.500000 1.000000 1.00
+L -0.500000 0.500000 1.000000 1.00
+L -0.500000 0.500000 0.000000 1.00
+L -0.500000 -0.500000 0.000000 1.00
+P 0.500000 -0.500000 1.000000 1.00
+L 0.500000 -0.500000 0.000000 1.00
+L 0.500000 0.500000 0.000000 1.00
+L 0.500000 0.500000 1.000000 1.00
+L 0.500000 -0.500000 1.000000 1.00
+P -0.500000 -0.500000 0.000000 1.00
+L 0.500000 -0.500000 0.000000 1.00
+L 0.500000 -0.500000 1.000000 1.00
+L -0.500000 -0.500000 1.000000 1.00
+L -0.500000 -0.500000 0.000000 1.00
+P -0.500000 0.500000 1.000000 1.00
+L 0.500000 0.500000 1.000000 1.00
+L 0.500000 0.500000 0.000000 1.00
+L -0.500000 0.500000 0.000000 1.00
+L -0.500000 0.500000 1.000000 1.00
+</pre>
+
+<b>From the Digistar technical overview</b>
+<p align="justify">
+Evans & Sutherland's star projection system, Digistar II, is a real-time, 
+computer graphics based system
+intended to entertain and educate large audiences. Show producers can 
+create environments that
+completely immerse audiences in 3D real-time computer generated images.
+Digistar II is a special-purpose computer graphics system that can do 
+everything a conventional
+planetarium system can do in addition to other advanced features. 
+Besides simulating traditional
+planetarium objects, Digistar II generates new special effects, such as 
+dynamic proper motion and travel through three-dimensional space.
+</p>
+
+<b>Further examples</b>
+<p>
+<center>
+<table width=60%>
+<tr>
+<td><a href="http://paulbourke.net/dataformats/vla/galaxy.vla.gz">galaxy.vla.gz</a></td>
+<td><a href="http://paulbourke.net/dataformats/vla/galaxy.gif">galaxy.gif</a></td>
+</tr>
+<tr>
+<td><a href="http://paulbourke.net/dataformats/vla/knot.vla.gz">knot.vla.gz</a></td>
+<td><a href="http://paulbourke.net/dataformats/vla/knot.gif">knot.gif</a></td>
+</tr>
+<tr>
+<td><a href="http://paulbourke.net/dataformats/vla/lorenz.vla.gz">lorenz.vla.gz</a></td>
+<td><a href="http://paulbourke.net/dataformats/vla/lorenz.gif">lorenz.gif</a></td>
+</tr>
+<tr>
+<td><a href="http://paulbourke.net/dataformats/vla/pulsar.vla.gz">pulsar.vla.gz</a></td>
+<td><a href="http://paulbourke.net/dataformats/vla/pulsar.gif">pulsar.gif</a></td>
+</tr>
+<tr>
+<td><a href="http://paulbourke.net/dataformats/vla/tritorus.vla.gz">tritorus.vla.gz</a></td>
+<td><a href="http://paulbourke.net/dataformats/vla/tritorus.gif">tritorus.gif</a></td>
+</tr>
+<tr>
+<td><a href="http://paulbourke.net/dataformats/vla/universe.vla.gz">universe.vla.gz</a></td>
+<td><a href="http://paulbourke.net/dataformats/vla/universe.gif">universe.gif</a></td>
+</tr>
+</table>
+<p>
+
+</td></tr></table></center>
+</body>
+</html>

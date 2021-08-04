@@ -1,0 +1,940 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>WRM Entity Flight Specification</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><Td>
+
+<center><b>
+ARPA ARPA (r) An Employee-Owned Company<br>
+ARPA War Breaker<br>
+World Reference Model<br>
+</b>
+<h1>WRM Entity Flight Specification</h1>
+Entity Models for Distributed Interactive Simulation (DIS) Interoperability<br>
+Version 1 Draft 10<br>
+September 26, 1994<br>
+Prepared for The Advanced Research Projects Agency<br>
+War Breaker Program Systems Engineering and Modeling Contract<br>
+By Science Applications International Corporation<br>
+Dan Brockway<br>
+With most of the work done by:<br>
+Michael Bienvenu Len Granowetter Carl Suttle<br>
+</center>
+
+<p><br><p>
+<pre>
+1. PURPOSE...................................................................... 1
+2. APPLICABLE DOCUMENTS ........................................................ 2
+3. BACKGROUND .................................................................. 3
+3.1. OVERVIEW OF THE MULTIGEN FLIGHT FORMAT..................................... 3
+3.1.1. Groups, Objects, Faces, Levels of Detail, and Degree of Freedom beads.... 3
+3.1.2. External references and instancing ...................................... 4
+3.1.3. Bead name and comment fields ............................................ 4
+3.2. AN OVERVIEW OF THE PERFORMER SCENE GRAPH .................................. 4
+3.2.1. DCSs and Articulations................................................... 4
+3.2.2. LOD nodes ............................................................... 5
+3.2.3. Switch nodes ............................................................ 5
+3.2.4. Tree optimizations ...................................................... 5
+3.3. FUNCTIONS OF THE VEGA OR PERFORMER LOADER ................................. 5
+4. MODELING FOR DIS INTEROPERABILITY ........................................... 6
+4.1. DIS ATTRIBUTE LEXICON (DAL) ............................................... 6
+4.1.1. DAL Syntax .............................................................. 6
+4.1.2. DAL Keywords ............................................................ 6
+4.1.3. DAL Keyword Values....................................................... 7
+4.1.4. DAL Implementation ...................................................... 8
+4.2. MODEL COORDINATE SYSTEM ................................................... 10
+4.2.1. Orientation of the model coordinate system............................... 10
+4.2.2. Origin of the model coordinate system.................................... 10
+4.3. MODELING FOR EFFICIENT MAPPING............................................. 11
+4.3.1. Comment the parent model header ......................................... 11
+4.3.2. Attached parts .......................................................... 11
+4.3.2.1. Comment attached parts stations in primary models...................... 11
+4.3.2.2. Comment the attachment point in attachable models ..................... 12
+4.3.3. Articulated Parts........................................................ 13
+4.3.3.1. Representing Articulations in MultiGen's Hierarchy..................... 13
+4.3.3.2. Embedding DIS Articulation Data in the Model .......................... 13
+4.3.4. Use commented group beads to control model appearance.................... 15
+4.3.5. Comment the children of attribute switches the DIS state represented .... 17
+4.3.6. Use inheritance flags to capture LOD, texture, or material from the parent
+4.4. FEATURES FOR INDEPENDENT MODELS ........................................... 21
+4.4.1. Tag the location of weapon fire special effects ......................... 21
+4.4.2. Tag the location of marking text (future) ............................... 21
+4.4.3. Model infrared or radar signatures (future).............................. 22
+4.5. MANAGING OPTIMIZATION OF THE PERFORMER SCENE GRAPH......................... 22
+</pre>
+
+<h3>I. Purpose</h3>
+<p>
+Historically, control of models (e.g., motion, articulation, and special effects) requires supporting
+software familiar with the model's structure. For closed applications and few models, this is not a
+problem; but in DIS environments with hundreds of model types, it would be more convenient to
+adopt uniform conventions for various features of models (like the origin and orientation of the
+local coordinate system), and to embed as much other supporting information as possible (like the
+DIS entity code), so that models can be selected and controlled by software with little or no
+knowledge of the model itself.
+<p>
+
+A further particular feature of DIS entities(models) is that they assume various appearances based
+on states; a tank may have its hatch in any of several positions, may appear in various
+camouflages, and may incur various types of damage. All of these states are invoked by data in
+DIS Protocol Data Units (PDUs) in accordance with published specifications (Refer to Section 2
+Applicable Documents, DIS Standards). Managing the various geometries and textures required
+to create these varying appearances should be possible, again, without the need for software
+having any particular knowledge of the model.
+<p>
+
+This document describes a methodology for the creation of three-dimensional models for use in
+the War Breaker WRM Distributed Interactive Simulation (DIS) environment. Compatible
+operation is achieved with models created using MultiGen Inc.'s (nÈe Software Systems)
+MultiGen model development system, and rendered using either Paradigm Simulation's Vega
+simulation environment or M‰k Technologies Stealth renderer. Both Vega and M‰K Stealth are
+Silicon Graphics Inc. Performer-based applications. Vega uses a custom loader, while M‰K
+Stealth uses the existing Performer loader, which MultiGen maintains for Silicon Graphics.
+Compatible operation thus requires a cooperative effort among Paradigm, M‰K, and MultiGen;
+this document is a reflection of that effort, as well as guidance from SAIC and significant
+contributions by others. The document is maintained by Paradigm, who welcomes comments and
+suggestions.
+<p>
+
+The approach described considered three primary criteria:<br>
+1. The MultiGen Flight format version 14.1 file (*.flt) structure hierarchy must be modular,
+flexible, and suitable for conversion to an optimal scene graph in Performer.
+<br>
+2. The file structure must provide a means for control of the model's representation (its
+textures and material properties) and its state (geometry).
+<br>
+3. The file structure must be self documenting regarding conformance to DIS standards.
+<br>
+
+<h3>I. Background</h3>
+<h4>A. Overview of the MultiGen Flight TM format</h4>
+
+<b>1. Groups, Objects, Faces, Levels of Detail, and Degree of Freedom beads</b><p>
+MultiGen's Flight file format uses a straightforward system to organize geometry within
+the file, consisting several types of beads.
+<p>
+<ul>
+<li>Face beads represent individual polygons.
+<p>
+<li>Object beads represent face beads which are logically or geographically related.
+Object beads may have only face beads (polygons) as children.
+<p>
+<li>Level of detail (LOD) beads provide a means to select alternate (simpler)
+geometries based on a user-definable range. (In MultiGen, LOD switch ranges are
+set manually by eye. The Vega Automatic LOD feature, if enabled, recomputes
+switch ranges based on object size in the image plane [accounting for field of view,
+model size, model range, and image resolution] overriding the ranges set in
+MultiGen.)
+<p>
+<li> Degree of Freedom (DOF) beads are placed in the data base to specify
+translational and/or rotational freedom for portions of a model. They can be used
+for DIS articulated parts or animated special effects. They specify a type of
+transformation and its limits, such as "rotate about the x axis between 45 and 135
+degrees". MultiGen's approach to degrees of freedom is hierarchical. Consider the
+example of a fingertip modelled as part of a hand. The fingertip is attached to the
+second segment of a finger, the second segment connected to the first segment,
+and the first segment attached to the hand. The fingertip is free to move within
+limits expressed with respect to a local coordinate system. This means you can set
+limits on the fingertip without regard to those imposed on the rest of the finger, or
+on other items attached above it in the hierarchy. Conversely, transformations
+accumulate as you move down the tree, so rotations and transformations on the
+hand as a whole are automatically taken into account before those affecting the
+fingertip are considered.
+<p>
+<li> Group beads represent logically-related or geographically-related object beads.
+Group beads are the most general, and may have any type of beads, except face
+beads, as children.
+</ul>
+<p>
+
+<b>1. External references and instancing</b><p>
+Two MultiGen constructs provide a means to avoid duplicating massive amounts of
+geometry:
+<ul>
+<li> An external reference (or xref) is a pointer to another Flight file containing
+additional geometry. A transformation matrix is usually attached to the xref to
+locate the position and orientation of the referenced object's coordinate system.
+<p>
+<li> Instances are used when two or more groups have children which share the same
+geometry. Each instance may have a transformation matrix controlling the position
+and orientation of the child's coordinate system. This allows, for example, the
+same house to be used at various locations and with various orientations on the
+terrain. (If flattened as a result of the selected optimization level, (See Section
+3.2.4 ), the database size increases as the geometry is duplicated, transforming the
+vertices at each instance; this is faster at runtime, but may result in a much larger
+database.)
+</ul>
+<p>
+
+<b>1. Bead name and comment fields</b><p>
+Each bead may be given a name, currently limited to seven characters.
+Most beads also contain a comment field (the comment is created within the bead dialog
+box, though it actually creates a separate comment bead which is not graphically
+represented in the hierarchy mode) for user-definable data. The comment field is used to
+provide an implementation of the features described in this document.
+
+<h4>A. An overview of the Performer Scene Graph</h4>
+
+In contrast to the Flight format's beads, the Performer scene graph consists of various types
+of nodes.
+<p>
+<b>1. DCSs and Articulations</b>
+<p>
+<ul>
+<li>  dynamic coordinate system (DCS) node is a transformation applied to all
+children of the node. It allows, for example, the real-time articulation of moving
+parts. A model's top-level DCS controls the position and orientation of its
+coordinate system.
+<p>
+<li> An articulation is any movable or detachable part of a model which lends itself to
+representation by a DCS node. Each articulated part should be represented by a
+single DCS node, which in turn will be the parent of that part's LOD nodes and
+representation or state switch nodes. Because only a single DCS may be used to
+represent an articulation, an articulation DCS should not be a descendant of an
+LOD or geometry switch node higher in the model. An articulation DCS is a
+descendant of the DCS associated with the part of the model to which the
+articulation is attached. The parent part may be the root of the model (e.g., the
+turret's parent is the tank), or another articulated part (e.g., the barrel's parent is
+the turret).
+</ul>
+<p>
+
+<b>2. LOD nodes</b>
+<p>
+LOD nodes allow Performer to provide alternate representations of objects, and are
+commonly used to switch in simpler geometries at further ranges. LOD nodes, like LOD
+beads, may have group nodes, geodes (objects), and other LOD nodes as its children.
+Performer uses range checking to switch models from high to low resolution based on the
+ranges set in the MultiGen LOD beads.
+<p>
+
+<b>1. Switch nodes</b>
+Performer uses switch nodes to select among children of the node. Vega uses these nodes
+specifically to select from among alternate representations of the object. Each entity or
+part requires a switch node for each type of attribute capable of multiple appearances.
+<p>
+
+<b>1. Tree optimization</b><p>
+When MultiGen Flight files are loaded into Performer, the loader optimizes the files for
+run time based on the optimization level set in the file. Two general levels of optimization
+are clean and partition. Clean culls all empty or unnecessary groups and geodes out of the
+tree. Partition creates a user specified rectangular grid system. The two dimensional
+grids contain a list of all the polygons in a particular grid. This is used to optimize
+intersection routines. A third optimization is flatten. Flatten only occurs for geometry for
+which there is no DCS; it then replicates the geometry of the object at each instance and
+transforms all object coordinates to world coordinates.
+<p>
+
+<h4>A. Functions of the Vega or Performer Loader</h4>
+
+Both the Vega and Performer loaders translate MultiGen Flight files to Performer scene
+graphs by creating Performer nodes from MultiGen beads. The table below summarizes the
+relationship between the Performer nodes and the MultiGen beads.
+<p>
+<center>
+<table><tr><td>
+<b>MultiGen Flight format</b> </td><td> <b>Performer Node Type</b>
+</td></tr><tr><td valign="right"> 
+group bead </td><td> pfGroup
+</td></tr><tr><td  valign="right">
+animation sequence in group bead </td><td> pfSequence
+</td></tr><tr><td  valign="right"> 
+combination of LOD beads </td><td> pfLOD
+</td></tr><tr><td  valign="right"> 
+polygon bead with children (subfaces) </td><td> pfLayer
+</td></tr><tr><td  valign="right"> 
+draw as light flag in polygon bead </td><td> pfLightPoint
+</td></tr><tr><td  valign="right"> 
+object bead </td><td>pfGeode
+</td></tr><tr><td  valign="right"> 
+axis rotation flag in polygon bead </td><td> pfBillboard
+</td></tr><tr><td  valign="right"> 
+group bead with @dis inherit </td><td> pfSCS or pfDCS
+</td></tr><tr><td  valign="right"> 
+DOF bead </td><td> pfDCS
+</td></tr><tr><td  valign="right"> 
+group bead with @dis switch </td><td> pfSwitch
+</td></tr></table></center>
+<p>
+
+<h3>I. Modeling for DIS Interoperability</h3>
+
+Techniques for modeling for the DIS environment are divided into three groups:
+<p>
+<ul>
+<li>Adoption of uniform standards for locating and orienting the model coordinate system
+<p>
+<li>Techniques which assist in the mapping from DIS codes to associated models and parts;
+<p>
+<li>General methods for eliminating individual support software for models
+</ul>
+<p>
+
+These features will be implemented within the existing Flight file structure, primarily using the
+bead comment fields.
+
+<h4>A. DIS Attribute Lexicon (DAL)</h4>
+
+The following lexicon is used to embed DIS attributes in the MultiGen Flight file format when
+creating a model for DIS Interoperability:
+<p>
+
+<b>1. DAL Syntax</b>
+The DAL syntax is simple and straightforward:
+<p>
+<center>
+<table><tr><td>
+<b>@dis</b> </td><td> <b>keyword</b> </td><td> <b>value</b>
+</td></tr><tr><td>
+Main keyword 
+</td><td>
+Particular DIS attribute being modeled
+</td><td>
+specific attribute information either a single entry, or a comma
+separated list, or a range of values (state keyword).
+Note the motion keyword requires
+min and max values to follow the keyword value.
+</td></tr></table></center>
+<p>
+
+<b>1. DAL Keywords</b><p>
+
+@dis - main keyword that precedes all other keywords. It also denotes the termination of a free
+form comment.
+<p>
+model_spec_version - identifies the version level of this document used to create the models.
+<p>
+entity_type - identifies the model with a unique DIS Entity code.
+<p>
+attachment_station - identifies the location on the parent model where externally referenced
+child models may be placed via a unique DIS Attached Part code.
+<p>
+attach_entity - identifies the model(s) that may be attached to an attachment_station via a unique
+DIS Entity code(s).
+<p>
+attachment_point - identifies the location where the externally referenced child model will be
+attach to the parent model's attachment stations via x, y, z offsets.
+<p>
+articulated_part - identifies the moveable parts of a model with a unique DIS Articulated Part
+code.
+<p>
+motion - identifies the type and range of motion for an articulated part.
+<p>
+switch - identifies a model appearance attribute with a DIS keyword.
+<p>
+state - determines the actual state of the appearance attribute with a DIS appearance state code.
+<p>
+inherit - identifies an instance where texture, material, or LODs should be inherited from the
+parent model.
+<p>
+weapon_effect - identifies the location of a weapon fire special effect.
+<p>
+dcs - forces Performer to create a dynamic coordinate system node.
+<p>
+scs - forces Performer to create a static coordinate system node.
+<p>
+# - delineates the end of an @dis field and the start of a free form comment that continues until
+the next @dis keyword. Comment fields will be interpreted sensitive to case.Ä1. DAL Keyword Values
+<p>
+@dis - takes another DAL keyword as its value.
+<p>
+model_spec_version - takes the version number on the front cover as its value.
+<p>
+entity_type - takes the numeric values in DIS Standard IST-CR-93-46 Enumerations and Bit
+Encoded Values Section 4.2.3 Comprehensive Entity-Type tables separated by colons ( : ) as its
+value.
+<p>
+attachment_station - takes a numeric value in DIS Standard IST-CR-93-46 Enumerations and
+Bit Encoded Values Section 4.7.1 Attached Parts as its value. It may optionally take the default
+specifier -1 as its value to indicate that any non exact match is to be attached to this location.
+<p>
+attach_entity - takes the numeric values in DIS Standard IST-CR-93-46 Enumerations and Bit
+Encoded Values Section 4.2.3 Comprehensive Entity-Type tables separated by colons ( : ) as its
+value.
+<p>
+attachment_point - takes the x, y, and z offsets from the model's origin that uniquely identify the
+attachment point.
+<p>
+articulated_part - takes the numeric value in DIS Standard IST-CR-93-46 Enumerations and Bit
+Encoded Values Section 4.7.2 Articulated Parts as its value.
+<p>
+motion - takes a value from Table 4.3.3.2 to identify the kind of motion followed by minimum
+and maximum range values.
+<p>
+switch - takes the name value in DIS Standard IST-CR-93-46 Enumerations and Bit Encoded
+Values Section 4. 3 Entity Appearance (General and Specific), joined by the underscore character
+( _ ) if the name is multiple words, as its value. Note that the following names ( frozen_status,
+power_plant_status, and state ) are preceded by an abbreviation for their domain as follows: gm_
+for guided munitions and lf_ for life forms. Refer to Table 4.3.5.
+<p>
+state - takes the numeric value defined in DIS Standard IST-CR-93-46 Enumerations and Bit
+Encoded Values Section 4. 3 Entity Appearance (General and Specific) Purpose field, as its value.
+Refer to Table 4.3.5. and Section 4.3.5 for a description of a value list for this keyword.
+<p>
+inherit - takes one of the following reserved names as its value: LOD, material, or texture.
+<p>
+weapon_effect - takes the numeric values in DIS Standard IST-CR-93-46 Enumerations and Bit
+Encoded Values Section 4.2.3.2 Munitions separated by colons ( : ) as its value. Note that more
+than one munition entity type maybe specified in a comma separated list.
+<p>
+dcs - none required.
+<p>
+scs - none required.
+<p>
+# - takes user defined alphanumeric text as its value.
+<p>
+
+<b>1. DAL Implementation</b><p>
+@dis:<br>
+The keyword "@dis" is used at the beginning of each line in the comment field to signal the Vega
+and Performer loaders of a feature specific to DIS modeling. Other key words and values follow.
+model_spec_version:ÄThis keyword is placed in the parent model header as well as in any externally referenced
+models' headers. Refer to Section 4.3.1.
+<p>
+entity_type:<br>
+This keyword is placed in the parent model header as well as in any externally referenced
+models' headers. Refer to Section 4.3.1.
+<p>
+attachment_station:<br>
+This keyword is placed in a Group bead in the parent model. Refer to Section 4.3.2.1.
+<p>
+attach_entity:<br>
+This keyword is placed in the same Group bead as the attachment station in the parent model.
+Refer to Section 4.3.2.1.
+<p>
+attachment_point:<br>
+This keyword is placed in a Group bead in the parent model if it is an attachable model. Refer to
+Section 4.3.2.2.
+<p>
+articulated_part:<br>
+This keyword is placed in a Group bead that is a child to the DOF bead that identifies an
+articulated part. This keyword is always followed by the motion keyword described below. Refer
+to Section 4.3.3.2.
+<p>
+motion:<br>
+This keyword is placed in a Group bead that is a child to the DOF bead that identifies an
+articulated part. Refer to Section 4.3.3.2.
+<p>
+switch:<br>
+This keyword is placed in a Group bead in the parent model as well as in a Group bead in any
+externally referenced models. Refer to Section 4.3.4.
+<p>
+state:<br>
+This keyword is placed in the child of a Group bead in the parent model as well as in a child of a
+Group bead in any externally referenced models. Refer to Section 4.3.5.
+<br>
+inherit:<br>
+This keyword is placed in the state's comment bead as appropriate. Refer to Section 4.3.6.
+<p>
+weapon_effect:<br>
+This keyword is placed in a Group bead that is a child to the DOF bead that identifies the special
+effect location. Refer to Section 4.4.1.
+<p>
+dcs:<br>
+This keyword is placed in a Group bead in the parent model or in a Group bead in an externally
+referenced model whenever a DCS node must explicitly be used. Refer to Section 4.5.Äscs:
+This keyword is placed in a Group bead in the parent model or in a Group bead in an externally
+referenced model whenever a SCS node must explicitly be used. Refer to Section 4.5.
+<p>
+#:<br>
+The pound sign "#" is used to stop the interpretation of an @dis field, and allows a free-form
+comment to follow. Any new line not starting with "@dis" will be ignored, and may be used for
+comments. <br>
+Examples:<BR>
+"@dis model_spec_version 001 # designed to version 001 of the model spec"<br>
+"@dis entity_type 1:1:225:3:1:1:0 # M88A1 Armoured Utility Vehicle,
+only armoured vehicle in this exercise"
+<p>
+
+<h4>A. Model Coordinate System</h4>
+
+<b>1. Orientation of the model coordinate system</b><p>
+
+Performer and MultiGen, use a different right-hand coordinate system from that of the DIS
+Standard, namely positive z up, x right, and y forward. The following is an intentional,
+specific deviation from the DIS standard intended to make the modeller's use of
+MultiGen intuitive with respect to a model's coordinate system:
+Ignore the DIS model coordinate system. Construct models using the Performer/MultiGen
+coordinate orientations (z up, x right, y forward), with a one meter unit length.
+<p>
+<center><img src="http://paulbourke.net/dataformats/wrm/coord.gif"></center>
+<p>
+The real-time software will perform the translation:<br>
+<center>
+xmodel = yDIS<br>
+ymodel = xDIS<br>
+zmodel = -zDIS<br>
+</center>
+<p>
+
+<b>1. Origin of the model coordinate system</b><p>
+
+Locate the origin of vehicles as appropriate from the following table:
+<p>
+
+<table><tr><td>
+<b>Domain</b> </td><td> <b>Location of model origin</b>
+</td></tr><tr><td>
+Land </td><td>On the plane of ground contact, at the axis of yaw rotation
+</td></tr><tr><td>
+Air </td><td> At the center of gravity
+</td></tr><tr><td>
+Surface </td><td> On the axis of the center of buoyancy, in the plane of the
+waterline for an unloaded ship
+</td></tr><tr><td>
+Subsurface </td><td> On the axis of the center of buoyancy, in the plane of the
+waterline of a surfaced submarine
+</td></tr><tr><td>
+Space </td><td> At the center of gravity
+</td></tr></table>
+<p>
+
+<h4>A. Modeling for Efficient Mapping</h4>
+
+<b>1. Comment the parent model header</b><p>
+
+The parent model is the base geometry without any external references. The parent model
+header is comprised of two sequential comments. The first is "@dis model_spec_version
+value", where value is the version number of this document to which the model was
+designed. The second is "@dis entity_type code", where code is found in the DIS
+Standard IST-CR-93-46 Enumeration & Bit Encoded Values Section 4.2.3
+Comprehensive Entity-Type tables. Note each field is separated by colons. Entity is the
+DIS terminology for a model.
+<p>
+For example, comment the parent model header of an M88A1 as follows:<br>
+"@dis model_spec_version 001<br>
+@dis entity_type 1:1:225:3:1:1:0"<br>
+<p>
+
+The entity type is derived from the DIS specifications:<br>
+<center>
+1 = Entity kind = 'Platform'<br>
+1 = Domain = 'Land'<br>
+225 = Country = 'USA'<br>
+3 = Category = 'Armored utility vehicle'<br>
+1 = Sub-category = 'M88 Medium Recovery Vehicle'<br>
+1 = Specific = 'M88A1'<br>
+0 = Extra = 'other'<br>
+</center>
+<p>
+
+<b>1. Attached parts</b><p>
+
+In a DIS environment, an entity may have one or more attached parts. Attached parts are
+separate entities that are "attached" to another entity. For instance, a missle launcher may
+have an attached missle prior to launch, an aircraft may have bombs attached prior to its
+bombing run, etc.
+<p>
+
+<b>a) Comment attached parts stations in primary models</b><p>
+
+An attached part is placed at a particular attachment station on the primary entity. One
+may think of an attachment station as a hanger, from which an attached part may be hung.ÄWhen modeling an entity which may have other entities attached to it, (e.g. a missle
+launcher), one must indicate where the attachment stations are in the entity's geometry,
+and at what orientation the attached part model should be placed.
+<p>
+Stations are numbered sequentially starting with one. The order of station numbering is
+from top to bottom, then back to front, then left to right, except for aircraft wing stations,
+which are numbered from inboard to outboard. The attached part stations are defined in
+DIS Standard IST-CR-93-46 Enumeration & Bit Encoded Values Section 4.7.1 Attached
+Parts.
+<p>
+
+Attachment station information is encoded in the primary model as follows:
+<p>
+
+Place a Group bead in the primary model for each attachment point. Create a minimal
+polygon at 0, 0, 0. Translate this polygon to the attachment station's x, y, z offset from
+the origin of the model. Rotate the polygon in the yaw, pitch, and roll axes such that if
+any geometry were to be placed below this group, it would have the proper orientation
+for the attached part. Comment the Group bead in the primary model for each
+attachment point as "@dis attachment_station value list", where value list is of the form
+{number[, number]} where number is the four-digit DIS code found in the DIS Standard
+IST-CR-93-46 Enumeration & Bit Encoded Values Section 4.7.1 Attached Parts for the
+station you are identifying. If the optional default specifier -1 follows an attachment_
+station number, it will be used as the attachment stationt for any attached part which
+does not have an exact match. For example, comment the Group bead for the fuselage
+centerline attachment point:
+<p>
+
+"@dis attachment_station 512, -1 # fuselage centerline station; also use for anything
+else that doesn't match"
+<p>
+
+For a missile launcher, the point on the launcher's geometry where a missile can be attached
+has a group bead with the following comment field:
+<p>
+
+"@dis attachment_station 1 # station 1"
+<p>
+
+A comment of the form "@dis attach_entity code", where code is found in the DIS Standard
+IST-CR-93-46 Enumeration & Bit Encoded Values Section 4.2.3 Comprehensive Entity-Type
+tables, is placed below the @dis attachment_station comment in the group bead.
+Additional codes may be placed in a comma separated list. Note each field is separated
+by colons. For the aircraft example, comment the Group bead:
+<p>
+
+"@dis attach_entity 2:9:225:1:15:3:0 #Mk-84 bomb PAVEWAY II laser-guided"
+<p>
+
+For the missle launcher:
+<p>
+
+"@dis attach_entity 2:1:225:1:15:1:0, 2:1:225:1:16:0:0 #FIM-92 Stinger A/B/C or MIM-104
+Patriot"
+<p>
+
+<b>a) Comment the attachment point in attachable models</b><p>
+
+When modeling an entity that can be attached to another entity, one must indicate what
+point on its geometry should coincide with the location of the attachment station on the
+entity to which this entity may attach. Think of this point as the point to be hung from the
+hanger (attachment station) defined above in section 4.3.2.1.
+<p>
+
+The attached part will by default be oriented parallel to the main model's longitudinal (y) axis.
+If any rotation or transformation is required to attach the attaching point to the attachment
+point station, it will be done by the primary model.
+<p>
+
+The location of the attatchment point is specified by a comment in the root bead of the model
+in a line following the "@dis entity_type ... " comment of the following format:
+<p>
+
+"@dis attachment_point x y z" where x, y, and z are the offsets from the model's origin that
+uniquely defines the attachment point. For the aircraft example, comment the root bead in
+the bomb model:
+<p>
+
+"@dis attachment_point 0 0 0.75 # bomb attachment point x = 0m, y = 0m, z = 3/4m"
+<p>
+
+For the missle launcher, comment the root bead in the missle model:
+"@dis attachment_point 0 0 -0.5 #missle attaching point"
+<p>
+
+This indicates that when this missle type is attached to a primary model, the point of
+attachment is half a meter below the entity's origin.
+<p>
+
+<b>1. Articulated Parts</b><p>
+
+Articulated parts are the moveable parts of a model, such as the turret on a tank, the periscope
+on a submarine, or the landing gear on an aircraft. They may be attached to the model or
+to another articulated part.
+<p>
+
+<b>a) Representing Articulations in MultiGen's Hierarchy</b><p>
+
+DOF beads are used to represent an articulated part.
+<p>
+
+There must be exactly one DOF bead for each articulated part in the model. If there are
+geometry switches, or multiple levels of detail associated with a particular articulated part,
+these beads must appear below the DOF bead for the articulated part.
+<p>
+
+If the articulated part is attached to another articulated part rather than to the base geometry
+of the model ( e.g. a gun is attached to a turret, whereas a turret is attached to the tank
+body [base geometry] ) then that articulated part's DOF must be a descendant of the
+parent articulated part's DOF. In this case, the gun's DOF must be a descendant of the
+turret's DOF.
+<p>
+
+The articulated part and DOF should be positioned such that the articulated part is in its
+neutral or initial position when the DOF bead attributes represent the identity
+transformation.
+<p>
+
+<b>b) Embedding DIS Articulation Data in the Model</b><p>
+
+The DOF bead does not have a comment field. Thus in order to identify which articulated
+part the DOF bead controls and to define the articulated part's motion parameters, a
+Group bead is placed as a child to the articulated part's DOF bead. All of the geometry
+that defines the articulated part is placed under this Group bead. The DIS specific model
+features are identified by comments in this Group bead as defined below:
+<p>
+
+The articulated part's Group bead comment field may consist of several lines, each starting
+with the "@dis" keyword. The first line is a DIS Articulated Part Type Specification. 
+The additional lines are DIS Articulated Part Motion Type Specifications, each assigned to a
+single line. There must be a DIS Articulated Part Motion Type Specification for each
+motion that is allowable for the articulated part.
+<p>
+
+The DIS Articulated Part Type Specification takes the form "@dis articulated_part type",
+where type is the four digit DIS enumeration for the Articulated part. Refer to DIS
+Standard IST-CR-93-46 Enumeration & Bit Encoded Values Section 4.7.2 Articulated
+Parts for type values. For example, comment the group bead for the turret of an M1
+tank:
+<p>
+
+"@dis articulated_part 4096 # primary turret"
+<p>
+
+A DIS Articulated Part Motion Type Specification takes the form "@dis motion kind min
+max", where kind is the type of motion allowed for an articulated part (see Table 4.3.3.2
+below); min is the minimum position/orientation deviation from the neutral
+position/orientation; and max is the maximum position/orientation deviation from the
+neutral position/orientation. The min/max constraints on translational parameters are in
+units of meters, and they are in units of degrees for rotational parameters. Refer to the
+following examples:
+<p>
+
+1) "@dis articulated_part 4096 # primary turret M1 tank"<br>
+"@dis motion azimuth 0.0 360.0 # primary turret can only rotate in azimuth;<br>
+# within the range of 0 to 360 degrees"
+<p>
+
+2) "@dis articulated_part 4416 # primary gun M1 tank"<br>
+"@dis motion elevation -30.0 90.0 # gun may change its elevation within a range<br>
+# of -30 to +90 degrees only"<br>
+"@dis motion Y -0.6 0.3 # gun may change its position along the<br>
+# Y axis for recoil within a range<br>
+# of -0.6 to +0.3 meters only"
+<p>
+
+3) "@dis articulated_part 3072 # left main landing gear F15E"<br>
+"@dis motion Y 0.0 1.0 # gear may change itsY, X, and Z positions<br>
+"@dis motion X -1.0 1.0 # with the indicated constraints<br>
+"@dis motion Z 0.0 2.0 # in meters<br>
+<p>
+
+Table 4.3.3.2 DIS Articulated Part Motion Type Specification Kind Values
+<p>
+
+<center>
+<table><tr><td>
+<b>Kind</b> </td><td> <b>Value</b> </td><td> <b>DIS cross reference Description</b>
+</td></tr><tr><td>
+Y </td><td> DIS X </td><td> Forward / Backward motion ( Model Y axis )
+</td></tr><tr><td>
+X </td><td> DIS Y </td><td> Left / Right motion ( Model X axis )
+</td></tr><tr><td>
+Z </td><td> -DIS Z </td><td> Up / Down motion ( Model Z axis )
+</td></tr><tr><td>
+Azimuth </td><td> -Azimuth </td><td> Heading ( rotation with respect to Model Z axis )
+</td></tr><tr><td>
+Elevation </td><td> Elevation </td><td> Pitch ( rotation with respect to Model Y axis )
+</td></tr><tr><td>
+Rotation </td><td> Rotation </td><td> Roll ( rotation with respect to Model X axis )
+</td></tr></table></center>
+<p>
+
+ÄNote that the DIS coordinate system differs from the MultiGen/Performer coordinate system
+such that in DIS, x is forward, y is right, and z is down
+<p>
+
+<b>1. Use commented group beads to control model appearance</b><p>
+
+Use Group beads to allow multiple variations in a model's appearance. Comment the
+Group bead as "@dis switch attribute" where attribute is the DIS Entity Appearance
+Record attribute the switch controls, e.g., "@dis switch paint_scheme". Refer to Table
+4.3.5 DIS Appearance Attributes and States for the complete list of appearance
+attributes.
+<p>
+
+Group beads identified with the @dis switch keyword allow different model appearances
+without resulting in an explosion of beads or an uncontrollable proliferation of files, and
+can be used to switch geometry, texture, or material:
+<p>
+<ul>
+<li> A geometry switch is an attribute switch whose children are different states of a
+part (e.g., a normal, damaged, or destroyed turret). If more than one type of
+representation of the part entity is also possible, texture switch (see below) may be
+used which share the same children. (e.g., desert or forest camouflage applied to a
+normal, damaged, or destroyed turret).
+<p>
+<li> A material switch allows one set of geometry to have multiple alternate material
+properties (e.g., a forest green vs. desert tan base coat). This avoids duplicating
+the model and its corresponding parts for each material.
+<p>
+<li> A texture switch allows selection from among multiple textures (e.g., desert vs.
+forest camouflage) for a single geometry.
+</ul>
+<p>
+
+The Vega and Performer loaders will translate Group beads with the @dis switch keyword
+to Performer pfSwitch nodes.
+<p>
+
+The reserved names for the switch attributes are taken from the DIS Entity Appearance
+Record specification. The switch attribute names are shown in Table 4.3.5.
+<p>
+
+The following example shows how a tank with multiple appearance attributes, states,
+LODs, and parts should be structured.
+<p>
+<center><img src="http://paulbourke.net/dataformats/wrm/example1.gif"></center>
+<p>
+
+In this figure, the turret switch file is attached to the body switch file, while the barrel,
+launcher, and hatch switch files are attached to the turret. This allows the turret to be
+positioned in the coordinate system of the body, and the barrel, launcher, and hatch to be
+positioned in the coordinate system of the turret. In this example, all external references
+inherit the texture and material tables of their parents.
+<p>
+
+If multiple color schemes are needed to represent camouflage, winter, and desert versions,
+another switch is needed. The previously defined tank would be referenced three times,
+with each reference attached to a texture attribute bead. The following figure illustrates
+the hierarchy needed to accomplish this:
+<p>
+<center><img src="http://paulbourke.net/dataformats/wrm/example2.gif"></center>
+<p>
+By using the concept of switch files and inheritance, the database consists of thirteen
+unique data files referenced by six switch nodes. This enables the tank to assume 324
+different appearances with a minimum of duplication. When converted to a Performer
+scene graph, the tank would have the following representation:
+<p>
+<center><img src="http://paulbourke.net/dataformats/wrm/example3.gif"></center>
+<p>
+
+While inheritance and attribute switches provide a higher level of functionality, they also
+require the modeller to be conscious of the interaction of all branches of a hierarchy. For
+example, if a part of a model does not inherit its parents’ attributes, attribute switches
+higher in the tree will also go unnoticed and may create undesired effects. By the same
+token, if a part contains different textures than its parent but inherits texture data, a
+texture switch may leave the part unaffected.
+<p>
+In order to reduce the number of existing permutations it is suggested that all of a model’s
+state files (e.g., normal, damage, destroyed) use the same texture data. Additional textures
+and different materials may be added to reflect degrees of damage, but the base texture
+should remain the same. With this structure, a texture change may occur at the highest
+level in the hierarchy and be reflected in all representations, states, and parts.
+<p>
+
+<b>1. Comment the children of attribute switches the DIS state represented</b><p>
+
+Comment the child of a Group bead identified by the @dis switch keyword, which
+represents one of two or more alternate states as "@dis state value list", where value list
+is one or more of the defined DIS states in the Entity Appearance Record, or the default
+child indicator "-1". Value list is of the form {m[,m]}, where m is the value -1, a single
+non-negative integer i, or an integer range i-j. In addition, set the LOD, texture, and
+material inheritance flags via comments in the bead as appropriate ( See section 4.2.6.).
+<p>
+
+Geometries can be combined appropriate to the application. For example, not all hatch
+states may need to have unique visual states:
+<p>
+
+Parent switch commented "@dis switch hatch"
+<p>
+
+Child commented "@dis state -1,1" (used for the closed state and any other states
+not explicitly defined by child bead comments)
+<p>
+
+Child commented "@dis state 2-3" or "@dis state 2,3" (used for either popped state)
+<p>
+
+Child commented "@dis state 4,5" (used for either open state)
+<p>
+
+If a switch does not have a match for a DIS PDU state, and no default is explicitly defined,
+the child with the lowest defined value shall be used.
+<p>
+
+The reserved names and values for these states are taken from the DIS specification for
+Entity Appearance Records, and shown in Table 4.3.5. The appearance attributes are used
+as the attribute switch values, and the state numbers are used as described above to
+comment the children.
+<p>
+
+<h4>A. Features for Independent Models</h4>
+
+<b>1. Tag the location of weapon fire special effects</b><p>
+
+Place a DOF bead at the location of the weapon fire special effect. Comment the Group
+bead which is a descendant of the DOF bead "@dis weapon_effect code list", where
+code list consists of the DIS munition IDs fired from this location.
+<p>
+For example:
+<ul>
+<li> Place a DOF bead at the end of the 50 calibre machine gun barrel on the turret of an
+M1A2, and label the descendant Group bead
+<br>
+"@dis weapon_effect 2:2:225:2:1:-1:-1, 2:8:225:2:5:-1,-1 # Munition, Anti-Armor,
+US, Ballistic, 50 cal, any type of round; also Munition, Anti-Personnel, US,
+Ballistic, 50 cal, any type of round"
+<br>
+<p>
+<li> Place a DOF bead at the end of the main gun barrel, and label the descendant Group
+bead
+<br>
+"@dis weapon_effect 2:2:225:2:13:1:-1:-1 # Munition, Anti-Armor, US,
+Ballistic, 120 mm, any type of round"
+</ul>
+
+<b>1. Tag the location of marking text (future)</b><p>
+
+[need a tag in the file which specifies the location, orientation, text font, and text size for
+PDU marking text; e.g., on the ship's stern and bow]
+<p>
+
+<b>1. Model infrared or radar signatures (future)</b><p>
+[need methodology to handle Infrared & Radar Signatures in the model geometry]
+<p>
+
+<h3>A. Managing Optimization of the Performer Scene Graph</h3>
+
+The structures shown in the figure below show the correspondence between a typical
+MultiGen file and the Performer tree which is created when it is loaded.
+
+<p><center><img src="http://paulbourke.net/dataformats/wrm/example4.gif"></center></p>
+
+Note that the group bead labeled “opt 0” becomes a DCS while the other group, g3, is
+flattened and its group is culled from the tree by optimization. The modeler may force the
+creation of a DCS in three different ways:
+<p>
+<ul>
+<li> Comment the group bead “@dis dcs” or “@dis scs” to force the creation of a DCS
+or SCS node respectively.
+<p>
+<li> If the model is attached to another model as an external reference, the loader will
+create either an SCS or a DCS, depending on the xref’s header
+<p>
+<li> If the loader finds a transformation matrix in a MultiGen bead whose optimization
+level is such that its hierarchy is not flattened, it will create a DCS
+</ul>
+<p>
+
+The following rules should govern DCS and SCS nodes in the construction of a tree:
+<p>
+<ul>
+
+<li>A parent object or parent part always exists in its own coordinate system, whether an
+SCS or a DCS.
+<p>
+<li>Flags and properties (@dis fields) may be placed anywhere in the MultiGen file
+hierarchy
+<p>
+<li>If a property is set in a bead in the MultiGen hierarchy, it will only effect the bead’s
+children, not its parent(s) or siblings.
+<p>
+<li>A DCS is never removed or flattened by the Performer or Vega loaders, no matter
+what level of optimization is set.
+<p>
+<li>An SCS may be flattened (culled from the Performer tree) if a high enough
+optimization level (clean, flatten) is specified in the MultiGen comment field where the
+SCS is defined.
+</ul>
+<p>
+</td></tr></table></center>
+</body>
+</html>
+

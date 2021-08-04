@@ -1,0 +1,201 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>EDF and EDF+ files</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>EDF and EDF+ file format</h1>
+Compiled by <a href="../index.html">Paul Bourke</a><br>
+May 2020
+</center>
+<p><br><p>
+
+<p align="justify">
+The EDF format (stands for European Data Format) was designed to store medical time series
+data, it is most commonly used for EEG data. A non-breaking extension was added in 2003
+called EDF+.
+It is an open documented standard that is agnostic to any recording system or
+hardware/software supplier.
+The initial document describing the format, published in 1992,
+is here: <a href="http://paulbourke.net/dataformats/edf/document.pdf">document.pdf</a>.
+</p>
+
+<p align="justify">
+The original EDF files are particularly easy to read, they consist of two header blocks
+followed by all the data. The first header block contains various information about the 
+recording, the device specification, ADC range and filters. Pertaining to the data it
+contains the number of data records, the length of one record and the number of
+"signals" (for example, electrodes for eeg).
+All of the fields in the two headers are plain human readable ASCII characters.
+The header is 256 bytes long, the entries are summarised below.
+</p>
+
+<center><table cellpadding=4 border=0 cellspacing=0><tr><td>
+   <b>Bytes</b>
+</td><td>&nbsp;&nbsp;</td><td>
+   <b>Description</b>
+</td></tr><tr><td>
+	8
+</td><td>&nbsp;&nbsp;</td><td>
+	version of this data format, usually 0 for original EDF
+</td></tr><tr><td>
+	80
+</td><td>&nbsp;&nbsp;</td><td>
+	patient identification
+</td></tr><tr><td>
+	80
+</td><td>&nbsp;&nbsp;</td><td>
+	local recording identification
+</td></tr><tr><td>
+	8
+</td><td>&nbsp;&nbsp;</td><td>
+	startdate of recording (dd.mm.yy)
+</td></tr><tr><td>
+	8
+</td><td>&nbsp;&nbsp;</td><td>
+	starttime of recording (hh.mm.ss)
+</td></tr><tr><td>
+	8
+</td><td>&nbsp;&nbsp;</td><td>
+	number of bytes in header record
+</td></tr><tr><td>
+	44
+</td><td>&nbsp;&nbsp;</td><td>
+	not used in original EDF specification
+</td></tr><tr><td>
+	8
+</td><td>&nbsp;&nbsp;</td><td>
+	number of data records
+</td></tr><tr><td>
+	8
+</td><td>&nbsp;&nbsp;</td><td>
+	duration of a single data record in seconds
+</td></tr><tr><td>
+	4
+</td><td>&nbsp;&nbsp;</td><td>
+	number of signals in data record
+</td></tr></table></center><p>
+
+<p align="justify">
+The second header has 256 bytes for each signal, but these 256 bytes are split
+on a per signal basis. For example, the first entry is a label for the signal, it is
+16 bytes long. The second header will start with the labels for each signal. This
+is followed by all the transducer types, and so on.
+The second header entries are as follows.
+</p>
+
+<center><table cellpadding=4 border=0 cellspacing=0><tr><td>
+	<b>Bytes</b>
+</td><td>&nbsp;&nbsp;</td><td>
+	<b>Description</b>
+</td></tr><tr><td>
+	16
+</td><td>&nbsp;&nbsp;</td><td>
+	label for the signal
+</td></tr><tr><td>
+	80
+</td><td>&nbsp;&nbsp;</td><td>
+	transducer type
+</td></tr><tr><td>
+	8
+</td><td>&nbsp;&nbsp;</td><td>
+	units
+</td></tr><tr><td>
+	8
+</td><td>&nbsp;&nbsp;</td><td>
+	minimum possible value in units
+</td></tr><tr><td>
+	8
+</td><td>&nbsp;&nbsp;</td><td>
+	maximum possible value in units
+</td></tr><tr><td>
+	8
+</td><td>&nbsp;&nbsp;</td><td>
+	minimum value numerically
+</td></tr><tr><td>
+	8
+</td><td>&nbsp;&nbsp;</td><td>
+	maximum value numerically
+</td></tr><tr><td>
+	80
+</td><td>&nbsp;&nbsp;</td><td>
+	type of any prefiltering
+</td></tr><tr><td>
+	8
+</td><td>&nbsp;&nbsp;</td><td>
+	number of samples in each data record
+</td></tr><tr><td>
+	32
+</td><td>&nbsp;&nbsp;</td><td>
+	reserved
+</td></tr></table></center><p>
+
+<p align="justify">
+The data follows, in the original EDF format the data was represented in two
+byte signed integers, little endian. See EDF+ for a relaxing of this for other
+data formats such as floating point.
+The number of samples will be the number of records times the number of samples in
+a data record times the number of signals.
+</p>
+
+<p align="justify">
+To parse an EDF file the minimum might be as follows.
+</p>
+<ul>
+<li>
+<p align="justify">
+Read 256 byte header. Extract the number of records (nrecords), the number
+of signals (nsignals) and optionally the duration of a record if you want to
+compute sampling frequency.
+</p>
+<li>
+<p align="justify">
+Read nsignals times each of the second header entries.
+Extract the number of samples in each data record (nsamples).
+</p>
+<li><p align="justify">
+Read nrecords * nsamples * nsignals of data values.
+</p>
+</ul><p>
+
+<p align="justify">
+Explicitly the ordering of the samples is as follows.
+</p>
+<pre>
+   for (i=0;i&lt;nrecords;i++) {
+      for (j=0;j&lt;nsamples;j++) {
+         for (ns=0;ns&lt;nsignals;ns++) {
+            read 2 byte integer sample
+         }
+      }
+   }      
+</pre>
+
+<p align="justify">
+As an example see: <a href="http://paulbourke.net/dataformats/edf/test.edf">test.edf</a>.
+It consists of 350 records, each record is 1 second long, and there are 21 signals
+(electrodes). Each record is the same length, namely 256 samples.
+</p>
+
+</td></tr></table></center>
+</body>
+</html>
+
+
+
+
+

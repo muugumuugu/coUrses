@@ -1,0 +1,390 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Creating fisheye images for SkySkan content</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Creating content for a full dome SkySkan show</h1>
+</center>
+<center><table width=80%><tr><td>
+<p align="justify">
+Part of the tools developed for my rendering for the SkySkan show called:
+Infinity Express, namely the Mars flyover sequences and the galaxy (2dF)
+fly-through.</p>
+<center>
+Written by <a href="../index.html">Paul Bourke</a><br>
+October 2000<p>
+<font color="#770000">
+This document should be considered of "historical" interest only.<br>
+The software described here has largely been replaced by
+<a href="../cube2fish/index.html">this version of cube2fish</a>.
+</font>
+</center>
+</td></tr></table></center>
+<p><br><p>
+
+<b>Introduction</b>
+<p align="justify">
+This note describes how material can be rendered and presented for
+the SkySkan full dome projection environments. The basic approach
+is that one needs to create 5 views of the scene each with a camera
+aperture of 90 degrees and each exactly at 90 degrees to each other,
+these views are called front, left, right, top, and back. This note
+will be concentrating on creating material from computer based rendering
+software and not photographically although the concepts are the same.
+The 5 images are processed by SkySkan to form a single "master" image,
+essentially an 
+<a href="../fisheye/index.html">angular fisheye image</a> (some rendering
+applications can create these directly). 
+This master is then sliced up
+and sent to the projectors in different ways depending on the geometry
+of the particular dome. For example, the same master can be used to
+create a show for a partial dome as well as for a full dome.
+</p>
+
+<b>Image Conventions</b>
+<p align="justify">
+Most camera models for computer based rendering applications
+require that the camera aperture, view direction, 
+up vector, and right vector are specified.
+The camera aperture for each view is 90 degrees, the following diagram
+illustrates how the views are orientated. The great beauty of creating
+images in this format is that almost any rendering package can be used.
+At the time of writing the images need to have their dimensions an
+integer multiple of 100 pixels. Low resolution images are around 800
+pixels square, high resolution images are considered to be around the
+2000 pixels square.
+</p>
+<center><img src="http://paulbourke.net/dome/skyvision/foldedcube.gif"></center>
+
+<p align="justify">
+Strictly speaking the bottom half of the left, right, back, and front
+don't need to be rendered, the images still need to be square but the
+bottom half can contain anything since it won't used to make the
+fisheye master. 
+</p>
+So the example below<p>
+<center>
+<a href="http://paulbourke.net/dome/skyvision/s00000.html"><img src="http://paulbourke.net/dome/skyvision/s00000s.gif" width=400 height=200></a>
+</center><br>
+<p align="justify">
+Could be submitted as follows with the corresponding reduction (2/5)
+in the render times. Unfortunately not all packages automatically
+render half frames, there are solutions to this restriction but they
+vary between packages and generally require some additional external
+programming. 
+</p>
+<center>
+<a href="http://paulbourke.net/dome/skyvision/ss0000.html"><img src="http://paulbourke.net/dome/skyvision/ss00000s.gif" width=400 height=200></a>
+</center>
+<p align="justify">
+This example also clearly illustrates that this is not a particularly useful
+view for full dome projection, unless one was interested in the ceiling.
+Commonly the front view vector is orientated down from what would normally
+considered the front, the result is that the front view center is raised
+above the spring line of the dome.
+</p>
+
+<pre>
+Usage: tga2dome filename n size [options]
+       filename must be of the form [l,r,t,b,f]_name_nnnnn.tga
+       n        is the sequence number, see filename above
+       size     is the width and height of the input images
+Options
+       -w n     sets the output image size to n, default = 2 * size
+       -a n     sets antialiasing level to n, default = 1 (none)
+       -vp x y  sets the view position (x,y) for offaxis fisheye
+       -o s     overlay with the tga file "s" (expects alpha channel)
+</pre>
+
+<b>File name conventions</b>
+
+<p align="justify">
+The file naming convention is of the following form: <b>c_s_nnnnn.ext</b><br>
+Where "c" specifies the view and 
+is a single letter from 'f', 'l', 'r', 't', 'b'. <br>
+"s" is the name of the sequence, a string (length limits unknown).<br>
+"nnnnn" is the sequence number for the animation,
+starting from 00000 and zero padded (%05d in C printf() format). <br>
+</p>
+
+<p align="justify">
+So for example,
+the first frame from an animation sequence called "starmap" might be called<br>
+l_starmap_00000.tga, r_starmap_00000.tga, f_starmap_00000.tga, 
+t_starmap_00000.tga, b_starmap_00000.tga.<br>
+The next frame would be<br>
+l_starmap_00001.tga, r_starmap_00001.tga, f_starmap_00001.tga,
+t_starmap_00001.tga, b_starmap_00001.tga.<br>
+etc.
+</p>
+
+<b>Previewing</b>
+<p align="justify">
+Previewing the images without a dome or projection system is an
+interesting exercise. One straightforward approach is to create a
+composite image made up out of the 5 pieces, some examples of these
+can be seen in the examples section below.
+</p>
+
+<p align="justify">
+One alternative to previewing these images is to place oneself in a
+cube and map the 5 images onto the sides. An example of this was created
+in OpenGL, the user can interactively move about a simple scene but instead
+of looking at the scene he/she is looking at the images mapped onto the
+cube. An helpful extension is to open the cube a little or place it
+flat. Some screen shots from 
+examples are shown below, the source code
+for this demos is available here: 
+<a href="http://paulbourke.net/dome/skyvision/skyvision.c">skyvision.c</a> and 
+<a href="http://paulbourke.net/dome/skyvision/skyvision.h">skyvision.h</a><br>
+It is a straightforward extension to place texture images on the
+folded out faces of the cube and even to animate these textures.
+</p>
+
+<table><tr><td valign="top">
+<a href="http://paulbourke.net/dome/skyvision/opengl4.html"><img src="http://paulbourke.net/dome/skyvision/opengl4s.gif" width=150 height=150"></a>
+<br>
+One model provided is a sphere, here the poles are aligned to be on the
+left and right of the viewer. The faces of the cube are spread out by
+about 30 degrees.
+</td><td valign="top">
+<a href="http://paulbourke.net/dome/skyvision/opengl3.html"><img src="http://paulbourke.net/dome/skyvision/opengl3s.gif" width=150 height=150"></a>
+<br>
+Construction lines outline the boundary of the faces and the 50% boundary
+on the surrounding faces.
+</td><td valign="top">
+<a href="http://paulbourke.net/dome/skyvision/opengl2.html"><img src="http://paulbourke.net/dome/skyvision/opengl2s.gif" width=150 height=150"></a>
+<br>
+The faces of the cube can be flattened out to lie on a plane.
+</td><td valign="top">
+<a href="http://paulbourke.net/dome/skyvision/opengl1.html"><img src="http://paulbourke.net/dome/skyvision/opengl1s.gif" width=150 height=150"></a>
+<br>
+The faces of the cube can be moved to their original positions as if
+they formed a cube.
+</td></tr></table>
+
+<table><tr><td valign="top">
+<a href="http://paulbourke.net/dome/skyvision/opengl5.html"><img src="http://paulbourke.net/dome/skyvision/opengl5s.gif" width=150 height=150"></a>
+<br>
+Another model is a room with each pair of faces a different colour.
+</td><td valign="top">
+<a href="http://paulbourke.net/dome/skyvision/opengl6.html"><img src="http://paulbourke.net/dome/skyvision/opengl6s.gif" width=150 height=150"></a>
+<br>
+The camera rotated so it isn't aligned with the faces of the room.
+</td><td valign="top">
+<a href="http://paulbourke.net/dome/skyvision/opengl7.html"><img src="http://paulbourke.net/dome/skyvision/opengl7s.gif" width=150 height=150"></a>
+<br>
+This view is with the faces of the cube closed up and the camera aperture
+exactly at the 50% point of the side faces.
+</td><td valign="top">
+<a href="http://paulbourke.net/dome/skyvision/opengl8.html"><img src="http://paulbourke.net/dome/skyvision/opengl8s.gif" width=150 height=150"></a>
+<br>
+The flattened cube.
+</td></tr></table>
+
+<pre>
+Usage: skyvision [-h] [-c]
+          -h   this text
+          -c   show construction lines
+Key Strokes
+           c   toggle construction lines
+           q   quit
+Model space
+  arrow keys   rotate left/right/up/down
+  left mouse   rotate left/right/up/down
+middle mouse   roll clockwise and anticlockwise
+           i   translate up
+           k   translate down
+           j   translate left
+           l   translate right
+           [   roll clockwise
+           ]   roll anti clockwise
+Projection space
+         +.-   move camera forward/backwards
+</pre>
+
+<p><b>Further Examples</b><p>
+
+<table width="100%"><tr><td valign="top">
+<b>Redentore</b>
+<a href="http://paulbourke.net/dome/skyvision/redentore_00000_master.html">(Fisheye master)</a>.
+<p>
+The individual images are provided here<br>
+<ul>
+<li><a href="http://paulbourke.net/dome/skyvision/f_redentore_00000.html">f_redentore_00000.jpg</a><br>
+<li><a href="http://paulbourke.net/dome/skyvision/l_redentore_00000.html">l_redentore_00000.jpg</a><br>
+<li><a href="http://paulbourke.net/dome/skyvision/r_redentore_00000.html">r_redentore_00000.jpg</a><br>
+<li><a href="http://paulbourke.net/dome/skyvision/t_redentore_00000.html">t_redentore_00000.jpg</a><br>
+<li><a href="http://paulbourke.net/dome/skyvision/b_redentore_00000.html">b_redentore_00000.jpg</a><br>
+</ul>
+<p align="justify">
+The nice thing about this form of display is that the images don't
+need to be changed from those sent to SkySkan for processing.
+Unfortunately watching animations in this mode it rather distracting
+because the back view on the right is often doing the opposite of
+the front view.
+</p>
+</td><td valign="top" align="right">
+<a href="http://paulbourke.net/dome/skyvision/r00000.html"><img src="http://paulbourke.net/dome/skyvision/r00000s.gif" width=400 height=200></a>
+</td></tr></table>
+
+<table width="100%"><tr><td valign="top">
+<b>Mars</b><p>
+<a href="http://paulbourke.net/dome/skyvision/mars_00000_master.html">(Fisheye master)</a>.
+<p>
+<p align="justify">
+These have been rendered at 1000x1000 pixels for each view. 
+They are based upon the Mola 1/8 degree topology data.
+The animation, which is far to large to display here,
+consisted of 1800 frames representing 3 days, the first day
+consisted of a the planet without modification, the second
+day sees the sea level increasing, clouds introduced, and
+vegetation grown. The frames on the right are samples from
+three points in time. The rendering was performed in PovRay.
+</p>
+<p align="justify">
+In the sequence, not only is Mars transforming but it is
+rotating. While this sort of display of the movie is good
+to verify the correctness of all the frames, it is very
+hard to appreciate how the material will look in the dome.
+For example, it isn't easy to mentally join the top edge of
+the left and right pieces to the left and right edge of the
+top piece.
+</p>
+<p align="justify">
+A much better alternative would be for content creators to be able
+create the fisheye masters, watching a fisheye lens movie while
+introducing other distortion at least provides image continuity.
+</p>
+</td><td valign="top" align="right">
+<center>
+<a href="http://paulbourke.net/dome/skyvision/00270.html"><img src="http://paulbourke.net/dome/skyvision/00270.gif" width=400 height=200></a>
+<p>
+<a href="http://paulbourke.net/dome/skyvision/00500.html"><img src="http://paulbourke.net/dome/skyvision/00500.gif" width=400 height=200></a>
+<p>
+<a href="http://paulbourke.net/dome/skyvision/00710.html"><img src="http://paulbourke.net/dome/skyvision/00710.gif" width=400 height=200></a>
+<p>
+</center>
+</td></tr></table>
+
+<table width="100%"><tr><td valign="top">
+<b>PovRay</b><p>
+<p align="justify">
+The following illustrates one possible method of instructing
+PovRay to create the 5 views automatically. Note that the
+image renaming and stitching together was performed using
+external scripts.
+The Povray scene file and initialisation file are:
+<a href="http://paulbourke.net/dome/skyvision/cube.pov">cube.pov</a> and <a href="http://paulbourke.net/dome/skyvision/cube.ini">cube.ini</a>.
+</p>
+<ul>
+<li><a href="http://paulbourke.net/dome/skyvision/f_povray_00000.html">f_povray_00000.png</a><br>
+<li><a href="http://paulbourke.net/dome/skyvision/l_povray_00000.html">l_povray_00000.png</a><br>
+<li><a href="http://paulbourke.net/dome/skyvision/r_povray_00000.html">r_povray_00000.png</a><br>
+<li><a href="http://paulbourke.net/dome/skyvision/t_povray_00000.html">t_povray_00000.png</a><br>
+<li><a href="http://paulbourke.net/dome/skyvision/b_povray_00000.html">b_povray_00000.png</a><br>
+</ul>
+</td><td valign="top" align="right">
+   <a href="http://paulbourke.net/dome/skyvision/povray_00000.html">
+	<img src="http://paulbourke.net/dome/skyvision/povray_00000s.gif" width=400 height=200></a>
+</td></tr></table>
+
+<table width="100%"><tr><td valign="top">
+<b>OpenGL</b><p>
+<p align="justify">
+It is straightforward to create the 5 views from existing
+OpenGL applications. One simply creates view directions and
+up vectors for each view and calls gluPerspective() or
+glFrustrum() appropriately, render each view and save
+the resulting image to disk using glReadPixels().
+<br>
+The example shown here is from a flight through the 2dF
+galaxy dataset.
+</p>
+<ul>
+<li><a href="http://paulbourke.net/dome/skyvision/f_opengl_00660.html">f_opengl_00660.gif</a><br>
+<li><a href="http://paulbourke.net/dome/skyvision/l_opengl_00660.html">l_opengl_00660.gif</a><br>
+<li><a href="http://paulbourke.net/dome/skyvision/r_opengl_00660.html">r_opengl_00660.gif</a><br>
+<li><a href="http://paulbourke.net/dome/skyvision/t_opengl_00660.html">t_opengl_00660.gif</a><br>
+<li><a href="http://paulbourke.net/dome/skyvision/b_opengl_00660.html">b_opengl_00660.gif</a><br>
+</ul>
+</td><td valign="top" align="right">
+   <a href="http://paulbourke.net/dome/skyvision/opengl_00660.html">
+	<img src="http://paulbourke.net/dome/skyvision/opengl_00660s.gif" width=400 height=200></a>
+</td></tr></table>
+<p>
+
+<b>Warnings</b><p>
+<ul>
+<li><p align="justify">
+    Depending on the implementation it is not generally 
+    possible to use light sources that are positioned
+    relative to the camera (at least not related to the right or
+    up vector of the camera).</p>
+<li><p align="justify"> 
+    Care must be taken with antialiasing and the possible
+    edge effects. Most rendering packages employ some sort of
+    supersampling which is local to a particular pixel. Some
+    methods and filtering approaches use information from a wider
+    region around a pixel. This can result in borders along the seams
+    of the cube. Any filtering should be left until after the images
+    have been turned into a fisheye master. </p>
+</ul>
+
+<b>Inverse operation, fisheye to partial cubic maps</b><p>
+<p align="justify">
+The inverse operation is clearly possible, that is, converting an
+angular fisheye image into as much of the 6 cubic maps as
+is provided by the fisheye. 
+</p>
+
+<center>
+<img border=1 src="http://paulbourke.net/dome/skyvision/redentore.jpg" width=800 height=800><br>
+Input fisheye image: redentore.tga<br><br><br><p>
+
+<img border=1 src="http://paulbourke.net/dome/skyvision/cube1.jpg" width=800 height=600><br>
+dome2cube -a 3 redentore.tga<br><br><br><p>
+
+<img border=1 src="http://paulbourke.net/dome/skyvision/cube45.jpg" width=800 height=600><br>
+dome2cube -a 3 -x 45 redentore.tga<br><br><br><p>
+
+<img border=1 src="http://paulbourke.net/dome/skyvision/cube90.jpg" width=800 height=600><br>
+dome2cube -a 3 -x 90 redentore.tga<br><br><br><p>
+</center>
+
+<pre>
+Usage: dome2cube [options] fisheyeimage
+Options
+   -w n   output image size, default: fisheyewidth/4
+   -a n   antialiasing level, default: 1 (none)
+   -x n   rotate dome by n degrees, default: 0
+</pre>
+
+<b>Test Pattern</b><p>
+
+<center>
+<img border=1 src="http://paulbourke.net/dome/skyvision/test.jpg" width=800 height=800><br>
+Test pattern<br><br><br><p>
+
+<img border=1 src="http://paulbourke.net/dome/skyvision/testcube.jpg" width=800 height=600><br>
+dome2cube -x 90 -a 4 test.tga<br><br><br><p>
+</center>
+
+</td></tr></table></center>
+</body>
+</html>

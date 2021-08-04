@@ -1,0 +1,269 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Vuo as a playback solution for domes</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Vuo as a playback solution for domes</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+September 2019
+</center>
+<p><br><p>
+
+<p align="justify">
+The following presents Vuo 
+as a possible movie playback solution, or indeed other realtime graphical
+experiences, for domes.
+It illustrates the
+key features of Vuo through an example. While it focusses on single projector systems
+employing a 
+<a href="../../papers/planetarian1/index.html">spherical mirror</a>, 
+it can also be used for fisheye systems that might require
+warping due to an 
+<a href="../whywarp/index.html">off-center fisheye lens</a>, or multiple projector systems assuming the
+warp and blend data is available. The features of Vuo that make it an ideal choice
+for the task are as follows:
+</p>
+
+<ul>
+<li><p align="justify">
+	There is a warping node in Vuo, previously introduced <a href="index1.html">here</a>, that is
+	extremely general and can support a wide range of image warping applications.
+   </p>
+</li>
+<li><p align="justify">
+	Vuo leverages the high performance hardware assisted graphics built into every current Mac
+	hardware and OS.
+   </p>
+</li>
+<li><p align="justify">
+	It supports ShaderToy style GLSL shaders providing for custom
+	high performance image transformations.
+   </p>
+</li>
+<li><p align="justify">
+	Vuo, while not free, is very reasonably priced for what it is capable of.
+	In the discussion here it is a replacement for <a href="../warppatch/index.html">Quartz Composer</a>
+	that the author has used for similar purposes in the past.
+	At the time of writing QC is essentially a dead product, not supported by Apple.
+   </p>
+</li>
+<li><p align="justify">
+	It is simply a fun environment for producing real-time graphics.
+	The example here is based upon the current version at the time of writing, namely 
+	version 1.2.0.
+	</p>
+</li>
+</ul><p>
+
+<h3>Warped fisheye</h3>
+
+<p align="justify">
+Some of the key capabilities of Vuo will be presented next in the form of an example.
+This might be the basis of a very simple movie playback system for a dome with a
+spherical mirror. This example will assume there is a 
+<a href="../meshmapper/index.html">warp mesh available and customised for the dome</a>
+projection configuration in question, and that the computer is configured with two
+displays, one being the primary display and the other a 
+secondary display connected to the projector.
+A screen capture of the two displays might be as follows, the left hand being what
+the operator sees on their display, the right hand is the fullscreen image connected to
+the data projector. Note, the displays are not mirrored and while this is the configuration
+assumed here Vuo is flexible enough to handle other arrangements.
+</p>
+<center><table><tr><td>
+	<center>
+	<a href="http://paulbourke.net/dome/vuo/primary.png"><img src="http://paulbourke.net/dome/vuo/primary_s.png" width=400 height=225 border=1></a><br>
+	<font size=-1>Primary display, eg: laptop screen</font>
+	</center>
+</td><td>
+	<center>
+   <a href="http://paulbourke.net/dome/vuo/secondary.png"><img src="http://paulbourke.net/dome/vuo/secondary_s.png" width=400 height=225 border=1></a><br>
+	<font size=-1>Secondary display, eg: projector</font>
+	</center>
+</td></tr></table></center><p>
+
+<p align="justify">
+To follow along at home, the following zip file: 
+<a href="http://paulbourke.net/dome/vuo/warpfisheye.zip">warpfisheye.zip</a> can be downloaded. A few fisheye movies
+need to be copied into the "movies" directory.
+Upon running the Vuo program with the Vuo project file provided the Vuo editor
+window should look something like the following.
+</p>
+
+<center>
+	<a href="http://paulbourke.net/dome/vuo/vuoscreen.png"><img src="http://paulbourke.net/dome/vuo/vuoscreen_s.png" width=800 height=416 border=1></a><br>
+</center><p>
+
+<p align="justify">
+The purpose of this document is not to be a tutorial on Vuo, there are lots of resources already
+on-line
+for that. In what follows the key parts of the Vuo project will be discussed, this
+in conjunction with other on-line material should be a fast start to learning Vuo and being able
+to modify the project here to meet your exact needs.
+</p>
+
+<p align="justify">
+From the above screen shot it is clear that Vuo is a graphical programming paradigm where
+nodes, which have inputs and outputs, are connected together by cables. When reading the 
+Vuo documentations or tutorials a key concept to pay attention to
+is the distinction between event and data signals on the cables.
+The main impediments to getting results at the start are firstly getting into the right
+mind set, this tends to be more difficult for those used to similar systems which while
+similar often work differently. Secondly there are a lot of built-in nodes so finding the
+right node or combination for the task requires some searching and experimenting.
+</p>
+
+<p align="justify">
+Broadly speaking, the upper half of the project screen cature above
+is concerned with the secondary display,
+that is, producing the warped fisheye full screen. The lower half is concerned with the 
+smaller window on the primary display, it consists of 4 buttons for playing, pausing and
+stepping to the next movie along with the name of the movie currently being played.
+The project is arranged such that inputs are managed
+by the nodes on the left (keyboard, movie name, and
+buttons) while outputs (windows and their contents) are managed by the nodes on the right.
+The different categories are further hilighted by colour, for example blue for inputs, yellow
+for outputs and grey for movie handling.
+</p>
+
+<center>
+   <a href="http://paulbourke.net/dome/vuo/screens.png"><img src="http://paulbourke.net/dome/vuo/screens_s.png" width=500 height=441 border=1></a><br>
+	<font size=-1>The display the windows appear on is indicated by the "Change Fullscreen
+Status" nodes, see red outlines above</font>
+</center><p>
+
+<p align="justify">
+The section of the project shown below is responsible for determining what movie files
+are available in the movies directory, managing the movie selection from the keyboard
+or button options, and finally delivering the movie name to the "Play Movie" node.
+</p>
+
+<center>
+   <a href="http://paulbourke.net/dome/vuo/movies.png"><img src="http://paulbourke.net/dome/vuo/movies_s.png" width=600 height=186 border=1></a>
+</center><p>
+
+<p align="justify">
+The key to the use of Vuo in this context is the warping node, this uses the exact same
+<a href="../warpingfisheye/index.html">warp mesh files</a> that are used elsewhere, such as the original
+<a href="../warpplayer/index.html">WarpPlayer</a> application and the 
+<a href="../VLCwarp/index.html">VLC based movie player</a>.
+Anyone planning on supporting spherical mirror playback are encouraged to support these
+warping files.
+</p>
+
+<center>
+   <img src="http://paulbourke.net/dome/vuo/warp.png" width=600 height=271 border=1>
+</center><p>
+
+<p align="justify">
+For correct operation it is important that all the red circles in the following are
+consistent, specifically have the same aspect ratio. That is, the aspect ratio of the
+projector in the fullscreen status node, the aspect ratio assumed in the warp
+mesh file, and the aspect ratio selected as the output of the warp node. Note that
+the size, 1920x1080 in this example, doesn't necessarily need to match the native
+resolution of the projector but it makes sense that it does.
+</p>
+
+<center>
+   <img src="http://paulbourke.net/dome/vuo/aspect.png" width=356 height=463 border=1>
+</center><p>
+
+<p align="justify">
+An exercise for the reader might be to place a small preview of the fisheye (prewarped)
+on the controller window, only takes one extra node, or two if you want the frame.
+See example in the left image below.
+</p>
+
+<center><table><tr><td>
+   <center>
+   <a href="http://paulbourke.net/dome/vuo/primary2.png"><img src="http://paulbourke.net/dome/vuo/primary2_s.png" width=400 height=225 border=1></a>
+   </center>
+</td><td>
+   <center>
+   <a href="http://paulbourke.net/dome/vuo/secondary2.png"><img src="http://paulbourke.net/dome/vuo/secondary2_s.png" width=400 height=225 border=1></a>
+   </center>
+</td></tr></table></center><p>
+
+<br>
+
+<h3>360 movie player</h3>
+
+<p align="justify">
+With the advent of so called VR (head mounted) displays, there is an increasing number of 360 movies
+being recorded. In the context of a dome one can of course extract a fisheye projection
+with a virtual fisheye camera pointing in any direction.
+With the addition to the above Vuo project
+of a GLSL shader node, the shader code to extract a fisheye from a
+equirectangular formatted movie, and some navigation controls one can readily 
+interactively tilt and pan in real-time within a 360 movie.
+</p>
+
+<center>
+	<a href="http://paulbourke.net/dome/vuo/spherical.png">
+   <img src="http://paulbourke.net/dome/vuo/spherical_s.png" width=800 height=579 border=1></a>
+</center><p>
+
+<p align="justify">
+This first example of a 360 video of sheep shearing the Vuo project
+extracts a fisheye view suitable for a fisheye lens projection system.
+Note the equirectangular is shown on the primary screen control window.
+While all rotations (roll, tilt, pan) are possible, normally only panning is useful.
+The tilt is generally fixed depending on the tilt angle of the dome, or the angle
+in a horizontal dome corresponding to natural viewing largely dependent on
+the seat tilt angle.
+</p>
+
+<center><table><tr><td>
+   <center>
+   <a href="http://paulbourke.net/dome/vuo/shearing1.png"><img src="http://paulbourke.net/dome/vuo/shearing1_s.png" width=400 height=225 border=1></a>
+   </center>
+</td><td>
+   <center>
+   <a href="http://paulbourke.net/dome/vuo/shearing2.png"><img src="http://paulbourke.net/dome/vuo/shearing2_s.png" width=400 height=225 border=1></a>
+   </center>
+</td></tr></table></center><p>
+
+<p align="justify">
+One can obviously add a warping node to achieve the same thing for a spherical mirror
+projection system, the example below is a 360 video recording from steel mill in India.
+</p>
+
+<center><table><tr><td>
+   <center>
+   <a href="http://paulbourke.net/dome/vuo/steel1.png"><img src="http://paulbourke.net/dome/vuo/steel1_s.png" width=400 height=225 border=1></a>
+   </center>
+</td><td>
+   <center>
+   <a href="http://paulbourke.net/dome/vuo/steel2.png"><img src="http://paulbourke.net/dome/vuo/steel2_s.png" width=400 height=225 border=1></a>
+   </center>
+</td></tr></table></center><p>
+
+<p align="justify">
+Similarly the warp node, with a suitable mesh, can be used to present a fisheye correctly
+on a dome where the fisheye lens may not be in the center of the dome, for example there
+may be a optomechanical star projector in the center.
+</p>
+
+<center>
+   <img src="http://paulbourke.net/dome/vuo/warp2.png" width=764 height=343 border=1>
+</center><p>
+
+</td></tr></table></center>
+</body>
+</html>
+

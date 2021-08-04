@@ -1,0 +1,232 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Experiences with my first 8K fulldome production pipeline</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800 cellpadding=0 cellspacing=0><tr><td>
+
+<center>
+<h1>Experiences with my first 8K fulldome production pipeline</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 2009<p>
+"Frozen in Time" is a production by Peter Morse.
+</center>
+<p><br><p>
+
+<p align="justify">
+The following are some notes arising from my first experience creating
+an 8K by 8K (8192 pixels square) fulldome show for one of the new breed of digital planetariums
+that are capable of presenting that resolution. The show itself is by Peter
+Morse and called "Frozen in Time". It had already been produced at 3600x3600 pixels
+in collaboration with Horizon - The Planetarium. The show consists of 
+panning around within full spherical panoramic images of the Mawsons huts in Antarctica.
+The spherical panoramas are of sufficiently high resolution (typically 20000 x 10000
+pixels) to support the generation of 8K square fisheye projections. In total the
+show runs for almost 6 minutes 45 seconds, but discounting credits the fisheye
+panning runs for about 6 minutes. The software used to create the raw sequences
+in the original production was <a href="../2fish/index.html">sphere2fish</a>, post production
+with FinalCutPro.
+</p>
+
+<b>Compositing software</b><br>
+<p align="justify">
+While 8K square output images are possible from most (but not all) rendering packages,
+this includes the locally developed "sphere2fish",
+it is a very different story with compositing software. The
+two packages generally used for in-house work are FinalCutPro (Mac OS-X) and Premier (MSWindows).
+At the time of writing neither of these were capable of greater than 4096 pixels.
+Frustratingly (for another project) FinalCutPro has the limit set arbitrarily to
+4000 pixels! While these limits may have been arguable a number of years back,
+there are a whole range of camera systems capable of larger frame sizes and an
+increasing number of display systems capable of matching resolutions. For example,
+the LadyBug-3 camera has a native resolution for video
+capture of 5400x2700 pixels.
+</p>
+<p align="justify">
+Fortunately for this production the requirements for the transitions and titles
+were modest. The solution then was to develop local software that acted upon
+the frames following simple instructions provided as a script. Examples of the
+script instructions were "fade out linearly from frame 4600 to frame 4750", or "overlay title
+sequence from frame 1000 to 1200". In total there were no more than 6 different
+operations required.
+</p>
+
+<b>Distributing the pipeline</b>
+<p align="justify">
+The pipeline is shown below, while the time for each section varies the averages
+per frame are: fisheye generation 220 seconds, transitions 50 seconds, composite
+40 seconds, and png 55 seconds. For 12000 frames that is a total of just under
+51 days of processing. This was split across 8 CPUs with the aim of completing 
+the processing within a week.
+</p>
+<center><img src="http://paulbourke.net/dome/8K/workflow.png" width=847 height=291 border=0></center><p>
+<p align="justify">
+The entire pipeline consisted of locally developed software running in Unix (Mac OS-X).
+The underlying software had a number of parameters, one being the frame size, another
+the degree of antialiasing. This meant that the entire sequence could be computed
+at a lower resolution to verify everything was functioning as expected. 
+These lower resolution versions
+could be computed very quickly, for example a 512 pixel version without antialiasing
+could be generated within an hour. The consequence being that when the final 8K version
+is computed there is a high confidence that it will be correct the first time.
+</p>
+
+<b>File format</b>
+<p align="justify">
+Since all stages of the pipeline consisted of locally developed software tools,
+the most straightforward format to use was TGA.
+Certainly not an efficient format but
+it is lossless and capable of being read and decoded much faster than the
+likely alternatives (TIFF and PNG). Note the run length encoding was used rather
+than the uncompressed variant. This gives a lossless format through the entire image
+processing stages, the final frames were then converted to PNG for distribution.
+</p>
+<p align="justify">
+An unfortunately characteristic of PNG is that the reading/writing is not
+symmetric, that is, compression is much slower than reading mainly due to
+the need to create the initial dictionary of sequences.
+On the hardware used a simple conversion from TGA to PNG took one minute, may not
+sound like much but for a 6 minute production the final image conversion would take
+a total of 8 days (if a single computer were used).
+</p>
+<center><img src="http://paulbourke.net/dome/8K/graph.png" width=627 height=535 border=0></center><p>
+<p align="justify">
+The above graph shows conversion times for various file formats. As it happens TGA
+is perhaps surprisingly not a bad choice for such a pipeline even though the above
+timings include file IO for which TGA has a disadvantage. Note that PNG can convert
+faster if it generated with a lower dictionary size, the timings above use the optimal
+dictionary and thus smallest file sizes. 
+</p>
+
+<b>Sample frames</b> (Copyright Peter Morse)<p>
+<p align="justify">
+Three sample frames from the animation are given below, note that they are presented
+here as JPEG for size reasons only. JPEG was not used at any stage in the production
+and indeed no lossy compression should be employed for obvious reasons despite the
+file size savings. 
+</p>
+<center>
+<table><tr><td>
+	<center>
+	<a href="http://paulbourke.net/dome/8K/06468.jpg"><img src="http://paulbourke.net/dome/8K/06468small.jpg" width=300 height=300 border=1></a><br>
+	Main room</center>
+</td><td>
+	<center>
+   <a href="http://paulbourke.net/dome/8K/10616.jpg"><img src="http://paulbourke.net/dome/8K/10616small.jpg" width=300 height=300 border=1></a><br>
+	Mawsons room</center>
+</td><td>
+	<center>
+   <a href="http://paulbourke.net/dome/8K/08178.jpg"><img src="http://paulbourke.net/dome/8K/08178small.jpg" width=300 height=300 border=1></a><br>
+	Hurleys darkroom</center>
+</td></tr></table><p>
+[Depending on the capabilities of your computer you may choose not to view these<br>
+in your browser but instead download them and view them in an image viewing application.]
+</center>
+<p>
+
+<b>File sizes</b>
+<p align="justify">
+Average files sizes for the TGA frames during the pipeline was 145MB, that is, frames
+that were non-trivial. Note that since the run length encoding really only reduces 
+the border (outside the fisheye circle) these frames are only slightly less than
+the uncompressed size of 192MB. 
+</p>
+
+<p align="justify">
+The final PNG files were on average 70MB each, these are
+only generated at the last stage of the pipeline.
+For 30fps this then works out as just over 2GB per second, or 120GB per minute.
+Interesting to note then that this relatively short production saved as
+PNG, which has one of the better lossless compression ratios, requires almost
+a terrabyte drive for distribution. Fortunately these drives are now relatively low cost
+except the interface is rather slow, see next point.
+</p>
+<p align="justify">
+It is interesting to compare 8K fisheye image size with a full HD image (1920x1080).
+In terms of image area (ignoring the fisheye fringe) the ratio of active pixels
+is pi 4096<sup>2</sup> / (1080*1920) = 25. This is therefore the multiplier one
+needs to consider for raytraced content for example. For image based operations
+the ratio is simply 8192 * 8192 / (1080*1920) = 32.
+</p>
+<center><img src="http://paulbourke.net/dome/8K/imagesize.png" width=400 height=251 border=0></center><p>
+
+<b>Frame transfer</b>
+<p align="justify">
+As an indication of how operations one would not normally give a second thought to
+in most shows can be more important for an 8K production. At 70MB per frame a 6 minute
+production can take a significant time to move between disks.
+The following tables gives upper limits for a few interfaces, in reality the
+quoted bandwidth of the standard is rarely met. For example, while SATA based drives are rated at
+1.5, 3, and 6 Gbits/sec in practice it is hard to get above 100MBytes/sec sustained.
+</p>
+<center><table>
+<tr>
+	<td width=200><b>Interface</b></td>
+	<td width=200><b>Bandwidth</b></td>
+	<td width=200><b>Transfer time</b></td>
+</tr>
+<tr>
+   <td>Firewire-400</td>
+   <td>400Mbits/sec</td>
+   <td>4.2 hours</td>
+</tr>
+<tr>
+   <td>USB-2</td>
+   <td>480Mbits/sec</td>
+   <td>3.5 hours</td>
+</tr>
+<tr>
+   <td>Firewire-800</td>
+   <td>786Mbits/sec</td>
+   <td>2.1 hours</td>
+</tr>
+</table></center><p>
+
+<b>Comments and lessons</b>
+<ul>
+<li><p align="justify">
+Invest in fast large drives. For transfer media keep away from cheap USB-2 drives
+and invest in Firewire-800 drives. For production I would now choose fast external
+SATA drives with a high bandwidth interconnect.
+</p>
+<li><p align="justify">
+Much of the above pipeline can be significantly improved using GPU programs. For
+example the fisheye from spherical panorama has subsequently been implemented in
+cuda, this reduces the image mapping from 220 seconds to under 30 seconds (including
+file IO).
+</p>
+<li><p align="justify">
+It is interesting to consider the consequences for raytraced rendering. Being a pixel
+based rendering it increases as the square of the linear dimension of the image. 
+For example, <a href="../astc2007/index.html">Fulldome Geometry Series: Part 1</a>
+was raytraced as 4K fisheye, only made possible by significant access to a 200cpu
+facility. The equivalent at 8K will take 4 times longer. 
+</p>
+<li><p align="justify">
+Do not assume your favourite rendering or compositing software will handle 8K images.
+Many packages now use the graphics card for effects and image processing, they achieve
+this using textures on the graphics card. Many cards (at the time of writing) have a limit
+of 4K for texture dimensions.
+</p>
+<li><p align="justify">
+Don't use PNG for multiple file read/writes, it is a format that needs a high CPU load for
+compression.
+</p>
+</ul>
+
+</td></tr></table></center>
+</body>
+</html>
+

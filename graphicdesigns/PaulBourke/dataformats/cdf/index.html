@@ -1,0 +1,1077 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Cyberspace Description Format (CDF)</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Cyberspace Description Format (CDF)</h1>
+<b>Reference Specification Proposal for VRML</b>
+</center>
+<p><br><p>
+
+<b>Introduction and Scope.</b>
+<p>
+1.1.	This document details a proposed standard text format for describing
+cyberspace decks and virtual worlds.  It is based on Autodesk's internal
+experience using the Cyberspace Developer Kit CDF.  As a result, this proposal
+contains some changes from the CDF found in CDK Versions 1.0 and 1.01.  The
+specification reflects a change in focus from supporting the CDF as a
+proprietary developer's tool to promoting the CDF as a set of  guidelines that
+will evolve towards an industry standard.
+<p>
+1.2.	The purpose of the CDF is to provide a standard framework to store,
+retrieve, modify and exchange descriptions of cyberspace objects.  These
+descriptions encompass object initialization, object state and object
+scheduling within a cyberspace simulation.
+<p>
+1.3.	We start with a small core containing basic syntax, organizational and
+reference semantics.   The next layer (level 2) contains semantics for creating
+certain classes of objects fundamental to all virtual worlds.   The third layer
+(level 3) contains vendor-specific or experimental extensions in such a way
+that those extensions can be read or bypassed by a given CDF parser (see figure
+1).
+<p>
+<center><IMG SRC="http://paulbourke.net/dataformats/cdf/cdf1.gif" border=1></center><p>
+<i>Figure 1.  </i>CDF  as a layered standard.
+<p>
+<p>
+1.4.	The CDF as an industry standard allows any number of implementations, just
+as today there are any number of implementations of DXF readers and writers. It
+gains this flexibility through layering and by allowing delegation of parsing
+of various resource files (such as DXF, 3DS, Inventor, OOGL, and others).  For
+example, a given CDF parser may not itself know how to parse a  3DS file, but
+may delegate this task to a parser object for that capability as in figure 2.
+The sub-parser can either create native objects from the resource file, or
+rewrite it as CDF which can then be reparsed by the CDF parser.  
+<p>
+<center><IMG SRC="http://paulbourke.net/dataformats/cdf/cdf2.gif" border=1></center>
+<p>
+<i>Figure 2.</i>  CDF Parser delegation.
+<p>
+1.5.	The CDF describes cyberspace <i>simulations</i>, in which changing
+constellations of geometry and behaviour reflect some domain of interest,
+rather than merely assembling static geometrical scenes.  Autodesk has created
+a large number of scene description classes in its Cyberspace Developer  Kit
+that are expressible in CDF; however, the specification for these classes can
+apply equally well to a variety of class libraries.  A proposed standard for
+these specifications is included in the second layer of the CDF.
+<p>
+1.6.	There are a large number of possible kinds of cyberspace behaviours.   The
+description of these behaviour types is in its infancy.  Although Autodesk has
+several in-house behaviour description languages that can be expressed in CDF,
+creating a general framework for  behaviour expression and interoperability is
+and will continue to be an ongoing issue.    The CDF can help this effort by
+providing a basic syntax in which  behaviour specification proposals can be
+expressed and evaluated.
+<p>
+1.7.	This remainder of this document considers the purpose of the CDF as a VRML
+candidate, a set of design goals for the CDF, and the proposed syntax and
+semantics.
+<p>
+<b>	CDF Design Goals</b>
+<p>
+This is a discussion of the design goals for the CDF.
+<p>
+2.1.	<b>Declarative, not procedural.</b>   The CDF strives to be independent of
+procedural semantics and particular language implementations, though
+interpretable code fragments or executables can be embedded within CDF
+extensions.  A CDF file is a description of a <i>cyberspace</i>, or virtual
+world, and not a program to create one.
+<p>
+2.2.	<b>Platform-independent.  </b>CDF is simply a text format, and contains no
+bias towards any particular operating system or hardware platform.
+<p>
+2.3.	<b>Small and easily understandable.   </b>The CDF uses a layered strategy.
+A small, easily understood set of core elements containing the basic syntactic
+and semantic idioms are handled by all parsers.  A second layer, built on top
+of the core, contains standard specification mechanisms to specify widely used
+constructs that are common to all 3D simulations.   The specification contains
+extension protocols to enable the developer to experiment with additional
+layers on top of the first two.
+<p>
+2.4.	<b>Easy orientation within a CDF file by authors and readers.
+</b>Authors and readers of a CDF file (both persons and software agents) can
+easily tell where they are in the file.
+<p>
+2.5.	<b>Concise.  </b>In as much as the standard is intended as a medium
+of exchange, CDF files and strings containing CDF fragments should impose a
+minimum burden on storage space and bandwidth.  
+<p>
+2.6.	<b>Object oriented, but not to any particular programming language model.
+</b>The CDF expresses that some particular object instance of a class or type
+is to be created and initialized with a particular set of attributes, while not
+mandating in what language the object class is implemented.<p>
+  <p>
+2.7.	<b>Expressive. </b>All file formats enable the translation of text into
+some set of internal data structures within a program.  These data structures
+are usually hierarchical in nature.  The CDF   provides a small set of
+"utility" built-in data structures  within the format.  It  also provides a
+means for the CDF developer community to expand on this set on a per-project
+basis. 
+<p>
+2.8.	<b>Expandable.</b>  The CDF enables both ad-hoc and per-project
+extensions, as well as a means to incorporate them into standard extension
+protocols.  There are two dimensions along which these extensions can occur.
+First, the range of objects that can be described can easily be extended;
+second, more data structures can be added to describe values for object
+initialization descriptions.
+<p>
+2.9.	<b>Facilitates experimentation.  </b>The spirit of the CDF  is to enable
+and encourage extensions to itself without violating basic parsability.
+<p>
+<b>3.	CDF Syntax.</b>
+<p>
+The CDF core syntax  has three parts.  The first is the reserved character set
+for object description; the second is the set of data types and structures
+expressible by the character set;  the third is an protocol under which the
+number of data types can be extended.
+<p>
+The use of  several mandated data structures within the syntax sets the stage
+for greater compatibility between delegated parsers.  Some programs use the
+resulting structures for an object's runtime state.  Such a 1:1 mapping between
+the CDF and object state is intuitive and also facilitates trouble-shooting. 
+<p>
+<b>3.1.  Character Set.</b>
+<p>
+3.1.1.	A CDF file or string is composed of  whitespace (spaces, tabs,
+newlines and return characters), data types and any of the nine reserved
+characters <b>%</b> , <b>;</b> ,  <b>(</b> , <b>)</b> , <b>{</b> , <b>}</b> ,
+<b>[</b> , <b>] </b>and<b> "</b> .  All other characters not part of the data
+type syntax are ignored by the parser, unless they occur within the
+<b>string</b> data type.   White space and reserved characters that do not
+occur within the context of a double quoted string are treated as token
+separators.
+<p>
+3.1.2.	Arithmetic and logical characters occurring singly or in conjunction
+with other such symbols not part of the reserved set in 3.1.1 are reserved for
+their use as arithmetic and logical symbols and shall not be used in any data
+type extension.  They are read as strings  unless they appear with other
+characters inside double quotes.  These characters are <b>~ </b>, <b>! </b>,
+<b>^ </b>, <b>&amp; </b>, <b>* </b>, <b>- </b>, <b>+ </b>, <b>= </b>, <b>/
+</b>,<b> | </b>,<b> :</b> ,<b> &lt;  </b>and<b>  &gt; .</b>
+<p>
+<b>3.2.   Core Data Types.<i></i></b><p>
+<b><i></i></b><p>
+3.2.1.	<b>Integers -- </b>Integers are expressed as themselves.  Unary
+minus is supported.  For example, 0, -42, 138 are legal.  Range is signed,
+32-bit base 10 by default, though other ranges and bases can be specified by
+directions to the CDF reader functions.  See also 4.6 on the file mode line. 
+<p>
+3.2.2.	<b>Reals</b> -- Real numbers are expressed as themselves.  Unary
+minus is supported.  Numbers between -1 and 1 (exclusive) have a leading zero
+to the left of the decimal point.   For example,  0.12394729, -45.67, 78.9 are
+legal.  Range is signed IEEE double precision.  All reals are in base 10.  If a
+real number is called for in an extended data type specification and an integer
+is offered, the integer is cast to a real.  (While the number 3 is a real
+number, it is parsed as an integer.)
+<p>
+3.2.3.	<b>Strings</b> -- Strings are expressed as follows.
+<p>
+3.2.3.1.	Any sequence of characters between a double quote and the next double
+quote is read as a string.
+<p>
+3.2.3.2.	Any non-double-quoted sequence of characters that does not contain
+whitespace or reserved characters and is not a number is read as a string.  
+<p>
+3.2.3.3.	All strings are case sensitive.
+<p>
+3.2.4.	<b>Tuples</b> -- A tuple is delimited by parentheses <b>(  )</b> and can
+contain any number of  CDF data structures and data objects, including other
+tuples.  All tuple elements are separated by spaces.  Tuples are used as
+heterogeneous lists, as in Lisp.
+<p>
+3.2.5.	<b>Queues</b> -- A queue is delimited by braces <b>{  }</b> and can
+contain any number of CDF data structures or data objects.  The structures or
+objects must be of the same type, e.g., all integers, all tuples, etc.
+<p>
+3.2.6.	<b>Dictionaries</b> -- A dictionary is delimited by brackets <b>[  ]
+</b>and can contain any number of string-queue pairs.  The string acts as the
+lookup key for the queue and items in the queue.  Any number of items of the
+same type can be stored under the same key.  The queue in the context of a
+dictionary is also called a <i>value queue</i> in this document.  Thus:<p>
+<pre>
+	[ A { B } ]  -- A is a key to the value queue containing B; 
+	the value of A is B.
+
+	[ A { B C } ] -- A is a key to the value queue containing B; 
+	the value of A is B and C.
+
+	[ A { { B C } } ]  -- A is a key to the value queue 
+	containing the queue containing B and C; the value of A is 
+	{ B C }.
+</pre>
+
+<P>3.2.7.<b>Comments</b> -- Comments are any number of characters, reserved or
+not, that are preceded by a semicolon and terminated by a newline character.
+Comments are ignored (except for the  <i>mode line</i>, see 4.6 below).  In
+this, they are identical to Lisp style  comments.
+<p>
+<b>3.3. Extended Data Types</b>
+<p>
+3.3.1<b>	Data type syntax extension protocol --</b> A data structure
+extension is delimited by percent signs.  The first percent sign is always
+followed by the name of the object type.  This is followed by tokens as needed
+to specify the data type.   For example, in the CDF extended data type package
+detailed below, <b>% vector3   (5.8  6.2  35.78) %  </b>might specify a 3
+dimensional vector  with  5.8, 6.2 and 35.78 as the vector elements.  The CDF
+core does not itself contain any of these extensions, only the means for
+specifying them.  The  CDF  level 2 contains an extended data type package
+containing some of the basic data structures common to all 3D simulations.
+Vendors and developers can add their own packages as desired.  Parsers that do
+not know of a particular extended data type ignore it <i>and</i> the object
+attribute of which it is a value.   For linear algebra data types, a
+right-handed coordinate system is assumed.
+<p>
+3.3.2.<b>	CDF Extended Data Type Package -- </b>The CDF level 2 contains a set
+of extended data types built on top of the core extension protocol.
+<p>
+3.3.2.1.<b>	Data block </b> -- This is a block of data, which the parser
+regards as unstructured.  The block can be any size.  The CDF specification
+is:
+<p>
+<blockquote><b>% data_block  (</b> <i>readwrite_flag  printable_flag  executable_flag
+filename</i><b>) %</b></blockquote>
+<p>
+The<i> readwrite_flag</i> is one of READWRITE  or READONLY.  The
+<i>printable_flag</i> is one of PRINTABLE or NON_PRINTABLE.  The
+<i>executable_flag</i> is EXECUTABLE or NON_EXECUTABLE.  The <i>filename</i> is
+a filename string with the path information delimited by forward
+slashes.
+<p>
+3.3.2.2<b>	3D vertex </b>-- The CDF specification is:
+<p>
+<blockquote><b>% vertex3  (</b> <i>x  y  z</i><b> ) %</b> </blockquote>
+<p>
+where <i>x</i>,<i> y</i>, and <i>z</i> are real numbers.
+<p>
+3.3.2.3<b>	3D vector</b> --  The CDF specification is:
+<p>
+<blockquote><b>% vector3  (</b> <i>x  y  z</i><b> ) %</b> </blockquote> 
+<p>
+where <i>x</i>,<i> y</i>, and <i>z</i> are real numbers.
+<p>
+3.3.2.4<b>	3D matrix</b> -- This is a PHIGS-style matrix of four columns:
+U,V,N,T.  An invariant fourth row of ( 0 0 0 1) is assumed, so it is
+unnecessary to specify it.  The matrix is therefore specifiable by three
+vectors and a vertex.  The CDF specification is:
+<p>
+<blockquote><b>% matrix (</b> <i>ux uy uz</i><b> ) (</b> <i>vx vy vz</i> <b>) (</b> <i>nx ny nz</i><b> ) (</b> <i>tx ty tz</i> <b>) %</b></blockquote>
+<p>
+where,<p>
+<pre>
+	<i>ux</i>, <i>uy</i> and <i>uz</i> are real numbers in the U column vector,
+
+	<i>vx</i>, <i>vy</i> and <i>vz</i> are real numbers in the V column vector,
+
+	<i>nx</i>, <i>ny</i> and <i>nz</i> are real numbers in the N column vector,
+
+	<i>tx</i>, <i>ty</i> and <i>tz</i> are real numbers in the T column vertex.
+</pre><p>
+3.3.2.5<b>Rotation</b> --  These are similar to quaternions (an economical way
+to specify rotations) but are easier to specify.  The CDF specification is:
+<p>
+<blockquote><b>% rotation</b>  <i>theta</i> <b>(</b> <i>x  y  z</i> <b>) %</b></blockquote>
+<p>
+where <i>theta</i> is the amount of rotation in radians and <i>x,  y</i> and
+<i>z</i> are the components of the vector part of the rotation (the axis of
+rotation).  Rotation around the axis is according to the right hand rule.
+<p>
+<p>
+<b>4.	CDF Organization and Semantics.</b>
+<p>
+4.1.	The CDF organizes the data objects and extended data types into
+specifications for cyberspace objects around the <i>section</i> concept.  <i>
+</i>A deck or virtual world specification in CDF is composed of a number of
+these sections.  Each section encapsulates the specifications for a particular
+class or type hierarchy.  For example, there might be a viewer section, a
+display section, a geometry section, a lights section and so on.  For a
+particular application, sections should have unique names.  Autodesk's CDK
+comes with its own set of sections, where each section groups class instance
+specifications  from a different C++ class hierarchy.   Developers and other
+vendors can also create their own sections for any class hierarchy or sub
+hierarchy, or map CDF into another language than C++.
+<p>
+4.2.	A section is expressed as a dictionary, and has three entries.
+<p>
+	A  mandatory <b>section</b> name string, e.g.  GEOMETRY, DISPLAYS, VIEWERS,
+LIGHTS, MATERIALS.  
+<p>
+	An optional <b>defaults </b>dictionary, containing such things as the default
+class name for objects in the hierarchy, usual initializer arguments, and so
+forth.
+<p>
+	A mandatory <b>specs</b> dictionary, containing object specification
+dictionaries kept under the object's name.  Object specification dictionaries
+are attribute values kept under the attribute name key.
+<p>
+The words <b>section</b>, <b>defaults</b>, <b>specs, class </b>and<b> like</b>
+are reserved. 
+<p>
+4.3.	In the example below, items have been indented for clarity.  This
+is not necessary; in fact  indentation and newline characters are not necessary
+at all.<p>
+<pre>
+[ section   { mysection }  
+  defaults  { [ attribute_name_4 { on }
+                class { ThingAMaBob }
+                ]
+              }
+  specs     { [ object_name_1 { [ attribute_name_1 { 4 } 
+                                  attribute_name_2 { yes }
+                                  attribute_name_3 { (F5 34 no ) }
+                                  ] 
+                                } 
+                object_name_2 { [ attribute_name_1 { 5 }
+                                  attribute_name_2 { no }
+                                  attribute_name_3 { (F24 9 no ) }
+                                  attribute_name_4 { off }
+                                ] 
+                              } 
+                ] 
+              }
+]</pre>
+<p>
+<i>Figure 3.  </i>Section example<i>.</i>
+<p>
+We could of course call the <i>object_names</i> and  <i>attribute_names</i>
+anything we wanted. 
+<p>
+Each default attribute is applied to any object description that lacks an
+explicit value for that attribute.  In figure 3, for the first object
+<i>object_name_1</i>, the value of <i>attribute_name_4</i>  is <i>on</i>.
+<p>
+4.4.	Attributes of an object might contain direct references to its state, or
+initialization information, or code fragments, or filenames of DXF or 3DS
+information, or anything at all.  The precise way the CDF description of a
+particular object is parsed and turned into an object is the responsibility of
+the developers of that object. 
+<p>
+4.5.	<b>Section extension protocol</b> -- There can be an unlimited number of
+different sections, so long as they have unique names.  Vendor specific section
+names are to be prefixed by a vendor-specific sentinel.  The form for this
+sentinel is several letters followed by an underscore.  Autodesk reserves the
+sentinels "AD_" and "CY_".
+<p>
+4.6.<b>	Mode line</b> -- The <i>mode line</i> contains information about how
+CDF is to be read within a text file.  This includes integer base information
+and other directions for CDF reader.   The mode line is  contained on one
+comment line (preceded by a semicolon).  The mode line is the first line of the
+file and only one mode line is allowed per file.  The mode line is prefixed by
+a "; -*-" (semicolon hyphen star hyphen) symbol.  After this delimiter are one
+or more <i>variable</i> : <i>value;</i>  pairs, separated by semicolons.  For
+example, if we wanted to set the integer base to 8 and the path default to
+"../../geom", we would use a mode line like this:
+<p>
+<blockquote><b>; -*- base : 8 ; path_default : "../../geom"  </b></blockquote>
+<p>
+No variable/value pairs are specified by the core CDF guidelines, only
+the syntax for expressing them.  We will probably wish to incorporate some into
+the standard before its release.
+<p>
+4.7.<b>	Specification by example -- </b>Object<b> </b>specifiers can be
+instructed to use the specification from another specified object within the
+same section.  This makes the specification of  similar items much easier, in
+that the author can in effect say "I want one of those with these
+modifications."<p>
+<pre>
+[ section   { mysection }  
+  defaults  { [ class { ThingAMaBob }
+                attribute_name_2 { no }
+                attribute_name_4  { on }
+                ]
+              }
+   specs    { [ objectname_1 { [ attribute_name_1 { 4 }
+                                 attribute_name_2 { yes }
+                                 attribute_name_3 { ( F5 34 no ) }
+                                 attribute_name_4 { off }
+                                 ] 
+                               }
+                objectname_2 { [ like { objectname_1 }
+                                 attribute_name_3 { ( F24 9 no )  }
+                                 ] 
+                               } 
+                ]
+              }
+]</pre>
+<p>
+<i>Figure 4</i>.  Specification by example.<p>
+In the preceding example, object_name_2 has the same values for
+attribute_name_1 and attribute_name_2 as does object_name_1.
+Attribute_name_3's value is different.  Attribute_name_4 is taken from the
+"like" object, in this case object_name_1, so its value is "off".
+Attribute_name_2 is also taken from the "like" object specifier, rather than
+from the default. 
+<p>
+4.8.<b>	Referring to objects built from other sections -- </b>It is
+useful to have object specifiers in one section refer to other object
+specifiers in other sections.  A viewer object instance, for example, may need
+to refer to one of several display object instances. 
+<p>
+4.8.1	These references are done by placing section and object names in the
+attributes value queue.  Thus, an XXX_VIEWER section might have a viewer_1
+object specifier that refers to an object specified in the XXX_DISPLAYS
+section.  The viewer_1 object specifier might would look like:<p>
+<pre>
+	[ attribute_name_1 { value_1 }
+	  display { section XXX_DISPLAYS display_name_1 }
+	  ...
+	] 
+</pre><P>
+<i>Figure 5.  </i>Object specifier dictionary showing a reference.
+<p>
+Objects and sections that are referred to must have been described
+previously in the file.
+<p>
+If the parser finds that the first element of the queue is  the word "section",
+it retrieves the second and third elements of the queue to find the section's
+name and name of the object within it.  Exactly what it does with this
+information is up to the implementation.  Typically an application would keep a
+database of the objects stored hierarchically under their section name and CDF
+specifier name, so that the objects are available to other sections.
+<p>
+4.8.2.	This mechanism enables building up of arbitrary hierarchies.  The
+following shows a possible CDF file that builds up a simple space of a room, a
+chair and a table.  The classes and section names are fictional, this is just
+to show how  cross referencing between sections works:
+<p><pre>
+[ section   { XXX_LIGHT }
+  defaults  { [ class { XXXLight }
+                ]
+              }
+  specs     { [ light0 { [ type { ambient }
+                           magnitude { 0.3 }
+                           ]
+                         }
+                light1 { [ type { directed }
+                           magnitude { 0.65 }
+                           aim { %vector3 ( 1.0 1.0 -1.0 )% }
+                           ]
+                         }
+                ]
+            }
+]
+
+[ section   { XXX_GEOMETRY }
+   defaults { [  file  { /net/vajra/geom }  ; your net path here
+                 class { XXXGeometry }
+                 space { section XXX_SPACE myspace }
+                 ]
+              }
+   specs    { [  room_geom { [ file { room.3ds } ] }
+                 chair_geom { [ file { chair.3ds } ] }
+                 table_geom { [ file { table.dxf } ] }
+                 ]
+              }
+]
+
+[ section    { XXX_ SIM_OBJECT }
+  defaults   { [ class { XXXSimObj }
+                 units { pounds feet seconds }
+                 ] 
+               }
+  specs      { [ room  { [ geometry { section XXX_GEOMETRY room_geom }
+                           location { %vertex3 ( 0 0 0 )% }
+                           ]
+                         }
+                 chair { [ class { XXXPhysical } 
+			   geometry { section XXX_GEOMETRY chair_geom }
+			   contained_by { section XXX_SIM_OBJECTS room }
+			   location { %vertex3 ( 5 0 5 )% }
+			   rotation { %rotation 0.25  ( 0 1 0 )% }
+                           mass { 10.0 }
+                           ]
+			 }
+                 table { [ like { section XXX_SIM_OBJECT chair }
+			   geometry { section XXX_GEOMETRY chair_geom }
+			   location { %vertex3  (10 0 10)% }
+                           mass { 50.0 }
+                           ]
+			 }
+                 ]
+          }
+]
+
+[ section   { XXX_SPACE }
+  defaults  { [ class { XXXSpace }
+                ] 
+              } 
+  specs     { myspace [  schedule { ( { section XXX_SIMOBJECT room }
+                                      { section XXX_SIMOBJECT chair }
+                                      { section XXX_SIMOBJECT table }
+                                      { section XXX_LIGHT light0 }
+                                      { section XXX_LIGHT light1 }
+                                      )
+                         ]
+              }
+]
+</pre>
+<p>
+<i>Figure 6</i>.  Simple scene description showing referencing.
+<p>
+4.9.<b>	Parser Delegation -- </b>A program's CDF parser can delegate the
+parsing of non-CDF resource files to sub-parser objects, as in paragraph 1.4
+and figure 2.  A sub-parser can parse the resource file in one of several ways.
+<p>
+It changes the resource into CDF and invokes the CDF reader recursively,
+<p>
+It recognizes that the resource contains CDF and invokes the reader
+recursively,
+<p>
+It reads, parses and converts the resource directly into one or more native
+objects to be used by the virtual world.  These objects are either placed into
+an object database directly or held with the sub-parser object for later
+retrieval by the program.
+<p>
+For example, a 3DS file contains a variety of scene information such as lights,
+materials, textures, polygonal meshes, and so forth.  A class, 3DS_Parser,
+might be a part an object created as part of an XXX_EXTERNAL_RESOURCES
+section.
+<P><pre>
+{specs [ bird_resource { [ class       { 3DS_Parser }<p>
+			file          { bird.3ds }<p>
+			sentinel  { "XXX" }<p>
+		              ] } ] <p>
+} 
+</pre>
+<i>Figure 7</i>.  Description of a resource.
+<p>
+Specifiers found in the file "bird.3ds" are converted to parsable CDF
+structures where possible and placed in the corresponding section with the
+appropriate sentinel characters, though as with references, the resulting
+descriptions must be parsed and the objects created before they can be referred
+to.  Alternatively, the sub-parser can create the objects and store them and
+other sections can refer to them using the cross-reference mechanism described
+in 4.8.  In our example, if you wanted to refer to the material "beakstuff" in
+the resource, the following CDF reference could be used:
+<p>
+{ section XXX_EXTERNAL_RESOURCES  bird_resource  MATERIALS  beakstuff }
+<p>
+CDF Parsers that understand how to parse XXX_EXTERNAL_RESOURCES will know how
+to deal with the extra items in the queue.
+<p>
+The ability of a CDF parser to reference components of hierarchical
+structures such as geometry is dependent upon the sophistication of the
+delegated-to parser of the external resource that contains that structure.
+The internals of delegated parsers (beyond the storage of their results) are
+not specified by this document.   
+<p>
+4.10<b>	CDF Level 2 section extensions --  </b>Level 2 contains section
+description proposals for scene description.  We have omitted a MATERIALS
+section at this time, but have a detailed material section proposal in
+preparation.
+<p>
+4.10.1.	Section GEOMETRY -- Geometry can either be obtained from a file or from
+a CDF description of simple parameterized closed figures.  In either case, the
+geometrical object is called a <i>component</i>.  Any component may contain
+other components.  If geometry is obtained directly from a file, a delegated
+parser is used and the variable names used are:
+<p>
+<blockquote><b>path</b>, string -- a file system path name 
+(If not present, the section parser looks in the current directory),
+<p>
+<b>file</b>, <i>string</i> -- a filename, including a path if a default path
+is not specified,
+<p>
+<b>scale</b>, <i>real</i> -- a scaling factor that all vertices in the file
+are multiplied by.  Defaults to 1.0 if not present.
+</blockquote>
+<p>
+4.10.1.1.	If the non-CDF geometry file is parsed as an external resource as in
+4.9, the resource may contain multiple components, as well as other information
+retrievable as per 4.9.  In this case, the description of the geometry would
+contain:
+<p>
+<blockquote><b>resource</b>, <i>reference to resource</i> -- a reference to a resource as in 4.9.</blockquote>
+<p>
+4.10.1.2.	 If the file is parsed as a GEOMETRY section object,  all the
+geometry is placed as a hierarchy of objects under one component, and any other
+information in the file (including the names of the sub-components is not
+accessible.  This is useful and more concise if the file contains
+non-hierarchical geometry (e.g., only a simple table or chair).  
+<pre>
+	[ section  { XXX_GEOMETRY }
+	  defaults { [ class { XXX_Component } ] }
+	  specs { [ chair_geom  { [ file { chair.3ds }
+				    scale  { 1. 5 }
+				    ] } ] } ]
+</pre><P>
+<i>Figure 8.</i>  A GEOMETRY section.
+<p>
+In this example, the chair_geom is found in the file chair.3ds.  We aren't
+interested in anything else the file has to tell us, only the specific
+geometrical component of a chair.  The scale factor enables us to uniformly
+resize the component; in this case the component will be a uniform 1.5 times
+the size it is specified as in the 3DS file.  If, instead of a simple chair,
+the file contained several pieces of geometry, say, a footstool, a chair and a
+TV tray, they would all be created as a single hierarchically arranged
+component under "chair_geom".  While a program familiar with the specific
+XXX_Component object could walk the geometry tree and retrieve the footstool,
+the footstool could not be referred to by any other CDF specification.  If this
+capability is needed, see 4.10.2.  The XXX_Component acts much like a delegated
+parser (in fact, it may invoke one), but throws away non-geometrical
+information.
+<p>
+4.10.1.3. A CDF spec for a simulation object in the virtual world that contains
+geometry refers to the Component (as in 4.8.2 or 4.9).
+<p>
+4.10.1.4. Parameterized closed figures that can be described in this section
+include box, cone, pyramid, cylinder, sphere, dome, nose, reducer, torus, and
+solid figures of extrusion and revolution.  If the figures are supported as
+solids by the implementation, there is also a solid figure described by boolean
+operations on other solid figures.
+<p>
+4.10.1.5. Box -- A rectilinear parallelepiped.  There are three ways of
+describing a box:
+<dl>
+    <dd>Anchored at the origin, extending along each positive axis,
+
+	<dl><dd><b>d</b>, <i>real</i>  -- dimension of cube.</dl>
+
+    <dd>Anchored at origin, extending along each positive axis,
+
+	<dl><dd><b>xdim</b>, <i>real </i>--  dimension along X axis,
+
+	<dd><b>ydim</b>, <i>real</i> --  dimension along Y axis,
+
+	<dd><b>zdim</b>, <i>real</i> --  dimension along Z axis.</dl>
+
+    <dd>User specifiable anchor, and orientation,
+
+	<dl><dd><b>v1</b>,<i> vertex3</i> -- a corner of the box,
+
+	<dd><b>v2</b>, <i>vertex3</i> -- opposite corner of the box from <b>v1</b>.</dl>
+</dl><P>
+4.10.1.6. Cone -- A right circular cone, with option to truncate.  There are
+two ways of describing a cone:
+<dl>
+    <dd>Base centered at the origin,
+
+
+	<dl><dd><b>r_bottom</b>, <i>real</i> --  radius of the bottom,
+
+	<dd><b>r_top</b>,<i> real</i> -- radius of the top, 
+
+	<dd><b>h</b>,<i> real</i> -- height of the cone,
+
+	<dd><b>tes</b>, <i>integer</i> --  number of tessellations 
+	around the surface of the cone.</dl>
+
+    <dd>User specifiable axis,
+
+	<dl><dd><b>v1</b>, <i>vertex3</i><b> --  </b>wider end of axis of cone,
+
+	<dd><b>v2</b>, <i>vertex3</i> --  narrower end of axis of cone,
+
+	<dd><b>r_bottom</b>, <i>real</i>  -- radius of the wider end,
+
+	<dd><b>r_top</b>, <i>real</i>  -- radius of the narrower end,
+
+	<dd><b>tes</b>, <i>integer</i> -- number of tessellations around 
+	the surface of cone.</dl>
+</dl><P>
+4.10.1.7. Dome -- A portion of a sphere, sometimes called a spherical sector of
+one base.  There are two ways of describing a dome:
+<dl>
+    <dd>Center of radius at the origin,
+
+	<dl><dd><b>rad</b>, <i>real</i> -- radius of the dome,
+
+	<dd><b>tes</b>, <i>real</i> -- number of tessellations around 
+	the surface of the dome,
+
+	<dd><b>h</b>, <i>real</i> -- distance from the top of the 
+	sphere to cut off the dome.</dl>
+
+    <dd>User specifiable axis,
+
+	<dl><dd><b>v1</b>, <i>vertex3</i> -- center of the top of the dome,
+
+	<dd><b>v2</b>, <i>vertex3 -- </i>center of the bottom of the dome,<p>
+
+	<dd><b>rad</b>, <i>real</i> -- radius of the dome, from <b>v2</b>,
+
+	<dd><b>tes</b>, <i>real</i> -- number of tessellations around the 
+	surface of the dome,</dl>
+</dl><P>
+4.10.1.8 Nose -- A conical figure, with one end offset from the other  like an
+air plane nose.  If neither end of the nose has radius zero, the two end planes
+are parallel.  There are two ways of describing a nose:
+<dl>
+    <dd>Base anchored at the origin in the XY plane,
+
+	<dl><dd><b>r_bottom</b>, <i>real</i> -- radius of the base, 
+
+	<dd><b>r_top</b>, <i>real</i> -- radius of the other end,
+
+	<dd><b>h</b>, <i>rea</i>l -- distance between the top and the base,
+
+	<dd><b>tes</b>, <i>integer --</i> number of tessellations around 
+	the surface of the nose.</dl>
+
+    <dd>User specifiable axis and end plane angle:
+
+	<dl><dd><b>v1</b>, <i>vertex3</i> -- location of the other, non-base 
+	end of the nose,
+
+	<dd><b>v2</b>, <i>vertex3</i> -- location of the base end of the 
+	nose, 
+
+	<dd><b>zdir</b>, <i>vector3</i> --  is the normal to the two end 
+	planes,
+
+	<dd><b>r_bottom</b>, <i>real</i> -- radius of the base, 
+
+	<dd><b>r_top</b>, <i>real</i> -- radius of the other end,
+
+	<dd><b>tes</b>,<i> integer</i> -- number of tessellations 
+	around the surface of the nose.</dl>
+</dl><p>
+4.10.1.9 Pyramid  --  The classical pyramid with a rectangular base.  There are
+three ways to describe a pyramid.
+<dl>
+    <dd>Anchored at the origin with the base in the  XY plane,  If v2 is not 
+    centered over the base the pyramid will have an edge on top or 
+    have a flat top.
+
+	<dl><dd><b>v1</b>, <i>vertex3</i> -- defines a point in the XY plane 
+	diagonally opposite the origin,
+
+	<dd><b>v2</b>, <i>vertex3</i> --  the narrow end of the pyramid. </dl>
+
+    <dd>User specifiable narrow end,
+
+	<dl><dd><b>v1</b>, <i>vertex3</i> -- defines a point in the XY plane 
+	diagonally opposite the<BR> anchor point <b>v3</b>,
+
+	<dd><b>v2</b>, <i>vertex3</i> --  the narrow end of the pyramid. 
+
+	<dd><b>v3</b>, <i>vertex3</i>  -- an anchor point instead of the origin.</dl>
+
+    <dd>User specifiable narrow end and orientation,
+
+	<dl><dd><b>v1</b>, <i>vertex3</i> -- defines a point in the base plane 
+	diagonally opposite the anchor point <b>v3</b>
+
+	<dd><b>v2</b>, <i>vertex3</i> --  the narrow end of the pyramid.
+
+	<dd><b>v3</b>, <i>vertex3</i>  -- an anchor point instead of the origin.
+
+	<dd><b>xdir</b>, <i>vector3</i> --  with zdir, defines the base plane,
+
+	<dd><b>zdir</b>, <i>vector3</i> -- with xdir, defines the base plane</dl>
+</dl><p>
+4.10.1.10 Reducer -- A hollow cone, cylinder or nose, with center shaft of
+varying size.  There are two ways to describe a reducer:
+<dl>
+    <dd>Anchored at the origin in the XY plane and extruded along the 
+    increasing Z axis,
+
+	<dl><dd><b>v2</b>, <i>vertex3</i> -- defining the other end of the reducer, 
+
+	<dd><b>rad1</b>, <i>real</i> -- defines the outer radius of the 
+	anchored end, 
+
+	<dd><b>rad1i</b>, <i>rea</i>l -- defines the inner radius of the 
+	anchored end,
+
+	<dd><b>rad2</b>, <i>rea</i>l -- defines the outer radius of the other end, 
+
+	<dd><b>rad2i</b>, <i>real</i> -- defnes the inner radius of the other end, 
+
+	<dd><b>tes</b>, i<i>nteger</i> -- defines the number of tessellations 
+	around the reducer.</dl>
+
+    <dd>User specifiable anchor point,
+
+	<dl><dd><b>v1</b>, <i>vertex3 -- </i>defines the anchor point of the 
+	reducer,
+
+	<dd><b>v2</b>, <i>vertex3</i> -- defining the other end of the 
+	reducer, 
+
+	<dd><b>rad1</b>, <i>real</i> -- defines the outer radius of the 
+	anchored end, 
+
+	<dd><b>rad1i</b>, <i>rea</i>l -- defines the inner radius of the 
+	anchored end,
+
+	<dd><b>rad2</b>, <i>rea</i>l -- defines the outer radius of the 
+	other end, 
+
+	<dd><b>rad2i</b>, <i>real</i> -- defnes the inner radius of the 
+	other end, 
+
+	<dd><b>tes</b>, i<i>nteger</i> -- defines the number of tessellations 
+	around the reducer,
+
+	<dd><b>zdir</b>, <i>vector3</i> -- defines the plane normal in which 
+	the ends v1 and v2 lie.</dl>
+</dl><P>
+4.10.1.11 Sphere -- The number of longitude and latitude tessellations are
+equal.
+<dl>
+    <dd>User-specifiable center; axis parallel to the Z axis,
+
+	<dl><dd><b>v1</b>, <i>vertex3</i> -- location of center of the sphere,
+
+	<dd><b>rad</b>, <i>real</i> -- radius of the sphere,
+
+	<dd><b>tes</b>, <i>integer</i> -- tessellations about the axis.</dl>
+
+    <dd>User-specifiable center and axis,
+
+	<dl><dd><b>v1</b>, <i>vertex3</i> -- location of center of the sphere,
+
+	<dd><b>rad</b>, <i>real</i> -- radius of the sphere,
+
+	<dd><b>tes</b>, <i>integer</i> -- tessellations about the axis,
+
+	<dd><b>zdir</b>, <i>vector3</i> -- orientation of the axis.</dl>
+</dl><P>
+4.10.1.12 Torus -- Orientation is through the hole.  The major axis is centered
+on the hole. The minor axis is a circle centered in the ring.
+<dl>
+    <dd>Centered at the origin,  oriented along the Z axis,
+
+	<dl><dd><b>major</b>, <i>real  </i>--  radius of the torus defined as the 
+	distance from the center to the minor axis.  
+
+	<dd><b>minor</b>, <i>real</i>  --  radius of the ring from the minor axis, 
+
+	<dd><b>tes1</b>, <i>integer</i> -- number of tessellations around the 
+	major axis,
+
+	<dd><b>tes2</b>, <i>integer</i> -- number of tessellations around the 
+	minor axis.</dl>
+
+    <dd>User specifiable center and orientation,
+
+	<dl><dd><b>major</b>, <i>real  </i>--  radius of the torus defined as the 
+	distance from the center to the minor axis.  
+
+	<dd><b>minor</b>, <i>real</i>  --  radius of the ring from the minor axis, 
+
+	<dd><b>tes1</b>, <i>integer</i> -- number of tessellations around the 
+	major axis,
+
+	<dd><b>tes2</b>, <i>integer</i> -- number of tessellations around the 
+	minor axis,
+
+	<dd><b>v1</b>, <i>vertex3</i> -- center of the torus,
+
+	<dd><b>zdir</b>, <i>vector3</i> -- orientation of the torus, 
+	perpendicular to the major radius.</dl>
+</dl><P>
+4.10.1.13 Solid of Extrusion -- A closed polygon extruded some distance along a
+vector, where the polygon is defined by a sequence of coplanar vertices in a
+value queue. There are two ways to describe a solid of extrusion.
+<dl>
+    <dd>Extrusion perpendicular to the plane of the polygon along the normal 
+    vector.  The normal vector is defined by the right-hand rule.
+
+	<dl><dd><b>p</b>, <i>sequence of vertex3's in the value queue</i> -- 
+	defines the polygon and (by implication) its normal,
+
+	<dd><b>h</b>, <i>real</i> --  distance the polygon is swept along 
+	the extrusion vector.  
+
+	<dd>Extrusion along a user-specified vector,
+
+	<dd><b>p</b>, <i>sequence of vertex3's in the value queue</i> -- 
+	defines the polygon and (by implication)  its normal,
+
+	<dd><b>h</b>, <i>real</i> --  distance the polygon is swept along the 
+	extrusion vector, 
+
+	<dd><b>v</b>, <i>vector3</i> -- direction of the sweep.</dl>
+</dl><P>
+4.10.1.14 Solid of Revolution -- a radially symmetric figure defined by
+revolution of a polygon about an axis. <p>
+<dl>
+	<dd><b>p</b>, <i>sequence of vertex3's in the value queue</i> -- defines the
+	polygon and its normal,
+
+	<dd><b>angle</b>, <i>real</i> -- angle of revolution of <b>p</b> around the axis
+	<dd>defined by <b>pnt</b> and <b>vec</b>,
+
+	<dl><dd><b>pnt</b>, <i>vertex3</i> -- anchor for the axis of revolution,
+
+	<dd><b>vec</b>, <i>vector3</i> -- direction of axis of revolution,
+
+	<dd><b>tes</b>, <i>integer</i> --  the number of tessellations within the
+	<b>angle</b>.</dl>
+</dl><P>
+4.10.1.16 Solid Boolean -- A solid figure defined from a Boolean operation on
+two other solid figures.
+<dl>
+	<dd><b>a</b>, <i>reference to geometry </i>-- One of the objects to perform the Boolean operation on.  Must be a solid.
+
+	<dd><b>b</b>, <i>reference to geometry</i> -- One of the objects to perform the Boolean operation on.  Must be a solid.
+
+	<dd><b>op</b>, <i>string</i> -- a Boolean operation.  Must be one of UNION (the union of <b>a</b> and <b>b</b>), SUBTRACT (the subtraction of <b>b</b> from <b>a</b>), or INTERSECT (the intersection of <b>a</b> and <b>b</b>).
+</dl><P>
+4.10.1.17 Solid Creation  -- Create a solid figure from a piece of geometry
+that encloses a single finite volume.  Useful for creating solids that can
+partake in Boolean operations.
+<dl>
+	<dd><b>rb</b>, <i>reference to geometry -- </i>a closed figure.
+</dl><P>
+4.10.2.	Section LIGHTS -- Lights can be of four types: point, spot, directed or
+ambient.  These types have overlapping sets of parameters detailing position,
+aim, colour, distribution, and so forth.  For each light parameter specified in
+this document, the parameter name and type will be followed with one or more of
+PSDA, (for Point, Spot, Directed, Ambient) indicating which light type it is
+appropriate for. Not all displays can handle all these of parameters.
+<dl><dl>
+	<dt><b>light_type</b>, <i>string</i>, PSDA
+	<dd>one of POINT, SPOT, DIRECTED or AMBIENT.
+
+	<dt><b>position</b>, <i>vertex3</i>, PSDA
+	<dd>location of the light.
+
+	<dt><b>aim</b>, <i>vector3</i>, DS
+	<dd>aim of the light.
+
+	<dt><b>magnitude</b>,<i> real</i>, PSDA
+	<dd>magnitude of the light.  Allowable range is 0 to 1.
+
+	<dt><b>cone_angle</b>, <i>real</i>, S
+	<dd>cone angle of a SPOT light, in degrees. Allowable range is 0 to 90.
+
+	<dt><b>cone_delta</b>, <i>real</i>, S
+	<dd>cone delta of a SPOT light, in degrees. Allowable range is 0 to 90.
+
+	<dt><b>beam_distribution</b>,<i> real</i>, S
+	<dd>beam distribution for a SPOT light. Allowable range is 0 to 1.
+This specifies the change in intensity of the light as the distance
+from the center of the axis of the cone increases. A value of 0
+specifies that the intensity does not change.
+
+	<dt><b>constant_attenuation</b>,<b> linear_attenuation</b>,
+<b>squared_attenuation</b>, <i>real</i>, PS
+
+<dd>The total attenuation for the light source at a distance D is
+given by the formula: attenuation = 1.0 / <b>constant_attenuation</b>
++ ( <b>linear_attenuation</b> * D) + ( <b>squared_attenuation</b> * D
+* D).
+
+	<dt><b>rgb</b>, <i>tuple of 3 reals</i>, PSDA
+	<dd> the colour of the light as an RGB triple, where each
+element has a range between 0 and 1.  The actual intensity of a colour
+component is the product of its value in the RGB triple and the
+overall magnitude.
+
+</dl></dl><P>
+4.10.3.	Section VIEWERS -- A viewer defines a point of view in space, and
+optionally a means to move that point of view.  All viewers have:
+<dl>
+	<dd><b>from,</b> <i>vertex3</i> - location of the viewer in global coordinates.
+
+	<dd><b>to,</b> <i>vertex3</i> - point the viewer is looking toward in global
+coordinates.
+
+	<dd><b>up,</b> <i>vector3</i> - a vector in the plane defined by from and the
+vector to - from.
+
+	<dd><b>display</b>, <i>reference</i> - a reference to a display driver from a
+DISPLAYS section.
+
+	<dd><b>perspective, </b><i>tuple</i> - (unless set by display) a tuple of four
+reals (<b>fovy</b> <b>aspect hither yon</b>) defining a view frustum, where:
+
+	<dd><b>fovy</b>, <i>real</i> - field of view, in degrees top to bottom
+direction,
+
+	<dd><b>aspect</b>, <i>real</i> - aspect ratio of width to height,
+
+	<dd><b>hither</b>, <i>real</i> - near clipping plane,
+
+	<dd><b>yon</b>, <i>real</i> - far clipping plane.
+</dl>
+Some viewers have:
+<dl>
+	<dd><b>sensor</b>, <i>reference</i> - a reference to a sensor driver from a SENSORS section, that moves the point of view of the viewer.
+</dl><P>
+
+4.10.4.	Section SIMS -- A Sim is an object to be simulated in a cyberspace
+simulation.  It has properties such as geometry, mass and dynamical properties,
+location, orientation and behaviour.  This document does not detail how behaviour
+is to be specified, but it is assumed that different kinds of behaviour will
+have their own sections yet to be defined.  A sim may also have its own
+internal behaviour as part of its implementation.
+<p>
+Sims do not use geometrical components directly, but create an <i>instance</i>
+of the component for their own use.  In this way, geometrical descriptions can
+be reused by multiple sims in different locations.
+<p>
+All sims can be described by the following variables:
+<dl>
+	<dd><b>geometry</b>, <i>reference to geometry </i> -- the geometry used to make a
+an component instance,
+
+	<dd><b>material</b>, <i>reference to material </i> -- the material of the object,
+
+	<dd><b>location</b>, <i>vertex3</i> -- location of the component instance of the geometry reference,
+
+	<dd><b>rotation</b>, <i>rotation</i> -- rotation of the component instance of the geometry reference.
+</dl>	
+Sims used to simulate physical objects in Newtonian dynamical systems have
+additional specifiable properties.  Their mass properties are:
+<dl>
+	<dd><b>volume</b>, <i>real</i> -- the volume in the units of the geometry,
+
+	<dd><b>density</b>, <i>real</i> --  mass per unit volume, 
+
+	<dd><b>mass</b>, <i>real</i> -- the product of  volume and density,
+
+	<dd><b>moments</b>, <i>tuple of 3 reals</i> -- moments of inertia relative to the world coordinate system.
+
+	<dd><b>products</b>, <i>tuple of 3 reals</i> -- products of inertia relative to the world coordinate system.
+
+	<dd><b>centroid</b>, <i>vertex3</i> -- centroid used for
+calculation of moments and products of inertia. Does <i>not</i> change
+as the geometry is moved.
+</dl>
+<P>Mass is not normally specified unless volume and/or density are unknown. For
+closed geometrical figures volume and other properties can often be calculated.
+Principal moments and principal axes are calculated by the physical sim object
+from these properties as needed by physical simulators.<p>
+ 
+<p>Several dynamical properties can also be described:
+<dl>
+	<dd><b>vel</b>, <i>vector3</i> --  velocity vector of the object,
+
+	<dd><b>avel</b>, <i>vector3</i> --  angular velocity vector of the object,
+
+	<dd><b>cog</b>, <i>vertex3 </i>-- center of gravity.  This sets the absolute location of the center of gravity in space.
+</dl><P>
+4.10.5.	Section SPACES -- A space is an organizing and scheduling container.
+Each entry in a space description contains a tuple of references to objects
+from a particular section that are to be included in and scheduled by the
+space.  The names of these description variables include: <b>lights</b>,
+<b>materials</b>, <b>geometry</b>, <b>viewers</b> and<b> sims.  </b>As more
+section types are used, spaces will be come more sophisticated to make use of
+them.
+<p>
+<b>5.  Contact Information</b><p>
+Requests for further information and comments about this proposal should
+be directed to Carl Tollander, email carlt@autodesk.com.
+<p>
+
+</td></tr></table></center>
+</body>
+</html>

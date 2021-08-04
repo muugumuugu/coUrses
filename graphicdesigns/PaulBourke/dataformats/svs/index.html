@@ -1,0 +1,65 @@
+<html>
+<head><link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>SVS image files</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>SVS image files</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+August 2014
+</center>
+<p><br><p>
+
+<p align="justify">
+So called SVS files are used by a number of medical/microscope scanners such as
+Aperio, scanscope (AxioVision), and others. It is essentially based upon the TIFF
+format and utilises the tiled image capabilities. Unfortunately it is a classic example
+of a commercial company leveraging the benefits of a industry standard and then
+adding custom tags and subsequently making it hard for everyone. Early use of svs
+at least employed standard image tags and was thus highly portable, tiff readers could
+decode the images while skipping over vendor unique tags. Current use, by AxioVision
+for example adds new non-standard compression tags (33003 and 33005) which is essentially
+JPEG2000, the upshot being it is no longer a TIFF tile that one can extract images from
+using standard tiff libraries.
+</p>
+
+<p align="justify">
+One can generally open svs file with tiff readers but if the JPEG2000 compression is used
+the best the reader can do is get the low resolution preview image.
+One can point libtiffs "tiffinfo" utility to inspect the tags.
+</p>
+
+<p align="justify">
+"vips" seems to be able to handle the JPEG2000 encoded SVS files and then save to something
+sane.
+</p>
+
+<b>Quotation from OpenSlide</b>
+<p align="justify">
+The first image in an SVS file is always the baseline image (full resolution). This image is always tiled, usually with a tile size of 240x240 pixels. The second image is always a thumbnail, typically with dimensions of about 1024x768 pixels. Unlike the other slide images, the thumbnail image is always stripped. Following the thumbnail there may be one or more intermediate “pyramid” images. These are always compressed with the same type of compression as the baseline image, and have a tiled organization with the same tile size.
+</p>
+<p align="justify">
+Optionally at the end of an SVS file there may be a slide label image, which is a low resolution picture taken of the slide’s label, and/or a macro camera image, which is a low resolution picture taken of the entire slide. The label and macro images are always stripped.
+</p>
+<p align="justify">
+Some Aperio files use compression type 33003 or 33005. Images using this compression need to be decoded as a JPEG 2000 codestream. For 33003: YCbCr format, possibly with a chroma sub-sampling of 4:2:2. For 33005: RGB format. Note that the TIFF file may not encode the colorspace or subsampling parameters in the PhotometricInterpretation field, nor the YCbCrSubsampling field, even though the TIFF standard seems to require this. The correct subsampling can be found in the JPEG 2000 codestream.
+</p>
+
+
+</td></tr></table></center><p>
+</body>
+</html>
+

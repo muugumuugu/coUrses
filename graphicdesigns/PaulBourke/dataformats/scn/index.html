@@ -1,0 +1,583 @@
+<html>
+<head><link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>SCN ray-tracing format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>SCN ray-tracing format</h1>
+Original by Ant&oacute;nio Costa
+</center>
+<p><br><p>
+
+<H3><a name="intro">1. Introduction</A></H3>
+<DL>
+    <DT>The SCN (SCeNe format)
+    was invented to replace a very simple format called SFF for the Rtrace
+    ray-tracer. It is
+    used to describe environments (geometry, topology, attributes, etc.) that are
+    processed by programs called ray-tracers, although it can be used by other
+    programs.<P>
+</DL>
+
+<H3><a name="overview">2. Overview</A></H3>
+<DL>
+    <DT>The RTrace ray-tracer uses a
+    very simplistic format (its only advantage is the simplicity!). It only reads
+    numbers (and strings for file names), but its syntax is very rigid. To avoid
+    this, I decided to create a much more elaborated, easy to write and flexible
+    scene description format, which I called SCN.<P>
+    
+    <DT>To avoid modifying the RTrace input code, a translator from SCN to SFF was
+    implemented as a separate program (Scn2Sff), meant to be
+    used as a preprocessor for RTrace (in UNIX and DOS, these two programs can be
+    used in a pipe like <I>scn2sff | rtrace</I>).<P>
+</DL>
+
+<H3><a name="syntax">3. Syntax</A></H3>
+<DL>
+    <DT>The SCN format does not have sections like SFF, RTrace's input format, and it
+    supports comments and even other preprocessor constructs (for example,
+    <I>cpp</I> and <I>m4 </I>for UNIX and DOS). Another important difference is
+    that it has default values for some scene parameters, which means that they do
+    not have to be specified at all.<P>
+    
+    <DT>The basic components of SCN are:<P>
+
+	<DD><B>comment</B> - they start anywhere on the line with some special
+	character like ; # or % and terminate in the end of line.<P>
+
+	<DD><B>integer</B> - any valid integer number, an integer expression
+	inside parenthesis or the result of the <I>int()</I> function.
+	Examples:  <P>
+
+	<DD><PRE>
+	0
+	1
+	-2
+	(1 + 2)     ; 3
+	int(10 / 3) ; 3</PRE><P>
+
+	<DD><B>real</B> - any valid integer or real number, a real expression
+	inside parenthesis or the result of any real-valued function like
+	<I>sin()</I>, <I>cos()</I>, etc. Examples:  <P>
+
+	<DD><PRE>
+	0.0
+	1.5
+	(1 + 2.1) ; 3.1
+	log(2)    ; 0.6931</PRE><P>
+
+	<DD><B>color</B> - a triplet of RGB reals between 0 and 1. In certain
+	cases, the RGB reals may be bigger than 1 or negative
+	(<I>color_extended</I>). It is also possible to use names that
+	represent the RGB values or the <I>mono </I>keyword followed by just
+	one real. Examples:  <P>
+
+	<PRE>
+	0 0 0    ; black
+	1 1 1    ; white
+	1 0 0    ; red
+	white
+	red
+	mono 0.5 ; medium gray</PRE><P>
+
+	<DD><B>point </B>- a triplet of reals representing X Y and Z values or
+	the result of any point-valued function like <I>normvector()</I>,
+	<I>addvector()</I>, etc. Examples:  <P>
+
+	<DD><PRE>
+	0 0 0                     ; world origin
+	10 5 1
+	1 (2 + 1) (10 * sin(0.1)) ; 1 3 0.0175
+	normvector(1.1 2.5 -2.3)  ; 0.3081 0.7001 -0.6441
+	addvector(1 2 3, 4 5 6)   ; 5 7 9</PRE><P>
+
+	<DD><B>vector </B>- similar to a point, but cannot be equal to 0 0 0.<P>
+
+	<DD><B>filename </B>- a set of characters (letters, digits and others)
+	with no blanks between. It is recommended to use only file names like
+	those of DOS.<P>
+
+	<DD><B>expression </B>- anything inside parenthesis. An expression can
+	be integer or real. The expression operators are + - * / ^  and | .
+	Examples:  <P>
+
+	<DD><PRE>
+	(1 + 2) ; 3
+	(1 - 2) ; -1
+	(1 * 2) ; 2
+	(1 / 2) ; 0.5
+	(1 ^ 2) ; 1.0
+	(5 | 3) ; 2</PRE><P>
+
+	<DD><B>function </B>- there are many functions available. The
+	integer/real-valued with integer/real arguments are <I>int(), sin(),
+	cos(), tan(), asin(), acos(), atan(), sqrt(), rtod (), dtor (), exp(),
+	log(), abs(), max()</I> and <I>min()</I>. The <I>dotvector()</I>
+	function has two vector arguments and returns a real number. There are
+	also functions with point/vector arguments that return point/vector
+	quantities like <I>normvector(), addvector(), diffvector(),
+	scalevector()</I> and <I>crossvector()</I>. Examples:  <P>
+
+	<DD><PRE>
+	tan(dtor(45))             ; 1.0
+	rtod(atan(1))             ; 45 degrees
+	log(exp(2))               ; 2
+	abs(-1.5)                 ; 1.5
+	max(0, 1)                 ; 1
+	dotvector(1 0 0, 0 1 0)   ; 0.0
+	scalevector(1 0 0, 2)     ; 2 0 0
+	scalevector(2 2 2, 1 2 3) ; 2 4 6
+	crossvector(1 0 0, 0 1 0) ; 0 0 1</PRE><P>
+</DL>
+
+<H3><a name="viewing">3.1. Viewing</A></H3>
+<DL>
+    <DT>To specify viewing parameters one can use the following instructions:<P>
+
+	<DD><B>eye point</B> - where the camera is (default is 5 0 0);
+	<I>from</I> can also be used.<P>
+
+	<DD><B>look point</B> - where the target of the camera is (default 0 0
+	0); <I>at</I> can also be used.<P>
+
+	<DD><B>up vector</B> - the camera vertical direction (default 0 1 0).<P>
+
+	<DD><B>fov real [real]</B> - the horizontal/vertical fields of view
+	(default 22.5 degrees); <I>angle</I> can also be used. If there is just
+	one value, then both fields of view are equal.  <P>
+
+	<DD>Examples:<P>
+
+	<DD><PRE>
+	eye 5 1 1
+	look 0 1 0 ; default up is 0 1 0
+	fov rtod(atan(320.0 / 200.0 * tan(dtor(15)))) 15 ; 23.21 15</PRE><P>
+</DL>
+
+<H3><a name="background">3.2. Ambient and Background</A></H3>
+<DL>
+    <DT>To specify the ambient and background colors, there are the following instructions:<P>
+
+	<DD><B>background color</B> - the background color; default
+	<I>light_blue_sky</I> (approx. 0.1 0.5 0.7).<P>
+
+	<DD><B>ambient color</B> - the ambient color (diffuse global lighting);
+	default 0.1 0.1 0.1 (dark gray).<P>
+
+	<DD>Examples:<P>
+
+	<DD><PRE>
+	background white
+	ambient mono 0.2</PRE><P>
+</DL>
+
+<H3><a name="lights">3.3. Lights</A></H3>
+<DL>
+    <DT>To specify lights attributes, there are several instructions:<P>
+
+	<DD><B>light point point [color_extended]</B> - this is a point light
+	that irradiates in any direction. If any of the color components is
+	negative, then there is no distance fall-off. Default color is white.<P>
+
+	<DD><B>light directional vector [color]</B> - this is a light like the
+	Sun that irradiates along a direction, with no distance fall-off.<P>
+
+	<DD><B>light spot point vector color_extended [angle [factor]] </B>-
+	this light illuminates inside a cone defined by the angle (default 45
+	degrees) with a transition that can be sharp (factor near 1) or smooth
+	(factor >> 1). The default value for factor is 1.<P>
+
+	<DD><B>light extended point color_extended radius samples</B> - a
+	spherical light sampled <I>samples2</I> rays.<P>
+
+	<DD><B>light linear point color_extended vector samples</B> - a thin
+	linear light source defined by the vector and centered at given point.
+	It is sampled by <I>samples </I>rays.<P>
+
+	<DD><B>light planar point color_extended vector vector samples
+	samples</B> - a kind of area light source defined by the two vectors
+	(the given point is at the center of the area). It is sampled by the
+	product of samples (8 by 8 is generally good).<P>
+
+	<DD>Examples:<P>
+
+	<DD><PRE>
+	light point 2 6 1 yellow
+	light directional -1 -1 -1              ; white
+	light spot 0 5 0 0 -1 0 red 30 2        ; smooth 30 degrees spot
+	light extended -3 5 3 green 0.5 8       ; 0.5 radius light sphere
+	light linear 1 8 3 white 0 0 2 32       ; white linear light
+	light planar 9 1 8 blue 1 0 0 0 0 1 8 8 ; blue square light</PRE><P>
+
+	<DD>Examples of the six light sources.  The basic scene is:<P>
+
+	<DD><PRE>
+	eye 7 5 0
+	at  0 0
+	fov 30
+	background white
+	sphere surface matte mono 0.8 data 0 3 0 1
+	cylinder surface matte mono 0.7 data 2 0 2 2 2 2 0.2
+	box surface matte white data 0 0 0 5 0.01 5
+	light ...</PRE><P>
+    
+	<DD><IMG SRC="http://paulbourke.net/dataformats/scn/lights.gif">
+</DL>
+
+<H3><a name="surfaces">3.4. Surfaces</H3></A><DL>
+    <DT>A surface is a non-geometric attribute that each object must have so
+    that it can be rendered.  When a surface is defined in a certain scope, it
+    is considered the current surface and many objects may share it without
+    having to name it explicitly. There is even a default surface (<I>surface
+    white mono 0.9 mono 0.1 3 0</I>).  A surface may have its special
+    attributes, which must appear immediately after the surface keyword, like:<P>
+
+	<DD><B>emitter </B>- the objects using this surface behave like
+	emitters, ie, they have a constant shading, independent of the light
+	sources.<P>
+
+	<DD><B>noshadow </B>- the objects using this surface do not have any
+	shadows.<P>
+
+    <DT>To specify surfaces, there are the following commands:<P>
+
+	<DD><B>surface color [diffusion specularity phong metalness
+	[transparency]]</B> - phong and metalness are reals, the others are
+	colors. Defaults 0.9 0.9 0.9, 0.1 0.1 0.1, 3, 0 and 0.1 0.1 0.1; if
+	only transparency is omitted, then its default is 0 0 0.<P>
+
+	<DD><B>surface strauss color smoothness metalness [transparency]</B> -
+	all are colors; default transparency is 0 0 0. This is an alternative
+	to the previous command that uses a more intuitive way of specifying
+	attributes.<P>
+
+	<DD><B>surface matte color </B>- 100% diffuse surface.
+
+	<DD><B>surface plastic color smoothness phong</B> - plastic surface
+	(high diffusion, small specularity and <I>phong </I>factor).<P>
+
+	<DD><B>surface metal color smoothness phong</B> - metallic surface
+	(small diffusion, high specularity and <I>phong </I>factor, maximum
+	metalness).<P>
+
+	<DD><B>surface dielectric color transparency refraction</B> -
+	non-opaque surface (no diffusion, small specularity, large <I>phong
+	</I>factor and nometalness). Needs a refraction index.<P>
+
+	<DD><B>surface glass color transparency</B> - transparent surface with
+	refraction index near 1.52 and similar to dielectric.<P>
+
+	<DD><B>refraction real </B>- this specifies the current refraction index.<P>
+
+	<DD>Examples:<P>
+
+	<DD><PRE>
+	surface blue mono 0.7 mono 0.3 15 0.7   ; matte
+	surface strauss brown mono 0.9 mono 0.1 ; matte
+	surface matte red                       ; 100% matte
+	surface plastic beige mono 0.8 0.5      ; plastic
+	surface metal white mono 0.9 0.9        ; metallic
+	surface dielectric white mono 0.8 1.2   ; translucent
+	surface glass white mono 0.95           ; white glass</PRE><P>
+</DL>
+
+
+<H3><A name="objects">3.5. Objects</A></H3>
+<DL>
+
+    <DT>The supported objects in SCN can be of two types. The objects of the
+    first type define a closed volume, while the others do not and must be
+    handled with care inside CSG operations (see the <I>list</I> primitive
+    bellow).  Any object may inherit global attributes like surface, textures
+    and transformations or else define its private attributes using the data
+    keyword before its geometric information. It is also possible to group
+    several objects and make them share some attributes using the <I>group</I>
+    ... <I>ungroup </I>keywords.  Example:<P>
+
+    <DD><PRE>
+    transform none
+    surface matte white                 ; current surface
+    box ...                             ; white
+    group
+      surface matte red                 ; current surface inside block
+      transform rotate y 45 ...         ; current transform inside block
+      sphere ...                        ; rotated, red
+      cone surface matte green data ... ; rotated, green
+      cube bump data ...                ; rotated, red, bump texture
+      cylinder ...                      ; rotated, red
+    ungroup
+    prism ...                           ; white</PRE><P>
+
+    <DT><A name="obj_closed">The closed objects are:</A><P>
+
+	<DD><B>sphere [... data] center radius</B> - a sphere.<P>
+
+	<DD><B>box [... data] center sizes</B> - an axis aligned box.<P>
+
+	<DD><B>cube [... data] center size</B> - an axis aligned cube.<P>
+
+	<DD><B>cone [... data] apex base base_radius</B> - a cone.<P>
+
+	<DD><B>cylinder [... data] apex base radius</B> - a cylinder.<P>
+
+	<DD><B>cone truncated [... data] apex apex_radius base base_radius</B>
+	- truncated cone.<P>
+
+	<DD><B>wedge [... data] point point point depth</B> - a wedge is
+	defined by a triangular face and an extrusion vector whose length is
+	depth; the face is defined counterclockwise and the vector points in
+	the Right Hand Rule direction (this convention is general in SCN).<P>
+
+	<DD><B>tetra [... data] point point point point</B> - a general
+	tetrahedron (composed of four triangles).<P>
+
+	<DD><B>prism [... data] depth vertices point ... point</B> - a prism
+	defined by a polygonal face and an extrusion vector similar to wedge.<P>
+
+	<DD><B>pyramid [... data] depth vertices point ... point </B>- a
+	pyramid.<P>
+
+	<DD><B>torus [... data] out_radius in_radius start_angle end_angle
+	[out_samples in_samples]</B> - a torus is centered in 0 0 0 and lies in
+	the XY plane (0 degrees is in the X axis direction and increases
+	counterclockwise). Actually, a torus is composed by a collection of
+	Phong triangles whose density is defined by <I>out_samples
+	</I><I>in_samples</I> (default 16 8).<P>
+
+	<DD><B>text3d file [... data] filename</B> - text primitives stored in
+	a file (high quality 3D letters, symbols, etc).<P>
+
+	<DD>Examples of closed objects:<P>
+
+	<DD><IMG SRC="http://paulbourke.net/dataformats/scn/objects.closed.gif"><P>
+
+    <DT><A name="obj_opened">The opened objects are:</A><P>
+
+	<DD><B>cone open [... data] apex base base_radius</B><P>
+
+	<DD><B>cylinder open [... data] apex base radius</B><P>
+
+	<DD><B>cone truncated open [... data] apex apex_radius base
+	base_radius</B><P>
+
+	<DD><B>prism open [... data] depth vertices point ... point</B><P>
+
+	<DD><B>pyramid open [... data] depth vertices point ... point</B><P>
+
+	<DD><B>pyramid truncated open [... data] depth apex_scale vertices
+	point ... point</B> - this is an opened pyramid with the apex face
+	scaled by apex_scale in relation to its base face (0 is an opened
+	pyramid and 1 is a opened prism).<P>
+
+	<DD><B>disc [... data] center normal radius</B> - a circle.<P>
+
+	<DD><B>ring [... data] center normal out_radius in_radius</B> - a
+	circle with a hole.<P>
+
+	<DD><B>patch [... data] point ... point</B> (12) - a bicubic patch is
+	defined by its corners and eight exterior points.<P>
+
+	<DD><B>patch file [... data] [point [point]] filename </B>- a group of
+	patches stored in a file; first point defines a translation and second
+	a scaling.<P>
+
+	<DD><B>polygon [... data] vertices point ... point</B> - polygon
+	without holes.<P>
+
+	<DD><B>polygon file [... data] [point [point]] filename</B> - a group
+	of polygons stored in a file.<P>
+
+	<DD><B>triangle [... data] point point point</B><P>
+
+	<DD><B>quadrangle [... data] point point point point</B> - four-sided
+	polygon.<P>
+
+	<DD><B>triangle normal [... data] point vector point vector point
+	vector</B> - a triangle with normals in its vertices (also called Phong
+	triangles).<P>
+
+	<DD><B>triangle normal file [... data] [point [point]] filename</B> - a
+	group of Phong triangles stored in a file.<P>
+
+	<DD><B>triangle general [... data] point vector point vector point
+	vector surface surface surface</B> - a triangle with normals and
+	surfaces in its vertices. It is similar to a triangle normal, but
+	allows the interpolation of any (or all) of the surface parameters
+	inside itself.<P>
+
+	<DD><B>triangle general file [... data] [point [point]] filename</B> -
+	a group of Phong triangles stored in a file.<P>
+
+	<DD><B>torus open [... data] out_radius in_radius start_angle end_angle
+	[out_samples in_samples]</B> - an open torus.<P>
+
+	<DD>Examples of opened objects:<P>
+
+	<DD><IMG SRC="http://paulbourke.net/dataformats/scn/objects.opened.gif"><P>
+
+    <DT><A name="obj_complex">Finally there are instructions that allow the creation
+	of complex objects:</A><P>
+
+	<DD><B>csg operation [... data] begin</B> - begin of a CSG operation.
+	The type of operation may be union, intersection or subtraction. A CSG
+	(Constructive Solid Geometry) is a binary operation performed on two
+	object operands (which may also be CSG's).<P>
+
+	<DD><B>csg next</B> - this instruction separates the definition of the
+	left (first) operand of the CSG from the right (second) operand.<P>
+
+	<DD><B>csg end</B> - this instruction terminates the CSG.<P>
+
+	<DD>Examples of CSG objects:<P>
+
+	<DD><IMG SRC="http://paulbourke.net/dataformats/scn/objects.csg.gif"><P>
+
+    <DT><A name="obj_list">There</A> is also one instruction that joins several 
+    simple objects into a
+    primitive object. This is mandatory for CSG or else errors will appear in
+    the picture:<P>
+
+	<DD><B>list [... data] begin</B> - start of a list of objects, at least two.<P>
+
+	<DD><B>list end</B>.<P>
+
+    <DT>This instruction must be used in a CSG context when at least one of the
+    operands is composed of opened objects (please note that each CSG operand
+    must bound a finite volume). Example:<P>
+
+	<DD><PRE>
+    list surface matte brown begin ; a new object similar to a pencil
+      cylinder open  0 -1 0   0 1 0   0.3
+      cone open      0 1.3 0  0 1 0   0.3
+      sphere         0 -1 0           0.3
+    list end</PRE><P>
+</DL>
+
+
+
+<H3><a name="transformations">3.6. Transformations</A></H3>
+<DL>
+
+    <DT>A transformation is an operation that modifies the geometry of an
+    object. Normally, transformations are concatenated to previous
+    transformations, although it is possible to do it in other ways.<P>
+
+	<DD><B>transform none</B> - discards all previous transformations.<P>
+
+	<DD><B>transform scale factor [factor factor]</B> - scaling transformation.<P>
+
+	<DD><B>transform translate point</B> - translation.<P>
+
+	<DD><B>transform rotate x angle</B> - rotation about the X axis (angle in degrees).<P>
+
+	<DD><B>transform rotate y angle</B>.<P>
+
+	<DD><B>transform rotate z angle</B>.<P>
+
+	<DD><B>transform rotate vector angle</B> - rotation about an axis
+	passing through origin.<P>
+
+	<DD><B>transform general point point point [point]</B> - any
+	transformation matrix (3x3 or 4x4).<P>
+</DL>
+
+
+<H3><a name="textures">3.7. Textures</A></H3>
+<DL>
+
+    <DT>A texture modifies in some extent the characteristics of a surface. It
+    is possible to apply transformations to textures and even keep them
+    independent from object transformations.<P>
+
+	<DD><B>texture none</B> - discards all previous texture transformations.<P>
+
+	<DD><B>texture scale factor [factor factor]</B>.<P>
+
+	<DD><B>texture translate point</B>.<P>
+
+	<DD><B>texture rotate x angle</B>.<P>
+
+	<DD><B>texture rotate y angle</B>.<P>
+
+	<DD><B>texture rotate z angle</B>.<P>
+
+	<DD><B>texture rotate vector angle</B>.<P>
+
+	<DD><B>texture general point point point [point]</B>.<P>
+
+	<DD><B>texture local</B> - generate all the necessary texture
+	transformations to access objects without considering their previously
+	defined object transformations. The keyword <I>invariant </I>is also
+	accepted.<P>
+
+	<DD>Example:<P>
+
+	<DD><PRE>
+	sphere
+	  transform scale 0.2 1 2
+	  transform rotate y ANGLE ; ANGLE is defined elsewhere
+	  texture local
+	  blotch 0.5 surface matte yellow
+	  surface matte red
+	  data 0 0 0 1</PRE><P>
+
+    <DT>When generating animations, for example, it is important that textures
+    stick to objects independently of their position, scale, etc or else it
+    will produce a undesirable effect. If ANGLE varies from 5 to 30 degrees,
+    the texture still applies correctly to the object and does not float
+    strangely.  <P>
+
+    <DT><IMG SRC="http://paulbourke.net/dataformats/scn/test.gif"><P>
+
+    <DT>The available textures are:<P>
+
+	<DD><PRE>
+	<U>Name     Parameters</U>
+	------------------------------------------------------
+	<B>checkers </B>surface [transform]
+	<B>blotch   </B>scale surface [filename] [transform]
+	<B>bump     </B>scale [transform]
+	<B>marble   </B>[filename] [transform]
+	<B>fbm      </B>offset scale omega lambda threshold octaves [transform]
+	<B>fbmbump  </B>offset scale lambda octaves [transform]
+	<B>wood     </B>color [transform]
+	<B>round    </B>scale [transform]
+	<B>bozo     </B>turbulence [filename] [transform]
+	<B>ripples  </B>frequency phase scale [transform]
+	<B>waves    </B>frequency phase scale [transform]
+	<B>spotted  </B>[filename] [transform]
+	<B>dents    </B>scale [transform]
+	<B>agate    </B>[filename] [transform]
+	<B>wrinkles </B>scale [transform]
+	<B>granite  </B>[filename] [transform]
+	<B>gradient </B>turbulence direction [filename] [transform]
+	<B>imagemap </B>turbulence mode axis filename [transform]
+	<B>gloss    </B>scale [transform]
+	<B>bump3    </B>scale size [transform]
+	------------------------------------------------------</PRE><P>
+
+	<DD>Examples:<P>
+
+	<DD><PRE>
+	sphere round 0.5 data 0 0 0 0.5
+	sphere bump 0.7 scale 20 data 0 1 0 0.5 ; scale of bump is smaller
+	sphere bump3 0.5 0.5 scale 1 4 1 data 0 -1 0 0.5 ; strange!</PRE><P>
+</DL>
+</td></tr></table></center>
+</body>
+</html>
+

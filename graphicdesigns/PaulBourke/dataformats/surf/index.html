@@ -1,0 +1,210 @@
+<html>
+<head><link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Surf format (3D-XplorMath)</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Surf format, save-as from 3D-XplorMath</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+December 2004<p>
+Format specification assistance from Richard Palais and
+testing by Luc Benard.
+</center>
+<p><br><p>
+
+<p align="justify">
+The surf format is an export format from the 3D-XplorMath software.
+The format is ascii printable characters so it can be opened and 
+inspected in any text editor. All surfaces are parametric of 2 variables,
+called (u,v), a grid.
+</p>
+
+<ul>
+<li>The first line should be "SurfaceDataFile", this can be used to
+check that any particular file is possibly a legal surf file.
+<p>
+<li>The second line is the version number, should currently be 3.
+<p>
+<li>The third and fourth lines are the dimensions (ures,vres) of the surface
+grid, namely the number of samples in the (u,v) parametric coordinates.
+<p>
+<li>The 5th line is the number of tiles, maximum number of tiles is 32
+(3D-XplorMath limit).
+<p>
+<li>The next 19 lines contain camera and viewing parameters, this doesn't
+exist for version = 1.<br>
+Camera position (vector)<br>
+Camera view direction (vector)<br>
+Image plane center (vector)<br>
+Image plane horizontal vector (vector)<br>
+Image plane vertical vector (vector)<br>
+Focal length (scalar)<br>
+Scale (scalar)<br>
+Eye separation (scalar)<br>
+Clipping plane distance (scalar)
+<p>
+<li>The next 3*ures*vres lines are the vertices of the (u,v) grid.
+<p>
+<li>The transformation matrix for each of the tiles, each is a four by three matrix.
+<p>
+<li>And finally a list of "normal correctors", either =1 or -1, one for each tile. 
+These are used internally by 3D-XplorMath and aren't required for geometry translation.
+</ul>
+Pascal code that writes the surf file.
+<pre>
+procedure SaveSurfaceToDisk;
+   var
+      i,j,k:longint;
+   begin
+      writeln(MyTextFile, 'SurfaceDataFile');
+      writeln(MyTextFile, 3);  //file version
+      writeln(MyTextFile, uResolution);
+      writeln(MyTextFile, vResolution);
+      writeln(MyTextFile, NumberOfTiles);
+      writeln(MyTextFile, ViewPoint.x);
+      writeln(MyTextFile, ViewPoint.y);
+      writeln(MyTextFile, ViewPoint.z);
+      writeln(MyTextFile, ViewDirection.x);
+      writeln(MyTextFile, ViewDirection.y);
+      writeln(MyTextFile, ViewDirection.z);
+      writeln(MyTextFile, ImagePlaneCenter.x);
+      writeln(MyTextFile, ImagePlaneCenter.y);
+      writeln(MyTextFile, ImagePlaneCenter.z);
+      writeln(MyTextFile, ImagePlaneXDirection.x);
+      writeln(MyTextFile, ImagePlaneXDirection.y);
+      writeln(MyTextFile, ImagePlaneXDirection.z);
+      writeln(MyTextFile, ImagePlaneYDirection.x);
+      writeln(MyTextFile, ImagePlaneYDirection.y);
+      writeln(MyTextFile, ImagePlaneYDirection.z);
+      writeln(MyTextFile, FocalLength);
+      writeln(MyTextFile, Graphic_Scale);
+      writeln(MyTextFile, EyeSeparation);
+      writeln(MyTextFile, ClipDistance);
+ 
+      for i := 1 to uResolution do
+      begin
+         for j := 1 to vResolution do
+         begin
+            writeln(MyTextFile, MySurface^^[i,j].x);
+            writeln(MyTextFile, MySurface^^[i,j].y);
+            writeln(MyTextFile, MySurface^^[i,j].z);
+         end;
+      end;
+
+      if NumberOfTiles > 1 then
+         for i := 1 to 4 do
+            for j := 1 to 3 do
+               for k := 1 to NumberOfTiles do
+                  writeln(MyTextFile, TMatrix[i,j,k]);
+       for k := 1 to NumberOfTiles do
+          writeln(MyTextFile, NormalCorrectors[k]);
+   end;
+</pre>
+
+Sample surf file: <a href="http://paulbourke.net/dataformats/surf/cyclide.surf.gz">cyclide.surf.gz</a>
+<p>
+
+<!-- Converter information ====================================== -->
+<p><hr><p>
+<h3>surfconv</h3>
+Download Mac OS-X version: surfconv.zip. This has been removed since 
+obj format export has now been added to 3D-XplorMath.
+<p align="justify">
+surfconv is a Unix style application that reads a surf files as exported by
+3D-XplorMath and writes to standard out either a PovRay or Wavefront OBJ
+representation. This utility was written to enable the surfaces supported
+by 3D-XplorMath to be imported into other rendering/modelling packages.
+<pre>
+Usage: surfconv [options] surfname
+Options
+   -pov     povray file (default)
+   -obj     wavefront object file
+   -geom    GEOM ouput format
+   -smooth  estimate normals at each vertex
+Example: surfconv -smooth -pov mysurf.surf
+</pre>
+
+<p align="justify">
+The PovRay and Wavefront OBJ formats both support vertex and index
+face primitives, this is standard for OBJ files and supported in PovRay
+with the recently introduced mesh2{} primitive [See PovRay documentation
+for details].
+</p>
+
+<p align="justify">
+The surf format does not include colour information so
+colour is not available in the output file. For PovRay the surface
+is assigned a texture called "surf_texture" which can be declared
+by the user.
+</p>
+
+<p align="justify">
+The surf format does not store vertex normals however these can be
+optionally estimated by the converter. Both the PovRay and Wavefront OBJ
+formats and corresponding rendering engines can use these to give a 
+better rendering result.
+</p>
+<center><table cellpadding=0 cellspacing=0><tr><td>
+<img src="http://paulbourke.net/dataformats/surf/facets.jpg" width=300 height=300 border=1><br>
+Without -smooth.
+</td><td width=10>
+&nbsp;
+</td><td>
+<img src="http://paulbourke.net/dataformats/surf/smooth.jpg" width=300 height=300 border=1><br>
+Vertex smoothing enabled.
+</td></tr></table></center>
+
+<p align="justify">
+The Wavefront OBJ includes texture coordinates in (u,v), the converter
+assigns linear texture coordinates from 0 to 1 in both dimensions. For
+a tiled model each tile will have independent texture coordinates.
+</p>
+
+<center><img src="http://paulbourke.net/dataformats/surf/texture.jpg" width=540 height=405 border=1><br>
+Reimann minimal surface constructed from 4 tiles. Rendering courtesy of Luc Benard.
+</center>
+
+<p align="justify">
+No attempt has been made to transfer the camera specifications  to the
+output files. While this is possible for the PovRay, it isn't for
+OBJ files and the purpose of this utility to transfer the geometry for
+editing within modelling/rendering/animation packages.
+</p>
+
+<p align="justify">
+The normals at each vertex are estimated by considering the normals
+of the grid cells the vertex shares. The contribution of a cell is
+proportional to the area of the cell. 
+</p>
+
+<b>Examples courtesy of Luc Benard</b><p>
+
+<center>
+	<img src="http://paulbourke.net/dataformats/surf/cyclide.jpg" width=767 height=504 border=1>
+</center><p>
+
+<center>
+   <img src="http://paulbourke.net/dataformats/surf/breather.jpg" width=540 height=405 border=1>
+</center><p>
+
+<center>
+   <img src="http://paulbourke.net/dataformats/surf/sievertenneper.jpg" width=540 height=405 border=1>
+</center><p>
+
+</td></tr></table></center>
+</body>
+</html>
+

@@ -1,0 +1,236 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>cube2dome - cubic maps to fisheye converter</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>cube2dome<br>Creates fisheye images from cubic maps</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+First version: June 2002<br>
+Update: December 2004 to support automatic conversion of animation sequences<br>
+Update: January 2006 to fix a subtle bug that added slight errors in the fisheye<br>
+Update: Dec 2008, added subdirectory support to assist with grouping cubic faces<p>
+Also, an interactive (real time) version of this is possible, see
+<a href="../panodome/index.html">PanoDome - QT VR on Stereoids</a><p>
+Cubic maps courtesy of Peter Morse (Antarctica model from Terragen) <br>
+and Peter Murphy (Photographic).
+</center>
+<p><br><p>
+
+<b>Introduction</b>
+<p align="justify">
+This utility attempts to read groups of up to 6 images rendered as a cubic map and creates as
+output an angular fisheye image. The input images are assumed to be TGA formatted files
+at either 24 or 32 bits per pixel (rgb with optional alpha), the output fisheye images
+will also be TGA files with the matching colour depth, in particular, the alpha 
+channel in the input images will be honoured. Supersampling antialiasing is used to
+reduce aliasing artefacts arising from the discrete sampling processes.
+</p>
+
+<p align="justify">
+While there are many potential reasons for wanting this functionality, the motivation
+for writing this conversion utility is to create fisheye images of animation sequences
+for dome projection in those cases
+where the rendering software being used doesn't explicitly support fisheye projection.
+</p>
+
+<center><table width=620><tr><td width=300>
+<img src="http://paulbourke.net/dome/cube2fish/gpo.jpg" width=300 height=300 border=0><br>
+<smalltext>Input images</smalltext> 
+</td><td width=20>&nbsp;</td><td width=300>
+<img src="http://paulbourke.net/dome/cube2fish/gpofish.jpg" width=300 height=300 border=1><br> 
+<smalltext>cube2dome -w 300 -a 3 10 %c_%d.tga</smalltext>
+</td></tr></table></center>
+
+<p align="justify">
+The utility has been compiled and tested
+for Mac OS-X command line usage. It has specifically been designed for converting
+animation sequences and thus supports a versatile file specification scheme natural to
+UNIX/C programmers and fulldome producers. 
+</p>
+
+<b>Usage string</b>
+<pre>
+Usage: cube2dome [options] filemask
+       filemask    A C style filename mask, must contain %c then %d for the
+                   face name [l,f,r,b,t,d] and frame number. For example:
+                      frame_%c_%04d.tga
+                   will look for cube faces with one of [l,f,r,b,t,d] substituted
+                   for %c and the frame number substituted for %04d (zero padded)
+                   New from version 1.06: file mask can now contain two %c fields.
+                   This allows frames to be split by directories, for example:
+                      sample_%c/frame_%c_%5d.tga
+Options
+       -w n        sets the output image size to n, default: twice image width
+       -a n        sets antialiasing level to n, default: 2
+       -n n        starting frame number, default: 0
+       -m n        frame number stepping count, default: 1
+       -s n        last frame (inclusive and optional)
+       -j n        save as jpeg with specific quality (default: TGA, quality 100)
+      -bc r g b a  sets the background colour, default: 32 32 32 255
+      -mc r g b a  sets the colour for missing faces, default: 0 0 255 255
+      -ht n        rotate camera about up vector, default: 0
+      -vt n        rotate camera about right vector, default: 0
+      -fa n        fisheye angle in degrees, default: 90
+      -vp x y z    sets the view position (x,y,z) for offaxis fisheye
+       -o s        overlay with the tga file "s" (expects alpha channel)
+      -bf n        fade towards the back of the fisheye, n = fadepower
+       -d          verbose, debug mode
+</pre>
+<p>
+
+<b>File naming conventions</b>
+<p align="justify">
+The file names for the 6 cubic faces are specified in a fairly general way but there
+are some rules/assumptions as well. The file name is assumed to consist of two items,
+a single letter that indicates the face of the cube and a number that indicates the
+frame number (cube2dome has specifically been designed to convert animation sequences).
+The whole file name is specified by a C style format string. For those not familiar
+with this, two examples are given below. The face letter is indicated by a %c and the
+frame number by %d. The cube face letter are as follows "l" - left, "r" - right, "f" - front,
+"b" - back, "t" - top, "d" - bottom/down. The frame number can be any non negative number,
+from 0 upwards.
+</p>
+
+Example 1.<br>
+If the frames are called l_ice_2.tga, f_ice_2.tga, r_ice_2.tga, t_ice_2.tga, d__ice_2.tga, 
+b_ice_2.tga, then the file name mask passed to cube2dome would be %c_ice_%d.tga.
+<p>
+
+Example 2.<br>
+If the frames were called room_l0003.tga, room_f0003.tga, room_r0003.tga, room_b0003.tga, 
+room_t0003.tga, room_d0003.tga, then the mask would be room_%c%04d.tga. 
+<p>
+
+<p align="justify">
+The output fisheye TGA files will have exactly the same file name style as the
+input images but with a "c" replaced in the cube face letter position. So in example 1
+above the output file will be c_ice_2.tga, and in example 2 the output fisheye image
+will be called room_c0003.tga.
+</p>
+
+<b>Options</b><br>
+<ul>
+
+<li><p align="justify">
+-a<br>Discrete sampling artefacts are reduced with supersampling, that is, pixels in
+the output image are sampled multiple times, the final pixel value is the average of 
+corresponding pixels in the cubic maps. In general values of 1 or 2 can be used for
+preview images, 3 and 4 are typical for final images. Note that the conversion time 
+increases roughly as the square of the antialiasing value!
+</p>
+
+<li><p align="justify">
+-vt<br>rotates the fisheye view by the camera right vector, this is particularly useful
+for dome and planetarium applications where differences in dome and seating arrangements
+can imply different definitions of "front".
+<br>
+<center><table width=620><tr><td width=300>
+<img src="http://paulbourke.net/dome/cube2fish/vt0.jpg" width=300 height=300 border=1><br>
+<smalltext>-vt 0 (the default)</smalltext>
+</td><td width=20>&nbsp;</td><td width=300>
+<img src="http://paulbourke.net/dome/cube2fish/vt40.jpg" width=300 height=300 border=1><br>
+<smalltext>-vt 40</smalltext>
+</td></tr></table></center>
+</p>
+
+<li><p align="justify">
+-ht<br>rotates the fisheye view about the up vector. Note this is performed before -vt
+described above.
+</p>
+
+<li><p align="justify">
+-d<br>
+Debug mode can be helpful for diagnosing problems, mostly intended for use by the
+developer.
+</p>
+
+<li><p align="justify">
+-fa<br>Sets the fisheye angle (new: March 2005), the default is 180 degrees.
+Used primarily to bring the horizon into shot on a horizontal dome.
+<br>
+<center><table width=620><tr><td width=300>
+<img src="http://paulbourke.net/dome/cube2fish/fa180.jpg" width=300 height=300 border=1><br>
+<smalltext>-fa 180 (the default)</smalltext>
+</td><td width=20>&nbsp;</td><td width=300>
+<img src="http://paulbourke.net/dome/cube2fish/fa200.jpg" width=300 height=300 border=1><br>
+<smalltext>-fa 200</smalltext>
+</td></tr></table></center>
+</p>
+
+</ul>
+
+<b>Additional notes</b><br>
+<ul>
+<li><p align="justify">
+If one of the faces of the cube is missing or the file corrupt, it will appear
+as a solid blue patch. This ensures that animations sequences with missing or corrupt
+files can still be processed and checked for other problems. This also means that if
+only 5 faces of the cube are required for a particular fisheye alignment then the 6th
+face need not be rendered.
+A new option (-mc) now allows an arbitrary colour to be assigned to a missing face.
+<br>
+<center><table width=620><tr><td width=300>
+<img src="http://paulbourke.net/dome/cube2fish/sub.jpg" width=300 height=300 border=0><br>
+<smalltext>Submarine cubic map</smalltext>       
+</td><td width=20>&nbsp;</td><td width=300>
+<img src="http://paulbourke.net/dome/cube2fish/subfish.jpg" width=300 height=300 border=1><br>
+<smalltext>Bottom face missing or corrupt</smalltext>
+</td></tr></table></center>
+</p>
+<li><p align="justify">
+All the input images are assumed to be square and all the same dimensions.
+The expected dimensions are determined from the first uncorrupted cubic image found.
+</p>
+<li><p align="justify">
+When specifying the file name mask the cube face letter (%c) must precede the frame
+number.
+</p>
+</ul>
+
+<b>Vuo implementation</b> (March 2020)<p>
+<p align="justify">
+Shader version written for Vuo which at the time of writing had limitations
+on the built in fisheye camera node. In particular this implementation is not
+limited to 180 degrees, as such it is based upon capturing all 6 faces of the
+cube in the same was as cube to equirectangular shader would.
+</p>
+<center>
+	<a href="http://paulbourke.net/dome/cube2fish/vuofov.jpg"><img src="http://paulbourke.net/dome/cube2fish/vuofov_s.jpg" width=800 height=819 border=1></a>
+</center><p>
+
+<b>FAQ</b><p>
+What is the appropriate resolution for the cube map images for a 4K fisheye?<p>
+<dd>
+<p align="justify">
+Imagine the coverage of the front cube face in the fisheye, it is about 1/2 the 
+width (or height), and about 1/2 the left face and right face make up the rest of the 
+width of the fisheye. So, the cube maps for close to a 1:1 mapping should therefore be 2K wide.
+<br>
+If you are not bound by powers of 2 and if you can afford to render 2500 pixel faces then that 
+should give you enough resolution to be safe, 
+make sure you do your final cube2dome renders with antialiasing of 2, 
+perhaps 3 if you can afford the time. In many cases having high resolution cube faces (4K) 
+would be a bad thing (believe it or not), you have the chance of aliasing effects for high 
+spatial frequency objects of your scene.
+</p>
+</dd>
+
+</td></tr></table></center>
+</body>
+</html>
+

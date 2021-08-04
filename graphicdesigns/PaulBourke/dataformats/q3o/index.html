@@ -1,0 +1,264 @@
+<html>
+<head><link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Quick3D Object FIle</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Quick3D Object File</h1>
+</center>
+<p><br><p>
+
+<center>
+<table width="100%" cellspacing="0" cellpadding="5" border="0">
+<tr valign="top">
+<td>
+<p align="justify">
+A quick3D object file consists of a header and one to three chunks.
+The three possible types of chunks are the mesh definitions chunk,
+the material definitions chunk, and the texture definitions chunk.
+They are binary files and will always have at least a header and a
+meshes chunk, but may not have materials or textures chunks. The
+file format uses the following data types:
+</p>
+
+<pre>
+char   = 1 byte
+bool   = 1 byte                  (0=FALSE or 1=TRUE)
+short  = 2 bytes
+int    = 4 bytes
+long   = 4 bytes
+float  = 4 bytes
+vertex = 12 bytes                (three float's)
+normal = 12 bytes                (three float's)
+texUV  = 8 bytes                 (two float's)
+pixel  = 3 bytes                 (three unsigned char's)
+face   = (4 * X) bytes           (X int's)
+string = length of string bytes  (including the '\0')
+color  = 12 bytes                (three float's)
+matrix = 64 bytes                (16 float's)
+</pre>
+
+<p align="justify">
+X represents the "shape" of the face, or in other words, the number
+of vertices involved in the particular face.
+<br>
+The header starts the file and has the following 22-byte
+structure:
+</p>
+
+<pre>
+HEADER {
+   char signature[8];
+   char version[2];
+   int  numberMeshes;
+   int  numberMaterials;
+   int  numberTextures;
+}
+</pre>
+
+<p align="justify">
+The signature field always contains "quick3Do" and identifies the
+file as a quick3D Object file. The next two char's contain the
+version of the quick3D file format used in the file. The current
+version is "30". Then follows three int's, the first being the
+number of meshes in the mesh definitions section, next the number
+of materials in the materials chunk, and finally the number of
+textures in the textures chunk. In the case where there are no
+materials and/or no textures, the number will be 0.<br>
+<br>
+Each of the three chunk types also have their own single-byte
+header:
+</p>
+
+<pre>
+CHUNK_HEADER {
+   char type;
+}
+</pre>
+
+<p align="justify">
+The type will be one of 'm', 'c', or 't', signalling a meshes chunk,
+materials chunk, or textures chunk respectively.<br>
+The mesh definitions chunk contains numberMeshes(contained in the
+file header) mesh definitions following its 1-byte chunk header.
+The mesh definitions come one after the other and each definition
+has the following structure:
+</p>
+
+<pre>
+MESH {
+   long   numberVertices;
+   vertex vertices[numberVertices];
+   long   numberFaces;
+   short  faceShapes[numberFaces];
+   face   faces[numberFaces]
+   int    materialIndices[numberFaces];
+   long   numberNormals;
+   normal normals[numberNormals];
+   long   numberTextureCoordinates;
+   texUV  textureCoordinates[numberTextureCoordinates];
+   face   textureIndices[numberFaces];
+   vertex centerOfMass;
+   float  boundingBox[6];
+}
+</pre>
+
+<p align="justify">
+If numberTextures from the file header is zero, then there will be
+no textureCoordinates nor textureIndices.<br>
+<br>
+The materials definitions chunk contains numberMaterials(contained
+in the file header) material definitions following its 1-byte chunk
+header. The material definitions come one after the other and each
+definition has the following structure:
+</p>
+
+<pre>
+MATERIAL {
+   string materialName;
+   color  ambientColor;
+   color  diffuseColor;
+   color  specularColor;
+   float  transparency;
+}
+</pre>
+
+<p align="justify">
+The texture definitions chunk contains numberTextures(contained in
+the file header) texture definitions following its 1-byte chunk
+header. The texture definitions come one after the other and each
+definition has the following structure:
+</p>
+
+<pre>
+TEXTURE {
+   string textureName;
+   int    textureWidth;
+   int    textureHeight;
+   pixel  texture[textureWidth * textureHeight]
+}
+</pre>
+
+<b>Scene File Format (.q3s)</b><br>
+
+<p align="justify">
+ The quick3D scene file is almost identical to the object format
+except that there is a different value in the signature field, and
+there is one additional chunk. The additional chunk is the scene
+chunk and contains data related to a quick3D scene. These are also
+binary files and will always have at least a header and a scene
+chunk, but may not have meshes, materials, or textures chunks. The
+scene file format uses the same data types as the object
+format.
+<br>
+The header starts the file and has the following 22-byte
+structure:
+</p>
+
+<pre>
+HEADER {
+   char signature[8];
+   char version[2];
+   int  numberMeshes;
+   int  numberMaterials;
+   int  numberTextures;
+}
+</pre>
+
+<p align="justify">
+The signature field always contains "quick3Ds" and identifies the
+file as a quick3D Scene file. The next two char's contain the
+version of quick3D that wrote the file. The current version is
+"30". Then follows three int's, the first being the number of
+meshes in the mesh definitions section, next the number of
+materials in the materials chunk, and finally the number of
+textures in the textures chunk. In the case where there are no
+meshes, materials, and/or no textures, the number will be 0.<br>
+<br>
+Each of the four chunk types also have their own header of the
+following 1-byte structure (this is just like an object file):
+</p>
+
+<pre>
+CHUNK_HEADER {
+   char type;
+}
+</pre>
+
+<p align="justify">
+The type will be one of 'm', 'c', 't', or 's', signalling a meshes
+chunk, materials chunk, textures chunk, or scene chunk
+respectively
+<br>
+The mesh, material, and texture definitions chunks in a scene file
+are exactly the same as in an object file. The scene chunk has the
+following structure:
+</p>
+
+<pre>
+SCENE {
+   float  position[3];
+   matrix transformation;
+   float  axis[3];
+   float  angle;
+   float  eyePosition[3];
+   float  eyeRotation[3];
+   color  foregroundColor;
+   color  backgroundColor;
+   bool   usingEyeFilter;
+   color  eyeFilterColor;
+   float  eyeFilterAmount;
+   color  lightColor;
+   int    backgroundImageWidth;
+   int    backgroundImageHeight;
+   string backgroundFilename;
+   pixel  backgroundImage[bgWidth * bgHeight];
+   float  depthCuing;
+   color  depthCueColor;
+   float  gamma;
+}
+</pre>
+
+<p align="justify">
+The position is the x, y, z in world space. The axis is the vector
+about which the model is rotated angle degrees about. This is also
+stored in matrix form in transformation. The eye point's
+orientation is represented by eyePosition and eyeRotation. Next are
+the foregroundColor and backgroundColor. Note that any materials
+specified in the mesh will override the foreground color.
+usingEyeFilter tells whether an eye filter is in use. The
+eyeFilterColor is the color of the eye filter, and eyeFilterAmount
+is its strength (if not used these may be all zero). The color of
+the light in the scene is stored in lightColor. If there is a
+background image, backgroundImageWidth and backgroundImageHeight
+will specify the image dimensions and backgroundImage will specify
+the pixel data. If backgroundImageWidth and backgroundImageHeight
+both equal zero, then there is no backgroundImage(the
+backgroundColor is used). Next, depthCuing specifies the amount of
+"depth" to be added to the scene (in the range of least to most,
+0.0 - 1.0). The depthCueColor is next. The final part of the scene
+chunk is the gamma value used in the scene.
+</p>
+</td>
+</tr>
+</table>
+
+</center>
+
+</td></tr></table></center>
+</body>
+</html>
+

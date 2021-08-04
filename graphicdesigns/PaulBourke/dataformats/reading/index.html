@@ -1,0 +1,335 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Byte swapping and binary files</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Reading binary files from PCs<br>on "other endian" machines</h1>
+Written by <a href="index.html">Paul Bourke</a><br>
+March 1991
+</center>
+<p>
+
+<p align="justify">
+This document briefly describes the byte swapping required when a binary
+file created on a DOS/WIndows is to be read on a computer which has its
+bytes ordered the other way. 
+</p>
+
+<p align="justify">
+There are various datatypes which may be read, the simplest is characters
+where no byte swapping is required. The next simplest is an 
+unsigned short integer
+represented by 2 bytes. If the two bytes are read sequentially then the
+integer value on a big endian machine is 256*byte1+byte2. If the integer 
+was written with a little endian machine such as a DOS/WINDOWS computer
+then the integer is 256*byte2+byte1.
+</p>
+
+<p align="justify">
+While this approach can be used for unsigned shorts, ints, and longs and
+can be easily modified for signed versions of the same, it is rather
+difficult for real numbers (floats and double precision numbers).
+Fortunately the standard IEEE numerical format is used almost exclusively
+now days so that the bytes making up the particular number can be
+swapped around appropriately in memory. This does assume that the
+size of the particular numerical type is the same length on both machines,
+the machine that wrote the file and the machine reading the file. The
+usual standards are short integers are 2 bytes, long integers are 4 bytes,
+floats are 4 bytes and doubles are 8 bytes.
+</p>
+
+<p align="justify">
+In summary, to read 2 byte integers (signed or unsigned) one reads the
+2 bytes as normal, eg: using fread(), and then swap the 2 bytes in memory.
+It turns out that for long integers, floats and doubles the requirements
+is to reverse the bytes as they appear in memory. See the source below
+for more details.
+</p>
+
+<b>Source code</b>
+<p align="justify">
+Some routines illustrating the methods required to do the byte swapping
+for various numerical types.
+</p>
+<font color="#770000">
+<pre>/*
+   Read a short integer, swapping the bytes
+*/
+int ReadShortInt(FILE *fptr,short int n)
+{
+   unsigned char *cptr,tmp;
+
+   if (fread(n,2,1,fptr) != 1)
+      return(FALSE);
+   cptr = (unsigned char *)n;
+   tmp = cptr[0];
+   cptr[0] = cptr[1];
+   cptr[1] =tmp;
+
+   return(TRUE);
+}
+
+/*
+   Read an integer, swapping the bytes
+*/
+int ReadInt(FILE *fptr,int *n)
+{
+   unsigned char *cptr,tmp;
+
+   if (fread(n,4,1,fptr) != 1)
+      return(FALSE);
+   cptr = (unsigned char *)n;
+   tmp = cptr[0];
+   cptr[0] = cptr[3];
+   cptr[3] = tmp;
+   tmp = cptr[1];
+   cptr[1] = cptr[2];
+   cptr[2] = tmp;
+
+   return(TRUE);
+}
+
+/*
+   Read a floating point number
+   Assume IEEE format
+*/
+int ReadFloat(FILE *fptr,float *n)
+{
+   unsigned char *cptr,tmp;
+
+   if (fread(n,4,1,fptr) != 1)
+      return(FALSE);
+   cptr = (unsigned char *)n;
+   tmp = cptr[0];
+   cptr[0] = cptr[3];
+   cptr[3] =tmp;
+   tmp = cptr[1];
+   cptr[1] = cptr[2];
+   cptr[2] = tmp;
+
+   return(TRUE);
+}
+
+/*
+   Read a double precision number
+   Assume IEEE
+*/
+int ReadDouble(FILE *fptr,double *n)
+{
+   unsigned char *cptr,tmp;
+
+   if (fread(n,8,1,fptr) != 1)
+      return(FALSE);
+
+   cptr = (unsigned char *)n;
+   tmp = cptr[0];
+   cptr[0] = cptr[7];
+   cptr[7] = tmp;
+   tmp = cptr[1];
+   cptr[1] = cptr[6];
+   cptr[6] = tmp;
+   tmp = cptr[2];
+   cptr[2] = cptr[5];
+   cptr[5] =tmp;
+   tmp = cptr[3];
+   cptr[3] = cptr[4];
+   cptr[4] = tmp;
+
+   return(TRUE);
+} </pre>
+</font>
+
+<b>Macros</b><p>
+An alternative for all but doubles is to use these cute macros, then
+the swapping is done inline.
+<p>
+<font color="#770000">
+<pre>#define SWAP_2(x) ( (((x) & 0xff) << 8) | ((unsigned short)(x) >> 8) )
+#define SWAP_4(x) ( ((x) << 24) | \
+         (((x) << 8) & 0x00ff0000) | \
+         (((x) >> 8) & 0x0000ff00) | \
+         ((x) >> 24) )
+#define FIX_SHORT(x) (*(unsigned short *)&(x) = SWAP_2(*(unsigned short *)&(x)))
+#define FIX_INT(x)   (*(unsigned int *)&(x)   = SWAP_4(*(unsigned int *)&(x)))
+#define FIX_FLOAT(x) FIX_INT(x)
+</pre>
+</font>
+
+<b>Strategies for developers</b>
+<p>
+There are three basic strategies for software developers when choosing how to
+create endian independent data files and associated software.<p>
+<ul>
+<li><p align="justify">
+Decide that the file format will be one particular endian. In this case software
+running on machines of the same endian does nothing special, software running on
+other machines byte swap everything on reading and writing. This is common for
+file formats and software designed with an implicit endian assumption which get
+ported at a future date to other machines.
+</p>
+<li><p align="justify">
+Store in the file the endian-ness of the file. The software writes the binary
+file in the natural endian of the underlying hardware but pays attention to
+the endian-ness when reading binary files. Both endian files need to be handled,
+the software has knowledge of its own endian-ness so it can do the right thing.
+</p>
+<li><p align="justify">
+The poorer cousin of the last approaches is not to store the endian-ness and for
+software to always write in its natural endian. This leads to two possible file
+types and the user is expected to know which endian a file is and chooses the
+appropriate one when specifying which file to read. This is obviously the least
+attractive approach.
+</p>
+</ul>
+
+<p><br><br><br><p>
+
+
+<center>
+<h1>Reading FORTRAN unformatted binary files in C/C++</h1>
+<h3>Or....FORTRAN Weirdness, what were they thinking?</h3>
+Written by <a href="../index.html">Paul Bourke</a><br>
+April 2003
+</center>
+<p>
+
+<b>Problem</b><br>
+<p align="justify">
+Ever wanted to read binary files written by a FORTRAN program
+with a C/C++ program? Not such an unusual or unreasonable request 
+but FORTRAN does some
+strange things ..... consider the following FORTRAN code, where
+"a" is a 3D array of 4 byte floating point values.
+</p>
+<pre>
+        open(60,file=filename,status='unknown',form='unformatted')
+        write(60) nx,ny,nz
+        do k = 1,nz
+          do j = 1,ny
+           write(60) (a(i,j,k),i=1,nx)
+          enddo
+        enddo
+        close(60)
+</pre>
+<p align="justify">
+What you will end up with is not a file that is (4 * nx) * ny * nz + 12 bytes 
+long as it would be for the equivalent in most (if not all) other languages!
+Instead it will be nz * ny * (4 * nx + 8) + 20 bytes long. Why?
+</p>
+
+<b>Reason</b><br>
+<p align="justify">
+Each time the FORTRAN write is issued a "record" is written, the record consists
+of a 4 byte header, then the data, then a trailer that matches the header. The
+4 byte header and trailer consist of the number of bytes that will be written
+in the data section. So the following 
+</p>
+<pre>
+        write(60) nx,ny,nz
+</pre>
+gets written on the disk as follows where nx,ny,nz are each 4 bytes, the other
+numbers below are 2 byte integers written in decimal
+<pre>
+        0 12 nx ny nz 0 12
+</pre>
+The total length written is 20 bytes. Similarly, the line
+<pre>
+        write(60) (a(i,j,k),i=1,nx)
+</pre>
+gets written as follows assuming nx is 1024 and "a" is real*4
+<pre>
+        10 0 a(1,j,k) a(2,j,k) .... a(1024,j,k) 10 0
+</pre>
+<p align="justify">
+The total length is 4104 bytes. Fortunately, once this is understood, it is a trivial to 
+read the correct things in C/C++.
+</p>
+<p align="justify">
+A consequence that is a bit shocking for many programmers is that the file created
+with the above code gives a file that is about 1/3 the size than one created with
+this code.
+</p>
+<pre>
+        open(60,file=filename,status='unknown',form='unformatted')
+        write(60) nx,ny,nz
+        do k = 1,nz
+          do j = 1,ny
+            do i = 1,nx
+              write(60) a(i,j,k)
+            enddo
+          enddo
+        enddo
+        close(60)
+</pre>
+<p align="justify">
+In this case each element of a is written in one record and consumes 12 bytes for
+a total file size of nx * ny * nz * 12 + 20.
+</p>
+
+<b>Note</b><br>
+<ul>
+<li><p align="justify">
+    This doesn't affect FORTRAN programs that might read these files,
+    that is because the FORTRAN "read" commands know how to handle these
+    unformatted files.
+</p>
+<li><p align="justify">
+    The discussion here does not address the transfer of binary files
+    between machines with a different endian. In that case after a short,
+    int, float, double is read the bytes must be rearranged. Fortunately
+    this is relatively straightforward with these macros.
+</p>
+<pre>
+#define SWAP_2(x) ( (((x) & 0xff) &lt;&lt; 8) | ((unsigned short)(x) &gt;&gt; 8) )
+#define SWAP_4(x) ( ((x) &lt;&lt; 24) | (((x) &lt;&lt; 8) & 0x00ff0000) | \
+         (((x) &gt;&gt; 8) & 0x0000ff00) | ((x) &gt;&gt; 24) )
+#define FIX_SHORT(x) (*(unsigned short *)&(x) = SWAP_2(*(unsigned short *)&(x)))
+#define FIX_LONG(x) (*(unsigned *)&(x) = SWAP_4(*(unsigned *)&(x)))
+#define FIX_FLOAT(x) FIX_LONG(x)
+</pre>
+<li><p align="justify">
+	It appears that the endianness of the 4 byte header and trailer reflect the
+	endianness of the machine doing the writing. Of course if you know the format of
+	the data being written then you can simply skip over the header/trailer bytes, but
+	if you need to decode the file or do error checking then knowledge of the endian of the
+	machine where the file was written and the endian of the machine where the file
+	is being read is necessary.
+</p>
+<li><p align="justify">
+    And lastly, the above does not address the possibility (fairly rare these days) that
+    the files may be transferred between two machines with different internal
+    representations of floating point numbers. If that is the case then you're
+    really in trouble and should probably revert to transferring the data in a
+    readable ASCII format.
+</p>
+<li><p align="justify">
+Update (Jan 2008): It would appear that on 64 bit machines the 2 header elements are
+each written as 4 bytes instead of 2 bytes each.
+</p>
+<li><p align="justify">
+If the file is not already in existence then writing files in FORTRAN to avoid the
+above, one can use the access='stream' option. This option was introduced reasonably
+recently explicitly to overcome this issue.
+</p>
+</ul>
+
+</td></tr></table></center>
+</body>
+</html>
+

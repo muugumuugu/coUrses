@@ -1,0 +1,360 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>TIFF image generation</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>TIFF Image Creation</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+August 1998
+</center>
+<p><br><p>
+
+<p align="justify">
+The following demonstrates how to create 24 bit colour RGB TIFF 
+(Tagged Image FIle Format) files.
+That is, how to create images from your own software that
+can be then opened and manipulated with image handling software, for
+example: GIMP, PhotoShop, etc. Given this aim, this document illustrates
+the "minimal" requirements necessary to create a TIFF file, it does not
+provide enough information for writing a TIFF file reader. For more
+information on the full TIFF specification the following postscript
+and pdf files describe the TIFF version 6.
+</p>
+
+<center>
+<a href="http://paulbourke.net/dataformats/tiff/tiff.ps.gz">tiff.ps.gz</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="http://paulbourke.net/dataformats/tiff/tiff.pdf">tiff.pdf</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="http://paulbourke.net/dataformats/tiff/tiff_summary.pdf">summary.pdf</a>
+</center>
+<p>
+
+<p align="justify">
+The basic structure of a TIFF file is as follows:
+</p>
+
+<p align="justify">
+The first 8 bytes forms the <b>header</b>. The first two bytes of which
+is either "II" for little endian byte ordering or "MM" for big endian
+byte ordering. In what follows we'll be assuming big endian ordering.
+Note: any true TIFF reading software is supposed to be handle both types.
+The next two bytes of the header should be 0 and 42<sub>dec</sub>
+(2a<sub>hex</sub>). The remaining 4 bytes of the header is the offset from the
+start of the file to the first "Image File Directory" (IFD), 
+this normally follows
+the image data it applies to. In the example below there is only one image
+and one IFD.
+/<p>
+
+<p align="justify">
+An <b>IFD</b> consists of two bytes indicating the number of entries followed
+by the entries themselves. The IFD is terminated with 4 byte offset to the
+next IFD or 0 if there are none. A TIFF file must contain at least one IFD!
+</p>
+
+<p align="justify">
+Each <b>IFD entry</b> consists of 12 bytes. The first two bytes identifies the
+tag type (as in Tagged Image File Format). The next two bytes are the field
+type (byte, ASCII, short int, long int, ...). The next four bytes indicate
+the number of values. The last four bytes is either the value itself or
+an offset to the values.
+</p>
+
+Considering the first IFD entry from the example gievn below:
+<pre>
+      0100 0003 0000 0001 0064 0000
+      |    |    |         |
+tag --+    |    |         |
+short int -+    |         |
+one value ------+         |
+value of 100 -------------+
+</pre>
+
+<b>Example</b>
+
+<p align="justify">
+The following is an example using the TIFF file shown on the right,
+namely a black image with a single white pixel at the top left and the
+bottom right position. 
+The image is 100 pixels wide by 200 pixels high.
+</p>
+
+<p align="justify">
+A hex dump is given below along with matching pointers and locations
+marked in matching colours, these colours further match the appropriate
+parts of the source code gievn later. The tags are underlined.
+</p>
+
+<table width=100% cellspacing=0 cellpadding=0><tr><td>
+<pre>
+   4d4d 002a 0000 ea68 ffff ff00 0000 0000
+   0000 0000 0000 0000 0000 0000 0000 0000
+
+   .... ....  black 0's deleted  .... ....
+
+   0000 0000 00ff ffff 000e <u>0100</u> 0003 0000
+   0001 0064 0000 <u>0101</u> 0003 0000 0001 00c8
+   0000 <u>0102</u> 0003 0000 0003 0000 <font color="#ff0000">eb16</font> <u>0103</u>
+   0003 0000 0001 0001 0000 <u>0106</u> 0003 0000
+   0001 0002 0000 <u>0111</u> 0004 0000 0001 0000
+   0008 <u>0112</u> 0003 0000 0001 0001 0000 <u>0115</u>
+   0003 0000 0001 0003 0000 <u>0116</u> 0003 0000
+   0001 00c8 0000 <u>0117</u> 0004 0000 0001 0000
+   ea60 <u>0118</u> 0003 0000 0003 0000 <font color="#00ff00">eb1c</font> <u>0119</u>
+   0003 0000 0003 0000 <font color="#ffff00">eb22</font> <u>011c</u> 0003 0000
+   0001 0001 0000 <u>0153</u> 0003 0000 0003 0000
+   <font color="#0000ff">eb28</font> 0000 0000 <font color="#ff0000">0008 0008 0008</font> <font color="#00ff00">0000 0000
+   0000</font> <font color="#ffff00">00ff 00ff 00ff</font> <font color="#0000ff">0001 0001 0001</font>
+</pre>
+</td><td>
+<img src="http://paulbourke.net/dataformats/tiff/tiff1.gif" alt="Example image" border=1>
+</td></tr></table>
+<p>
+The above example uses 14<sub>dec</sub> 
+(000ei<sub>hex</sub>) directory entries.<br>
+0100 - Image width<br>
+0101 - Image height<br>
+0102 - Bits per sample (8)<br>
+0103 - Compression method (1 = uncompressed)<br>
+0106 - Photometric Interpretation (2 = RGB)<br>
+0111 - Strip Offsets<br>
+0112 - Orientation (1 = 0 top, 0 left hand side)
+0115 - Samples per pixel (1)<br>
+0116 - Rows per strip (200 = image height)<br>
+0117 - Strip Byte Counts (60000 = 100 x 200 x 3)<br>
+0118 - Minimum sample value (0,0,0)<br>
+0119 - Maximum sample value (255,255,255)<br>
+011c - Planar configuration (1 = single image plane)<br>
+0153 - Sample format<br>
+
+<p>
+
+<b>Source code example</b>
+
+<p align="justify">
+The following is the guts of a C program to create a TIFF file
+of width nx, height ny. Each pixel is made up of 3 bytes, one byte
+for each of Red, Green, Blue. Each colour component ranges from 0 (black)
+to 255 (white).
+</p>
+<pre>
+   /* Write the header */
+   WriteHexString(fptr,"4d4d002a");    /* Big endian & TIFF identifier */
+   offset = nx * ny * 3 + 8;
+   putc((offset & 0xff000000) / 16777216,fptr);
+   putc((offset & 0x00ff0000) / 65536,fptr);
+   putc((offset & 0x0000ff00) / 256,fptr);
+   putc((offset & 0x000000ff),fptr);
+
+   /* Write the binary data */
+   for (j=0;j&lt;ny;j++) {
+      for (i=0;i&lt;nx;i++) {
+ ... calculate the RGB value between 0 and 255 ...
+         fputc(red,fptr);
+         fputc(green,fptr);
+         fputc(blue,fptr);
+      }
+   }
+
+   /* Write the footer */
+   WriteHexString(fptr,"000e");  /* The number of directory entries (14) */
+
+   /* Width tag, short int */
+   WriteHexString(fptr,"0100000300000001");
+   fputc((nx & 0xff00) / 256,fptr);    /* Image width */
+   fputc((nx & 0x00ff),fptr);
+   WriteHexString(fptr,"0000");
+
+   /* Height tag, short int */
+   WriteHexString(fptr,"0101000300000001");
+   fputc((ny & 0xff00) / 256,fptr);    /* Image height */
+   fputc((ny & 0x00ff),fptr);
+   WriteHexString(fptr,"0000");
+<font color="#ff0000">
+   /* Bits per sample tag, short int */
+   WriteHexString(fptr,"0102000300000003");
+   offset = nx * ny * 3 + 182;
+   putc((offset & 0xff000000) / 16777216,fptr);
+   putc((offset & 0x00ff0000) / 65536,fptr);
+   putc((offset & 0x0000ff00) / 256,fptr);
+   putc((offset & 0x000000ff),fptr);
+</font>
+   /* Compression flag, short int */
+   WriteHexString(fptr,"010300030000000100010000");
+
+   /* Photometric interpolation tag, short int */
+   WriteHexString(fptr,"010600030000000100020000");
+
+   /* Strip offset tag, long int */
+   WriteHexString(fptr,"011100040000000100000008");
+
+   /* Orientation flag, short int */
+   WriteHexString(fptr,"011200030000000100010000");
+
+   /* Sample per pixel tag, short int */
+   WriteHexString(fptr,"011500030000000100030000");
+
+   /* Rows per strip tag, short int */
+   WriteHexString(fptr,"0116000300000001");
+   fputc((ny & 0xff00) / 256,fptr);
+   fputc((ny & 0x00ff),fptr);
+   WriteHexString(fptr,"0000");
+
+   /* Strip byte count flag, long int */
+   WriteHexString(fptr,"0117000400000001");
+   offset = nx * ny * 3;
+   putc((offset & 0xff000000) / 16777216,fptr);
+   putc((offset & 0x00ff0000) / 65536,fptr);
+   putc((offset & 0x0000ff00) / 256,fptr);
+   putc((offset & 0x000000ff),fptr);
+<font color="#00ff00">
+   /* Minimum sample value flag, short int */
+   WriteHexString(fptr,"0118000300000003");
+   offset = nx * ny * 3 + 188;
+   putc((offset & 0xff000000) / 16777216,fptr);
+   putc((offset & 0x00ff0000) / 65536,fptr);
+   putc((offset & 0x0000ff00) / 256,fptr);
+   putc((offset & 0x000000ff),fptr);
+</font><font color="#ffff00">
+   /* Maximum sample value tag, short int */
+   WriteHexString(fptr,"0119000300000003");
+   offset = nx * ny * 3 + 194;
+   putc((offset & 0xff000000) / 16777216,fptr);
+   putc((offset & 0x00ff0000) / 65536,fptr);
+   putc((offset & 0x0000ff00) / 256,fptr);
+   putc((offset & 0x000000ff),fptr);
+</font>
+   /* Planar configuration tag, short int */
+   WriteHexString(fptr,"011c00030000000100010000");
+<font color="#0000ff">
+   /* Sample format tag, short int */
+   WriteHexString(fptr,"0153000300000003");
+   offset = nx * ny * 3 + 200;
+   putc((offset & 0xff000000) / 16777216,fptr);
+   putc((offset & 0x00ff0000) / 65536,fptr);
+   putc((offset & 0x0000ff00) / 256,fptr);
+   putc((offset & 0x000000ff),fptr);
+</font>
+   /* End of the directory entry */
+   WriteHexString(fptr,"00000000");
+
+   /* Bits for each colour channel */
+   WriteHexString(fptr,"000800080008");
+
+   /* Minimum value for each component */
+   WriteHexString(fptr,"000000000000");
+
+   /* Maximum value per channel */
+   WriteHexString(fptr,"00ff00ff00ff");
+
+   /* Samples per pixel for each channel */
+   WriteHexString(fptr,"000100010001");
+</pre>
+
+<p align="justify">
+The WriteHexString() function is given below.
+<p>
+<pre>
+void BM_WriteHexString(FILE *fptr,char *s)
+{
+   unsigned int i,c;
+   char hex[3];
+
+   for (i=0;i&lt;strlen(s);i+=2) {
+      hex[0] = s[i];
+      hex[1] = s[i+1];
+      hex[2] = '\0';
+      sscanf(hex,"%X",&c);
+      putc(c,fptr);
+   }
+}
+</pre>
+
+<br><br>
+
+<b>libtiff</b><p>
+<p align="justify">
+While the above creates a simple TIFF file, the ultimate source/API for
+dealing with TIFF is the library "libtiff". This is particularly so if you
+wish to read TIFF files which is a non-trivial process if you wish to cover
+all possibilities.
+For example, if one wanted to determine the width and height one would not normally search
+for the width and height tags but rather employ something like this (courtesy 
+Mehmet Vahit Kapar).
+</p>
+<pre>
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include "tiffio.h"
+
+main(int argc,char **argv)
+{
+   TIFF* tif = TIFFOpen(argv[1],"r");
+   if (tif) {
+      uint32 w, h;
+      size_t npixels;
+      uint32* raster;
+
+      TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
+      TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
+
+      TIFFClose(tif);
+   }
+   exit(0);
+}
+</pre>
+
+<p><br><p>
+<b>Contribution by Chris Rorden</b><p>
+Notes:
+<ul>
+<li><p align="justify">
+TIFF RGB images should always have a contiguous (RGBRGBRGB ...) not planar 
+(RRR..RGGG..GBBB..B) 
+format. While the header allows you to specify planar, it is not well supported. 
+</p>
+<li><p align="justify">
+For 16-bit data, be aware that most TIFF viewers ignore the maximum and minimum values and assume your data is scaled from 0 to 65535 (You can test this with my example).
+</p>
+<li><p align="justify">
+For 16-bit data, it is important that the endian is set correctly.
+</p>
+<li><p align="justify">
+For data with only one component (e.g. grayscale or black and white) you encode min, max, bits per sample directly in the tag, for RGB data the tag provides a pointer to the address for those values.
+</p>
+</ul>
+
+<p align="justify">
+The following example are an adaption of the above with the following additional features.
+</p>
+<ul>
+<li>Works for grayscale and RGB images.<p>
+<li>The TIFF writer supports 16-bit images (normalizing values to 65535, getting the endian correct)<p>
+<li>Supports de-planarize RGB images.
+</ul>
+
+<a href="http://paulbourke.net/dataformats/tiff/jpeg2tiff_50.zip">
+Example</a> that converts popular JPEGs (uses NanoJPEG library)
+<p>
+<a href="http://paulbourke.net/dataformats/tiff/jpeg2tiff_70.zip">
+Example</a> that copies an arcane lossless JPEG format that is popular with medical imaging to TIFF (my own library).
+<p>
+
+</td></tr></table></center>
+</body>
+</html>
+

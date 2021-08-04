@@ -1,0 +1,164 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+<title>Isqua Istari &raquo; Stadtplan-Dateien (*.sgs) Map File Format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h3>Stadtplan-Dateien (*.sgs) Map File Format</h3>
+Contribution by Paul Spooner<br>
+November 17, 2012
+</center>
+<p><br><p>
+	
+		<p>So you may have seen an old program kicking around called &#8220;Roleplaying City Map Generator 5.4&#8221; which is pretty useful for making city maps. There are a few problems with it, like you can&#8217;t edit the map once it&#8217;s been generated, but it works well for what it does. There&#8217;s an importer into the excellent &#8220;NBOS fractal mapper&#8221; that can be <a title="Fractal Mapper .sgs import tool".
+
+<center>
+<img src="http://paulbourke.net/dataformats/sgs/RCMG5_4.jpg" alt="Roleplaying City Map Generator 5.4" width="766" height="531">
+<smalltext>Roleplaying City Map Generator 5.4</smalltext>
+</center>
+<p>But I wanted to figure out how to read and edit the save file itself. <span id="more-496"></span>It turns out the map result save file (.sgs extension) is in plaintext, and easily decoded. It&#8217;s a vector format, editable in notepad++ or whatever text editing tool you prefer.</p>
+<p>The file is newline delimited (each line holds a &#8220;piece&#8221; of data), so I&#8217;ll be going through each line describing what it is (as far as I can tell). For this guide each bulletpoint is a line of text, with an example in parenthesies. Values that you can safely edit are preceeded by a pound symbol (#like this). Values I don&#8217;t know what they are are preceeded by a question mark (?like this). Some values have a single space preceeding them. I&#8217;ve marked these with an underscore (_like this). I don&#8217;t know if the space is important, but it makes the file easier to read. Repeated values, or arrays of data are inside brackets [like this]. Evertrhing is located as X and Y coordinates, from the top-left corner, x = horizontal (right), y = vertical (down).</p>
+<ul style="list-style-type:none">
+<li>Version number (5.40)</li>
+<li>? (0.9) Maybe a sub-version?</li>
+<li>#Name of the city (Haea Ofrivu)</li>
+<li>_#Size of the city ( 350)</li>
+<li>?[twelve lines, the first is 1 and the rest are 0] I don&#8217;t know what these do.</li>
+<li>?_[four more zeros, preceded by spaces]</li>
+<li>#_the number of &#8220;line&#8221; type objects. This is the total number of roads and rivers. ( 10) Don&#8217;t change this value unless you actually add or remove one of the &#8220;line&#8221; entries, or the program will crash on loading the file.</li>
+<li>?_I think this is always 562, not sure why ( 562)</li>
+<li>?Same here, always 0.5 (0.5)</li>
+<li>?(3.5)</li>
+</ul>
+<p>Now we get to the fun stuff. The following is the &#8220;line&#8221; data format. There is one of these entries for each of the roads and rivers (and lakes). If you add or remove one of these sets of data, remember to change the &#8220;number of &#8220;line&#8221; type objects&#8221; value above.</p>
+<p>[</p>
+<ul style="list-style-type:none">
+<li>#_Type 0 = road, 1 = river, 2 = lake ( 0)</li>
+<li> #_half the length of datalist, the number of xy pairs ( 52) Edit this if you change the number of defined points&#8230; or it will crash instead of loading.</li>
+<li>#Width (3.5)</li>
+<li>?_zero in every known case ( 0)</li>
+<li>#[datalist of point coordinates] for this example, there will be 52 pairs, or 104 entries.<br />
+(26.5<br />
+247.41)&#8230;</li>
+</ul>
+<p>]</p>
+<p>After the &#8220;line&#8221; type objects come the buildings.</p>
+<ul style="list-style-type:none">
+<li>#_Number of buildings ( 200) Change this if you change the number of buildings or crash etc.</li>
+</ul>
+<p>And then all the building data.</p>
+<p>[</p>
+<ul style="list-style-type:none">
+<li>?_a zero ( 0) though I think this can be any number&#8230; just don&#8217;t make it text. It doesn&#8217;t do anything though.</li>
+<li>#_The type of building. 0 = square, 1 = round. ( 0)</li>
+</ul>
+<p>If the type is 0, or square</p>
+<ul style="list-style-type:none">
+<li>#[four pairs, eight lines, the four corners of the building]<br />
+(98.18<br />
+86.64<br />
+99.9<br />
+86.51<br />
+100.16<br />
+89.92<br />
+98.44<br />
+90.05)</li>
+</ul>
+<p>But if the type is 1, or round</p>
+<ul style="list-style-type:none">
+<li>#this is the X (136.91)</li>
+<li>#and then this is the Y (198.26)</li>
+<li>#and this is the size, diameter (3.08)</li>
+</ul>
+<p>]</p>
+<p>Okay. Got roads, rivers, and buildings. Next is a bit more confusing, and involves squares, parks, walls, towers, etc. Try and keep up&#8230;trees are last and they are super straightforward.</p>
+<ul style="list-style-type:none">
+<li> #_number of &#8220;squares&#8221; ( 11) Always one more than the actual number, and the last entry is blank.</li>
+<li>?_ thirty thousand ( 30000) don&#8217;t ask me why. You can change any of the digits, though it doesn&#8217;t do anything, but don&#8217;t change the length.</li>
+</ul>
+<p>And then the data for the squares. &#8220;Squares&#8221; in this case are areas enclosed by dotted lines on roads. The x-y coordinates mark out where the dots go.</p>
+<p>[</p>
+<ul style="list-style-type:none">
+<li>?_zero ( 0)</li>
+<li>#_Number of data pairs ( 31) as above, change if you alter the number of points</li>
+<li>?A decimal value number. (0.852139) This doesn&#8217;t seem to do anything.</li>
+<li>#[The data points, x y pairs]<br />
+(254.91<br />
+223.03)&#8230;</li>
+</ul>
+<p>]</p>
+<p>As a note, the last &#8220;square&#8221; data will look like this:<br />
+( 0<br />
+0<br />
+0)</p>
+<p>and, since the number of data pairs is zero (the second zero) it will be followed by no pairs. These blank entries can also be found elsewhere.</p>
+<p>Then the data for the parks. This is exactly the same as for the squares.</p>
+<ul style="list-style-type:none">
+<li>#[same as for the &#8220;squares&#8221;, only these are &#8220;parks&#8221; aparently. Includes the 30000 and all that stuff.]</li>
+</ul>
+<p>After all that data is the &#8220;are there walls and towers?&#8221; entry.</p>
+<ul style="list-style-type:none">
+<li>#_one or zero ( 1)</li>
+</ul>
+<p>If 0, skip straight to trees. If 1, it is followed by&#8230;</p>
+<ul style="list-style-type:none">
+<li>#_Number of wall points. ( 135)</li>
+<li>#thickness of the wall. (3) though it can be a decimal number.</li>
+</ul>
+<p>And then all the wall points, in series (this makes a loop)</p>
+<p>[</p>
+<ul style="list-style-type:none">
+<li>#X (294.71)</li>
+<li>#Y (94.15)</li>
+<li>#_Present/absent ( 1) If 1, this point will &#8220;connect&#8221; to the previous and subsequent points. If 0, the point will not connect.</li>
+</ul>
+<p>]</p>
+<p>And then the towers.</p>
+<ul style="list-style-type:none">
+<li>#_Number of towers ( 13)</li>
+</ul>
+<p>[</p>
+<ul style="list-style-type:none">
+<li>#_presence, 1 = visible, 0 = invisible ( 1)</li>
+<li>#_Type, 1 = round, 2 = square( 2)</li>
+</ul>
+<p>If Type = 2</p>
+<ul style="list-style-type:none">
+<li>#[four point pairs, same as for square buildings]</li>
+</ul>
+<p>If Type = 1</p>
+<ul style="list-style-type:none">
+<li>#[x, y, and radius, same as for round buildings]</li>
+</ul>
+<p>]</p>
+<p>We&#8217;ve made it! Now there&#8217;s a bajillion trees!</p>
+<ul style="list-style-type:none">
+<li>#_number of trees ( bajillion)</li>
+</ul>
+<p>[</p>
+<ul style="list-style-type:none">
+<li>#x (115.01)</li>
+<li>#y (155.05)</li>
+<li>#diameter (3.77)</li>
+</ul>
+<p>]</p>
+<p>The file ends with a blank line, or a newline character, depending on how you look at it.</p>
+
+</td></tr></table></center>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Fisheye to Pannini projections</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Fisheye to Pannini projections</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+January 2018<p>
+See also: <a href="../fish2/index.html">Transforming fisheye to ...</a>
+</center>
+<p><br><p>
+
+<b>Introduction</b><p>
+<p align="justify">
+The Pannini projection is an approach to creating wide angle views that avoid the stretching
+that occurs for wide standard perspective views, rectilinear projections. It is named after the
+Roman painter Gian Paolo Pannini who seems to have used the technique although there is no
+documentary evidence except a kind of reverse engineering of his paintings.
+The projection is a variant on a cylindrical projection, that is, vertical structures remain straight
+in the projection.
+</p>
+
+<br>
+<b>Mathematics</b><p>
+<p align="justify">
+The fundamental equations relating positions on the image plane to longitude and latitude,
+in the so called "basic Pannini projection" are
+</p>
+<center>
+h = S sin(longitude)<br>
+v = S tan(latitude)
+</center><p>
+<p align="justify">
+Where "h" and "v" are the pixel position in the normalised Pannini image and S is defined as.
+</p>
+<center>
+	<img src="http://paulbourke.net/dome/fish2pannini/eq1.png" width=170 height=46 border=0>
+</center><p>
+
+<p align="justify">
+As per most image mappings one requires the inverse equations, that is, given a position
+in the output image (Pannini) what is the best pixel estimate in the input image (fisheye in
+this case).
+Derivation is shown below but essentially the same as that by 
+Thomas Sharpless, Bruno Postle, and Daniel German in their original paper.
+This reverse mapping is what is required for supersampling antialiasing used here, but also
+for hardware accelerated implementation such as GLSL shaders.
+<center>
+	<img src="http://paulbourke.net/dome/fish2pannini/equations.png" width=500 height=656 border=0>
+</center><p>
+
+<p align="justify">
+The above allows one to calculate longitude and latitude given normalised image
+coordinates h and v. The longitude and latitude can then be mapped into the source
+image coordinate system, a fisheye in this case.
+</p>
+
+<p align="justify">
+The control variable d determines the degree of the Pannini projection
+and ranges from 0 upwards.
+d=0 is just a standard perspective projection, d=1 is cylindrical stereographic
+projection, and as d tends to infinity the projection tends to a cylindrical orthographic.
+</p>
+
+<br>
+<b>Usage line</b><p>
+<p align="justify">
+The implementation documented here creates a Pannini projection from a fisheye
+photograph. It is designed to work from fisheyes directly off a sensor without
+any prior processing, as such the center (-c option) and radius 
+(-r option) of the fisheye circle is required
+along with the FOV at that radius (-s option). 
+If the fisheye has already been centered and cropped then
+those parameters default to the expected values. Additionally, as in the example below,
+the fisheye is not perfectly level then it can be corrected by rotating about any axis,
+see -x, -y and -z options. The x axis to the right (rotation is a tilt), 
+the z axis upwards (rotation is a pan) and the y axis forward (rotation is a roll).
+Any fisheye lens has a degree of non-linearity, normally most evident towards the
+rim. This can be corrected with the -p option and a fourth order polynomial, for
+more information see <a href="../fisheyecorrect/index.html">this</a>.
+The software uses a straightforward supersampling antialiasing, see -a option.
+</p>
+<pre>
+Usage: fish2pannini [options] fisheyeimage
+Options
+   -w n        pannini image width, default = 800
+   -h n        pannini image height, default = 600
+   -t n        field of view (degrees) at d=0, default = 100
+   -d n        pannini parameter d, default: 1
+   -s n        field of view of fisheye (degrees), default = 180
+   -c x y      center of the fisheye image, default is center of image
+   -r n        fisheye radius (horizontal), default is half width of fisheye image
+   -x n        tilt angle (degrees), default: 0
+   -y n        roll angle (degrees), default: 0
+   -z n        pan angle (degrees), default: 0
+   -a n        antialiasing level, default = 2
+   -p n n n n  4th order lens correction, default: off
+   -v          verbose mode, default: off
+</pre>
+
+<br>
+<b>Examples</b><p>
+
+<center><table width=800><tr><td>
+   <a href="http://paulbourke.net/dome/fish2pannini/sample1.jpg"><img src="http://paulbourke.net/dome/fish2pannini/sample1s.jpg" width=800 height=533 border=1></a><br>
+   Input sample fisheye image, 180 degrees
+</td></tr></table></center><p>
+
+<center><table width=800><tr><td>
+	<a href="http://paulbourke.net/dome/fish2pannini/persp130.jpg"><img src="http://paulbourke.net/dome/fish2pannini/persp130s.jpg" width=400 height=225 border=1></a><br>
+	Perspective FOV=130, or Pannini d=0
+</td><td>
+	<a href="http://paulbourke.net/dome/fish2pannini/pannini1.jpg"><img src="http://paulbourke.net/dome/fish2pannini/pannini1s.jpg" width=400 height=225 border=1></a><br>
+	Pannini d=1
+</td></tr></table></center><p>
+
+<p align="justify">
+The above illustrates the key property of these projections, the horizontal field of view 
+of the Pannini projection on the right is the same as the perspective view on the left
+except the stretching on the extreme of the image has bee removed. For example the windows
+on the left of the cathedral are now square and the distant feel of the main alter has
+been removed.
+</p>
+
+<center><table width=800><tr><td>
+   <a href="http://paulbourke.net/dome/fish2pannini/pannini4.jpg"><img src="http://paulbourke.net/dome/fish2pannini/pannini4s.jpg" width=400 height=225 border=1></a><br>
+   Pannini d=0.25
+</td><td>
+   <a href="http://paulbourke.net/dome/fish2pannini/pannini3.jpg"><img src="http://paulbourke.net/dome/fish2pannini/pannini3s.jpg" width=400 height=225 border=1></a><br>
+   Pannini d=0.5
+</td></tr></table></center><p>
+
+<p align="justify">
+The "basic Pannini projection" has just one parameter to adjust, namely "d" in the equations above.
+The effect of adjusting d is illustrated here noting that in each case the same horizontal FOV of 130
+degrees is maintained.
+</p>
+
+<center><table width=800><tr><td>
+   <a href="http://paulbourke.net/dome/fish2pannini/pannini2.jpg"><img src="http://paulbourke.net/dome/fish2pannini/pannini2s.jpg" width=400 height=225 border=1></a><br>
+   Pannini d=2
+</td><td>
+   <a href="http://paulbourke.net/dome/fish2pannini/pannini3.jpg"><img src="http://paulbourke.net/dome/fish2pannini/pannini3s.jpg" width=400 height=225 border=1></a><br>
+   Pannini d=5, nearly cylindrical
+</td></tr></table></center><p>
+
+<p align="justify">
+And finally a more extreme example of 150 degrees horizontal FOV.
+</p>
+
+<center><table width=800><tr><td>
+   <a href="http://paulbourke.net/dome/fish2pannini/persp150.jpg"><img src="http://paulbourke.net/dome/fish2pannini/persp150s.jpg" width=400 height=225 border=1></a><br>
+   Perspective FOV=150
+</td><td>
+   <a href="http://paulbourke.net/dome/fish2pannini/pannini5.jpg"><img src="http://paulbourke.net/dome/fish2pannini/pannini5s.jpg" width=400 height=225 border=1></a><br>
+   Pannini d=1
+</td></tr></table></center><p>
+
+<p align="justify">
+There are a number of methods for straightening off-center horizontal lines, they seem to be
+arbitrary correction factors to the latitude based upon the longitude. That is, a 
+vertical compression
+or stretching that varies from the center of the image horizontally. One of many possible approaches
+has been added here, in the example below note the more horizontally straight structures compared
+with the uncorrected approach on the left.
+</p>
+
+<center><table width=800><tr><td>
+   <a href="http://paulbourke.net/dome/fish2pannini/pannini1.jpg"><img src="http://paulbourke.net/dome/fish2pannini/pannini1s.jpg" width=400 height=225 border=1></a><br>
+   Pannini d=1, b=0
+</td><td>
+   <a href="http://paulbourke.net/dome/fish2pannini/pannini6.jpg"><img src="http://paulbourke.net/dome/fish2pannini/pannini6s.jpg" width=400 height=225 border=1></a><br>
+   Pannini d=1, b=0.75
+</td></tr></table></center><p>
+
+<br>
+<b>Personal observation</b><p>
+<p align="justify">
+A final word on terminology. Image mappings from ultrawide angle lenses such as fisheye often use
+terms like "undistorting", "correcting", "defishing" and so on. It should be recognised that a fisheye
+image, for example, is no more distorted than any other type of projection. Indeed one could consider a fisheye
+to be simpler and more natural projection than a rectilinear projection. For example the mathematics
+is more elegant and in many ways simpler. The fact that lines we expect to be straight straight are not
+so is a natural consequence of trying to map a 3D object onto a 2D sheet.
+An effect that is a consequence of fisheye, in the same way as peripheral stretching is
+a consequence of perspective. Neither are a "distortion".
+</p>
+
+<br>
+<b>Giovanni Paolo Pannini</b><p>
+<p align="justify">
+A little history about Giovanni Paolo Pannini (sometimes spelt with a single "n", Panini) and
+also known as Gian Paolo Panini. He
+was born in Italy (Piacenza) in 1691 but lived most of his life
+in Rome from 1711 to 1765. In the context of this document he was known as a "view painter", known
+as the vedutisti. It is suggested he was educated in the art of perspective and worked mainly
+in the studio of Benedetto Luti.
+</p>
+
+<br>
+<b>References</b><p>
+
+<i>Pannini: A New Projection for Rendering Wide Angle Perspective Images</i>.
+Computational Aesthetics in Graphics, Visualization, and Imaging (2010).
+Thomas K. Sharpless, Bruno Postle, and Daniel M. German
+<p>
+
+<i>Optimizing content-preserving projections for wide-angle images</i>.
+SIGGRAPH '09, pp. 1-9.
+Carroll R., Agrawal M., Agarwala A.
+<p>
+
+<i>Correction of geometric perceptual distortions in pictures</i>.
+SIGGRAPH '95, pp. 257- 264.
+Zorin D., Barr A.H.
+<p>
+
+</td></tr><table></center>
+</body>
+</html>
+

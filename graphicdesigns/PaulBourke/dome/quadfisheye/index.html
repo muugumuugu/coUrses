@@ -1,0 +1,236 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Quad fisheye mapping to a 360 panorama</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width="800"><tr><td>
+
+<center>
+<h1>Quad fisheye mapping to a 360 panorama</h1>
+or
+<h3>What does it look like being on a mountain top engulfed by fire?</h1>
+In collaboration with HPWREN (High Performance Wireless
+Research & Education Network)<br>
+Example taken from Bush fire monitoring on the Santa Ynez North Peak, 8th July 2017<br>
+<a href="http://hpwren.ucsd.edu/news/20170815/">News story</a><br>
+<a href="https://www.youtube.com/watch?v=wipj73bIkXY">Navigable YouTube video of time lapse sequence</a>.
+<p>
+Written by <a href="../index.html">Paul Bourke</a><br>
+August 2017<p>
+</center>
+<p><br><p>
+
+<p align="justify">
+The history of panoramic photography dates back to the very earliest days 
+of photography in 1840s. Techniques to photographically capture panoramas 
+have continued to evolve including the development of bespoke camera systems. 
+With new presentation devices such as cylindrical projection systems and 
+head mounted displays that allow the panorama to convey an immersive sense 
+of a place, there has been considerable effort in developing cameras to 
+record panoramic video. Single camera designs capable of recording 360 
+video are simple and easily create seamless panoramas but have the 
+disadvantage of not scaling in resolution. Higher resolution requires 
+rigs consisting of multiple individual cameras. The overlapping images 
+from each camera are fused together to form the final panorama. The 
+challenges for these multiple camera systems involves minimising the 
+inevitable parallax errors 
+[<a href="../../miscellaneous/parallaxerror/index.html">1</a>] 
+and creating a constant colour 
+grade, the success of these determines how seamless the panorama will appear.
+</p>
+
+<p align="justify">
+<a href="index.html#figure1">Figure 1</a> 
+shows a single time snapshot from four cameras mounted on Santa 
+Ynez North Peak on the 8th July 2017. Each camera has field of view (FOV) 
+greater than 90 degrees horizontally and thus captures everything visible 
+(within a limited vertical FOV) from the position of the camera. While 
+these 4 images capture the entire horizontal field of view, as they 
+stand they present a distorted and disconnected view, a form not 
+directly useful for current virtual reality (VR) experiences. A 
+frequently used approach to forming suitable panoramas is to use 
+machine vision to find feature points between the images, that is, 
+points on the same object between adjacent images. Once these points 
+are found the images can be warped and blended together, aligning the 
+feature points, to form the panorama. This approach can lead to 
+spatial distortion but is unsuited in this case because there is 
+not sufficient overlap to find enough reliable feature points, and feature points
+are rarely found in clear blue sky.
+</p>
+
+<center><a name="figure1">&nbsp;</a>
+   <a href="http://paulbourke.net/dome/quadfisheye/figure1.jpg"><img src="http://paulbourke.net/dome/quadfisheye/figure1s.jpg" width=800 height=133 border=1></a><Br>
+	<font size=-1>
+	Figure 1: Four source fisheye camera images
+	</font>
+</center><p>
+
+<p align="justify">
+The approach used here is to model the key optical and geometric 
+properties of the camera system. This includes the field of view of 
+the fisheye lenses and the camera orientations. Armed with this 
+parameterised model one can project the fisheye images onto the 
+appropriate geometry required for the final panorama. The images 
+would be projected onto a cylinder for a cylindrical panorama, or 
+as in this case, projected onto a sphere to form an equirectangular 
+projection. <a href="index.html#figure2">Figure 2</a> shows the equirectangular projection corresponding 
+to the 4 images in <a href="index.html#figure1">figure 1</a>. The equirectangular projection is the 
+most commonly used format for VR applications, it extends 360 degrees 
+horizontally and 180 degrees vertically. Each fisheye image is 
+responsible for exactly one quarter of this image horizontally. Since 
+the lenses are slightly greater than 90 degrees the overlap between 
+each quarter is used to blend the images together thus reducing the 
+visibility of the seam. 
+</p>
+
+<center><a name="figure2">&nbsp;</a>
+   <a href="http://paulbourke.net/dome/quadfisheye/figure2.jpg"><img src="http://paulbourke.net/dome/quadfisheye/figure2s.jpg" width=800 height=400 border=1></a><br>
+	<font size=-1>
+	Figure 2: Equirectangular projection, 360 degrees in longitude horizontally, 180 degrees 
+in latitude vertically.
+	</font>
+</center><p>
+
+<p align="justify">
+The missing part is how to measure the optical and geometric properties 
+of each camera, noting that the author did not have access to the 
+cameras and there is often a 5% variation in commodity optical elements. 
+An interactive application was developed that allows the operator to 
+manually adjust the important parameters and get immediate feedback on 
+the consequences on the alignment of features in the scene. 
+<a href="index.html#figure3">Figure 3</a> is 
+a screen dump of this application. 
+</p>
+
+<center><a name="figure4">&nbsp;</a>
+   <a href="http://paulbourke.net/dome/quadfisheye/figure4.jpg"><img src="http://paulbourke.net/dome/quadfisheye/figure4s.jpg" width=800 height=219 border=1></a><br>
+   <font size=-1>
+	Figure 4: Center and radius of each fisheye.
+   </font>
+</center><p>
+
+<p align="justify">
+Using the mouse and keyboard one can 
+adjust the lens FOV, the position of the fisheye on the camera sensor 
+and the orientation of the cameras. For example, each of these cameras 
+is tilted downwards by about 9 degrees. 
+As well as the field of view and camera angles, the software requires
+the center and radius of each fisheye, see <a href="index.html#figure4">figure 4</a>.
+Once the desired alignment is 
+achieved the parameters are saved to a file and used in the subsequent 
+processing of frames. Such a parameter file is shown below, the image files
+can be concatenated together as in <a href="index.html#figure1">figure 1</a> or
+separate image files.
+</p>
+
+<pre>
+ID: 0
+IMAGE: c.jpg
+RADIUS: 1600
+CENTER: 1584 1074
+FOV: 120.99
+ROTATEX: -9.0
+
+ID: 1
+IMAGE: c.jpg
+RADIUS: 1600
+CENTER: 1504 1012
+FOV: 115.99
+ROTATEX: -9.0
+
+ID: 2
+IMAGE: c.jpg
+RADIUS: 1600
+CENTER: 1536 1024
+FOV: 111.99
+ROTATEX: -9.0
+
+ID: 3
+IMAGE: c.jpg
+RADIUS: 1600
+CENTER: 1492 1024
+FOV: 106.99
+ROTATEY: -0.99
+ROTATEX: -9.0
+</pre>
+
+<p align="justify">
+It should be noted here that due to fundamental 
+parallax issues it is not possible to achieve a perfect alignment 
+across all depths, only at a single depth 
+[<a href="../../miscellaneous/parallaxerror/index.html">1</a>]. 
+The goal here 
+was to achieve a good alignment for distant objects. Additionally, 
+these cameras are not colour calibrated and operating in automatic 
+exposure mode so colour differences between each quarter is to be expected.
+</p>
+
+<center><a name="figure3">&nbsp;</a>
+   <a href="http://paulbourke.net/dome/quadfisheye/figure3.jpg"><img src="http://paulbourke.net/dome/quadfisheye/figure3s.jpg" width=800 height=400 border=1></a><br>
+	<font size=-1>
+	Figure 3: Optical/geometric parameter adjustment software
+	</font>
+</center><p>
+
+<p align="justify">
+The advantages of 360 panorama image and video are many. If the panorama 
+is laid out flat as in <a href="index.html#figure2">figure 2</a> nothing is hidden from view and the 
+local distortion is minimal. One only need to keep in mind that the 
+left and right edge are connected. A navigable perspective view can be 
+presented online 
+[<a href="https://youtu.be/wipj73bIkXY">2</a>] 
+reducing the distortion entirely while 
+allowing the operator to look around in real time. There are a number 
+of surround presentation devices that have been built to give a sense 
+of immersion both without the need to wear anything and providing a 
+more social experience. Examples might be the iDome 
+[<a href="../iDome/index.html">3</a>] 
+or the AVIE cylinders 
+[<a href="http://paulbourke.net/dome/quadfisheye/AVIE.pdf">4</a>]. When viewed within a VR head 
+mounted display one gets an undistorted view while being able to 
+naturally turn around as one might in real life, the ultimate sense 
+of "being there".
+</p>
+
+<center>
+<a href="https://www.youtube.com/watch?v=wipj73bIkXY">
+<img src="http://paulbourke.net/dome/quadfisheye/youtube.png" width=800 height=454 border=1></a><br>
+<font size=-1>(Click for navigable YouTube video of time lapse sequence)</font>
+</center><p>
+
+<p align="justify">
+<b>Online references</b>
+</p>
+<ol>
+<li><p align="justify">
+	<a href="../../miscellaneous/parallaxerror/index.html">Fundamental parallax issues explained</a>.
+</p></li>
+<li><p align="justify">
+	<a href="https://youtu.be/wipj73bIkXY">Timelapse sequence</a> from which 
+	<a href="index.html#figure2">figure 2</a> is a one frame.
+</p></li>
+<li><p align="justify">
+	<a href="../iDome/index.html">
+	iDome immersive display, presenting a 180 degree view and mouse navigation</a>
+</p></li>
+<li><p align="justify">
+	<a href="http://paulbourke.net/dome/quadfisheye/AVIE.pdf">AVIE - Advanced Visualisation and Interaction Environment</a>
+</p></li>
+</ol>
+
+</td></tr></table></center>
+</body>
+</html>
+

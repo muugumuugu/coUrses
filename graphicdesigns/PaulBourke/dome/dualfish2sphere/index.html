@@ -1,0 +1,421 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Converting dual fisheye images into a spherical (equirectangular) projection</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Converting dual fisheye images into a spherical (equirectangular) projection</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+August 2016<p>
+See also: <a href="../../miscellaneous/parallaxerror/index.html">
+	Fundamental parallax error when blending images from multiple cameras</a>
+</center>
+<p>
+
+<p align="justify">
+<i>The source code implementing the projections below is only available
+on request for a small fee. It includes a demo application and an invitation to
+convert an image of your choice to verify the code does what you seek.
+For more information please contact the <a href="../../index.html">author</a>.</i>
+</p>
+<p><br><p>
+
+<b>Introduction</b><p>
+
+<p align="justify">
+The following presents one method by which two fisheye images, with sufficient apertures,
+can be combined to form one spherical (equirectangular) projection. It is one of two main approaches,
+this is a purely geometric algorithm, the alternative is to detect feature points between the
+two overlapping fisheye images and perform a warp/blend.
+</p>
+
+<p align="justify">
+A "fisheye" image is taken to mean a projection defined as a circular fisheye, namely radially 
+symmetric in longitude and with latitude proportional to the radius from the center of the fisheye 
+circle. Most lenses do have some non-linearity and this is a relatively straightforward
+correction to make. A fisheye is defined for any angle, 180 being the most common but in the context
+here one requires greater than 180 degrees. 
+The fisheye circle may be smaller than the image frame it is contained in (sensor size) or it may be 
+larger, so the circle is clipped. Both these situations are common for real fisheye images and
+camera sensors and as such need to be dealt with.
+</p>
+
+<b>Implementation</b>
+
+<p align="justify">
+The algorithm described here is tested with a command line utility that accepts various command
+line option and reads a parameter file describing attributes of the fisheye images. The usage
+string is as follows.
+</p>
+
+<pre>
+Usage: dualfish2sphere [options] parameterfile
+Options
+   -w n    sets the output image size, default: twice fisheye width
+   -a n    sets antialiasing level, default: 2
+   -b n    longitude width for blending, default: no blending
+   -d      debug mode
+</pre>
+
+<p align=justify">
+The algorithm, as with many of this nature, considers each pixel in the output image and
+determines the best estimate from the input images. Antialising here is performed using
+a simple supersampling approach, each pixel in the output image is sampled multiple times
+at different subpixel positions, the best estimates from the input images are averaged
+together. For fisheye images greater than 180 degree aperture, the two overlapping halves
+of their projection into equirectangular space are blended together using a simple linear
+multiplicative blend function.
+</p>
+
+<p align="justify">
+The parameter file consists of a series of lines consisting of a keyword and value
+pair. At the very least the file must contain two IMAGE: keywords, the modifier
+keywords can appear in any order and apply to the previously defined IMAGE:.
+Noting that the order in which the rotate keywords appear determines the order
+in which they are performed.
+An example parameter file is given below, the meanings of the keywords
+should be clear.  A line starting with a "#" is a comment line, the rest of the
+line will be ignored.
+All angles are defined in degrees and all coordinates are defined in pixels.
+</p>
+
+<pre>
+# left image
+IMAGE: sample.tga
+RADIUS: 904
+CENTER: 959 970
+APERTURE: 190
+ROTATEZ: -1.2
+ROTATEX: 0
+ROTATEY: -90
+
+# right image
+IMAGE: sample.tga
+RADIUS: 904
+CENTER: 2879 948
+APERTURE: 189
+ROTATEX: -2
+ROTATEY: 90
+</pre>
+
+<p align="justify">
+In the above the two fisheye images are assumed to be in the same image, one on the left
+of the other although the algorithm isn't affected by the order. 
+The software also handles the case where the two fisheyes are located within
+different files. CENTER: defines the center of the fisheye circle (origin is the top left
+corner of the image). RADIUS: is the radius of the fisheye circle
+that matches the given APERTURE:. The conventions for a single file containing two
+fisheye images is given below.
+</p>
+
+<center>
+	<img src="http://paulbourke.net/dome/dualfish2sphere/diagram1.png" width=647 height=353 border=0>
+</center><p>
+
+<p align="justify">
+Note the extreme generality of these defining parameters, the fisheye images need not have the
+same aperture, radius, or position in the image. This is largely to deal with integrated
+dual fisheye systems that, in the real world, are rarely perfect. For example the lenses
+are not always on the same optical axis and there is variation between the optics of any
+two fisheye lenses. 
+</p>
+
+<p align="justify">
+The various rotation angles provide a mechanism by which
+corrections can be made to the fisheye camera/lens system, for example if they don't
+share the same optical axis. The fisheye lens/camera is assumed to be looking down the
+y axis, so ROTATEY: serves to roll the fisheye. The x axis is assumed to be to the right,
+so a ROTATEX serves to correct for the fisheye tilt. The z axis is up so ROTATEZ: serves to
+pan the fisheye.  Note the since the algorithm operates in reverse (from the output image
+to the input fisheye) the rotational transformations act in the reverse order to which
+they appear in the parameter file.
+</p>
+
+<b>Example</b><p>
+<p align="justify">
+The following example will illustrate the main features of the algorithm implementation.
+It will be based upon two separate fisheye images, each with an aperture of 210 degrees.
+</p>
+
+<center><table><tr><td>
+<a href="http://paulbourke.net/dome/dualfish2sphere/exampleleft.jpg"><img src="http://paulbourke.net/dome/dualfish2sphere/exampleleft_s.jpg" width=400 height=400 border=1></a>
+</td><td>
+<a href="http://paulbourke.net/dome/dualfish2sphere/exampleright.jpg"><img src="http://paulbourke.net/dome/dualfish2sphere/exampleright_s.jpg" width=400 height=400 border=1></a>
+</td></tr></table>
+</center><p>
+
+<p align="justify">
+In this somewhat artificial example the left fisheye above is tilted up by 10 degrees.
+The right fisheye above is rotated clockwise off the optical axis by 5 degrees.
+The parameter file is given below.
+</p>
+
+<pre>
+# Example for online example
+
+# first fisheye
+IMAGE: exampleleft.tga
+APERTURE: 210
+RADIUS: 1024
+CENTER: 1024 1124
+ROTATEX: -10
+
+# second fisheye
+IMAGE: exampleright.tga
+CENTER: 1124 1024
+RADIUS: 1024
+APERTURE: 210
+ROTATEY: -5
+</pre>
+
+<p align="justify">
+Each fisheye is located in a different part of the image (sensor) plane.
+The resulting panorama after compensating correctly for these camera/fisheye
+errors is shown below.
+</p>
+
+<center>
+<a href="http://paulbourke.net/dome/dualfish2sphere/example_sph.jpg"><img src="http://paulbourke.net/dome/dualfish2sphere/example_sph_s.jpg" width=800 height=400 border=1></a>
+</center><p>
+
+<p align="justify">
+So how does this work? Each fisheye, assuming it has an aperture of at least 180 degrees captures
+half the visible world, another fisheye pointing in the opposite direction captures the
+other half. It should therefore be possible to merge the two fisheye images together to form
+a complete equirectangular projection, which defines the whole visible world. The left fisheye
+above mapped into equirectangular space is shown below, it fills more than half the equirectangular
+image because the lens is 210 degrees. Some additional notes and implementation of converting
+fisheye to equirectangular images can be found <a href="../fish2/index.html">here</a>.
+</p>
+
+<center>
+<a href="http://paulbourke.net/dome/dualfish2sphere/diagram2.jpg"><img src="http://paulbourke.net/dome/dualfish2sphere/diagram2_s.jpg" width=800 height=400 border=1></a>
+</center><p>
+
+<p align="justify">
+Repeating for the right hand fisheye above gives the following, noting that it generally 
+covers the second half of the equirectangular image and in this case is continuous across
+the 0 to 360 agle wrap.
+</p>
+
+<center>
+<a href="http://paulbourke.net/dome/dualfish2sphere/diagram3.jpg"><img src="http://paulbourke.net/dome/dualfish2sphere/diagram3_s.jpg" width=800 height=400 border=1></a>
+</center><p>
+<p align="justify">
+As long as the fisheyes have an aperture greater than 180 degrees there is some image
+overlap to blend the two halves together. The two images with a blend zone of 15 degrees (75
+degrees to 105 degrees) are given below. The final image is achieved by simply adding these
+on a pixel by pixel basis. 
+</p>
+<center>
+<a href="http://paulbourke.net/dome/dualfish2sphere/diagram4.jpg"><img src="http://paulbourke.net/dome/dualfish2sphere/diagram4_s.jpg" width=800 height=400 border=1></a>
+</center><p>
+<center>
+<a href="http://paulbourke.net/dome/dualfish2sphere/diagram5.jpg"><img src="http://paulbourke.net/dome/dualfish2sphere/diagram5_s.jpg" width=800 height=400 border=1></a>
+</center><p>
+
+<b>Notes</b><p>
+<ul>
+<li><p align="justify">
+Fisheye angles of 190 degrees or more are required for a satisfactory blend zone, 10 degrees.
+</p>
+<li><p align="justify">
+The discussion here does not address the fundamental issues of parallax error in real dual fisheye
+systems where the nodal points of the lenses do not coincide. A perfect blend can occur at any one distance
+but not at all distances.
+</p>
+</ul>
+
+<br>
+<center>
+	<a href="http://paulbourke.net/dome/dualfish2sphere/diagram.pdf"><img src="http://paulbourke.net/dome/dualfish2sphere/diagram_s.png" border=1 width=800 height=680></a>
+</center>
+<p>
+<br><p>
+
+<center>
+<h1>Addendum: Automatic optimisation of parameters for dualfish2sphere</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+April 2017<p>
+</center><p><br><p>
+
+<p align="justify">
+Described here is an additional utility for <a href="index.html">dualfish2sphere</a>
+that, given an initial guess of the parameters, attempts to find the optimal values. 
+Optimal is defined by the parameters that result in the smoothest transition across
+the two blend zones.
+The following fisheye pair will be used to illustrate this algorithm.
+</p>
+<center>
+   <a href="http://paulbourke.net/dome/dualfish2sphere/outdoor.jpg"><img src="http://paulbourke.net/dome/dualfish2sphere/outdoor_s.jpg" width=800 height=400 border=1></a>
+</center><p>
+
+<b>Instructions</b><p>
+
+<p align="justify">
+<b>1.</b>
+Estimate the parameters and create the parameter file for dualfish2sphere. The important 
+parameters for the optimisation are the center of the fisheye and aperture. If there are rotations 
+greater than a few degrees, estimate those also. 
+The author generally uses PhotoShop for this, using a combination of the circular selection tool
+to estimate the position of the fisheye, snapping ruler guides to form the rectangle around
+each fisheye and the center, and finally the rectangular selection tool and info panel to read
+off the values of the center.
+</p>
+<center>
+   <a href="http://paulbourke.net/dome/dualfish2sphere/outdoor_ps.jpg"><img src="http://paulbourke.net/dome/dualfish2sphere/outdoor_ps_s.jpg" width=800 height=424 border=1></a>
+</center><p>
+
+<p align="justify">
+The software will randomly search for best fit 
+within a chosen range around the estimates above, the better the estimate the more likely and 
+faster the fit will be found. By default the range of search is +-10 degrees for the aperture, +-20 
+pixels for the center of the fisheye and +-5 degrees for each rotational parameter. For 
+example, if the estimate of the aperture is 200 degrees, the software will search between 
+190 and 210 degrees. The range can be adjusted using the -p option.
+</p>
+<p align="justify">
+An initial parameter file might be as follows.
+</p>
+<pre>
+# left
+IMAGE: outdoor.tga
+RADIUS: 905
+CENTER: 970 980
+APERTURE: 190
+ROTATEY: 7
+# right
+IMAGE: outdoor.tga
+RADIUS: 905
+CENTER: 2920 940
+APERTURE: 190
+ROTATEY: -7
+</pre>
+
+<p align="justify">
+The resulting equirectangular projection is as follows. 
+A blend region of 10 degrees is used, for this example the command line might be
+</p>
+<pre>
+   dualfish2sphere -w 3000 -b 10 -a 2 outdoor.txt
+</pre>
+<p align="justify">
+Note the poor alignment in the red ellipse regions.
+</p>
+<center>
+   <a href="http://paulbourke.net/dome/dualfish2sphere/outdoor_sph.jpg"><img src="http://paulbourke.net/dome/dualfish2sphere/outdoor_sph_s.jpg" width=800 height=400 border=1></a>
+</center><p>
+
+<p align="justify">
+<b>2.</b>
+Run dualfish2sphere in optimisation mode, see -e option. One wants this to run 
+fast so choose a smallish image, say 1000 pixels. Don’t need antialiasing so 
+set that to 1. Must use blending because it is across the blend zone that the error 
+metric works, say 5 or 10 degrees. For example the command line might be
+</p>
+<pre>
+   dualfish2sphere -w 1000 -b 10 -e 100000 -a 1 outdoor.txt
+</pre>
+Each time the software finds a better estimate it will save a parameter 
+file. After the requested 100000 steps the best parameter set is given below, note this is in the
+format of a usual input parameter file for dualfish2sphere.
+</p>
+<pre>
+# Optimisation step 22924 of 100000
+# Error: 1137.68
+# delta aperture: 5 degrees
+# delta center: 20 pixels
+# delta theta: 5 degrees
+# blend width: 10 degrees
+# image 1
+IMAGE: outdoor.tga
+RADIUS: 905
+CENTER: 978 991
+#  Was: 970 980
+APERTURE: 192.3
+#    Was: 190.0
+ROTATEY: 7.0
+ROTATEX: 0.3
+ROTATEZ: -0.7
+ROTATEY: 0.1
+# image 2
+IMAGE: outdoor.tga
+RADIUS: 905
+CENTER: 2919 950
+#  Was: 2920 940
+APERTURE: 190.0
+#    Was: 190.0
+ROTATEY: -7.0
+</pre>
+
+<p align="justify">
+<b>3.</b>
+Check that the final parameters of best fit are not close to the range used for the random search. If 
+they are then it may mean you have missed the best value for that parameter. Use the optimal 
+parameter file to create the final image, and subsequent conversions.
+</p>
+<pre>
+    dualfish2sphere -w 3000 -b 10 -a 2 outdoor_08.txt
+</pre>
+<p align="justify">
+The resulting equirectangular is shown below.
+</p>
+
+<center>
+   <a href="http://paulbourke.net/dome/dualfish2sphere/outdoor_08_sph.jpg"><img src="http://paulbourke.net/dome/dualfish2sphere/outdoor_08_sph_s.jpg" width=800 height=400 border=1></a>
+</center><p>
+
+<b>Usage string</b><p>
+<pre>
+Usage: dualfish2sphere [options] parameterfile
+Options
+   -w n      sets the output image size, default: twice fisheye width
+   -a n      sets antialiasing level, default: 2
+   -b n      longitude width for blending, default: no blending
+   -q n      blend power, default: linear
+   -e n      optimise over n random steps
+   -p n n n  range search aperture, center and rotations, default: 10 20 5
+   -d        debug mode
+</pre>
+
+<b>Notes</b><p>
+<ul>
+<li><p align="justify">
+It is important to run the optimisation on a visually rich scene, the metric the algorithm
+uses is to calculate the squared difference between corresponding pixels in the blend zone.
+</p>
+<li><p align="justify">
+In general, due to parallax errors I suggest one would create 2 or 3 optimal parameter files for 
+different types of scene. One would use the appropriate one depending on the relative depth of the 
+scene and the important depth. So for example, the best parameter file for a group of people 
+sitting around the camera may be different than the parameter file for a landscape scene.
+</p>
+<li><p align="justify">
+The parameter files only need to be recomputed for a new camera rig or if the optical/geometric
+properties of the camera rig change.
+</p>
+<li><p align="justify">
+It is not necessary to search through the parameter space of the radius of the fisheye. This
+is because the radius and aperture are not independent, indeed the radius is defined as
+the distance at which the field of view is the aperture value.
+</p>
+</ul>
+
+</td></tr><table></center>
+</body>
+</html>
+

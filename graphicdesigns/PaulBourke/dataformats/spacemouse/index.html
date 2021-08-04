@@ -1,0 +1,300 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Decoding data from the Magellan Space Mouse</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+
+<center><table width=800><tr><Td>
+
+<center>
+<h1>Decoding data from the Magellen Space Mouse</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+December 2006
+</center>
+<p>
+
+<p align-="justify">
+The following gives introductory information to handling the data from the
+Magellan Spacemouse, a 6 degree of freedom input device. The version of the mouse
+used here is based upon the serial interface, communication settings are: 8 databits,
+1 stop bit, no parity, and 9600 baud. This note is not considered an exhaustive guide
+but covers most of the "useful" aspects, the rest are mostly guessable once the material
+covered here is understood.
+</p>
+
+<p align-="justify">
+All communication with the mouse is done with standard printable ascii characters.
+Communication and data terminations/separators are using either ascii character 13
+or 10, that is, carriage return or linefeed. The mouse can tell the application which
+of the buttons is pressed as well as the position and orientation from the 6 DOF puck.
+All communication with the mouse has the form of a single character that identifies
+the type of data (for example: "k" for key, "d" for position/angle data, and so on),
+this is followed by the data associated with that data type, and finally a line
+termination. All data is encoded as single nibbles, so two functions usually required
+are those that convert to and from nibbles (4 bits, so 0..15). For example, functions to encode
+and decode bytes for the Spacemosue are as follows.
+</p>
+<pre>
+unsigned char EncodeSpacemouse(int n)
+{     
+   int codes[16] = {'0','A','B','3','D','5','6','G','H','9',':','K','<','M','N','?'};
+   
+   if (n &gt;= 0 && n &lt;= 15)
+      return(codes[n]);
+   else  
+      return('0');
+}        
+</pre>
+
+<pre>
+/*
+    Convert characters to nibbles
+*/
+int DecodeSpacemouse(char c)
+{
+   int n;
+
+   switch (c) { 
+   case '0': n = 0; break;
+   case 'A': n = 1; break;
+   case 'B': n = 2; break;
+   case '3': n = 3; break;
+   case 'D': n = 4; break;
+   case '5': n = 5; break;
+   case '6': n = 6; break;
+   case 'G': n = 7; break;
+   case 'H': n = 8; break;
+   case '9': n = 9; break;
+   case ':': n = 10; break;
+   case 'K': n = 11; break;
+   case '<': n = 12; break;
+   case 'M': n = 13; break;
+   case 'N': n = 14; break;
+   case '?': n = 15; break;
+   default: n = 0; break;
+   }
+  
+   return(n);
+}
+</pre>
+
+<p align='justify">
+Each component of the position and orientation data are returned as 4 characters.
+They are reconstituted into an integer as follows:
+</p>
+<pre>
+/*
+   Convert string to numbers
+*/
+int ConvertSpacemouse(char *c)
+{
+   int n=0;
+
+   n += DecodeSpacemouse(c[0]) * 4096;
+   n += DecodeSpacemouse(c[1]) * 256;
+   n += DecodeSpacemouse(c[2]) * 16;
+   n += DecodeSpacemouse(c[3]);
+   n -= 32768;
+
+   return(n);
+}
+</pre>
+
+<p align='justify">
+There are a number of responses possible from the Spacemouse, the following lists
+all that are known by the author, comments are provided next to the more useful.
+In what follows the data from the Spacemouse until the termination character is read
+into a string "s", so the first element of the string s[0] is the identifier.
+</p>
+<center><table width=100% cellspacing=10>
+<tr><td valign="top">b</td>
+<td>Beep</td></tr>
+<tr><td valign="top">c</td>
+<td></td></tr>
+<tr><td valign="top">p</td>
+<td></td></tr>
+<tr><td valign="top">e</td>
+<td>Error, generally a communication error</td></tr>
+<tr><td valign="top">k</td>
+<td>Key press. The data consists of 3 bytes that should be decoded as:<br>
+key = DecodeSpacemouse(s[1]) + DecodeSpacemouse(s[2])*16 + DecodeSpacemouse(s[3])*256;</td></tr>
+<tr><td valign="top">m</td>
+<td>A mode change has occured. A mode consists of things like a change between just
+supplying position, or orientation. Mode 1 is just position is supplied, 2 is just orientation,
+and 3 is both. A single data bytes follows and should be decoded as:<br>
+mode = DecodeSpacemouse(s[1]);</td></tr>
+<tr><td valign="top">z</td>
+<td>Reset</td></tr>
+<tr><td valign="top">n</td>
+<td>Zero radius</td></tr>
+<tr><td valign="top">q</td>
+<td>Sensitivity. Two bytes are supplied as data corresponding to the sensitivity of the
+position and orientation. They are decoded individually as<br>
+sensitivity1 = DecodeSpacemouse(s[1]);<br>
+sensitivity2 = DecodeSpacemouse(s[2]);
+</td></tr>
+<tr><td valign="top">d</td>
+<td>Ths is the psition and orientation information. 24 bytes are supplied as data, 4 for
+each of 3 cartesian coordinates and 3 orientation angles. They are decoded as follows<br>
+p.x = ConvertSpacemouse(&s[1]);<br>
+p.z = ConvertSpacemouse(&s[5]);<br>
+p.y = ConvertSpacemouse(&s[9]);<br>
+thetax = ConvertSpacemouse(&s[21]);<br>
+thetay = ConvertSpacemouse(&s[13]);<br>
+thetaz = ConvertSpacemouse(&s[17]);<br>
+Note that it is the applications responsibility to scale these into appropriate ranges.
+The angle conventions also depend on the applications conventions.
+</td></tr>
+<tr><td valign="top">v</td>
+<td>Version number follows.</td></tr>
+</table></center><p>
+
+<p align="justify">
+There are a number of commands that can be sent to the Spacemouse, they generally
+follow a similar format to the above. In particular there are three things one generally
+should do to initialise the device and ensure it is working OK, these are listed below.
+</p>
+
+<center><table width=100% cellspacing=10>
+<tr><td valign="top">\rvz\r</td>
+<td>Reset the Spacemouse</td></tr>
+
+<tr><td valign="top">vQ\r</td>
+<td>Request the version number, this can be checked for something expected like the word "Magellan".</td></tr>
+
+<tr><td valign="top">kQ\r</td>
+<td>The requests that button presses result in a message being sent.</td></tr>
+
+<tr><td valign="top">m3\r</td>
+<td>Puts the device into mode 3 where translation and orientation are reported.</td></tr>
+</table></center><p>
+
+<p align="justify">
+Note that the user may control some aspects of the device using the buttons in conjuntion
+with the "*" button. Thee will be reported and the application can choose to take action
+or not depending on the result.
+</p>
+
+<p><br><br><br><p>
+
+
+
+
+<center>
+<h1>Decoding data from the MicroSoft Serial Mouse</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+April 2003
+</center>
+<p>
+
+<p align-="justify">
+The old MicroSoft serial mouse, while no longer in general use, can
+be employed to provide a low cost input device, for example, coupling
+the internal mechanism to other moving objects. The serial protocol for the
+mouse is 1200 baud, 7 bit, 1 stop bit, no parity. The pinout of the connector
+is standard serial as shown below.
+</p>
+<center><img src="http://paulbourke.net/dataformats/spacemouse/serialmouse.gif"></center><br>
+<center><table cellpadding=5>
+<tr>
+<td>Pin</td><td colspan=2>Description</td>
+</tr><tr>
+<td>1</td><td>DCD</td><td>Data carried detect</td>
+</tr><tr>
+<td>2</td><td>RD</td><td>Receive data</td>
+</tr><tr>
+<td>3</td><td>TD</td><td>Transmit data</td>
+</tr><tr>
+<td>4</td><td>DTR</td><td>Data terminal ready</td>
+</tr><tr>
+<td>5</td><td>SG</td><td>Signal ground</td>
+</tr><tr>
+<td>6</td><td>DSR</td><td>Data set ready</td>
+</tr><tr>
+<td>7</td><td>RTS</td><td>Request to send</td>
+</tr><tr>
+<td>8</td><td>CTS</td><td>Clear to send</td>
+</tr><tr>
+<td>9</td><td></td><td>Ring</td>
+</tr>
+</table></center>
+
+<p align="justify">
+Every time the mouse changes state (moved or button pressed)
+a three byte "packet" is sent to the serial interface. For reasons
+known only to the engineers, the data is arranged as follows, most
+notably the two high order bits for the x and y coordinates share
+the first byte with the button status.
+</p>
+<center><table border=0 cellpadding=5>
+<tr>
+<td></td><td>D6</td><td>D5</td><td>D4</td><td>D3</td><td>D2</td><td>D1</td><td>D0</td>
+</tr>
+<tr>
+<td>1st byte</td><td>1</td><td>LB</td><td>RB</td><td>Y7</td><td>Y6</td><td>X7</td><td>X6</td>
+</tr>
+<tr>
+<td>2nd byte</td><td>0</td><td>X5</td><td>X4</td><td>X3</td><td>X2</td><td>X1</td><td>X0</td>
+</tr>
+<tr>
+<td>3rd byte</td><td>0</td><td>Y5</td><td>Y4</td><td>Y3</td><td>Y2</td><td>Y1</td><td>Y0</td>
+</tr>
+</table></center>
+Where
+<ul>
+<li>LB is the state of the left  button, 1 = pressed, 0 = released.
+<p>
+<li>RB is the state of the right button, 1 = pressed, 0 = released
+<p>
+<li>X0-7 is movement of the mouse in the X direction since the
+          last packet.  Positive movement is toward the right.
+<p>
+<li>Y0-7 is movement of the mouse in the Y direction since the
+          last packet.  Positive movement is back, toward the user.
+</ul>
+<p>
+
+<p align="justify">
+Sample C code to decode three bytes from the mouse passed in "s", the
+button and position (x,y) are returned.
+</p>
+<pre>
+/*
+   s should consist of 3 bytes from the mouse
+*/
+void DecodeMouse(unsigned char *s,int *button,int *x,int *y)
+{
+   *button = 'n'; /* No button - should only happen on an error */
+   if ((s[0] & 0x20) != 0)
+      *button = 'l';
+   else if ((s[0] & 0x10) != 0)
+      *button = 'r';
+   *x = (s[0] & 0x03) * 64 + (s[1] & 0x3F);
+   if (*x &gt; 127)
+      *x = *x - 256;
+   *y = (s[0] & 0x0C) * 16 + (s[2] & 0x3F);
+   if (*y &gt; 127)
+      *y = *y - 256;
+}
+</pre>
+
+
+</td></tr></table></center><p>
+</body>
+</html>
+
+
+
+

@@ -1,0 +1,192 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>HDF tools</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>HDF Tools</h1>
+Compiled by <a href="../index.html">Paul Bourke</a><br>
+Nov 2010<p>
+<!--
+<a href="index_ru">Russian version</a> by <a href="https://www.wowessays.com/">wowessays</a><br>
+-->
+<a href="https://teletype.in/@patrickwright/sw7P_CEST">
+Russian version</a> by <a href="https://www.wowessays.com/">wowessays</a><br>
+</center><p><br><p>
+
+<p align="justify">
+The following is some (brief) documentation on HDF tools prepared to handle volumetric
+data stored as a number of slices in HDF format. If any of the following is not clear
+please feel free to ask for assistance/enlightenment. Note that the tools here make many
+assumptions of the particular data files and problem at hand, if you need more generality
+of additional capabilities/features then just ask.
+</p>
+
+<p align="justify">
+The various output volumetric files created here are formatted as per the Drishti
+raw format. This consists of a short header followed by the binary data. The header
+consists of a single byte indicating the volume data size (0 for unsigned byte,
+and 8 for float), followed by 3 integers (4 bytes each) indicating the volume dimensions (x,y,z).
+Following this is the volume data in the data format as indicated and arranged as
+z slices, y columns, and finally x varies the fastest. The output for the sub-sampling
+tools uses floats, unsigned chars are used for the threshold data. If using software that
+doesn't know how to read the raw data, there are 13 bytes to skip over to ignore the header.
+</p>
+
+<b>Notes</b><p>
+<ul>
+<li><p align="justify">
+The tools can be found in ~pbourke/bin/. You may copy the binaries but it would be better to add
+this directory to your path, this will mean you automatically get the benefit of bug
+fixes and other upgrades.
+</p>
+<li><p align="justify">
+The HDF files involved are actually saved as HDF version 4.25. As such you need to 
+load the module hdf4/4.2.5 (this only applies to cognac at the moment).
+</p>
+<li><p align="justify">
+The general assumption for the HDF files is that their name contains an indexing number
+starting from 0. This assumption means the specification for the slices uses the C string
+formatting conventions, examples are given in the usage strings below.
+</p>
+<li><p align="justify">
+Most of the tools here assume the collection of HDF files start with index 0 and the
+index values increases by 1 for each slice. Each slice must be the same dimensions.
+</p>
+<li><p align="justify">
+The tools here ask for the slice dimensions and for the number of slices. While this
+information could be derived from the HDF files and the number of them, the approach
+taken is used to (slightly) simplify the programming but it mostly 
+serves as a test that each file is as expected.
+</p>
+</ul>
+
+<h3>hdf2raw</h3>
+<p align="justify">
+This takes the list of HDF files and generates a single raw binary file of the volume.
+The sub-sampling is performed by simply sampling at a lower resolution. Intended mainly
+as a quick checking tool.
+</p>
+<pre>
+Usage: hdf2raw [options] nx ny nz hdf_file_mask
+
+   The volume is expected to be nx by ny by nz.
+   Where the input HDF files are images in nx by ny.
+   And nz slices, numbering from 0 upwards.
+
+   The hdf_file_mask is a C style descriptor.
+   For example A01/rec_E06ty_%05d.hdf would identify
+   hdf files in a directory called "A01" with names
+   rec_E06ty_00000.hdf, rec_E06ty_00001.hdf, ... etc
+
+   Options:
+   -s n      degree of sub-sampling (default: 1 = none)
+   -v        enable verbose mode
+</pre>
+<p><!-- ====================================================== --><p>
+
+<h3>hdfsubsample</h3>
+<p align="justify">
+Same functionality as hdf2raw but this averages the sub-sampled blocks, a simple bx
+filter is used. This is mainly aimed at a means of taking the raw volumetric data
+into other volume visualisation packages that expect a single binary volumetric data file.
+</p>
+<pre>
+Usage: hdfsubsample [options] nx ny nz hdf_file_mask
+
+   The volume is expected to be nx by ny by nz.
+   Where the input HDF files are images in nx by ny.
+   And nz slices, numbering from z0 upwards.
+
+   The hdf_file_mask is a C style descriptor.
+   For example A01/rec_E06ty_%05d.hdf would identify
+   hdf files in a directory called "A01" with names
+   rec_E06ty_00000.hdf, rec_E06ty_00001.hdf, ... etc
+
+   Options:
+   -s n      degree of sub-sampling (default: 4)
+   -z0 n     index of first slice (default: 0)
+</pre>
+<p><!-- ====================================================== --><p>
+
+<h3>hdfextract</h3>
+<p align="justify">
+This tool does a variety of things, but the main ones are extracting a sub-volume
+and performing a threshold operation. The sub-volume is defined by the origin and 
+dimensions on each axis, noting that they may be different. The thresholded dataset
+is one where the resulting voxels are 0 if the source voxel is outside the threshold
+range and 1 if it is within the threshold range. The normalisation, if chosen, determines
+the global range of the source volume and scales the range of each slice so it has the
+same range.
+</p>
+<pre>
+Usage: hdfextract [options] nx ny nz hdf_file_mask
+
+   The volume is expected to be nx by ny by nz.
+   Where the input HDF files are images in nx by ny.
+   And nz slices.
+
+   The hdf_file_mask is a C style descriptor.
+   For example A01/rec_E06ty_%05d.hdf would identify
+   hdf files in a directory called "A01" with names
+   rec_E06ty_00000.hdf, rec_E06ty_00001.hdf, ... etc
+
+   Options:
+   -t1 n     set the lower threshold value (default: 0)
+   -t2 n     optionally set the upper threshold value (default: 1e+32)
+   -dx n     size in x dimension of the subvolume (default: 128)
+   -dy n     size in y dimension of the subvolume (default: 128)
+   -dz n     size in z dimension of the subvolume (default: 128)
+   -s n      set size in all dimensions of the subvolume (default: 128)
+   -o n n n  origin of subvolume (default: 0 0 0)
+   -n v1 v2  normalise the global range to a chosen range v1 to v2 (default: off)
+   -v        enable verbose mode
+</pre>
+<p><!-- ====================================================== --><p>
+
+<h3>hdfinfo</h3>
+<p align="justify">
+Generates statistics (range, mean, standard deviation, histograms....) of the
+sequence of HDR files. Intended to give a quick snapshot of the volume slices and
+to ensure all files are valid.
+</p>
+<pre>
+Usage: hdfinfo [options] nx ny nz hdf_file_mask
+
+   The volume is expected to be nx by ny by nz.
+   Where the input HDF files are images in nx by ny.
+   And nz slices, numbering from 0 upwards.
+
+   The hdf_file_mask is a C style descriptor.
+   For example A01/rec_E06ty_%05d.hdf would identify
+   hdf files in a directory called "A01" with names
+   rec_E06ty_00000.hdf, rec_E06ty_00001.hdf, ... etc
+</pre>
+
+<p><!-- ====================================================== --><p>
+
+<h3>Source code</h3>
+<p align="justify">
+The HDF code used in these utilities is quite targeted to the files in question,
+it is provided here for reference: 
+<a href="http://paulbourke.net/dataformats/hdf/readhdf.c">readhdf.c</a> and <a href="http://paulbourke.net/dataformats/hdf/readhdf.h">readhdf.h</a>.
+</p>
+
+</td></tr></table></center>
+</body>
+</html>
+

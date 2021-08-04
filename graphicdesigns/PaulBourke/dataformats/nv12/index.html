@@ -1,0 +1,120 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>NV12 yuv pixel format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>NV12 yuv pixel format</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+August 2016
+</center>
+<p><br><p>
+
+<p align="justify">
+The NV12 image format is commonly found as the native format from
+various machine vision, and other, video cameras. 
+It is yet another variant where colour information is stored
+at a lower resolution than the intensity data.
+In the NV12 case the intensity (Y) data is stored as 8 bit samples,
+and the colour (Cr, Cb)
+information as 2x2 subsampled image, this is otherwise known as 4:2:0.
+The Y data is stored in one plane, the Cr and Cb channels are
+either interleaved in another plane or sometimes (in contrast to
+the official specification) in two planes.
+</p>
+
+Supposedly the official MicroSoft statement is:<br>
+<i>
+A format in which all Y samples are found first in memory as an 
+array of unsigned char with an even number of lines (possibly 
+with a larger stride for memory alignment), followed immediately 
+by an array of unsigned char containing interleaved Cb and Cr 
+samples (such that if addressed as a little-endian WORD type, 
+Cb would be in the LSBs and Cr would be in the MSBs) with the 
+same total stride as the Y samples. This is the preferred 4:2:0 
+pixel format.
+</i>
+
+<p align="justify">
+For example, where nx and ny are the width and height of the
+image respectively and the Cr and Cb are stored in separate
+planes.
+</p>
+<pre>
+   for (j=0;j%lt;ny;j++) {
+      for (i=0;i%lt;nx;i++) {
+          indexy = j*nx+i;
+          y[indexy] = fgetc(fptr);
+      }
+   }
+   for (j=0;j%lt;ny;j+=2) {
+      for (i=0;i%lt;nx;i+=2) {
+         indexuv = j*nx/4+i/2;
+         u[indexuv] = fgetc(fptr);
+      }
+   }
+   for (j=0;j%lt;ny;j+=2) {
+      for (i=0;i%lt;nx;i+=2) {
+         indexuv = j*nx/4+i/2;
+         v[indexuv] = fgetc(fptr);
+      }
+   }
+</pre>
+<p>
+
+<p align="justify">
+The YUV to RGB conversion can be based upon a few standards.
+</p>
+
+<pre>
+BITMAP3 YUV_to_RGB(int y,int u,int v)
+{
+   int r,g,b;
+   BITMAP3 bm = {0,0,0};
+   
+   // u and v are +-0.5
+   u -= 128;
+   v -= 128;
+
+   /* Conversion
+   r = y + 1.370705 * v;
+   g = y - 0.698001 * v - 0.337633 * u;
+   b = y + 1.732446 * u;
+   */
+   r = y + 1.402 * v;  
+   g = y - 0.34414 * u - 0.71414 * v;  
+   b = y + 1.772 * u; 
+
+   // Clamp to 0..1
+   if (r < 0) r = 0;
+   if (g < 0) g = 0;
+   if (b < 0) b = 0;
+   if (r > 255) r = 255;
+   if (g > 255) g = 255;
+   if (b > 255) b = 255;
+
+   bm.r = r;
+   bm.g = g;
+   bm.b = b;
+
+   return(bm);
+}
+</pre>
+
+</td></tr></table></center>
+</body>
+</html>

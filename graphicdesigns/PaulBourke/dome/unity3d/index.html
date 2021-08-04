@@ -1,0 +1,164 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Creating fisheye views with the Unity3D engine</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800 cellpadding=0 cellspacing=0><tr><td>
+
+<center>
+<h1>Creating fisheye views with the Unity3D engine</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+August 2011
+</center><p>
+<p><br><p>
+
+<p align="justify">
+Here I discuss a means of producing a fisheye image using the Unity3D gaming engine. 
+The approach has been introduced 
+<a href="../UnityiDome/index.html">here for the spherical mirror</a>. In that case
+a 180 degree fisheye is generated and subsequently warped. A 180 degree field of view
+can be achieved with a 4 pass approach, that is, 4 renders with camera frustums
+passing through the vertices of a cube with the view direction towards the midpoint of the
+edge between the left and right faces of the cube. In the following a wider field of view is
+created, namely up to a maximum of 250 degrees. It is based upon the same multipass
+render approach except now 5 cube faces are used, left-right-top-bottom-front, and the 
+view direction is towards the centre of the front face.
+</p>
+
+<p align="justify">
+The following illustrates the process. There are 5 coincident cameras, each pointing
+respectively left-right-top-bottom-front and each with a 90 degree field of view horizontally
+and vertically. Each of these camera views are rendered to a texture (requires Unity3D Pro)
+and each texture is then applied to the meshes found <a href="http://paulbourke.net/dome/unity3d/Archive.zip">here</a>.
+These meshes have been designed to create a fisheye when viewed with a orthographic
+camera. Given the 5 faces of the cube and
+the camera in the centre, the widest field of view is dictated by the angle to the
+corners of the side and top/bottom faces, this is approximately 250 degrees.
+The circular mask can be used to set a specific fisheye field of view, 240 degree in this
+example.
+</p>
+
+<center>
+   <a href="http://paulbourke.net/dome/unity3d/look1.png">
+   <img src="http://paulbourke.net/dome/unity3d/look1_s.png" width=800 height=451 border=1></a>
+</center><p>
+
+<p align="justify">
+The 5 meshes with their respective camera based textures are finally viewed with an orthographic
+camera. To prevent this mesh structure being visible in world, the 5 meshes and light source
+are placed on a separate layer. Similarly the scene lights do not illuminate the meshes
+and the single directional light for the mesh does not illuminate the scene.
+</p>
+
+<p align="justify">
+The view in game with the gamer panned up 90 degrees is shown below. The lines of longitude
+and latitude
+in the textured sphere are 10 degrees apart, one can see the field of view is 240 degrees.
+Other angles can be achieved by changing the size/radius of the mask.
+</p>
+
+<center>
+	<a href="http://paulbourke.net/dome/unity3d/look2.png">
+	<img src="http://paulbourke.net/dome/unity3d/look2_s.png" width=800 height=446 border=1></a>
+</center><p>
+
+<p align="justify">
+A discussion of the general technique for a 180 degree fisheye and 4 cube faces
+can also be found <a href="../../papers/cgat09b/index.html">here</a>.
+<br>
+A small sample Unity3D (Pro required) that illustrates a 210 and 240 degree fisheye
+is provided: <a href="http://paulbourke.net/dome/unity3d/Unity_5cube2fish.zip">Unity_5cube2fish.zip</a>.
+</p>
+
+<b>Addendum</b><p>
+<p align="justify">
+While the above is suited to a projector with a fisheye lens in a dome, there are other
+methods of fulldome projection. The only way to get higher resolution is to go to multiple
+projectors, and one option has a number of projectors around the rim of the dome. These
+projectors each cover overlapping regions of the dome surface, the projected imagery needs
+to be geometry corrected and an edge blending mask added to form a correct continuous
+image on the dome. There are two ways this can be achieved, the first is to do the geometry
+correction and blending in the software, that is, before the image is set to the graphics card.
+Unity can achieve this by adding a second rendering pass, transforming the image as per
+the earlier discussion or as per <a href="../UnityiDome/index.html">this</a> on the iDome.
+The second method involves the warping and blending being applied on the graphics card,
+both nVidia and ATI have mechanisms that simplify this process and there are a number of
+interfaces developed to either manually or automatically develop the geometry/warping data.
+From a software perspective this is a much simpler process because one only needs to create
+the right rectangular viewport that the geometry/blending expects.
+</p>
+<p align="justify">
+While there are a number of ways one might create the graphics for N projectors, one convenient
+way is from a single computer with multiple graphics pipes. As such, the way one creates imagery
+from Unity is very similar to the multi-projector rig described above for fisheye except now
+the camera orientations and field of view are prescribed by the dome calibration system.
+Additionally if the projection system consists of N projectors then typically they would be 
+arranged as a large tiled desktop in which case each virtual camera needs to be presented
+within each 1/N segment of that desktop. The following example should make this clear.
+</p>
+
+<center>
+	<img src="http://paulbourke.net/dome/unity3d/6view1.jpg" width=800 height=300 border=1><br>
+	<fons size=-1>6 virtual camera views arranged as a 3x2 grid and rendered by the
+	orthographic camera.</font>
+</center><p>
+
+<p align="justify">
+The rest is in the details. In this case consider 6 projectors, each being 1920x1200 resolution.
+Each virtual camera is set to render to a texture, each of those textures is then applied to a
+plane of the right aspect, the planes are arranged such that a final orthographic camera
+views them as a seamless 3x2 grid (as above). Each image above corresponds to a graphics pipe
+on which the warping/blending is applied. The 3x2 grid is an arbitrary choice, it could be set up as 
+6x1 or 2x3 and so on.
+</p>
+
+<center>
+   <img src="http://paulbourke.net/dome/unity3d/6view2.jpg" width=800 height=334 border=1><br>
+	<font size=-1>6 panels and orthographic camera in the model, but on their own invisible unlit layer</font>
+</center><p>
+
+Note that many camera and Unity settings need to be exactly right, in some cases
+for the result to work at all, in order cases to get optimal quality results.<p>
+<ul>
+<li>Textures for the render to texture need to be the aspect of the
+display, for example 1.6:1 for a 1920x1200 resolution projector set.
+The textures as applied to the 6 panels should be done so as unlit textures.
+<p>
+<li>The 6 panels onto which the render textures are applied
+need to be the correct aspect ratio, 1.6:1. They can be any size.
+<p>
+<li>The 6 panels need to be positioned exactly (depending on the size) to form
+a seamless 3x2 (in this case) grid and the orthographic camera centered.
+<p>
+<li>In order for the 6 panels not to be visible in the scene they should be on
+a separate layer that is invisible to the scene cameras.
+<p>
+<li>The viewport of the scene virtual cameras needs to be W=1.6, H=1.0,
+this is the usual normalised OpenGL style viewport settings.
+<p>
+<li>Finally the viewport for the ortho camera needs to be half the aspect of
+the tiled array, in this case the tiled array has an aspect of
+3*1920/(2*1200), or W=1.2, H=1.0. 
+</ul>
+
+<center>
+   <img src="http://paulbourke.net/dome/unity3d/6view3.jpg" width=800 height=325 border=1><br>
+   <font size=-1>Each panel with aspect 1920:1200 positioned perfectly with its neighbours</font>
+</center><p>
+
+</td></tr></table></center>
+</body>
+</html>
+

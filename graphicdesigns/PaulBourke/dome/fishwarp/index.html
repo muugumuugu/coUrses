@@ -1,0 +1,804 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Tools for Spherical Mirror Projection</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table cellpadding=0 border=0 cellspacing=0 width=800><tr><td>
+
+<center>
+<h1>Tools for Spherical Mirror Projection</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+First version: October 2019, minor updates June 2021<br>
+</center>
+<p>
+
+<b>Contents</b><p>
+<center><table border=0.5 cellspacing=0 cellpadding=5>
+<tr>
+	<td nowrap><b>Name</b></td>
+	<td><b>Description</b></td>
+	<td nowrap align="center"><b>Spherical mirror</b></td>
+	<td align="center"><b>Fisheye</b></td>
+</tr>
+<tr>
+   <td nowrap><a href="index.html#fisheye">Fisheye movie player</a></td>
+	<td>Plays a fisheye formatted movie</td>
+   <td align="center">Yes</td>
+   <td align="center">NA</td>
+</tr>
+<tr>
+   <td nowrap><A href="index.html#360">360 movie player</a></td>
+   <td>Plays an equirectangular formatted movie with controls to pan and tilt.</td>
+   <td align="center">Yes</td>
+   <td align="center">Yes</td>
+</tr>
+<tr>
+   <td nowrap><A href="index.html#360VR">360 VR movie player</a></td>
+   <td>Plays a VR (stereoscopic) top-bottom equirectangular movie
+	with controls to pan and tilt.</td>
+   <td align="center">Yes</td>
+   <td align="center">Yes</td>
+</tr>
+<tr>
+   <td nowrap><a href="index.html#standard">Standard movie player</a></td>
+   <td>Plays a standard (non-fisheye) movie. Provides controls to set the
+	height and scale of the movie frame on the dome.</td></td>
+   <td align="center">Yes</td>
+   <td align="center">Yes</td>
+</tr>
+<tr>
+   <td nowrap><a href="index.html#text">Warped text viewer</a></td>
+   <td>Places user chosen text on the dome including control of text position.
+	size, colour ...</td>
+   <td align="center">Yes</td>
+   <td align="center">Yes</td>
+</tr>
+<tr>
+   <td nowrap><a href="index.html#slide">Fisheye slide player</a></td>
+   <td>Runs a slide show of fisheye images, warped. Slide show can be manually
+   or automatically advanced.</td>
+   <td align="center">Yes</td>
+   <td align="center">NA</td>
+</tr>
+<tr>
+   <td nowrap><a href="index.html#slide2">Standard slide player</a></td>
+   <td>Runs a slide show of standard (non-fisheye) images, warped. Slide show can be manually
+   or automatically advanced.</td>
+   <td align="center">Yes</td>
+   <td align="center">Yes</td>
+</tr>
+<!--
+<tr>
+   <td nowrap><a href="#prewarp">Fisheye movie pre-warp</a></td>
+   <td>Converts a fisheye movie to a prewarped movie. EXPERIMENTAL</td>
+   <td align="center">Yes</td>
+   <td align="center">NA</td>
+</tr>
+-->
+<!--
+<tr>
+   <td></td>
+   <td></td>
+   <td align="center"></td>
+   <td align="center"></td>
+</tr>
+-->
+</table></center><p>
+<p><br><p>
+
+<b>Short history and older software by the author</b><p>
+<p align="justify">
+In 2003 the author developed the idea of using a spherical mirror for fulldome projection
+instead of the much more expensive fisheye lens options. Initially fisheye movies were
+pre-warped but it was quickly realised that was not a sensible approach, rather the fisheye
+movie should be warped during playback.
+Fortunately this is something that is straightforward
+for the graphics cards of the time and now.
+In 2005 the <a href="../warpplayer/index.html">warpplayer</a> software was developed
+to do exactly that, for Apple Macs. Later in 2013, a modified version of
+<a href="../VLCwarp/index.html">VLC</a> was created
+that supports real-time warping and was available for Mac and Windows.
+</p>
+
+<p align="justify">
+Unfortunately the above two solutions are showing their age and the realities of the
+technology they were built on means they are difficult to maintain. On the Mac at least,
+the following is an attempt to bring things up to date and base the solution on a more
+stable and future-proof (as far as one can) footing.
+</p>
+
+
+<b>Before purchasing</b><p>
+<p align="justify">
+All the playback solutions below have demonstration versions, PLEASE download and test these before
+purchasing.
+If for some reason the demo version does not work for you please contact the author.
+Please be advised that some of the downloads are rather large, this
+is due to the inclusion of short fisheye movies for testing purposes.
+</p>
+
+<b>Licensing</b><p>
+
+<ul>
+<li>Purchasing one of the solutions below entitles you to the whole set and the meshmapper application.<br>
+<li>The license is for a single computer, please respect this.<br>
+<li>Please contact the author for a quotation if you require licenses for multiple machines or clients.<br>
+</ul>
+
+
+
+<p><br><p>
+<!-- ******************************************************************************************** -->
+
+<a name="fisheye">&nbsp;</a>
+<table width=800 bgcolor="#dddddd" cellpadding=0 cellspacing=10>
+<tr><td valign="center" align="center">
+<b>Fisheye Movie Player</b>
+</td></tr></table><p>
+
+<b>Introduction</b><p>
+<p align="justify">
+The following documents a new (2019) Apple Mac
+fisheye movie playback solution for planetariums
+using a spherical mirror projection system.
+It is intended to replace the older, and less featured, 
+<a href="../warpplayer/index.html">WarpPlayer</a> application.
+It includes a simple control pane to select between different user installed fisheye movies,
+volume control, fisheye positioning, pause/play button and a preview on the operator console.
+And of course it allows one to supply a custom warp mesh for precise warping.
+</p>
+
+<b>Display settings</b><p>
+<p align="justify">
+The software expects two displays, the primary display identified by having the Apple
+menu bar along the top, and a secondary display attached to the data projector. These displays
+should not be mirrored, the settings accessed from the system preferences are shown below.
+</p>
+<center>
+	<a href="fisheyemovie1.png">
+	<img src="fisheyemovie1_s.png" width=800 height=391 border=0></a>
+</center><p>
+
+<p align="justify">
+Note that in general the two displays will not be the same size. The secondary display will
+typically be either 1920x1080 or 1920x1200, the primary display will be whatever the
+laptop or iMac screen resolution is.
+</p>
+
+<b>Player controls</b><p>
+<p align="justify">
+When the player application is run, two windows will be created. 
+One window will be on the secondary
+display, it will be full screen and it is where the warped movie will play (on the data projector).
+The other window will appear on the primary display, it will not be full screen, it contains
+the movie controls and will appear as follows although the movie name and preview rectangle
+will obviously reflect other movies than the two examples shown here.
+</p>
+
+<center>
+   <a href="fisheyemovie2.png">
+	<img src="fisheyemovie2.png" width=600 height=599 border=1></a>
+</center><p>
+
+<p align="justify">
+The meaning of the items on this window should be obvious. 
+The fisheye movie is previewed in the lower rectangle,
+the image on the secondary display is the warped version of this. The sound volume slider
+shown is a multiplier on the system sound levels, so when the slider is all the way
+to the right then the system sound level will be in effect.
+When the slider is all the way to the left then there will be no audio.
+</p>
+<p align="justify">
+In this example, the image on the secondary display will appear as follows, namely the
+warped version of the fisheye movie.
+</p>
+<center>
+   <a href="fisheyemovie3.png">
+	<img src="fisheyemovie3_s.png" width=800 height=449 border=1></a>
+</center><p>
+
+<p align="justify">
+This approach of using the secondary display facilitates seamless presentations. That is,
+one can launch the different tools independently without the audience seeing anything
+strange occuring between them, for example: menus bars, other windows, etc.
+The control pane on the operators screen would normally be invisible to the audience.
+</p>
+
+<b>Warp Mesh</b><p>
+<p align="justify">
+Any projection using a spherical mirror requires a description of how the fisheye is
+warped, such that after passing through the optical system (projector and mirror) the
+result on the dome looks correct. This is described by a mesh (vertices and texture
+coordinates) and stored in a so called <a href="../../dataformats/meshwarp/index.html">warpmesh file</a>.
+Ideally a warp mesh is created specifically for each installation since the warping
+required will depend on the exact geometry/optics. A tool for calibrating a particular 
+installation is <a href="../meshmapper/index.html">meshmapper</a> and is provided with this application. 
+Some installations find they can
+use a generic warpmesh and adjust the geometry/optics to match.
+</p>
+<p align="justify">
+Correct warping depends not on the resolution of the projector but only on the aspect
+ratio, the ratio of the width to height in pixels. 
+Two versions of this software are supplied for the two most common aspect ratios suited
+to spherical mirror projection, namely 16x9 and 16x10. 16x9 is suitable for projectors of
+resolution 1920x1080 and 1280x720, although the later is not recommended by the author.
+The most common 16x10 aspect ratio is for projectors with a resolution of 1920x1200
+(UXGA+) and 2560x1600 (WQXGA). 
+Other common data projection aspect ratios are 4x3 and 5x4, but these are not recommended
+for spherical mirror projection due to low pixel efficiency.
+Readers are asked to contact the author if they require
+ a version of the software for a different aspect ratio, or for higher resolution projectors
+such as WQXGA, 4K, and UHD.
+</p>
+
+<p align="justify">
+In order to use a site specific
+specific warping the warp mesh file should be named "warpmap.data" and
+placed in the package contents for the app. This is achieved by right mouse clicking
+(or control-click on laptop touch panels) on the
+application icon and choosing "Show Package Contents" from the pop-up menu, see below.
+</p>
+
+<center>
+	<img src="fisheyemovie4.png" width=369 height=531 border=1>
+</center><p>
+
+<p align="justify">
+The result, after expanding the Contents and Resources folders will look like the following,
+simply replace the warpmap.data file with the one designed for your particular set-up by
+the company you purchased the system from, or as a result of running the meshmapper
+calibration.
+</p>
+
+<center>
+	<img src="fisheyemovie5.png" width=548 height=450 border=1>
+</center><p>
+
+<b>Movies</b>
+<p align="justify">
+This fisheye movie player allows one to play any one of a number of movies. The movies that
+appear upon clicking the "Previous movie" and "Next movie" button are the ones found
+in the movies directory, also located in the Contents and Resources folder. To create your own
+playlist simply copy the movies you wish to play into that directory, as an example two
+short fisheye movies are supplied, see below.
+</p>
+<center>
+	<img src="fisheyemovie6.png" width=548 height=450 border=1>
+</center><p>
+
+<b>Navigation</b><p>
+<ul>
+<li><p align="justify">
+On occasion it is useful to be able to rotate the fisheye on the dome, this can be accomplished
+by holding the shift key down and moving the mouse left and right.
+<p>
+<li><p align="justify">
+If you decide you want to play a movie (or two) on the spur of the moment
+and you haven't already copied it into the movies directory, you can simply drag/drop
+the movie onto the control pane. That movie or movies will then appear at the end of
+the movie list.
+</p>
+</ul><p>
+
+<b>Test before buying</b><p>
+<p align="justify">
+To test before buying please download one of the following demonstration versions.
+These are full featured except the  movie is converted to greyscale the words "Demo version" are added.
+Please report problems with the demonstration version to the author.
+</p>
+
+<dl>
+<dd><a href="Fisheye&#32;Movie&#32;Player&#32;16x9&#32;Demo.dmg">Fisheye Movie Player Demo for 16x9 aspect projector</a><br>
+<dd><a href="Fisheye&#32;Movie&#32;Player&#32;16x10&#32;Demo.dmg">Fisheye Movie Player Demo for 16x10 aspect projector</a>
+</dl>
+
+
+
+<p><br><p>
+<!-- ******************************************************************************************** -->
+
+<a name="360">&nbsp;</a>
+<table width=800 bgcolor="#dddddd" cellpadding=0 cellspacing=10>
+<tr><td valign="center" align="center">
+<b>360 Movie Player</b>
+</td></tr></table><p>
+
+<p align="justify">
+The following operates essentially the same as the above except in this case it accepts
+a 360 movie, as typically captured from one of the <a href="../../panorama/360video/index.html">360 movie</a> 
+cameras on the market. The
+format of the image is expected to an equirectangular projection, 360 degrees of longitude
+and 180 degrees of latitude. The image should have a 2:1 aspect ratio, for example
+</p>
+<center>
+   <img src="360movie1.jpg" width=800 height=400 border=1>
+</center><p>
+
+<p align="justify">
+This movie player assumes a spherical mirror based projection system.
+If you have a fisheye lens projection system then the author is happy to produce a version for
+you, but additional information is required such as the pixel radius of the fisheye projection.
+Please contact the author for a version in this case, there is no additional cost for this customisation.
+</p>
+
+<b>Instructions</b>
+
+<p align="justify">
+The following assumes the reader is familiar with the documentation above for the fisheye
+case, only the differences will be presented.
+The expected display settings are the same as for the above. Namely two displays, the secondary connected
+to the data projector.
+The player controls are very similar, except now the preview shows the full equirectangular
+frame instead of a fisheye.
+</p>
+
+<center>
+   <a href="360movie2.png">
+	<img src="360movie2_s.png" width=600 height=600 border=0></a>
+</center><p>
+
+<p align="justify">
+The 360 movie is previewed in the lower rectangle,
+the image on the secondary display is the warped version 
+of an extracted fisheye view. See below for a description of how to interactively
+move this fisheye selection.
+</p>
+
+<p align="justify">
+In this example, the image on the secondary display will appear as follows.
+</p>
+<center>
+   <a href="360movie3.png">
+	<img src="360movie3_s.png" width=800 height=450 border=0></a>
+</center><p>
+
+<p align="justify">
+Movies are added to the play list by adding them to the "360video" directory, again located in the 
+Package Contents for the application. Alternatively to temporarily add movies to the playlist they
+can be dragged onto the player controls window.
+</p>
+<center>
+   <a href="360movie4.png">
+	<img src="360movie4_s.png" width=400 height=338 border=1></a>
+</center><p>
+
+<b>Navigation</b><p>
+<p align="justify">
+There are an infinite number of fisheyes that can be extracted from an equirectangular. The best
+can depend on the content and the orientation of the dome and/or seating. The arrow keys can be
+used to shift the fisheye view, the left and right arrows change the longitude, the up and down arrows
+change the latitude. Auto repeat is also supported for continuous movement. 
+Alternatively one can shift the
+fisheye by holding the shift key and moving the mouse while the player control window is active.
+Note that fast movement can be disorientating, smooth gradual movement is recommended.
+</p>
+
+<b>Warning</b><p>
+<p align="justify">
+360 movies can be much more compute/graphics demanding than fisheye movies. For one thing,
+for the same resolution they are twice the size. In addition to the warping required,
+which is the same as for the fisheye player, in this case the fisheye needs to be first
+extracted. As such, the computer power required for smooth playback may be more demanding.
+</p>
+
+<b>Test before buying</b><p>
+<dl>
+<dd><a href="360&#32;Movie&#32;Player&#32;16x9&#32;Demo.dmg">360 Movie Player Demo for 16x9 aspect projector</a><br>
+<dd><a href="360&#32;Movie&#32;Player&#32;16x10&#32;Demo.dmg">360 Movie Player Demo for 16x10 aspect projector</a><br>
+<dd><a href="360&#32;Movie&#32;Player&#32;(fisheye)&#32;Demo.dmg">360 Movie Player Demo for fisheye projector</a>
+</dl>
+
+
+
+
+<p><br><p>
+<!-- ******************************************************************************************** -->
+
+<a name="360VR">&nbsp;</a><br>
+<table width=800 bgcolor="#dddddd" cellpadding=0 cellspacing=10>
+<tr><td valign="center" align="center">
+<b>360 VR movie Player</b>
+</td></tr></table><p>
+
+<p align="justify">
+A version of the above 360 movie player is also provided for so called "VR" 360 movies. These
+movies are intended for stereoscopic viewing in VR headsets, the frame is split into two 
+halves vertically. The equirectangular movie for one eye in the top half of the frame and
+the equirectangular movie for the other half is in the bottom half of the frame.
+This player otherwise operates identically to the 360 movie player described above.
+</p>
+<center>
+   <a href="360VR.png">
+	<img src="360VR_s.png" width=600 height=601 border=1></a>
+</center><p>
+
+
+<p><br><p>
+<!-- ******************************************************************************************** -->
+
+<a name="standard">&nbsp;</a>
+<table width=800 bgcolor="#dddddd" cellpadding=0 cellspacing=10>
+<tr><td valign="center" align="center">
+<b>Standard (non-fisheye) movie player</b>
+</td></tr></table><p>
+
+<p align="justify">
+The following is in the same style as the two players above except this expects to
+play a standard (non-fisheye) movie on a section of the dome. Conceptually the movie
+is playing on a plane that is tangential to the  hemispherical dome surface, it is tilted
+at some angle and a certain distance away. 
+</p>
+
+<p align="justify">
+This movie player assumes a spherical mirror based projection system.
+If you have a fisheye lens projection system then the author is happy to produce a version for
+you, but additional information is required such as the pixel radius of the fisheye projection.
+Please contact the author for a version in this case, there is no additional cost for this customisation.
+</p>
+
+<b>Instructions</b>
+
+<p align="justify">
+The following assumes the reader is familiar with the documentation above for the fisheye
+case, only the differences will be presented.
+The expected display settings are the same as for the above. Namely two displays, the secondary connected
+to the data projector.
+The player controls are very similar to the previous players except now there
+are two additional sliders. One controls the angle of the movie plane above the spring line
+of the dome, the other controls the size of the movie and therefore how much of the dome it
+covers.
+</p>
+
+<center>
+   <a href="standardvideo1.png">
+	<img src="standardvideo1_s.png" width=600 height=601 border=0></a>
+</center><p>
+
+<p align="justify">
+Two different angle and scale values are shown below.
+The first is lower on the dome, the second is higher on the dome and slightly larger.
+</p>
+
+<center>
+	<a href="standardvideo2.png">
+	<img src="standardvideo2_s.png" width=800 height=450 border=1"></a>
+</center><p>
+<center>
+	<a href="standardvideo3.png">
+	<img src="standardvideo3_s.png" width=800 height=450 border=1"></a>
+</center><p>
+
+<p align="justify">
+Movies are added to the play list by adding them to the "videos" directory, again located in the
+Package Contents for the application. Alternatively to temporarily add movies to the playlist they
+can be dragged onto the player controls window.
+</p>
+<center>
+   <a href="standardvideo4.png">
+	<img src="standardvideo4.png" width=400 height=462 border=1></a>
+</center><p>
+
+<p align="justify">
+The background images can be found in the "backgrounds" directory in the package contents.
+The exact background can be chosen with the left and right arrow keys. Other backgrounds
+can be added, it is expected that they are square and fisheye projections.
+</p>
+
+<p align="justify">
+A version of the above standard video movie player is also provided that does not do
+any warping.
+This is intended for direct fisheye projection rather than spherical mirror systems.
+This player otherwise operates identically to the standard video movie player described above.
+</p>
+<center>
+   <a href="standardvideo5.png">
+   <img src="standardvideo5_s.png" width=800 height=800 border=1></a>
+</center><p>
+
+<b>Test before buying</b><p>
+<dl>
+<dd><a href="StandardVideo&#32;Movie&#32;Player&#32;16x9&#32;Demo.dmg">StandardVideo Movie Player Demo for 16x9 aspect projector</a><br>
+<dd><a href="StandardVideo&#32;Movie&#32;Player&#32;16x10&#32;Demo.dmg">StandardVideo Movie Player Demo for 16x10 aspect projector</a><br>
+<dd><a href="StandardVideo&#32;Movie&#32;Player&#32;(fisheye)&#32;Demo.dmg">StandardVideo Movie Player Demo for fisheye projector</a>
+</dl>
+
+
+
+<p><br><p>
+<!-- ******************************************************************************************** -->
+
+<a name="text">&nbsp;</a>
+<table width=800 bgcolor="#dddddd" cellpadding=0 cellspacing=10>
+<tr><td valign="center" align="center">
+<b>Warped text viewer</b>
+</td></tr></table><p>
+
+<p align="justify">
+The motivation of this utility is to put messages on the dome, warped correctly.
+These may be welcome messages, exit instructions, questionnaires, etc. 
+</p>
+
+<p align="justify">
+The background image selection (should be a fisheye), the warp mesh file, and the text
+message can be customised by editing/replacing the corresponding files in the
+package contents.
+</p>
+<center>
+	<img src="warptext1.png" width=400 height=417 border=0>
+</center><p>
+
+<p align="justify">
+The current control pane looks as follows.
+</p>
+<center>
+	<a href="warptext2.png">
+   <img src="warptext2_s.png" width=600 height=602 border=0></a>
+</center><p>
+
+<p align="justify">
+The output on the secondary display as follows.
+</p>
+<center>
+   <img src="warptext3.png" width=800 height=450 border=0>
+</center><p>
+
+<p align="justify">
+A version of the above is also provided that does not do any spherical mirror warping.
+This is intended for direct fisheye projection, the secondary display might look
+something like this.
+</p>
+<center>
+   <a href="warptext4.png">
+   <img src="warptext4_s.png" width=600 height=600 border=1></a>
+</center><p>
+
+<b>Test before buying</b><p>
+<dl>
+<dd><a href="Warped&#32;text&#32;viewer&#32;16x9&#32;demo.dmg">Warped text viewer demo for 16x9 aspect projector<br>
+<dd><a href="Warped&#32;text&#32;viewer&#32;16x10&#32;demo.dmg">Warped text viewer demo for 16x10 aspect projector<br>
+<dd><a href="Warped&#32;text&#32;viewer&#32;(fisheye)&#32;demo.dmg">Warped text viewer for fisheye projector</a>
+</dl>
+
+
+<p><br><p>
+<!-- ******************************************************************************************** -->
+
+<a name="slide">&nbsp;</a>
+<table width=800 bgcolor="#dddddd" cellpadding=0 cellspacing=10>
+<tr><td valign="center" align="center">
+<b>Fisheye Slide Player</b>
+</td></tr></table><p>
+
+<p align="justify">
+This software plays a slide show consisting of fisheye still images.
+</p>
+
+<p align="justify">
+The slide images and the warp mesh file
+can be customised by editing/replacing the corresponding files in the
+package contents.
+</p>
+<center>
+   <img src="fisheyeslide1.png" width=400 height=428 border=0>
+</center><p>
+
+<p align="justify">
+The current control pane looks as follows.
+</p>
+<center>
+   <a href="fisheyeslide2.png">
+   <img src="fisheyeslide2_s.png" width=600 height=602 border=0></a>
+</center><p>
+
+<p align="justify">
+The output on the secondary display as follows.
+</p>
+<center>
+	<a href="fisheyeslide3.png">
+   <img src="fisheyeslide3_s.png" width=800 height=449 border=0></a>
+</center><p>
+
+<dl>
+<dd><a href="Fisheye&#32;Slide&#32;Player&#32;16x9&#32;Demo.dmg">Fisheye Slide Player demo for 16x9 aspect projector.</a><br>
+<dd><a href="Fisheye&#32;Slide&#32;Player&#32;16x10&#32;Demo.dmg">Fisheye Slide Player demo for 16x10 aspect projector.</a><br>
+</dl>
+
+
+<p><br><p>
+<!-- ******************************************************************************************** -->
+
+<a name="slide2">&nbsp;</a>
+<table width=800 bgcolor="#dddddd" cellpadding=0 cellspacing=10>
+<tr><td valign="center" align="center">
+<b>Standard Slide Player</b>
+</td></tr></table><p>
+
+<p align="justify">
+This software plays a slide show consisting of standard (non-fisheye) images, correctly warped for
+fisheye projection or spherical mirror projection.
+</p>
+
+<p align="justify">
+The slide images and the warp mesh file
+can be customised by editing/replacing the corresponding files in the package contents.
+</p>
+<center>
+   <img src="standardslide1.png" width=400 height=519 border=0>
+</center><p>
+
+<p align="justify">
+The current control pane looks as follows.
+</p>
+<center>
+   <a href="standardslide2.png">
+   <img src="standardslide2_s.png" width=600 height=602 border=0></a>
+</center><p>
+
+<p align="justify">
+The output on the secondary display as follows.
+</p>
+<center>
+   <a href="standardslide3.png">
+   <img src="standardslide3_s.png" width=800 height=449 border=0></a>
+</center><p>
+
+<p align="justify">
+Secondary display example for a fisheye projection system.
+</p>
+<center>
+   <a href="standardslide4.png">
+   <img src="standardslide4_s.png" width=800 height=799 border=0></a>
+</center><p>
+
+<dl>
+<dd><a href="Standard&#32;Slide&#32;Player&#32;16x9&#32;Demo.dmg">Standard Slide Player demo for 16x9 aspect projector</a><br>
+<dd><a href="Standard&#32;Slide&#32;Player&#32;16x10&#32;Demo.dmg">Standard Slide Player demo for 16x10 aspect projector</a><br>
+<dd><a href="Standard&#32;Slide&#32;Player&#32;16x10&#32;Demo.dmg">Standard Slide Player demo for fisheye projection</a>.
+</dl>
+
+
+<p><br><p>
+<!-- ******************************************************************************************** -->
+
+<!--
+<a name="prewarp">&nbsp;</a>
+<table width=800 bgcolor="#dddddd" cellpadding=0 cellspacing=10>
+<tr><td valign="center" align="center">
+<b>Fisheye movie pre-warp (EXPERIMENTAL)</b>
+</td></tr></table><p>
+
+<p align="justify">
+The following tool allows one to create a prewarped version of a fisheye movie, suitable say, for playing
+from a low end device such as a media player. Note that in general the author does strongly recommends not
+creating prewarped versions of fisheye movies for other purposes, much better to 
+<a href="#fisheye">warp live on the fly</a>.
+One reason for discouraging 
+this is that a pre-warped movie only really suits a specific geometric/optical setup and
+as such cannot result in a correct warp across different dome installations.
+</p>
+
+<p align="justify">
+Unlike the previous <a href="../tgawarp/">pipeline</a> by the author
+this tool does the movie conversion without the need to extract the movie frames, warp them individually
+and then reassemble the movie. 
+</p>
+
+<p align="justify">
+The operation of the tool is quite straightforward. A movie should be drag-dropped onto the conversion
+application window, shown below. The start button should be pressed at which stage the conversion process will
+start, the application will quit when complete. The converted movie will have the same name as the original
+movie except with the word "_warped" appended.  This warped movie will be saved to the Desktop.
+The movie will be either H.264 (the default) or H.265 if that
+option is chosen, the movie will use the .mov container and extension.
+</p>
+
+<center>
+   <a href="prewarp1.png">
+	<img src="prewarp1.png" width=600 height=617 border=0></a>
+</center><p>
+
+<p align="justify">
+The tool is supplied with sample warp mesh files for
+the two most common aspect ratios for spherical mirror projection. The instructions for using a custom
+warp mesh is described for the other players listed above.
+</p>
+
+<b>Test before buying</b><p>
+<dl>
+<dd><a href="Fisheye Movie PreWarper 16x9 Demo.dmg">Fisheye pre-warp video converter Demo for 16x9 aspect projector</a><br>
+<dd><a href="Fisheye Movie PreWarper 16x10 Demo.dmg">Fisheye pre-warp video converter Demo for 16x10 aspect projector</a>
+</dl><p>
+
+<b>Note on MOV</b><p>
+<p align="justify">
+The tool above has been created primarily for Apple Macs, hence the choice of MOV as the movie
+container. It is accepted that this is not always the container of choice for Windows machines.
+It is quite easy to convert from MOV to mp4 (for example) in a lossless way by using the free
+ffmpeg software (there are lots of other ways as well but many/most will involve an undesirable
+recompression.
+</p>
+<pre>
+   ffmpeg -i moviename.mov -vcodec copy -acodec copy moviename.mp4
+</pre>
+-->
+
+
+<p><br><p>
+<!-- ******************************************************************************************** -->
+
+<a name="buying">&nbsp;</a>
+<table width=800 bgcolor="#dddddd" cellpadding=0 cellspacing=10>
+<tr><td valign="center" align="center">
+<b>Buying</b>
+</td></tr></table><p>
+
+<p align="justify">
+All the above software is available for the one price, that is, if you buy one then the others are
+also available. This includes <A href="../index.html">meshmapper</a> for creating customised warp mesh files.
+Please test the demonstration versions first, these are full featured except the movie is converted
+to greyscale and the words "Demo version" are added. Please report problems with the demonstration versions
+to the author.
+When you are ready, click on the PayPal purchase button below.
+</p>
+
+<center>
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+<input type="hidden" name="cmd" value="_s-xclick">
+<input type="hidden" name="hosted_button_id" value="59M3JBMNQ5KEA">
+<input type="image" src="https://www.paypalobjects.com/en_AU/i/btn/btn_buynowCC_LG.gif" border="0" name="submit" alt="PayPal – The safer, easier way to pay online!">
+<img alt="" border="0" src="https://www.paypalobjects.com/en_AU/i/scr/pixel.gif" width="1" height="1">
+</form>
+</center>
+<p>
+
+
+<b>Customisation</b><p>
+
+<p align="justify">
+The author is prepared to consider customised versions of the tools here, or new features.
+If you have feature requests feel free to send them by email. If multiple people ask for the same
+feature then it may be implemented in the future. Alternatively you may wish to commission
+a new feature or other customisation. The cost of any customisation will depend on the degree
+of difficulty and whether you require exclusive rights or if it can be shared with the
+community.
+</p>
+
+<p>
+<b>Update history</b><p>
+<ul>
+<li>June 2021: Added looping option to fisheye and standard image warping players.<br>
+<li>October 2019: First release of the <a href="index.html#fisheye">fisheye movie player</a>.<br>
+<li>November 2019: Added drag and drop of movies to temporarily add to playlist.<br>
+<li>November 2019: Created demo version for testing before buying.<br>
+<li>November 2019: Fixed window size for retina displays.<br>
+<li>December 2019: Released first version of the <a href="index.html#360">360 movie player</a>.<br>
+<li>January 2020: Released first version of the
+   <a href="index.html#standard">standard (non-fisheye) movie player</a>.<br>
+<li>February 2020: Released <a href="index.html#prewarp">pre-warping movie converter</a><br>
+<li>March 2020: Released player for <a href="index.html#360VR">VR (stereoscopic) 360 movie</a><bR>
+<li>March 2020: Fixed a problem with the "standard movie player when used in countries
+that use commas instead of periods for the decimal separator.<br>
+<li>March 2020: Added background image to "standard video" player.<br>
+<li>March 2020: Added fast forward control and buttons, where appropriate.<br>
+<li>April 2020: Updated all apps to version 1.1 with new features and interface consistency.
+Also added fisheye versions where appropriate.<br>
+</ul>
+<p>
+
+<p><br><br><br><p>
+</td></tr></table></center>
+</body>
+</html>
+

@@ -1,0 +1,460 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Sphere 2 fisheye</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Fisheye projections from spherical maps</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+May 2003, software updated January 2016<p>
+Update, October 2019: Added support for 
+<a href="../fisheyetypes/index.html">Orthographic, Stereographic and Equisolid mappings</a>.<p>
+See also: <a href="../../panorama/sphere2persp/index.html">
+Mapping a equirectangular projection to perspective</a><br>
+and
+<a href="../../panorama/sphere2pano/index.html">
+Mapping a equirectangular projection to a cylindrical panoramic projection</a><br>
+</center>
+<p>
+
+<p align="justify">
+<i>The source code implementing the projections below is only available
+on request for a small fee. It includes a demo application and an invitation to
+convert an image of your choice to verify the code does what you seek.
+For more information please contact the <a href="../../index.html">author</a>.</i>
+</p>
+<p><br><p>
+
+<p align="justify">
+"sphere2fish" takes a full spherical map and generates fisheye views
+given a center position for the fisheye, optionally an up vector, and an
+aperture from 0 to 360 degrees. In addition, the user may choose the
+level of antialiasing (supersampling) and an option to create a circularly
+bounds fisheye (traditional) or a rectangularly bound fisheye (the later is
+usually only appropriate for smaller aperture angles). The application is
+in the form of a UNIX style command line interface, a TGA file is expected
+for the input image (24 or 32 bit RGB), the output fisheye image is
+written to standard output. The usage message is given below.
+</p>
+
+<pre>
+Usage: sphere2fish [options] sphereimage
+Options
+   -w n       width and height of the fisheye image, default = 1024
+   -t n       fisheye FOV (degrees), default = 180
+   -c x y     center longitude and latitude of fisheye, default = 0 0 degrees
+   -u x y z   up vector, default = (0,0,1)
+              required for latitude = +- 90 degrees (poles)
+   -f         full rectangular fisheye instead of circular crop, default: off
+   -a n       antialiasing level, default = 2
+   -m n       fisheye mapping, default: 0 (equidistant)
+   -p n       fisheye power function for equidistant, default = 1 (disabled)
+   -o s       output file name, default: name derived from input filename
+   -bg r g b  background image colour (outside fisheye circle), default: black
+   -d         debug mode, default: off
+</pre>
+
+<p align="justify">
+The conventions used with the program as drawn below. In particular, zero
+longitude and latitude are taken to be in the center of the spherical image.
+</p>
+
+<center>
+<img src="http://paulbourke.net/dome/2fish/diagram2.gif" width=556 height=679>
+</center><P>
+
+<p align="justify">
+The following spherical image will be used to illustrate (and test)
+various capabilities of the fisheye generator.
+</p>
+
+<center>
+	<img src="http://paulbourke.net/dome/2fish/lobby.jpg" width=800 height=400 border=1><p>
+</center>
+
+<center><table><tr><td>
+	Default view conditions<br>
+	sphere2fish lobby.tga &gt; 1.tga<br>
+	<center>
+	<img src="http://paulbourke.net/dome/2fish/1.jpg" width=400 height=400 border=1>
+	</center>
+</td><td width=20>
+   &nbsp;
+</td><td>
+	From 90 degrees longitude<br>
+	sphere2fish -c 90 0 lobby.tga &gt; 2.tga<br>
+	<center>
+	<img src="http://paulbourke.net/dome/2fish/2.jpg" width=400 height=400 border=1>
+	</center>
+</td></tr></table></center><p>
+
+<center><table><tr><td>
+	From 45 degrees latitude<br>
+	sphere2fish -c 0 45 lobby.tga &gt; 3.tga<br>
+	<center>
+	<img src="http://paulbourke.net/dome/2fish/3.jpg" width=400 height=400 border=1>
+	</center>
+</td><td width=20>
+	&nbsp;
+</td><td>
+	Fisheye from north pole<br>
+	sphere2fish -c 0 90 lobby.tga &gt; 4.tga<br>
+	<center>
+	<img src="http://paulbourke.net/dome/2fish/4.jpg" width=400 height=400 border=1>
+	</center>
+</td></tr></table></center><p>
+
+<center><table><tr><td>
+	Fisheye from north pole and with different up vector<br>
+	sphere2fish -c 0 90 -u 0 1 0 lobby.tga &gt; 5.tga<br>
+	<center>
+	<img src="http://paulbourke.net/dome/2fish/5.jpg" width=400 height=400 border=1>
+	</center>
+</td><td width=20>
+   &nbsp;
+</td><td>
+	Extend to whole rectangular range<br>
+	sphere2fish -f lobby.tga &gt; 6.tga<br>
+	<center>
+	<img src="http://paulbourke.net/dome/2fish/6.jpg" width=400 height=400 border=1>
+	</center>
+</td></tr></table></center><p>
+
+<center><table><tr><td>
+	Full 360 degree fisheye<br>
+	sphere2fish -t 360 lobby.tga &gt; 7.tga<br>
+	<center>
+	<img src="http://paulbourke.net/dome/2fish/7.jpg" width=400 height=400 border=1>
+	</center>
+</td><td width=20>
+   &nbsp;
+</td><td>
+	90 degree fisheye<br>
+	sphere2fish -t 90 -f lobby.tga &gt; 8.tga<br>
+	<center>
+	<img src="http://paulbourke.net/dome/2fish/8.jpg" width=400 height=400 border=1>
+	</center>
+</td></tr></table></center><p>
+
+Camera roll<br>
+sphere2fish -c -60 0 -u 0 1 1 lobby.tga &gt; 9.tga<br>
+<center>
+<img src="http://paulbourke.net/dome/2fish/9.jpg"><bR>
+</center>
+<p>
+
+<b>Photographic example</b>
+<p align="justify">
+The following is a spherical projection stitched from 50 images using AutoPano Pro.
+Only a 1/2 hemisphere is captured. The original spherical projection image is
+22000x11000 pixels.
+</p>
+<center>
+<a href="http://paulbourke.net/dome/2fish/spherical_quarterres.jpg"><img src="http://paulbourke.net/dome/2fish/spherical_quarterres_s.jpg" width=800 height=400 border=1></a>
+</center><p>
+
+<p align="justify">
+In this case only one fisheye can be captured. If the full spherical projection was captured
+(only requiring twice the number of individual images) then a fisheye pointing in any
+direction can be sampled. The original fisheye images can be up to 10,000 pixels square.
+</p>
+<center>
+<a href="http://paulbourke.net/dome/2fish/fisheye_quarterres.jpg"><img src="http://paulbourke.net/dome/2fish/fisheye_quarterres_s.jpg" width=800 height=800 border=1></a>
+</center>
+
+<p><br><br><br><p>
+
+
+
+<center>
+<img src="http://paulbourke.net/dome/2fish/pan.jpg" width="900" height="75">
+<h1>Converting Images from Panoramic to Dome</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+February 2002<p>
+Example images courtesy (and copyright) Astro Copy Service, 
+Planetarium Augsburg, Germany<p>
+See also <a href="../fisheye/index.html">Angular fisheye projections</a>.<p>
+</center>
+<p>
+
+<p align="justify">
+The following will discuss the conversion of panoramic images into
+those suitable for display onto a dome, in particular, angular
+fisheye as used by the majority of planetarium domes. There are
+a number of panoramic image formats, they all use the same horizontal
+axis which ranges from 0 to 2 pi. There are however a number of 
+vertical distortions, the two most common are considered here.
+One is often called a radial panoramic where the vertical axis
+is considered to lie on the surface of a sphere, the other is a
+linear panoramic where the vertical axis results from a standard
+perspective projection. This second is the most common, the image
+is obtained by projecting onto a cylinder about the camera.
+</p>
+
+<p align="justify">
+As with most mappings the goal is to estimate the colour for each
+pixel in the destination image. The destination image in this case
+is the angular fisheye, the colour estimate will be determined by 
+the corresponding
+pixels in the source (panoramic) image. In general there isn't a 
+single pixel in the input image corresponding to a particular pixel in the
+destination image. For best results it is usual to find the closest
+pixel in the input image for a range of positions within each pixel
+in the destination image, these are averaged together to determine
+the final estimate of the colour. This is commonly called antialiasing,
+the simplest form of which is to estimate the colour by averaging over
+a 2x2 or 3x3 grid within each pixel.
+</p>
+
+<center><img src="http://paulbourke.net/dome/2fish/alias.gif" width="527" height="289"></center><p> 
+
+<p align="justify">
+The basic idea is to find the mapping between
+a coordinate system in the angular fisheye and a coordinate system in the
+panoramic image. The convenient coordinate system in the angular fisheye
+is "r" (the distance from the center of the pixel to the pixel in
+question) and the angle "phi" (angle of the vector to the pixel).
+The convenient coordinate system in the panoramic image is the same
+angle "phi" (the vertical axis of the panoramic), in both images this
+angle varies from 0 to 2 pi. The vertical axis of the panoramic is 
+proportional to the "r" in the angular fisheye. This is illustrated
+in the following figure.
+</p>
+
+<center><img src="http://paulbourke.net/dome/2fish/diagram.gif" width="528" height="512"></center><p> 
+
+<p align="justify">
+The conversion of the two types of panoramic image will be illustrated
+by transforming the following test pattern. This will be done for three
+values of thetamax, that is, the panoramic images will be assumed to
+vary vertically from 0 to 30, 60, and 90 degrees.
+</p>
+
+<center><img src="http://paulbourke.net/dome/2fish/grid.gif" width="900" height="226"></center><p>
+
+Radial panoramic<br>
+<center><img src="http://paulbourke.net/dome/2fish/radial.gif" width="900" height="295"></center><p>
+<p align="justify">
+The hole in the center for all but the 90 degree case reflects the lack
+of image data from thetamax to 90 degrees which is the central
+portion of the fisheye image.
+</p>
+
+Linear panoramic<br>
+<center><img src="http://paulbourke.net/dome/2fish/linear.gif" width="900" height="296"></center><p> 
+<p align="justify">
+The most obvious feature of this case is the extreme distortion
+that occurs as the fisheye tends to 90 degrees. Of course, while
+the distortion seems extreme below that is because the test image
+has a equal spacing grid, something that would not normally occur in a
+90 degree panoramic. A normal 90 degree panoramic would appear very
+distorted itself and the process of turning that into a dome image
+would correct for the distortion.
+</p>
+
+<p align="justify">
+The following is a 
+linear 45 degree angular fisheye of the panoramic shown at the top
+of this page.
+</p>
+<center><img src="http://paulbourke.net/dome/2fish/l45deg.jpg" width="600" height="600"></center><p>
+
+<b>Notes</b><p>
+
+<ul>
+<li><p align="justify">
+It has been assumed here that the panoramic extends from 0 degrees
+upwards along the vertical axis. This is because the discussion here
+has been targeted towards turning panoramas into images for
+projection in planetarium domes where one only sees above the
+horizon in both the panoramic and fisheye.
+</p>
+<li><p align="justify">
+Radius of the dome image is related to the length of the
+panoramic, namely, the diameter of the dome image is the
+width of the panoramic divided by pi. Other dome dimensions
+will result in a radial compression or stretching.
+</p>
+</ul>
+
+<b>Further Examples</b><bR>
+<p><center><img src="http://paulbourke.net/dome/2fish/egypt.gif" width=900 height=74></center>
+<p><center><img src="http://paulbourke.net/dome/2fish/egypt40.gif" width=680 height=680></center>
+<p>
+
+<p><center><img src="http://paulbourke.net/dome/2fish/southpole.gif" width=900 height=84></center>
+<p><center><img src="http://paulbourke.net/dome/2fish/southpole40.gif" width=680 height=680></center>
+
+<pre>
+pan2sph panfilename [options]
+Options:
+-t n       set max theta on vertical axis of panoramic, 0...90 (default: 45)
+-a n       set antialias level, 1 upwards, 2 or 3 typical (default: 2)
+-w n       width of the dome image, height = width (default: 512)
+-s         use sine function correction (default: off)
+-r n       rotation angle, 0...nx (default: 0)
+-f         flip insideout (default: off)
+-bg r g b  set background colour, 0...255 each (default: 0 0 0)
+</pre>
+
+<a href="http://paulbourke.net/dome/2fish/pano2fisheye.pdf">Diagram illustrating panorama within a circular fisheye for planetarium use</a>
+<p>
+
+<p>
+<b>Further exercise</b><br>
+December 2004
+<p>
+
+<pre>
+Usage: pano2fish [options] fisheyeimage
+Options
+-w n      fisheye image width and height, default = -1
+-r r1 r2  inner and outer radius of the fisheye image
+-h h1 h2  top and bottom panoramic edges
+-a n      antialiasing level, default = 1 (no antialising)
+-d        change direction of panoramic
+-p n      rotate by n degrees
+-c        clear region outside fisheye radius
+</pre>
+
+<center><table><tr><td>
+	<img border=0 src="http://paulbourke.net/dome/2fish/diagram3.gif" width=600 height=601 border=1><br>
+</td></tr></table></center><p>
+
+<b>Example</b><p>
+
+<center><table><tr><td>
+	Input image<br>
+	<img border=1 src="http://paulbourke.net/dome/2fish/pano.jpg" width=800 height=200 border=1><br>
+</td></tr></table></center><p>
+
+<center><table><tr><td>
+	Default settings<br>
+	<img border=1 src="http://paulbourke.net/dome/2fish/test1.jpg" width=400 height=400 border=1><br>
+	pano2fish -w 480 pano.tga
+</td><td width=20>
+   &nbsp;
+</td><td>
+	Set panoramic height range, measured from bottom of the image<br>
+	<img border=1 src="http://paulbourke.net/dome/2fish/test2.jpg" width=400 height=400 border=1><br>
+	pano2fish -a 2 -h 172 50 -w 480 pano.tga
+</td></tr></table></center><p>
+
+<center><table><tr><td>
+	Set the fisheye radius range, measured from the center of the fisheye<br>
+	<img border=1 src="http://paulbourke.net/dome/2fish/test3.jpg" width=400 height=400 border=1><br>
+	pano2fish -a 2 -h 172 50 -r 208 60 -w 480 pano.tga
+</td><td width=20>
+   &nbsp;
+</td><td>
+	Reverse panoramic direction<br>
+	<img border=1 src="http://paulbourke.net/dome/2fish/test4.jpg" width=400 height=400 border=1><br>
+	pano2fish -a 2 -h 172 50 -r 208 60 -w 480 -d pano.tga
+</td></tr></table></center><p>
+
+<center><table><tr><td>
+	Change phase<br>
+	<img border=1 src="http://paulbourke.net/dome/2fish/test5.jpg" width=400 height=400 border=1><br>
+	pano2fish -a 2 -h 172 50 -r 208 60 -w 480 -d -p 180 pano.tga
+</td><td width=20>
+   &nbsp;
+</td><td>
+	Invert mapping by swapping radius bounds<br>
+	<img border=1 src="http://paulbourke.net/dome/2fish/test6.jpg" width=400 height=400 border=1><br>
+	pano2fish -a 2 -h 172 50 -r 60 208 -w 480 pano.tga
+</td></tr></table></center><p>
+
+<center><table><tr><td>
+	Clear region outside radius range<br>
+	<img border=1 src="http://paulbourke.net/dome/2fish/test7.jpg" width=400 height=400 border=1><br>
+	pano2fish -a 2 -h 172 50 -r 208 60 -w 480 -c pano.tga
+</td></tr></table></center><p>
+
+<br>
+<b>Rendering software solution.</b><br>
+Update: February 2016
+<p>
+
+<p align="justify">
+There are now a number of plug-ins for compositing packages that allow one
+to work in polar coordinates, rather than Cartesian coordinates and also allow
+one to place various image projections (perspective, cylindrical, equirectangular)
+into the fisheye image space.
+But if one is used to a 3D modelling/rendering package or if one is creating
+realtime content then an alternative approach is to compose the non-fisheye
+elements in the 3D scene and then simple render the fisheye. For plane perspective
+images these may be placed on a billboard in the scene, at the desired position
+and angle. The image will appear on a flat surface in the dome oriented, positioned
+and sized as set in the model.
+</p>
+
+<p align="justify">
+In the case relevant here, one could place a cylinder in the 3D model world with
+the panorama on the surface as a texture. This cylinder should have the same horizontal
+angular extent as the panorama, not necessarily a full 360 degrees. The height of the cylinder
+would normally be fixed to the right aspect ratio of the panorama but the position and
+angle of the panorama could be varied as desired. Indeed, rotating and tilting the cylinder is
+a standard type of dome transition or way of enlivening what is otherwise a static image (of
+course the texture could also be a video sequence). Again, rendering the fisheye of the
+textured cylinder will ensure the geometric effect in the dome is the same as within
+the 3D model.
+</p>
+
+<p align="justify">
+Some examples are shown below, on the left is a view of the cylinder in relation to
+a polar grid representing the dome. On the right is the fisheye rendered from the
+middle of the dome.
+The examples here are created using PovRay but any 3D modelling/rendering package
+that supports a circular fisheye lens could be chosen.
+</p>
+
+<center>
+<table width=800><tr><td>
+	<a href="http://paulbourke.net/dome/2fish/polar0.png"><img src="http://paulbourke.net/dome/2fish/polar0s.png" width=390 height=390 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/dome/2fish/polar1.png"><img src="http://paulbourke.net/dome/2fish/polar1s.png" width=390 height=390 border=1></a>
+</td></tr></table></p>
+</center><p>
+
+<p align="justify">
+Raising the cylinder above the spring line of the dome.
+</p>
+
+<center>
+<table width=800><tr><td>
+   <a href="http://paulbourke.net/dome/2fish/polar0b.png"><img src="http://paulbourke.net/dome/2fish/polar0bs.png" width=390 height=390 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/dome/2fish/polar1b.png"><img src="http://paulbourke.net/dome/2fish/polar1bs.png" width=390 height=390 border=1></a>
+</td></tr></table></p>
+</center><p>
+
+<p align="justify">
+Rotating the cylinder with respect to the dome axis.
+</p>
+
+<center>
+<table width=800><tr><td>
+   <a href="http://paulbourke.net/dome/2fish/polar0c.png"><img src="http://paulbourke.net/dome/2fish/polar0cs.png" width=390 height=390 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/dome/2fish/polar1c.png"><img src="http://paulbourke.net/dome/2fish/polar1cs.png" width=390 height=390 border=1></a>
+</td></tr></table></p>
+</center><p>
+
+</td></tr></table></center>
+</body>
+</html>
+

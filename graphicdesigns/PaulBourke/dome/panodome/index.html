@@ -1,0 +1,341 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Interactive Dome Projection of Panoramic Images</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table cellpadding=0 border=0 cellspacing=0 width=800><tr><td>
+
+<center>
+<h1>Interactive Dome Projection<br>of Panoramic Images</h1>
+<h3>Alternative title: <font color="#770000">PanoDome, QuickTime VR on Steroids</font></h3>
+Written by <a href="../index.html">Paul Bourke</a><br>
+August 2004<br>
+Updated January 2005 to support <a href="../index.html">spherical mirror projection</a><p>
+<p align="justify">
+See also: <a href="../dometexture/index.html">Interactive fisheye image generation</a> for details on
+the algorithm used to create the projection interactively using hardware accelerated
+graphics hardware, namely using OpenGL.
+</p>
+
+<p align="justify">
+Featured first at BOK GLOBULE at Burning Man 2004 (August 30 - September 6th), 
+a 30 foot geodesic dome theatre
+constructed in celebration of the 2004 theme: Vault of Heaven.
+</p>
+
+</center>
+<p><br><p>
+
+<p align="justify">
+Most people are familiar with interactive viewing of panoramic images using
+various software products, originally popularised by QuickTime VR from Apple. 
+These calculated
+a perspective rectangular window from spherical panoramic, cylindrical
+panoramic, or cubic images. They typically allow the user to rotate the view direction
+of the camera and zoom in or out, all in realtime. 
+This demonstration application performs the same
+function except that instead of presenting a rectangular perspective output, it
+creates a angular fisheye image suitable for projection into dome environments.
+</p>
+<p>
+
+<b>Input image formats and output projector/fisheye lens configurations</b><br>
+<p align="justify">
+There are 3 widely used geometries for surround visual fields, they are spherical
+panoramas, cylindrical panoramas, and cubic environment maps. All are supported here along
+with some variants, they are each illustrated in the text below. 
+</p>
+<center><table cellspacing=0 cellpadding=0 border=0><tr><td width=300 valign="top">
+<center><a href="http://paulbourke.net/dome/panodome/sample1.jpg">
+	<img src="http://paulbourke.net/dome/panodome/sample1s.jpg" width=300 height=225 border=1><br>
+</center></a>
+<font size=-1>Five surround image input formats<br>
+[Peter Murphy]</font>
+</td><td width=20>&nbsp;</td><td valign="top" width=300>
+<center><a href="http://paulbourke.net/dome/panodome/sample2.jpg">
+   <img src="http://paulbourke.net/dome/panodome/sample2s.jpg" width=300 height=225 border=1><br>
+</center></a>
+<font size=-1>Four projector/fisheye lens configurations<br>
+[Peter Morse, Terragen]</font>
+</td></tr></table></center><p>
+
+<p align="justify">
+There are additionally
+a number of ways of aligning the angular fisheye image (which is circular)
+within the rectangular region
+of the projector, typically with a 4:3 aspect ratio.
+</p>
+<center><img src="http://paulbourke.net/dome/panodome/lens.gif" width=700 height=137 border=0></center><p>
+
+<b>Cylindrical panoramic</b><br>
+<p align="justify">
+The majority of panoramic images extend 360 degrees in longitude but are typically
+restricted vertically. This is often not a great loss for a perspective projection
+and the vertical navigation is often limited so the user doesn't "look" too 
+far up or down. In this implementation the user is free to look anywhere, the 
+areas in latitude not included in the panoramic image are displayed as black.
+</p>
+<center><table cellspacing=0 cellpadding=0 border=0><tr><td width=300 valign="top">
+<center>
+   <img src="http://paulbourke.net/dome/panodome/cyl.gif" width=300 height=77 border=0><br>
+   <img src="http://paulbourke.net/dome/panodome/cylb.gif" width=300 height=150 border=1><br>
+</center>
+</td><td width=20>&nbsp;</td><td width=300 valign="top">
+<center><a href="http://paulbourke.net/dome/panodome/sample5.jpg">
+   <img src="http://paulbourke.net/dome/panodome/sample5s.jpg" width=300 height=225 border=1><br>
+</center></a>
+<font size=-1>Cylindrical<br>[Peter Murphy]</font>
+</td></tr></table></center><p>
+
+<b>Full spherical panoramic</b><br>
+<p align="justify">
+Unlike the cylindrical panoramic image, the spherical typically represents the
+entire spherical field, 360 degrees in longitude and from -90 (South pole)
+to 90 (North pole) degrees in latitude. There is a singularity at the North and South
+poles where those single points in 3D space are stretched along the entire top
+and bottom edge of the spherical panoramic image.
+</p>
+<center><table cellspacing=0 cellpadding=0 border=0><tr><td width=300 valign="top">
+<center>
+   <img src="http://paulbourke.net/dome/panodome/sphere.gif" width=300 height=77 border=0><br>
+   <img src="http://paulbourke.net/dome/panodome/sphereb.gif" width=300 height=150 border=1><br>
+</center>
+</td><td width=20>&nbsp;</td><td width=300 valign="top">
+<center><a href="http://paulbourke.net/dome/panodome/sample3.jpg">
+   <img src="http://paulbourke.net/dome/panodome/sample3s.jpg" width=300 height=225 border=1><br>
+</center></a>
+<font size=-1>Variable dome texture coordinate resolution<br>
+[Peter Murphy]</font>
+</td></tr></table></center><p>
+
+<b>Cubic environment, 6 sides</b><br>
+<p align="justify">
+This and the spherical panoramic input image type are the two environment
+maps that support a full spherical navigation. While the spherical option is
+more suited to real world filming options, the cubic environments are more
+suited to computer modelled/rendered environments. Computer rendering applications
+don't always support fisheye or panoramic projection but they all support 90
+degree square perspective projections.
+</p>
+<center><table cellspacing=0 cellpadding=0 border=0><tr><td width=300 valign="top">
+<center>
+   <img src="http://paulbourke.net/dome/panodome/cube6.gif" width=300 height=152 border=0><br>
+   <img src="http://paulbourke.net/dome/panodome/cube6b.gif" width=300 height=150 border=1><br>
+</center>
+</td><td width=20>&nbsp;</td><td width=300 valign="top">
+<center><a href="http://paulbourke.net/dome/panodome/sample6.jpg">
+   <img src="http://paulbourke.net/dome/panodome/sample6s.jpg" width=300 height=225 border=1><br>
+</center></a>
+<font size=-1>Venus<br>
+[Paul Bourke, Terragen]<br>
+Note: the configuration of the input image on the left. The bottom face
+of the cube is placed in the top right hand corner but it is aligned in such
+as way that it's "natural" position is below the "front" image.
+</font>
+</td></tr></table></center><p>
+
+<b>Cubic environment, 4 sides</b><br>
+<p align="justify">
+This input image just consists of the 4 faces of the cubic environment, that
+is, the top and bottom faces are missing.
+As with cylindrical panoramic images, the areas in the dome that correspond to
+the top and bottom faces of the cube are shown in black.
+</p>
+<center><table cellspacing=0 cellpadding=0 border=0><tr><td width=300 valign="top">
+<center>
+   <img src="http://paulbourke.net/dome/panodome/cube4.gif" width=298 height=91 border=0><br>
+   <img src="http://paulbourke.net/dome/panodome/cube4b.gif" width=300 height=75 border=1><br>
+</center>
+</td><td width=20>&nbsp;</td><td width=300 valign="top">
+<center><a href="http://paulbourke.net/dome/panodome/sample4.jpg">
+   <img src="http://paulbourke.net/dome/panodome/sample4s.jpg" width=300 height=225 border=1><br>
+</center></a>
+<font size=-1>Support for partial cubic maps<br>[elumenati]</font>
+</td></tr></table></center><p>
+
+<b>Upward pointing fisheye</b> (New: May 2006)<br>
+<p align="justify">
+While a fisheye image doesn't contain the entire field of view of some of the other
+image formats, this option does at
+least allow one to spin a fisheye image around within a planetarium. The lower
+hemisphere will just appear black, use the middle mouse for a rotate, the "[","]" keys,
+or auto rotate with "b", "B". There is a "view up" option in the menus that may also be
+useful for orientating the camera correctly.
+</p>
+<center><table cellspacing=0 cellpadding=0 border=0><tr><td width=300 valign="top">
+<center>
+   <img src="http://paulbourke.net/dome/panodome/petra.jpg" width=300 height=300 border=1><br>
+</center>
+</td><td width=20>&nbsp;</td><td width=300 valign="top">
+<center><a href="http://paulbourke.net/dome/panodome/petra_warp.jpg">
+   <img src="http://paulbourke.net/dome/panodome/petra_warp_s.jpg" width=300 height=225 border=1><br>
+</center></a>
+<font size=-1>Support for upward pointing fisheye images<br>[Carolyn Sumners, Petra]</font>
+</td></tr></table></center><p>
+
+<b>Command line usage</b><br>
+<p align="justify">
+At the time of writing the application has been developed using
+Mac OS-X but just as a UNIX application, it therefore also builds
+straightforwardly under Linux. 
+</p>
+<pre>
+Usage: panodome [options] tgafile
+Options
+                  -h        this text
+                  -p n      projector/lens configuration [1,2,3,4,5,6]
+                  -f        full screen
+                -fps n      target frames per second
+                  -s        spherical map (default)
+                  -c        input image is a cylindrical map
+                  -l        input image is a planar map
+                  -b        input image is a cubic map (6 faces)
+                  -w        input image is a cubic map (4 faces)
+                  -u        input image is up pointing fisheye
+                  -o s      open state file
+                  -r n      dome resolution [3,4,5]
+                  -a n      camera aperture, 90 to 180
+                 -bg r g b  background colour
+                  -m s      read map file for spherical mirror projection
+                  -d        verbose mode
+Key Strokes
+              arrows        rotate camera
+   left mouse button        rotate camera
+                 [,]        roll camera
+ middle mouse button        roll camera
+  right mouse button        menus
+        shift-arrows        change fisheye offset in plane
+           shift-<,>        change fisheye offset in depth
+                 a,A        autorotate control (camera)
+                 b,B        autorotate control (panoramic)
+                   h        camera home
+                  f1        toggle stats
+                  f2        toggle mesh
+                  f3        toggle intensity map (warp map only
+                  f4        toggle textures
+                   w        dump window to TGA file
+                   q        quit
+</pre>
+
+<b>Notes</b><br>
+<ul>
+<li><p align="justify">
+Because the input image is recursively bisected so they can be more efficiently 
+applied as textures,
+the input image width and height must be a power of 2. Typically one scales the
+image width to a power of 2 (eg: 4096 pixels) and then crops or pads the height
+so that it is a power of 2. At the time of writing the maximum size image
+that can be handled and still achieve smooth interaction is roughly as follows.
+</p>
+<pre>
+    Width: <2048    Almost any graphics card today can handle this.
+            4096    Requires better than average cards.
+           >8192    Requires the better cards on the market.
+</pre>
+<li><p align="justify">
+Options are available through the menus (right mouse click). For Mac users
+with a single button mouse see the GLUT preferences for button emulation,
+normally control-click for the right button and option-click for the middle
+button.
+</p>
+<li><p align="justify">
+In the majority of practical uses (fisheye lens or spherical mirror) it needs
+to be run in full screen mode. This is generally not a problem for Mac OS-X but
+it can be an issue with many/most Linux based window managers and most
+implementations of GLUT for Linux. In particular, the release versions of OpenGLUT
+and FreeGLUT seem not have problems, the original MesaGLUT seems to implement
+fullscreen mode properly.
+</p>
+<li><p align="justify">
+Spherical panoramic images are assumed to extend from -90 to 90 degrees in latitude.
+The latitude range for cylindrical panoramas is derived from the width to height
+ratio of the image and is assumed to be centered about equator (0 degrees latitude).
+</p>
+<li><p align="justify">
+Currently 4 views are rendered internally and the resulting textures mapped onto
+the appropriately textured fisheye disk. 4 views are required for the full dome
+option but only three views are strictly required for the two truncated dome
+projection options. A further 25% performance increase could be achieved if 
+one wanted to optimise for a truncated dome arrangement.
+</p>
+<li><p align="justify">
+An attempt is made to handle different projector aspect ratios, however, there
+is no assurance that the way your particular lens is aligned with the rectangular
+projector image is replicated identically by this software.
+</p>
+<li><p align="justify">
+The input image must be either a 24 or 32 bit TGA file, compressed or otherwise.
+Other file formats can readily be added in the future.
+</p>
+</ul>
+<p>
+
+<center><table width=100%><tr><td align="center" valign="top">
+<center>
+<a href="http://paulbourke.net/dome/panodome/galaxy.jpg">
+<img src="http://paulbourke.net/dome/panodome/galaxy_s.jpg" width=400 border=1 height=400></a><br>
+<font size=-1>Fisheye window dump from high resolution spherical panoramic 
+images from Dr. Axel Mellinger, Universitaet Potsdam.</font>
+</center>
+</td><td align="center" valign="top">
+<center>
+<a href="http://paulbourke.net/dome/panodome/bokglobule.jpg">
+<img src="http://paulbourke.net/dome/panodome/bokglobule_s.jpg" border=1 width=400 height=300></a><br>
+<font size=-1>First public appearance of panodome, Bok-Globule at Burning Man 
+2004, Courtesy of David McConville, The Elumenati.</font>
+</center>
+</td></tr></table></center><p>
+
+<b>Updated to support <a href="../index.html">spherical mirror projection</a></b><br>
+January 2005<p>
+<center>
+<table width=100%><tr><td>
+	<img src="http://paulbourke.net/dome/panodome/mirror1.jpg" width=400 height=300 border=1>
+</td><td>
+	<img src="http://paulbourke.net/dome/panodome/mirror2.jpg" width=400 height=300 border=1>
+</td></tr></table>
+</center><p>
+
+<center>
+<table width=100%><tr><td>
+	<a href="http://paulbourke.net/dome/panodome/reb1.jpg">
+	<img src="http://paulbourke.net/dome/panodome/reb1_s.jpg" width=400 height=300 border=1></a>
+</td><td>
+	<a href="http://paulbourke.net/dome/panodome/reb2.jpg">
+	<img src="http://paulbourke.net/dome/panodome/reb2_s.jpg" width=400 height=300 border=1></a>
+</td></tr></table>
+</center><p>
+
+<b>Mac OS-X GLUT preferences</b><p>
+<p align="justify">
+To set the GLUT preferences (permanently) for Mac OS-X, run panodome (or
+any GLUT based application) in windowed mode (don't use -f). Choose 
+preferences and perhaps set them as follows. Quit from panodome, all
+GLUT based applications will use these preferences from now on.
+</p>
+<center>
+<table width=100%><tr><td align="center" valign="top">
+	<a href="http://paulbourke.net/dome/panodome/pref1.jpg">
+	<img src="http://paulbourke.net/dome/panodome/pref1_s.jpg" width=300 height=252 border=1></a>
+</td><td align="center" valign="top">
+	<a href="http://paulbourke.net/dome/panodome/pref2.jpg">
+	<img src="http://paulbourke.net/dome/panodome/pref2_s.jpg" width=300 height=252 border=1></a>
+</td></tr></table>
+</center><p>
+
+</td></tr></table></center>
+</body>
+</html>
+

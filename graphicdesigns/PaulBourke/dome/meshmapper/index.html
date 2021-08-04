@@ -1,0 +1,284 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>meshmapper</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>meshmapper</h1>
+<h3>Calibration tool for dome projection using a spherical mirror and single projector.</h3>
+Available for Mac OS-X<br>
+Written by <a href="../index.html">Paul Bourke</a><br>
+July 2007<p>
+<a href="http://paulbourke.net/dome/meshmapper/meshmapper.pdf">Subsequent notes for a 8m dome</a> (Updated 2012)<br>
+<a href="http://paulbourke.net/dome/meshmapper/Meshmapper_instructions.pdf">Instructions for Taiwan</a> (Updated 2021)
+</center>
+<p><br><p>
+
+<p align="justify">
+"meshmapper" is a utility that allows one to create precise warping maps for projection
+systems using a single projector and a spherical mirror, 
+a technique called variously "sphemir" and
+"mirrordome". These may be upright domes such as <a href="../iDome/index.html">these</a>,
+planetariums such as
+<a href="../domeinstall/index.html">these</a>, and even more
+exotic spherical environments such as <a href="../isphere/index.html">these</a>. The following is
+a brief outline of the procedure one might use, please note that because the software
+described here is "utility" style UNIX application, one is expected to have some technical
+skills ... it is also still evolving.
+</p>
+
+<p align="justify">
+In essence the software is a simulator that takes as inputs the geometric and optical
+characteristics of the projection system. Some of these parameters can be measured
+reasonably accurately, others are more difficult. The idea is that one inputs an image
+for which the result on the projection surface is known, the parameters are then
+adjusted until the correct (known) visual result is obtained on the projection surface. For example,
+in a dome one knows the correct appearance of a polar grid (lines of longitude and latitude)
+such as the following image: <a href="http://paulbourke.net/dome/meshmapper/radialgrid.tga.zip">radialgrid.tga.zip</a>.
+</p>
+<center><img src="http://paulbourke.net/dome/meshmapper/radial_s.jpg" border=1></center><p>
+
+<p align="justify">
+If the correct parameters are applied to the simulator then the image will appear correct
+on the dome, "meshmapper" allows the operator to interactively modify the parameters until
+the correct visual effect is obtained, for example, for an upright dome this would be the
+test pattern appearing on the dome as follows.
+</p>
+<center><img src="http://paulbourke.net/dome/meshmapper/radial2.jpg" border=1></center><p>
+
+The parameters required fall into three groups as follows:<br>
+<ul>
+<li>Dome: radius, position, tilt angle<br>
+<li>Projector: position, tilt angle, throw angle, offset angle, direction<br>
+<li>Mirror: radius, position<br>
+</ul>
+
+<p align="justify">
+While some parameters such as the positions of the components can be measured reasonably
+accurately, others can be determined less well. In particular, estimating the projector
+throw (varies with zoom setting), the projector tilting and offset angle. These can be
+varied using keyboard controls in order to achieve a precise match. For example, the image
+and settings (top left corner panel) for the above calibration is shown below.
+</p>
+<center><a href="http://paulbourke.net/dome/meshmapper/screendump.jpg"><img src="http://paulbourke.net/dome/meshmapper/screendump_s.jpg" border=1></a></center><p>
+
+<p align="justify">
+The parameters are changed by first selecting which object will be modified (projector,
+mirror, or dome) by using the keys "p", "m", or "d". The object being modified is indicated
+in the panel on the top left of the display.
+Parameter values are then changed by using
+the lower and upper case of various letters, lower case decreases the value, upper-case
+increases the value. So for example once the mirror object is chosen, then hitting the
+"r" key will reduce the radius of the mirror, while "R" will increase the radius of the
+mirror. Positions of the mirror and projector (dome is fixed at the origin) can only
+be adjusted in the x-z plane using the keys "x", "X", "z", and "Z".
+For more details see the usage string below, "meshmapper" is a command line utility, the
+following string is displayed with "meshmapper -h".
+</p>
+
+<pre>
+Usage: meshmapper [options] tgaimage
+Options
+   -h     this text
+   -p     use a polar mesh rather than cartesian
+   -f     full screen
+   -d     verbose/debug mode
+   -r s   read existing geometry file
+Left mouse button for popup menus
+
+Keyboard
+          h     camera home
+          p     choose to modify projector
+          m     choose to modify mirror
+          d     choose to modify dome
+  0,1,2,3,4     choose to modify mesh node
+          n     modify nothing
+        x,X     modify position (projector, mirror, mesh)
+        z,Z     modify position (projector, mirror, mesh)
+        y,Y     modify position (mesh)
+        r,R     modify radius (mirror or dome)
+        a,A     modify tilt angle (projector or dome)
+        b,B     modify bearing (dome)
+        t,T     modify throw (projector)
+        o,O     modify offset (projector)
+          f     modify dome top (dome)
+          w     windowdump
+      esc,q     quit
+</pre>
+
+<p align="justify">
+Various additional options are available through the pop-up menus (right mouse button).
+Of particular note is the mesh resolution and the image geometry. The keyboard keys shown
+in the usage above are also available on screen, see the "Toggle interface help" in the
+pop-up menu.
+</p>
+
+<p align="justify">
+The current settings are saved in a file called "last.cfg" that will be saved in the
+same location as the application. A sample configuration file is given for an upright dome
+(<a href="http://paulbourke.net/dome/meshmapper/upright.cfg">upright.cfg</a>) and a planetarium configuration
+(<a href="http://paulbourke.net/dome/meshmapper/planetarium.cfg">planetarium.cfg</a>). These can be used as starting points for the
+two different orientations (rename them "last.cfg"). These are just text files and can be
+edited as such before running "meshmapper", indeed this is usually the way one would start
+with a new calibration. At the time of writing the aspect ratio (typically 4/3 or 16/9) can
+only be set by editing this file.
+</p>
+
+<p align="justify">
+Once the calibration is complete a warping mesh file can be written using the "Save XYUV
+warp mesh", see the pop-up menus. The file saved is called "test_xyuv.data", this is the
+file that is used to warp fisheye frames (in this example) and is described 
+<a href="../../dataformats/meshwarp/index.html">here</a> and used for example in this
+<a href="../warpplayer/index.html">warp-on-the-fly movie player</a>.
+</p>
+
+<b>Coordinate conventions</b><p>
+<center>
+	<img src="http://paulbourke.net/dome/meshmapper/layout.png" width=600 height=871 border=0>
+</center><p>
+
+<b>Installation instructions</b><p>
+<p align="justify">
+It is assumed that the user is familiar with the Apple operating system and has
+at least some familiarity with running UNIX style applications from the command line.
+</p>
+<ul>
+<li><p align="justify">
+Rename one of the config files supplied above as "last.cfg". Place it in the same
+directory as the "meshmapper" application.
+</p>
+<li><p align="justify">
+For a hemispherical display you can choose/create your own calibration fisheye
+image, or use the following (<a href="http://paulbourke.net/dome/meshmapper/radialgrid.tga.zip">radialgrid.tga</a>).
+This image should also be placed in the same directory as the "meshmapper" application.
+</p>
+<li><p align="justify">
+Ensure X11 is installed.
+The recomendation is XQuartz found 
+	<a href="https://www.xquartz.org/">here</a>.
+</p>
+<li><p align="justify">
+"cd" to the directory containing the "meshmapper" application.
+Run "meshmapper" from the command line, for example type<br>
+./meshmapper<br>
+Use either the xterm or the terminal program supplied by Apple and
+located in the Applications/Utilities directory.
+</p>
+<li><p align="justify">
+Choose the preferences menu item, this sets the Apple GLUT preferences.
+Note the mouse emulation is only required if you don't have a 3 button mouse.
+Quit from "meshmapper" by choosing "quit" from the menu bar, this will ensure the
+preferences are saved.
+</p>
+<center><table><tr><td><img src="http://paulbourke.net/dome/meshmapper/pref1.jpg" width=349 height=297 border=1></td>
+<td width=20>&nbsp;</td>
+<td><img src="http://paulbourke.net/dome/meshmapper/pref2.jpg" width=349 height=297 border=1></td></tr></table></center>
+<p>
+<li><p align="justify">
+Run the "meshmapper" from the command line in full screen mode and using the
+radialgrid alignment image. For example, type<br>
+meshmapper -f -i radialgrid.tga
+</p>
+<li><p align="justify">
+Proceed as above to adjust the parameters until the image is aligned as desired.
+</p>
+<li><p align="justify">
+Using the menus, save the xyuv mesh data, it is this file that can be used with
+the <a href="../warpplayer/index.html">warping movie player</a> 
+and other software following that convention. For example for "warpplayer" you
+may choose to rename this map file "default.data" and place it in the same
+directory as the warpplayer application.
+</p>
+</ul>
+<p>
+
+<b>Notes</b><p>
+<ul>
+<li><p align="justify">
+If you have an internal and external display they must be mirrored.
+Note that "interesting" things happen if the builtin display on the Mac is not the
+same as the resolution and/or aspect of the projector. The bottom line is that for
+optimal quality the builtin display should be the same or higher resolution than
+the projector native resolution. In this case Mac OS-X will honour the lowest
+resolution which will be the projector.
+</p>
+<li><p align="justify">
+The center of the dome is the origin of the coordinate system.
+All components (dome, mirror, and projector) are assumed to be centered on the x,z plane (y=0).
+Z axis points up and the projector lies along the x axis.
+</p>
+<li><p align="justify">
+All units are metric (meters) and angles in degrees.
+</p>
+<li><p align="justify">
+The program needs to be run in full screen mode.
+</p>
+<li><p align="justify">
+Recommended mesh resolution is 60 or greater, this is the vertical resolution and the
+horizontal resolution will be set depending on the aspect ratio of the projector to
+give mesh cells that are approximately square.
+</p>
+<li><p align="justify">
+Since the configuration settings are read and saved each time the program is run, the
+configuration doesn't need to be done in one session. Indeed it is useful to be able to
+tweek the configuration each time the parameters change slightly eg: after maintenance
+and cleaning at which point the projector/mirror may be slightly disturbed.
+</p>
+<li><p align="justify">
+This program can be used to create single pre-warped still images. Load the image
+"meshmapper -i yourfisheyeimage.tga", a window dump is created by hitting the "w" key.
+The window dump will be called "0000.tga" the first time, "0001.tga" the second time
+and so on.
+</p>
+<li><p align="justify">
+The various shading/fading options are intended to cope with fading the image to black
+at the back of a planetarium dome, for example. This is important to both remove the extreme
+distortion that can occur behind the mirror and also to reduce the inter reflections arising
+from very bright images just behind and above the mirror.
+</p>
+</ul>
+
+<b>Question</b><p>
+<pre>
+How do I go about writing my own warping software?
+</pre>
+<b>Answer</b><p>
+<pre>
+It turns out the mathematics is quite intractable ... by that I mean hard to solve 
+because of the variables required to define a data projector. So all my alignment 
+work has involved a simulation of the physical parameters.
+
+So, you need the geometry and optics of projector, the spherical mirror and the dome. 
+You can see the parameters that go into my simulation in the top left of the second
+image above.
+
+What one does is imagine a ray through a grid sampling of the projectors rectangular 
+frustum. This ray, in 3D space hits the spherical mirror (or not), is reflected 
+through standard equal angle of incidence and reflection about a normal of the 
+intersection point on the sphere, it then hits the dome (or not). Given the point 
+on the dome you can work out what the 3D fisheye ray coordinate (phi,theta) and in 
+turn the position (r,theta) on the 2D fisheye image. At this point you have a mapping 
+between the fisheye (u,v) coordinate and the position in the image being projected. 
+So if you create a mesh where the vertices are the original grid sampling, the texture 
+coordinate is the calculated (u,v) coordinate. Complicated, but once you get the 
+hang of it the concept is easy, the rest is in the details.
+</pre>
+
+</td></tr></table></center><p>
+</body>
+</html>
+

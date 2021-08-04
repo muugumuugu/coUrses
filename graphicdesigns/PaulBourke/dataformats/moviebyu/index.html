@@ -1,0 +1,164 @@
+<html>
+<head><link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>MovieBYU format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Movie BYU Format</h1>
+Original by Ken Chin-Purcell<br>
+Edited by <a href="../index.html">Paul Bourke<br></a>
+June 1987
+</center>
+<p><br><p>
+
+<h3>File Format</h3>
+<p>
+The Movie BYU format is an ascii file format for unstructured collections of
+polygons.  Integers are written using a FORTRAN I/O format of 10I8.  Floating
+point numbers are written using a FORTRAN I/O format of 6E12.5.
+<p>
+BYU geometry is described using verticies, connectivity, and parts.  A vertex
+is a point location, and is specified by x, y and z coordinates.  The order
+that the verticies appear in the file determines vertex indicies, with the
+first vertex being number one, the next vertex number two, and so forth.  A
+polygon is specified as a list of verticies.  In the file format the last
+vertex index for each polygon is negated.  A part is composed of a
+consecutive set of polygons, such as polygons 121 thru 233.
+<p>
+The geometry file has four sections.  The first section is one line long, and
+specifies array dimensions.  The second section describes the part
+boundaries.  The third section contains x-y-z coordinates for all of the
+verticies.  The fourth section is the connectivity array, a list of vertex
+indicies that describe the polygons.
+<p>
+The first section contains four integers in the following order:  the number
+of parts, the number verticies, the number of polygons, and the number of
+entries in the connectivity array.
+<p>
+The next section contains two integers for every part: the starting polygon
+number and the ending polygon number.
+<p>
+The third section lists three floating point numbers for every vertex:  the
+x, y and z coordinates.
+<p>
+The last section is a list of integers describing connectivity.  For each
+polygon the vertex numbers are listed, with the last vertex negated.
+<p>
+The scalar file is simply a list of floating points numbers, one per vertex.
+
+<p><br><p>
+
+<h3>Example</h3>
+
+Geometry file for a unit cube:
+<p>
+<pre>
+1       8       6      24
+1       6
+0.00000e+00 0.00000e+00 0.00000e+00 1.00000e+00 0.00000e+00 0.00000e+00
+1.00000e+00 1.00000e+00 0.00000e+00 0.00000e+00 1.00000e+00 0.00000e+00
+0.00000e+00 0.00000e+00 1.00000e+00 1.00000e+00 0.00000e+00 1.00000e+00
+1.00000e+00 1.00000e+00 1.00000e+00 0.00000e+00 1.00000e+00 1.00000e+00
+1       4       3      -2       5       6       7      -8       1       2
+6      -5       2       3       7      -6       3       4       8      -7
+4       1       5      -8
+</pre>
+
+<p>
+A sample scalar file for this cube:
+
+<p>
+<pre>
+0.00000e+00 1.00000e+00 2.00000e+00 3.00000e+00 4.00000e+00 5.00000e+00
+6.00000e+00 7.00000e+00
+</pre>
+
+<br>
+<h3>Source to parse BYU files</h3>
+<pre>
+/* 
+   source to read in BYU format
+   written by Kalvin Quinkert kalvin@uswest.com
+   sometime between January 1992 and May 1992
+*/
+
+int   np,nj,npt,ncon;    /* number of parts,vertices,polygons,connectivity */
+int   npl[3][MAX_PARTS]; /* start and end polygons for each part */
+float xpp[MAX_VERTICES];
+float ypp[MAX_VERTICES];
+float zpp[MAX_VERTICES];
+int   ivq[MAX_VERTICES]; /* connectivity array */
+
+readasc(char *filename)
+{
+   FILE *fp;
+   int  i;
+
+   if (np &gt; 0)
+	   return 1;
+   printf("opening %s\n",filename);
+   if (!(fp = fopen(filename,"r"))) {
+      fprintf(stderr,"cannot open %s\n",filename);
+      exit(1);
+   }
+
+   fscanf(fp,"%d%d%d%d\n",&np,&nj,&npt,&ncon);
+   for (i=0;i&lt;np;i++) 
+      fscanf(fp,"%d %d\n",&npl[1][i],&npl[2][i]);
+   for (i=0;i&lt;nj;i+=2) {
+      printf("vertex %d\n",i);
+      if (i + 1 &lt; nj)
+         fscanf(fp,"%f %f %f %f %f %f\n",&xpp[i],&ypp[i],&zpp[i],
+                                        &xpp[i+1],&ypp[i+1],&zpp[i+1]);
+      else
+         fscanf(fp,"%f %f %f\n",&xpp[i],&ypp[i],&zpp[i]);
+   }
+   for (i=0;i&lt;ncon;i++) {
+      printf("connectivity %d\n",i);
+      ivq[i] = readint(fp);
+   }
+}
+
+int readint(FILE *fp)
+{
+   int value=0;
+   int sign=1;
+   char ch;
+
+   while(!feof(fp)) {
+      while(1) {
+         ch=fgetc(fp);
+         if((ch=='+')||(ch=='-')||(ch&gt;='0'&&ch&lt;='9')) break;
+      }
+      while(1) {
+         if (ch=='+')
+            sign=1;
+         else if(ch=='-')
+            sign=-1;
+         else if(ch&gt;='0'&&ch&lt;='9')
+            value = (value*10)+(ch-'0');
+            return(value);
+         }
+         ch=fgetc(fp);
+      }
+   }
+}
+</pre>
+
+</td></tr></table></center>
+</body>
+</html>
+

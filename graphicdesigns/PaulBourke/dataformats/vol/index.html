@@ -1,0 +1,229 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>.vol format description</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<h1>.vol File Format Specifications</h1>
+
+<b>General Description</b><p>
+
+<p align="justify">
+This is a simple file, consisting of a header and a set of value bytes, for storing volume image data. Specified by Mark Dow, January 2001.
+</p>
+<p align="justify">
+The header is a total of 10000 bytes: 
+</p>
+<p align="justify">
+The first five characters (mdvol, 5 x 8 bits) identify the file as volume with this file type.  
+One character, 8 bits, serves as a version indicator. 
+One integer, 32 bits, is the total length of the header. 
+</p>
+<p align="justify">
+Three integers are dimensions, xyz in pixels, of the volume. 
+</p>
+<p align="justify">
+Three floats, 3x32 bits, are physical dimensions, xyz in mm, of each voxel.  
+</p>
+<p align="justify">
+Two floats indicate a reasonable black point and white point for the initial display, with a range [0,1]. 
+</p>
+<p align="justify">
+One float indicates a reasonable gamma for the initial display where the gamma is applied after the black/white point.  
+</p>
+<p align="justify">
+Three characters specifies gray 8 bit, g08, gray 16 bit, g16, or color 24 bit, c24, byte information.  
+4900 characters, 4900 x 8 bits, of text is the description of the file format.  
+151 characters are a text title.  4900 characters are a text description of the volume contents. 
+The rest are bytes, in x/y/z or r/g/b/x/y/z order, describing the image data. 
+If the color character is g08, there are x*y*z bytes of color data.  
+If the color character is g16, there are 2*x*y*z bytes of color data.  
+If the color character is c24, there are 3*x*y*z bytes of color data.
+</p>
+
+<b>Format Specification</b><p>
+
+<center>
+<table border=1 cellpadding=5 cellspacing=0>
+<tr>
+                            <td>Contents</td>
+                            <td>Data type</td>
+                            <td>Number</td>
+                            <td>Length, bytes</td>
+                            <td>Byte offset from beginning of file
+                            </td>
+                            <td>Comments</td>
+</tr>
+<tr>
+                            <td>&nbsp</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>Little-endian byte ordering is assumed.</td>
+</tr>
+<tr>
+                            <td>The text "mdvol"</td>
+                            <td>char, 1 byte</td>
+                            <td>5</td>
+                            <td>5</td>
+                            <td>0</td>
+                            <td>Identifier for any Space file type.
+                            </td>
+</tr>
+<tr>
+                            <td>The text "1"</td>
+                            <td>char, 1 byte</td>
+                            <td>1</td>
+                            <td>1 </td>
+                            <td>5</td>
+                            <td>Space Volume Type file version indicator.
+                            </td>
+</tr>
+<tr>
+                            <td>10000</td>
+                            <td >unsigned int, 4 bytes</td>
+                            <td>1</td>
+                            <td>4</td>
+                            <td>6</td>
+                            <td>Length of header, for a Space Volume Type 1 file.
+                            </td>
+</tr>
+<tr>
+                            <td>Volume dimensions: xzy<br>(in pixels)</td>
+                            <td>unsigned int, 4 bytes</td>
+                            <td>3</td>
+                            <td>12</td>
+                            <td>10</td>
+                            <td>Must correspond with the number of image values (see last row of this table).
+                            </td>
+</tr>
+<tr>
+                            <td>Physical dimensions of each voxel: xzy<br>(in mm)</td>
+                            <td>float, 4 bytes</td>
+                            <td>3</td>
+                            <td>12 </td>
+                            <td>22</td>
+                            <td>Use 0.0, 0.0, 0.0 for unspecified dimensions. Should be positive.
+                            </td>
+</tr>
+<tr>
+                            <td>Black point and white point for the initial display, with a range [0,1]</td>
+                            <td>float, 4 bytes</td>
+                            <td>2</td>
+                            <td>8</td>
+                            <td>34</td>
+                            <td>These values are used to construct a color LUT for display
+                                purposes. Use 0.0, 1.0 for default display.
+                            </td>
+</tr>
+<tr>
+                            <td>Gamma for the initial display &gt; 0.0</td>
+                            <td>float, 4 bytes</td>
+                            <td>1</td>
+                            <td>4</td>
+                            <td>42</td>
+                            <td>This value is used to construct a color LUT for display
+                                purposes. Use 1.0 for default linear display.
+                            </td>
+</tr>
+<tr>
+                            <td>Color code:<br>The text "g08", "i08", or "c24"</td>
+                            <td>char, 1 byte</td>
+                            <td>3</td>
+                            <td>3</td>
+                            <td>46</td>
+                            <td>This color code specifies the color format that the image values represent: grayscale 8 bit,
+				* indexed 8 bit, or color 24 bit (3 bytes in RGB order) respectively.
+                            </td>
+</tr>
+<tr>
+                            <td>Text description of the Space Volume Type 1 file format</td>
+                            <td>char, 1 byte</td>
+                            <td>4900</td>
+                            <td>4900</td>
+                            <td>49</td>
+                            <td>**See footnote for text to use. Fill unused length with space characters.
+                                his text is only used for human readable self documentation of the file structure.
+                            </td>
+</tr>
+<tr>
+                            <td>Text title for the volume</td>
+                            <td>char, 1 byte</td>
+                            <td>151</td>
+                            <td>151</td>
+                            <td>4949</td>
+                            <td>Fill unused length with space characters.</td>
+</tr>
+<tr>
+                            <td>Text description of the volume</td>
+                            <td>char, 1 byte</td>
+                            <td>4900</td>
+                            <td>4900</td>
+                            <td>5100</td>
+                            <td>Fill unused length with space characters.</td>
+</tr>
+<tr>
+                            <td>Image values<br>(Color code - value order)</td>
+			    <td>byte (8 bit integer), 1 byte</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+			    <td>10000</td>
+                            <td>&nbsp;</td>
+</tr>
+<tr>			
+                             <td>g08: -x/-z/-y order</td>
+                            <td>&nbsp;</td>
+			     <td nowrap>g08: x*y*z</td>
+                             <td>x*y*z</td>
+                            <td>&nbsp;</td>
+                             <td>One byte/voxel (8 bit integer), x varies fastest.</td>
+</tr>
+<tr>			
+                             <td>i08: -x/-z/-y order</td>
+                            <td>&nbsp;</td>
+                             <td nowrap>i08: x*y*z</td>
+                             <td>x*y*z</td>
+                            <td>&nbsp;</td>
+                             <td>One bytes/voxel (8 bit integer)</td>
+</tr>
+<tr>			
+                            <td>c24: rgb/-x/-z/-y order</td>
+                            <td>&nbsp;</td>
+                            <td nowrap>c24: 3*x*y*z</td>
+                            <td>3*x*y*z</td>
+                            <td>&nbsp;</td>
+                            <td>One byte/color, three bytes/voxel, color then x varies fastest.</td>
+
+</tr>
+</table></center><p>
+
+<b>Notes</b><p>
+
+<ul>
+<li><p align="justify">
+The Space Volume Type 1 file type does not include or define a color table for indexed 8 bit data format. Later Space Volume file types do include an 8 bit x 3 byte color table.
+</p>
+
+<li><p align="justify">
+Insert the following, without quote marks, as the "Text description of the Space Volume Type 1 file format": 
+"This is a simple file, of Space Volume Type 1, consisting of a header followed by a set of image value bytes, for storing volume image data and basic image display parameters. The header (which should be in little-endian byte order) is a total of 10000 bytes long. The first five characters (mdvol, 5 x 1 byte) identify the file as volume with this file type. One character, 1 byte, serves as a file type version indicator -- this file is of type 1. One integer, 4 bytes, is the total length of the header. Three integers are dimensions, xzy in pixels, of the volume. Three floats, 3x4 bytes, are physical dimensions, xzy in mm, of each voxel. Two floats indicate a reasonable black point and white point for the initial display color transform, with a range [0,1]. One float indicates a reasonable gamma (>0) for the initial display. Three characters, the color code, specifies the color format that the image values represent: gray 8 bit (g08), indexed 8 bit (i08) or color 24 bit (c24). 4900 characters, 4900 x 1 byte, of text is this description of the file format. 151 characters are a text title. 4900 characters are a text description of the volume image content. The rest are image value bytes (8 bit integers), describing the volume image. If the color code is g08, there are x*y*z bytes of image values, in -x/-z/-y order. If the color code is i08, there are x*y*z bytes of image values, in -x/-z/-y order. If the color code is c24, there are 3*x*y*z bytes of image color values, in rgb/-x/-z/-y order."
+</p>
+</ul>
+
+</td></tr></table></center>
+</body>
+</html>

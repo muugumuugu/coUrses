@@ -1,0 +1,1310 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Various EEG file formats and Conventions</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Various EEG File Formats and Conventions</h1>
+Documented by <a href="../index.html">Paul Bourke</a><br>
+</center>
+<p><br><p>
+
+<center>
+<h3>NeuroScan EEG File Formats</h3>
+April 1997, updated September 1997
+</center>
+
+<b>Continuous EEG</b><p>
+
+The following documents the file structure for continuous EEG files as 
+created by SCAN version 4 (the files are still reported as version 3 as
+the format hasn't changed).
+<p>
+Experience has shown that many (most) of the fields are not filled out
+correctly by the software. In particular, the best way to work out the
+number of samples is 
+<p>
+<center>
+nsamples = SETUP.EventTablePos - (900 + 75 * nchannels) / (2 * nchannels)
+</center>
+
+<center>
+<p><img src="http://paulbourke.net/dataformats/eeg/neuroscan1.gif"><p>
+</center>
+
+Sample code to convert continuous eeg files to ascii, 
+<a href="http://paulbourke.net/dataformats/eeg/cnt2ascii.c">cnt2ascii.c</a> (<a href="http://paulbourke.net/dataformats/eeg/sethead.h">sethead.h</a>).
+<p>
+
+<b>Average EEG</b><p>
+
+To calculate the expected number of samples from the file size<p>
+<center>
+nsamples = ((filesize - 900 - nchannels*75) / nchannels - 5) / 4;
+</center>
+<p>
+
+<center>
+<img src="http://paulbourke.net/dataformats/eeg/neuroavg1.gif">
+</center><p>
+
+Sample code to convert average files to ascii, 
+<a href="http://paulbourke.net/dataformats/eeg/avg2ascii.c">avg2ascii.c</a>
+
+<b>sethead.h</b><p>
+
+The following is my version of the "sethead.h" file, designed to make
+implementations on other machines easier, namely "other-endian" machines.
+Note that character fields are single byte, longs are 4 bytes, floats
+are 4 bytes IEEE format, short ints are 2 bytes.
+<pre> 
+typedef struct {               /* Electrode structure  ------------------- */
+   char  lab[10];              /* Electrode label - last bye contains NULL */
+   char  reference;            /* Reference electrode number               */
+   char  skip;                 /* Skip electrode flag ON=1 OFF=0           */
+   char  reject;               /* Artifact reject flag                     */
+   char  display;              /* Display flag for 'STACK' display         */
+   char  bad;                  /* Bad electrode flag                       */
+   unsigned short int n;       /* Number of observations                   */
+   char  avg_reference;        /* Average reference status                 */
+   char  ClipAdd;              /* Automatically add to clipboard           */
+   float x_coord;              /* X screen coord. for 'TOP' display        */
+   float y_coord;              /* Y screen coord. for 'TOP' display        */
+   float veog_wt;              /* VEOG correction weight                   */
+   float veog_std;             /* VEOG std dev. for weight                 */
+   float snr;                  /* signal-to-noise statistic                */
+   float heog_wt;              /* HEOG Correction weight                   */
+   float heog_std;             /* HEOG Std dev. for weight                 */
+   short int baseline;         /* Baseline correction value in raw ad units*/
+   char  Filtered;             /* Toggel indicating file has be filtered   */
+   char  Fsp;                  /* Extra data                               */
+   float aux1_wt;              /* AUX1 Correction weight                   */
+   float aux1_std;             /* AUX1 Std dev. for weight                 */
+   float sensitivity;          /* electrode sensitivity                    */
+   char  Gain;                 /* Amplifier gain                           */
+   char  HiPass;               /* Hi Pass value                            */
+   char  LoPass;               /* Lo Pass value                            */
+   unsigned char Page;         /* Display page                             */
+   unsigned char Size;         /* Electrode window display size            */
+   unsigned char Impedance;    /* Impedance test                           */
+   unsigned char PhysicalChnl; /* Physical channel used                    */
+   char  Rectify;              /* Free space                               */
+   float calib;                /* Calibration factor                       */
+} ELECTLOC;
+
+typedef struct{
+   char   rev[20];              /* Revision string                         */
+   char   type;                 /* File type AVG=1, EEG=0                  */
+   char   id[20];               /* Patient ID                              */
+   char   oper[20];             /* Operator ID                             */
+   char   doctor[20];           /* Doctor ID                               */
+   char   referral[20];         /* Referral ID                             */
+   char   hospital[20];         /* Hospital ID                             */
+   char   patient[20];          /* Patient name                            */
+   short  int age;              /* Patient Age                             */
+   char   sex;                  /* Patient Sex Male='M', Female='F'        */
+   char   hand;                 /* Handedness Mixed='M',Rt='R', lft='L'    */
+   char   med[20];              /* Medications                             */
+   char   classif[20];          /* Classification                          */
+   char   state[20];            /* Patient wakefulness                     */
+   char   label[20];            /* Session label                           */
+   char   date[10];             /* Session date string                     */
+   char   time[12];             /* Session time strin                      */
+   float  mean_age;             /* Mean age (Group files only)             */
+   float  stdev;                /* Std dev of age (Group files only)       */
+   short int n;                 /* Number in group file                    */
+   char   compfile[38];         /* Path and name of comparison file        */
+   float  SpectWinComp;         /* Spectral window compensation factor     */
+   float  MeanAccuracy;         /* Average respose accuracy                */
+   float  MeanLatency;          /* Average response latency                */
+   char   sortfile[46];         /* Path and name of sort file              */
+   long   NumEvents;            /* Number of events in eventable           */
+   char   compoper;             /* Operation used in comparison            */
+   char   avgmode;              /* Set during online averaging             */
+   char   review;               /* Set during review of EEG data           */
+   short unsigned nsweeps;      /* Number of expected sweeps               */
+   short unsigned compsweeps;   /* Number of actual sweeps                 */
+   short unsigned acceptcnt;    /* Number of accepted sweeps               */
+   short unsigned rejectcnt;    /* Number of rejected sweeps               */
+   short unsigned pnts;         /* Number of points per waveform           */
+   short unsigned nchannels;    /* Number of active channels               */
+   short unsigned avgupdate;    /* Frequency of average update             */
+   char  domain;                /* Acquisition domain TIME=0, FREQ=1       */
+   char  variance;              /* Variance data included flag             */
+   unsigned short rate;         /* D-to-A rate                             */
+   double scale;                /* scale factor for calibration            */
+   char  veogcorrect;           /* VEOG corrected flag                     */
+   char  heogcorrect;           /* HEOG corrected flag                     */
+   char  aux1correct;           /* AUX1 corrected flag                     */
+   char  aux2correct;           /* AUX2 corrected flag                     */
+   float veogtrig;              /* VEOG trigger percentage                 */
+   float heogtrig;              /* HEOG trigger percentage                 */
+   float aux1trig;              /* AUX1 trigger percentage                 */
+   float aux2trig;              /* AUX2 trigger percentage                 */
+   short int heogchnl;          /* HEOG channel number                     */
+   short int veogchnl;          /* VEOG channel number                     */
+   short int aux1chnl;          /* AUX1 channel number                     */
+   short int aux2chnl;          /* AUX2 channel number                     */
+   char  veogdir;               /* VEOG trigger direction flag             */
+   char  heogdir;               /* HEOG trigger direction flag             */
+   char  aux1dir;               /* AUX1 trigger direction flag             */
+   char  aux2dir;               /* AUX2 trigger direction flag             */
+   short int veog_n;            /* Number of points per VEOG waveform      */
+   short int heog_n;            /* Number of points per HEOG waveform      */
+   short int aux1_n;            /* Number of points per AUX1 waveform      */
+   short int aux2_n;            /* Number of points per AUX2 waveform      */
+   short int veogmaxcnt;        /* Number of observations per point - VEOG */
+   short int heogmaxcnt;        /* Number of observations per point - HEOG */
+   short int aux1maxcnt;        /* Number of observations per point - AUX1 */
+   short int aux2maxcnt;        /* Number of observations per point - AUX2 */
+   char   veogmethod;           /* Method used to correct VEOG             */
+   char   heogmethod;           /* Method used to correct HEOG             */
+   char   aux1method;           /* Method used to correct AUX1             */
+   char   aux2method;           /* Method used to correct AUX2             */
+   float  AmpSensitivity;       /* External Amplifier gain                 */
+   char   LowPass;              /* Toggle for Amp Low pass filter          */
+   char   HighPass;             /* Toggle for Amp High pass filter         */
+   char   Notch;                /* Toggle for Amp Notch state              */
+   char   AutoClipAdd;          /* AutoAdd on clip                         */
+   char   baseline;             /* Baseline correct flag                   */
+   float  offstart;             /* Start point for baseline correction     */
+   float  offstop;              /* Stop point for baseline correction      */
+   char   reject;               /* Auto reject flag                        */
+   float  rejstart;             /* Auto reject start point                 */
+   float  rejstop;              /* Auto reject stop point                  */
+   float  rejmin;               /* Auto reject minimum value               */
+   float  rejmax;               /* Auto reject maximum value               */
+   char   trigtype;             /* Trigger type                            */
+   float  trigval;              /* Trigger value                           */
+   char   trigchnl;             /* Trigger channel                         */
+   short int trigmask;          /* Wait value for LPT port                 */
+   float trigisi;               /* Interstimulus interval (INT trigger)    */
+   float trigmin;               /* Min trigger out voltage (start of pulse)*/
+   float trigmax;               /* Max trigger out voltage (during pulse)  */
+   char  trigdir;               /* Duration of trigger out pulse           */
+   char  Autoscale;             /* Autoscale on average                    */
+   short int n2;                /* Number in group 2 (MANOVA)              */
+   char  dir;                   /* Negative display up or down             */
+   float dispmin;               /* Display minimum (Yaxis)                 */
+   float dispmax;               /* Display maximum (Yaxis)                 */
+   float xmin;                  /* X axis minimum (epoch start in sec)     */
+   float xmax;                  /* X axis maximum (epoch stop in sec)      */
+   float AutoMin;               /* Autoscale minimum                       */
+   float AutoMax;               /* Autoscale maximum                       */
+   float zmin;                  /* Z axis minimum - Not currently used     */
+   float zmax;                  /* Z axis maximum - Not currently used     */
+   float lowcut;                /* Archival value - low cut on external amp*/
+   float highcut;               /* Archival value - Hi cut on external amp */
+   char  common;                /* Common mode rejection flag              */
+   char  savemode;              /* Save mode EEG AVG or BOTH               */
+   char  manmode;               /* Manual rejection of incomming data      */
+   char  ref[10];               /* Label for reference electode            */
+   char  Rectify;               /* Rectification on external channel       */
+   float DisplayXmin;           /* Minimun for X-axis display              */
+   float DisplayXmax;           /* Maximum for X-axis display              */
+   char  phase;                 /* flag for phase computation              */
+   char  screen[16];            /* Screen overlay path name                */
+   short int CalMode;           /* Calibration mode                        */
+   short int CalMethod;         /* Calibration method                      */
+   short int CalUpdate;         /* Calibration update rate                 */
+   short int CalBaseline;       /* Baseline correction during cal          */
+   short int CalSweeps;         /* Number of calibration sweeps            */
+   float CalAttenuator;         /* Attenuator value for calibration        */
+   float CalPulseVolt;          /* Voltage for calibration pulse           */
+   float CalPulseStart;         /* Start time for pulse                    */
+   float CalPulseStop;          /* Stop time for pulse                     */
+   float CalFreq;               /* Sweep frequency                         */
+   char  taskfile[34];          /* Task file name                          */
+   char  seqfile[34];           /* Sequence file path name                 */
+   char  SpectMethod;           /* Spectral method                         */
+   char  SpectScaling;          /* Scaling employed                        */
+   char  SpectWindow;           /* Window employed                         */
+   float SpectWinLength;        /* Length of window %                      */
+   char  SpectOrder;            /* Order of Filter for Max Entropy method  */
+   char  NotchFilter;           /* Notch Filter in or out                  */
+   char  unused[11];            /* Free space                              */
+   short  FspStopMethod;        /* FSP - Stoping mode                      */
+   short  FspStopMode;          /* FSP - Stoping mode                      */
+   float FspFValue;             /* FSP - F value to stop terminate         */
+   short int FspPoint;          /* FSP - Single point location             */
+   short int FspBlockSize;      /* FSP - block size for averaging          */
+   unsigned short FspP1;        /* FSP - Start of window                   */
+   unsigned short FspP2;        /* FSP - Stop  of window                   */
+   float FspAlpha;              /* FSP - Alpha value                       */
+   float FspNoise;              /* FSP - Signal to ratio value             */
+   short int FspV1;             /* FSP - degrees of freedom                */
+   char  montage[40];           /* Montage file path name                  */
+   char  EventFile[40];         /* Event file path name                    */
+   float fratio;                /* Correction factor for spectral array    */
+   char  minor_rev;             /* Current minor revision                  */
+   short int eegupdate;         /* How often incomming eeg is refreshed    */
+   char   compressed;           /* Data compression flag                   */
+   float  xscale;               /* X position for scale box - Not used     */
+   float  yscale;               /* Y position for scale box - Not used     */
+   float  xsize;                /* Waveform size X direction               */
+   float  ysize;                /* Waveform size Y direction               */
+   char   ACmode;               /* Set SYNAP into AC mode                  */
+   unsigned char CommonChnl;    /* Channel for common waveform             */
+   char   Xtics;                /* Scale tool- 'tic' flag in X direction   */
+   char   Xrange;               /* Scale tool- range (ms,sec,Hz) flag X dir*/
+   char   Ytics;                /* Scale tool- 'tic' flag in Y direction   */
+   char   Yrange;               /* Scale tool- range (uV, V) flag Y dir    */
+   float  XScaleValue;          /* Scale tool- value for X dir             */
+   float  XScaleInterval;       /* Scale tool- interval between tics X dir */
+   float  YScaleValue;          /* Scale tool- value for Y dir             */
+   float  YScaleInterval;       /* Scale tool- interval between tics Y dir */
+   float  ScaleToolX1;          /* Scale tool- upper left hand screen pos  */
+   float  ScaleToolY1;          /* Scale tool- upper left hand screen pos  */
+   float  ScaleToolX2;          /* Scale tool- lower right hand screen pos */
+   float  ScaleToolY2;          /* Scale tool- lower right hand screen pos */
+   short int port;              /* Port address for external triggering    */
+   long  NumSamples;            /* Number of samples in continous file     */
+   char  FilterFlag;            /* Indicates that file has been filtered   */
+   float LowCutoff;             /* Low frequency cutoff                    */
+   short int LowPoles;          /* Number of poles                         */
+   float HighCutoff;            /* High frequency cutoff                   */
+   short int HighPoles;         /* High cutoff number of poles             */
+   char  FilterType;            /* Bandpass=0 Notch=1 Highpass=2 Lowpass=3 */
+   char  FilterDomain;          /* Frequency=0 Time=1                      */
+   char  SnrFlag;               /* SNR computation flag                    */
+   char  CoherenceFlag;         /* Coherence has been  computed            */
+   char  ContinousType;         /* Method used to capture events in *.cnt  */
+   long  EventTablePos;         /* Position of event table                 */
+   float ContinousSeconds;      /* Number of seconds to displayed per page */
+   long  ChannelOffset;         /* Block size of one channel in SYNAMPS    */
+   char  AutoCorrectFlag;       /* Autocorrect of DC values                */
+   unsigned char DCThreshold;   /* Auto correct of DC level                */
+} SETUP;
+
+typedef struct {
+   char Teeg;                   /* Either 1 or 2                           */
+   long Size;                   /* Total length of all the events          */
+   long Offset;                 /* Hopefully always 0                      */
+} TEEG;
+
+typedef struct {
+   unsigned short StimType;     /* range 0-65535                           */
+   unsigned char  KeyBoard;     /* range 0-11 corresponding to fcn keys +1 */
+   char KeyPad_Accept;          /* 0->3 range 0-15 bit coded response pad  */
+                                /* 4->7 values 0xd=Accept 0xc=Reject       */
+   long Offset;                 /* file offset of event                    */
+} EVENT1;
+
+typedef struct{
+   unsigned short StimType;     /* range 0-65535                           */
+   unsigned char  KeyBoard;     /* range 0-11 corresponding to fcn keys +1 */
+   char KeyPad_Accept;          /* 0->3 range 0-15 bit coded response pad  */
+                                /* 4->7 values 0xd=Accept 0xc=Reject       */
+   long Offset;                 /* file offset of event                    */
+   short Type;
+   short Code;
+   float Latency;
+   char EpochEvent;
+   char Accept2;
+   char Accuracy;
+} EVENT2; </pre>
+<p>
+
+<b>Electrode position as used by Brain Dynamics Laboratory, 1996/1997</b><p>
+
+<center><img src="http://paulbourke.net/dataformats/eeg/eegmelb.gif"></center><p>
+
+<p><br><br><br><p>
+
+<center>
+<h3>Westmead EEG file format</h3>
+August 1997
+</center>
+
+<p align="justify">
+The following describes the important aspects of the EEG data files
+from the 
+Department of Medical Physics and Cognitive Neuroscience Unit, 
+Westmead Hospital, Westmead, NSW 2145, Australia.
+</p>
+
+<p align="justify">
+The files consist a ID line followed by 
+a header followed by the actual data section.
+The ID and header is ascii/readable text while the EEG data is binary, 
+simply a series of 2 byte signed ints (usually referred to in C 
+as "short int"). Note that while the files have an ASCII header they
+must be FTPed or otherwise transferred in binary mode to preserve the
+EEG data part. While the mixed ASCII/BINARY nature makes dealing with
+these files a bit awkward at times, it is often convenient to browse
+the header using a text editor or just using "more".
+</p>
+
+<table width=800 border=1>
+<tr><td width=50%>
+<b>Description</b>
+</td><td width=25%>
+<b>Example</b>
+</td><td width=25%>
+<b>Source example</b>
+</td></tr>
+
+<tr><td width=50% valign=top>
+<b>First line</b>
+<p align="justify">
+It consists of two items, a version number and offset.
+The offset is the number of 512 bytes chunks in the header.
+</p>
+The current format descriptor is EEG2.
+<p align="justify">
+The previous EEG1 format differs only in that the
+binary data was stored in a 1's complement offset format.
+</p>
+</td><td width=25% valign=top>
+<pre>
+EEG2   15
+</pre>
+</td><td width=25% valign=top>
+<pre>
+char ident[32];
+int offset;
+FILE *fptr;
+
+if (fscanf(fptr,"%s %ld",ident,&offset) != 2) {
+   report unexpected result
+}
+</pre>
+</td></tr>
+
+<tr><td valign=top width=50%>
+<b>Header</b><p>
+"offset" * 512 in length<p>
+<p align="justify">
+This consist of a number of variables providing
+additional quantitative and qualitative values.
+Most are obvious from their descriptors in square brackets [].
+</p>
+The ones of particular interest are:<br>
+&nbsp;&nbsp;&nbsp;[NumChans]<br>
+&nbsp;&nbsp;&nbsp;[Label]<br>
+&nbsp;&nbsp;&nbsp;[SamRate]<br>
+<p>
+Lines are terminated with &lt;CR&gt;&lt;LF&gt;<p>
+<p>
+In detail, each variable is represented in the header by:
+
+<p align="justify">
+<b>1</b><br>
+     The variable's identifying name.  This consists of as
+     many as 11 characters enclosed by square brackets.  The
+     left bracket must be in the first column.  In reading the
+     variable's name, leading and trailing blanks are removed,
+     case is ignored, and control characters are removed.
+</p>
+
+<p align="justify">
+<b>2</b><br>
+     A description of the variable.  This is indicated by
+     "desc=3D" followed by as many as 39 characters
+</p>
+
+<p align="justify">
+<b>3</b><br>
+     The dimensions of the compressed array in the form:
+     "dimensions=3D dim1 dim2". The first dimension equals the
+     number of channels, or else 1 (if the value is the same
+     for each channel).  The second dimension equals the
+     number of segments, or else 1 (if the value is the same
+     for each segment).
+</p>
+
+<p align="justify">
+<b>4</b><br>
+     The data type in the form: "type=3Ddata_type", where
+     data_type can be any of the types defined in ac_set.h
+     under enum FIELDTYPE.  This item is optional, as there
+     are very likely correct defaults set by any program that
+     reads these data files.
+</p>
+
+<p align="justify">
+<b>5</b><br>
+     An introduction to the array list: "weight+value=3D".
+<p>
+
+<p align="justify">
+<b>6</b><br>
+     The array of weights and values.  There should be dim1 x
+     dim2 lines.  The values for segment 0 are listed first,
+     then for segment 1, and so on.  Each line consists of a
+     weight and a value.  The weight may be 0, in which case,
+     no value is present or necessary.  Otherwise the weight
+     is >0 and a value is specified.  The value may be of any
+     of the various types recognised by this set of programs -
+     see item 4.  There is a function decode() that decodes
+     any of these standard formats.  Concerning weights, for
+     string and boolean variables, there is no useful
+     distinction between weights of 1 and >1.  However for
+     numeric variables, the value of weight is important when
+     combining data sets.  Then it is necessary to form
+     weighted averages, hence the importance of including a
+     weight with each value.
+</p>
+
+<p align="justify">
+The variables may be arranged in any order within the header,
+with the exception of the two variables NumChans and NumSegs
+that MUST precede any multidimensional variable.  This is
+because with such array-type variables, one or both of the two
+dimensions specified in item 3 will be >1 and MUST match
+NumChans or NumSegs.
+</p>
+
+<pre>
+
+
+</pre>
+
+<p align="justify">
+Finally, within the header part of the data file, blank lines
+may be inserted anywhere, and are skipped when reading the
+file.  Also, from the end of the header to the beginning of
+the binary data there is a variable number of tilde (~)
+characters.  They are inserted as padding, in order that the
+binary data begins on an IO block boundary (multiple of 512
+bytes).
+</p>
+
+</td><td width=25% valign=top>
+<pre>
+[ProgramType]
+  desc=Identifies acquisition program
+  dimension=1 1
+  weight+value=
+    1 aep
+
+[PatName    ]
+  desc=Subject's name
+  dimension=1 1
+  weight+value=
+    1 _________ ___ 
+
+[PatID      ]
+  desc=Subject's ID
+  dimension=1 1
+  weight+value=
+    1 MS044
+
+[StartTime  ]
+  desc=Start time of study
+  dimension=1 1
+  weight+value=
+    1 17 Apr 96 13:16:51
+
+[NumChans   ]
+  desc=Number of data channels
+  dimension=1 1
+  weight+value=
+    1 32
+
+[NumSegs    ]
+  desc=Number of data segments
+  dimension=1 1
+  weight+value=
+    1  1
+
+[DataType   ]
+  desc=Identifies source of data
+  dimension=32 1
+  weight+value=
+    1 POT
+    1 POT
+    1 POT
+    1 POT
+    1 POT
+    1 POT
+    1 POT
+    1 POT
+    1 POT
+    1 POT
+    1 POT
+    1 POT
+    1 POT
+    1 POT
+    1 POT
+    1 POT
+    1 POT
+    1 POT
+    1 POT
+    1 POT
+    1 POT
+    1 POT
+    1 POT
+    1 POT
+    1 CED
+    1 CED
+    1 CED
+    1 BIT
+    1 POT
+    1 POT
+    1 SCR
+    1 BIT
+
+[Label      ]
+  desc=Identifies channel
+  dimension=32 1
+  weight+value=
+    1 Fp1
+    1 Fp2
+    1 F7
+    1 F3
+    1 Fz
+    1 F4
+    1 F8
+    1 A1
+    1 T3
+    1 C3
+    1 Cz
+    1 C4
+    1 T4
+    1 A2
+    1 T5
+    1 P3
+    1 Pz
+    1 P4
+    1 T6
+    1 O1
+    1 O2
+    1 EOG1
+    1 EOGv
+    1 EOG2
+    1 CedX
+    1 CedY
+    1 CedA
+    1 CedS
+    1 Resp
+    1 ECG
+    1 SCR
+    1 C31
+
+[HWGain     ]
+  desc=Total HW gain
+  dimension=32 1
+  weight+value=
+    1   200
+    1   200
+    1   200
+    1   200
+    1   200
+    1   200
+    1   200
+    1   200
+    1   200
+    1   200
+    1   200
+    1   200
+    1   200
+    1   200
+    1   200
+    1   200
+    1   200
+    1   200
+    1   200
+    1   200
+    1   200
+    1   200
+    1   200
+    1   200
+    1     1
+    1     1
+    1     1
+    0
+    1    30
+    1    30
+    1    30
+    0
+
+[LCFilt     ]
+  desc=Low Cut filter setting
+  dimension=32 1
+  weight+value=
+    1 DC
+    1 DC
+    1 DC
+    1 DC
+    1 DC
+    1 DC
+    1 DC
+    1 DC
+    1 DC
+    1 DC
+    1 DC
+    1 DC
+    1 DC
+    1 DC
+    1 DC
+    1 DC
+    1 DC
+    1 DC
+    1 DC
+    1 DC
+    1 DC
+    1 DC
+    1 DC
+    1 DC
+    0
+    0
+    0
+    0
+    1 DC
+    1 DC
+    1 DC
+    0
+
+[HCFilt     ]
+  desc=High Cut filter setting
+  dimension=32 1
+  weight+value=
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 250.0000
+    1 50.0000
+    1 50.0000
+    1 50.0000
+    1 250.0000
+
+[HWUnit     ]
+  desc=Unit associated with raw signal
+  dimension=32 1
+  weight+value=
+    1	uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 CU
+    1 CU
+    1 CU
+    1
+    1 uV
+    1 uV
+    1 mV
+    1
+
+[PlotRow    ]
+  desc=Row in which to plot data
+  dimension=32 1
+  weight+value=
+    1  0
+    1  1
+    1  2
+    1  3
+    1  4
+    1  5
+    1  6
+    1  7
+    1  8
+    1  9
+    1 10
+    1 11
+    1 12
+    1 13
+    1 14
+    1 15
+    1 16
+    1 17
+    1 18
+    1 19
+    1 20
+    1 21
+    1 22
+    1 23
+    1 24
+    1 25
+    1 26
+    1 27
+    1 28
+    1 29
+    1 30
+    1 31
+
+[PlotCol    ]
+  desc=Colour with which to plot data
+  dimension=32 1
+  weight+value=
+    1 10
+    1 10
+    1 14
+    1 10
+    1 12
+    1 10
+    1 14
+    1 10
+    1 14
+    1 10
+    1 12
+    1 10
+    1 14
+    1 10
+    1 14
+    1 10
+    1 12
+    1 10
+    1 14
+    1 10
+    1 10
+    1  2
+    1  2
+    1  2
+    1 11
+    1 11
+    1 11
+    1 11
+    1  2
+    1  4
+    1 10
+    1 15
+
+[PlotGain   ]
+  desc=Plot scale, as a power of 2
+  dimension=32 1
+  weight+value=
+    1 14
+    1 14
+    1 14
+    1 14
+    1 14
+    1 14
+    1 14
+    1 14
+    1 14
+    1 14
+    1 14
+    1 14
+    1 14
+    1 14
+    1 14
+    1 14
+    1 14
+    1 14
+    1 14
+    1 14
+    1 14
+    1 14
+    1 14
+    1 14
+    1 14
+    1 14
+    1 10
+    0
+    1  9
+    1 10
+    1 12
+    0
+
+[Positive   ]
+  desc=Up, if data is to be plotted +ve up
+  dimension=32 1
+  weight+value=
+    1 Down
+    1 Down
+    1 Down
+    1 Down
+    1 Down
+    1 Down
+    1 Down
+    1 Down
+    1 Down
+    1 Down
+    1 Down
+    1 Down
+    1 Down
+    1 Down
+    1 Down
+    1 Down
+    1 Down
+    1 Down
+    1 Down
+    1 Down
+    1 Down
+    1 Down
+    1 Down
+    1 Down
+    1  Up
+    1  Up
+    1  Up
+    0
+    1  Up
+    1  Up
+    1  Up
+    0
+
+[Clipping   ]
+  desc=Yes, if plot clipping required
+  dimension=32 1
+  weight+value=
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    1  No
+    0
+    1  No
+    1  No
+    1  No
+    0
+
+[CalFac     ]
+  desc=Scale factor applied to raw signal
+  dimension=32 1
+  weight+value=
+    1 1.0000
+    1 1.0000
+    1 1.0000
+    1 1.0000
+    1 1.0000
+    1 1.0000
+    1 1.0000
+    1 1.0000
+    1 1.0000
+    1 1.0000
+    1 1.0000
+    1 1.0000
+    1 1.0000
+    1 1.0000
+    1 1.0000
+    1 1.0000
+    1 1.0000
+    1 1.0000
+    1 1.0000
+    1 1.0000
+    1 1.0000
+    1 1.0000
+    1 1.0000
+    1 1.0000
+    1 0.3250
+    1 0.2000
+    1 0.0269
+    0
+    1 1.0000
+    1 1.0000
+    1 0.3027
+    0
+
+[CalUnit    ]
+  desc=Unit associated with scaled data
+  dimension=32 1
+  weight+value=
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 uV
+    1 deg
+    1 deg
+    1 deg
+    0
+    1 uV
+    1 uV
+    1 ms
+    0
+
+[SamRate    ]
+  desc=Sampling rate in Hz
+  dimension=1 1
+  weight+value=
+    1 250.00000000
+
+[RefSite    ]
+  desc=Reference site for EEG channels
+  dimension=1 1
+  weight+value=
+    1 LEL
+
+[PatComments]
+  desc=Any comments
+  dimension=1 1
+  weight+value=
+    1
+
+[TagF1      ]
+  desc=Meaning of F1 marker
+  dimension=1 1
+  weight+value=
+    1
+
+[TagF2      ]
+  desc=Meaning of F2 marker
+  dimension=1 1
+  weight+value=
+    1
+
+[TagF3      ]
+  desc=Meaning of F3 marker
+  dimension=1 1
+  weight+value=
+    1
+
+[TagF4      ]
+  desc=Meaning of F4 marker
+  dimension=1 1
+  weight+value=
+    1
+</pre>
+</td><td width=25% valign=top>
+<p align="justify">
+There are many ways to parse the desired fields from this header.
+For example to extract the number of channels.
+</p>
+
+<pre>
+int found;
+int nchannels;
+char s[64];
+
+rewind(fptr);
+found = FALSE;
+while (fscanf(fptr,"%s",s) == 1) {
+   if (strstr(s,"[NumChans   ]") != NULL) {
+      SkipUntil(fptr,'\n');
+      SkipUntil(fptr,'\n');
+      SkipUntil(fptr,'\n');
+      SkipUntil(fptr,'\n');
+      if ((fscanf(fptr,"%s %d",s,&nchannels) != 2) {
+          Handle read error
+      }
+      found = TRUE;
+      break;
+   }
+}
+if (!found) {
+   Handle case where the number of channels wasn't found
+}
+if (nchannels &lt; 1 || nchannels &gt; 64) {
+   Handle unexpected number of channels
+}
+</pre>
+</td></tr>
+
+<tr><td width=50% valign=top>
+<b>Samples - Binary data</b><p>
+<p align="justify">
+Each sample is stored as a 2 byte signed integers
+(2's complement) in "little-endian"
+order (Byte swapping may be required).
+To calculate the total number of samples use:
+</p>
+<pre>
+nsamples = (size - 512*offset) / (2*nchannels) 
+</pre>
+<p align="justify">
+where "size" is the total file size. ie: the file is made up of
+"offset" blocks, each 512 bytes in length. This is followed by "nsamples",
+each one made up of "nchannels" 2 byte samples. 
+</p>
+
+Typically, the last channel (C31) is for the event markers.
+</td><td width=25% valign=top>
+<center>
+Example inappropriate
+</center>
+</td><td width=25% valign=top>
+<pre>
+fseek(fptr,512L*offset,SEEK_SET);
+
+for (i=0;i&lt;nsamples;i++) {
+   for (j=0;j&lt;nchannels;j++) {
+      if (!ReadShort(fptr,&samples[i].electrode[j],TRUE)) {
+         Handle read error
+      }
+   }
+}
+
+/*
+   Read a possibly byte swapped short
+*/
+int ReadShort(FILE *fptr,short n,int swap)
+{
+   unsigned char *cptr,tmp;
+
+   if (fread(n,2,1,fptr) != 1)
+      return(FALSE);
+   if (swap) {
+      cptr = (unsigned char *)n;
+      tmp = cptr[0];
+      cptr[0] = cptr[1];
+      cptr[1] =tmp;
+   }
+   return(TRUE);
+}
+</pre>
+</td></tr></table>
+
+<p align="justify">
+Basic C source code that takes a Westmead EEG file and converts it into
+an ascii file is given here: <a href="http://paulbourke.net/dataformats/eeg/westmead2ascii.c">westmead2ascii.c</a>.
+It can be readily modified and used as the basis of a converter to meet
+you specific needs.
+</p>
+
+<b>Electrode positions as used by Westmead Hospital, 1995 -> 1999.</b>
+<center><img src="http://paulbourke.net/dataformats/eeg/eegsyd.gif"></center>
+
+<p><br><br><br><p>
+
+<center>
+<h3>ASCII format for EEG signals</h3>
+September 1997
+</center>
+
+The following describes an ascii file format for storing 
+multichannel EEG signals. This is by no means intended to be
+an ideal format for archiving such data but rather a convenient,
+machine independent format for exploratory analysis and data interchange.<p>
+
+The file consists of two header lines followed by the data.
+The first header line has 4 constants, the number of channels, the
+sampling frequency (Hz), the number of events, and the number of samples.
+The second header line consists of the column names for the data
+that follows. If the data is raw EEG signals then the columns
+should be the electrode names.
+The first two columns of the data section
+are predefined, they are the sample number
+and the event code. The remaining columns contain the samples from
+each channel (electrode).<p>
+
+<b>Note:</b><br>
+<ul>
+<li>The first column, the sample number, need not start at 0. 
+    For example, it may
+    be used to identify where in a longer recording a subset was derived.
+    <br>
+<li>How the event code is encoded is not specified except that 0 represents
+    the absence of an event.
+    <br>
+<li>The units and numerical datatype of the actual samples isn't specified. 
+    For raw
+    recording they might be straight numbers from the ADC, for processed
+    data they might be floating point numbers in microvolts.
+    <br>
+<li>Each value is separated by "standard" C white space, for example,
+    a single space, multiple spaces, a tab character.
+    <br>
+</ul>
+
+<b>Example</b><p>
+The first few representative lines of such a file might look like
+this:<p>
+<pre>
+62 500 0 1000
+sample event FP1 FPZ FP2 F3A F4A F7 F5 F3 F1 FZ F2 F4 F6 F8 C5A C3A   . . . 
+0 0 -1746 -1717 -1716 -1710 -1676 -1528 -1738 -1493 -1736 -1324 -1432 . . .
+1 0 -1962 -1891 -1988 -1864 -1717 -1663 -1853 -1583 -1746 -1378 -1505 . . .
+2 0 -2112 -1952 -2128 -1936 -1688 -1748 -1867 -1612 -1786 -1394 -1548 . . .
+3 0 -2063 -1857 -2032 -1853 -1600 -1694 -1774 -1547 -1802 -1373 -1535 . . .
+4 0 -1767 -1595 -1697 -1551 -1438 -1433 -1552 -1406 -1688 -1296 -1437 . . .
+5 0 -1315 -1222 -1229 -1128 -1219 -1032 -1196 -1176 -1430 -1172 -1281 . . .
+6 0 -898 -887 -822 -802 -1062 -683 -838 -976 -1144 -1067 -1148 -1139  . . .
+7 0 -757 -799 -692 -772 -1042 -571 -676 -940 -1051 -1079 -1143 -1147  . . .
+  :   :    :    :    :    :    :    :    :    :    :    :    :    :
+  :   :    :    :    :    :    :    :    :    :    :    :    :    :
+  :   :    :    :    :    :    :    :    :    :    :    :    :    :
+</pre>
+
+<p><br><br><br><p>
+
+<center>
+<h3>Electrocap Coordinates</h3>
+Compiled by Per Line<br>
+January 1997
+</center>
+<p>
+
+<center>
+<table width=90%><tr><td>
+<pre>
+BSE                   Neuroscan         Westmead    Coordinates
+1-64   0-63   Name    EEG     Phys                  x       y       z
+--------------------------------------------------------------------------
+ 2      1     FP1      0         1         1       -91.5   -24.5    -7.0
+ 3      2     FPZ      1         2        --       -94.8     0.0    -6.1
+ 4      3     FP2      2         3         2       -91.5    24.5    -7.0
+ 7      6     F3A      3         4        --       -82.0   -38.3    28.9
+11     10     F4A      4         5        --       -82.0    38.3    29.9
+13     12     F7       5         6         3       -54.5   -77.8     2.8
+14     13     F5       6         7        --       -54.8   -70.2    33.1
+15     14     F3       7         8         4       -62.3   -52.3    49.1
+16     15     F1       8         9        --       -64.2   -29.9    63.3
+17     16     FZ       9        10         5       -61.2     0.0    72.7
+18     17     F2      10        11        --       -64.2    29.9    63.3
+19     18     F4      11        12         6       -62.3    52.3    49.1
+20     19     F6      12        13        --       -54.8    70.2    33.1
+21     20     F8      13        14         7       -54.5    77.8     2.8
+22     21     C5A     14        15        --       -34.8   -82.6    41.3
+23     22     C3A     15        16        --       -34.8   -60.2    64.7
+24     23     C1A     16        17        --       -34.8   -30.1    76.6
+25     24     CZA     17        18        --       -34.8     0.0    88.5
+26     25     C2A     18        19        --       -34.8    30.1    76.6
+27     26     C4A     19        20        --       -34.8    60.2    64.7
+28     27     C6A     20        21        --       -34.8    82.6    41.3
+29     28     T3      21        22         9         0.0   -94.6     8.8
+30     29     C5      22        23        --         0.0   -83.6    45.2
+31     30     C3      23        24        10         0.0   -61.2    72.7
+32     31     C1      24        25        --         0.0   -33.0    89.1
+33     32     CZ      25        26        11         0.0     0.0    95.0
+34     33     C2      26        27        --         0.0    33.0    89.1
+35     34     C4      27        28        12         0.0    61.2    72.7
+36     35     C6      28        29        --         0.0    83.6    45.2
+37     36     T4      29        30        13         0.0    94.6     8.8
+--     --     EMGR    --        31        --          --      --      --
+--     --     EMGL    --        32        --          --      --      --
+38     37     T3L     30        33        --        32.4   -89.3    -1.8
+39     38     TCP1    31        34        --        34.8   -82.6    41.3
+40     39     C3P     32        35        --        34.8   -60.2    64.7
+--     --     C1P     33        36        --        34.8   -30.1    76.6
+41     40     PZA     34        37        --        34.8     0.0    88.5
+--     --     C2P     35        38        --        34.8    30.1    76.6
+42     41     C4P     36        39        --        34.8    60.2    64.7
+43     42     TCP2    37        40        --        34.8    82.6    41.3
+44     43     T4L     38        41        --        32.4    89.3    -1.8
+45     44     T5      39        42        15        54.5   -77.8     2.8
+54     53     P5      40        43        --        54.8   -70.1    33.1
+47     46     P3      41        44        16        57.5   -57.5    49.1
+48     47     P1      42        45        --        64.2   -29.9    63.3
+49     48     PZ      43        46        17        61.2     0.0    72.7
+50     49     P2      44        47        --        64.2    29.9    63.3
+51     50     P4      45        48        18        57.5    57.5    49.1
+59     58     P6      46        49        --        54.8    70.1    33.1
+53     52     T6      47        50        19        54.5    77.8     2.8
+60     59     CB1     48        51        --        77.3   -54.1   -10.6
+55     54     P3P     49        52        --        89.4   -40.3    20.9
+56     55     P1P     50        53        --        87.4   -23.4    28.9
+--     --     PZP     51        54        --        87.4     0.0    28.9
+57     56     P2P     52        55        --        87.4    23.4    28.9
+58     57     P4P     53        56        --        89.4    40.3    20.9
+64     63     CB2     54        57        --        77.3    54.1   -10.6
+61     60     O1      55        58        20        91.6   -24.5    -6.1
+62     61     OZ      56        59        --        95.0     0.0    -1.8
+63     62     O2      57        60        21        91.6    24.5    -6.1
+--     --     VEOGR   --        61        --          --      --      --
+--     --     HEOG    --        62        --          --      --      --
+--     --     NC      --        63        --          --      --      --
+--     --     NC      --        64        --          --      --      -- 
+--     --     A1      --        --         8          --      --      --
+--     --     A2      --        --        14          --      --      --
+--     --     EOG1    --        --        22          --      --      --
+--     --     EOGv    --        --        23          --      --      --
+--     --     EOG2    --        --        24          --      --      --
+--     --     CedX    --        --        25          --      --      --
+--     --     CedY    --        --        26          --      --      --
+--     --     CedA    --        --        27          --      --      --
+--     --     CedS    --        --        28          --      --      --
+--     --     Resp    --        --        29          --      --      --
+--     --     ECG     --        --        30          --      --      --
+--     --     SCR     --        --        31          --      --      --
+--     --     C31     --        --        32          --      --      --
+</pre>
+</td></tr></table>
+
+<p>
+<center><img src="http://paulbourke.net/dataformats/eeg/head1020.gif"></center><p>
+International 10-20 electrode position standard.
+<p>
+
+</td><tr></table></center>
+</body>
+</html>

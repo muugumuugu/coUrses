@@ -1,0 +1,89 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>e57 file format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>e57</h1>
+Proposed standard for laser scan data.<br>
+Edited: June 2017
+</center>
+<p><br><p>
+
+<p align="justify">
+The most common file format for storing and interchange of 3D laser scan data.
+While proposed as a standard, unfortunately at the time of writing there are only
+libraries built for Windows and building from source for Mac or Linux is non-trivial.
+This is disappointing given text in the main e57 document and online, namely
+</p>
+<center>
+<table width=700><tr><Td>
+<i>
+To accomplish this
+goal, we have created a cross-platform, open source implementation of the standard that is intended to lower the barriers
+to adoption of the standard and to provide a reference to compare other implementations against. The software,
+which is known as libE57, consists of a library, supporting utilities and example programs, and documentation. 
+</i>
+</td></tr></table>
+</center>
+<p>
+
+Paper: <a href="http://paulbourke.net/dataformats/e57/2011-huber-e57-v3.pdf">The ASTM E57 File Format for 3D Imaging Data Exchange</a><p>
+
+<p align="justify">
+Broardly an e57 file consists of a 48 byte header, a series of data chunks, and finally
+an XML section. The whole file, including the header is split into 1024 byte "pages", 1020 bytes
+of data and 4 bytes at the end as a checksum. This chunk nature even applies to the
+otherwise text/readable XML section located after all the data chunks.
+<p>
+
+<pre>
+struct E57FileHeader {
+    char        fileSignature[8];
+    uint32_t    majorVersion;
+    uint32_t    minorVersion;
+    uint64_t    filePhysicalLength;
+    uint64_t    xmlPhysicalOffset;
+    uint64_t    xmlLogicalLength;
+    uint64_t    pageSize;
+}
+</pre>
+
+<p align="justify">
+In order to extract the xml section one simply reads from the start of the file in 1024 byte
+pages, once the file location reaches header.xmlPhysicalOffset save the remaining 1020 bytes
+of each 1024 page. There are of course other options, slightly more complicated but faster is to seek
+to header.xmlPhysicalOffset and determine which part of the 1024 page one is on, read the rest of
+that page and then continue to read 1024 bytes pages to the end of the file but only saving the
+first 1020 bytes of each.
+An example xml section is provided here: <a href="http://paulbourke.net/dataformats/e57/xml.zip">xml.zip</a>.
+It seems normal that a e57 file is padded to integer multiple of the page size, 1024, so
+header.filePhysicalLength is always a multiple of 1024.
+</p>
+
+<center>
+<a href="http://paulbourke.net/dataformats/e57/e57colour.jpg"><img src="http://paulbourke.net/dataformats/e57/e57colour_s.jpg" width=800 height=400 border-1></a>
+</center>
+<br>
+<center>
+<a href="http://paulbourke.net/dataformats/e57/e57depth.jpg"><img src="http://paulbourke.net/dataformats/e57/e57depth_s.jpg" width=800 height=400 border-1></a>
+</center>
+
+</td></tr></table></center>
+</body>
+</html>
+

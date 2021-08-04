@@ -1,0 +1,152 @@
+<html>
+<head><link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Holter ECG .dat files</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Holter ECG .dat file</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+July 2018
+</center>
+<p><br><p>
+
+<p align="justify">
+A Holter recorder is an ambulatory electrocardiography device for, most commonly, measuring
+ECG for possibly many days. Software is provided that analyses the signals calculating various
+metrics common in the industry. However, the system and software is proprietary, it does not
+even seem to offer any facility to export the raw data in a format that is useful for independent
+analysis or research. In the authors opinion this is totally unconscionable behaviour, while it may
+be reasonable to protect algorithms and IP involved in the analysis, the raw data could reasonably
+be expected to be the property of the person who purchased the recording equipment, or the person
+whose ECG was recorded.
+</p>
+
+<center>
+   <img src="http://paulbourke.net/dataformats/holter/channel1.jpg" width=800 height=300 border=1>
+</center><p>
+
+<p align="justify">
+But there is a way around this. The recorder stores the original recording in a "flash.dat" file. While
+parts of this file can be decoded, there are aspects that are as yet not understood. Indeed since the
+LX Analysis software seems to be built upon Matlab it may be that there are MatLab conventions
+and file writing details involved.
+The file would in the very least be quite inefficient to deal with for analysis. So, the very
+first time the LX Analysis software reads the flash.dat file it creates a bunch of other files, each
+containing a specific aspect of the data. One of the files so created is called "datacard.dat", this
+contains the ECG samples of the N channels recorded, typically 2 or 3.
+</p>
+
+<p align="justify">
+As long as this datacard.dat file exists then it is relatively easy, albeit messy, to extract the
+samples. Behind the scenes the installer of LX Analysis 
+(this includes the free demo version) installs some utilities, one is called
+unpackdc (unpack data card). This creates a simple 2 byte per sample binary file per channel that is then easy
+to read and write in a more useful format for other software.
+</p>
+
+<p align="justify">
+The usage string for unpackdc is
+</p>
+<pre>
+ unpackdc datacard_file_name channel_one channel_two channel_three type [g1] [g2] [g3] [sample-rate]
+ uses as input/output the file in datacard.dat format datacard_file_name
+  (full path must be specified)
+ channel_xxx is the name of the input/output file for channel xxx 
+ if channel_xxx_file_name	is set to - then that channel is not converted 
+ the converted channels are input/output as 16 bit binary data with the least 
+ significant bit equal to 12.5 micro volt (assuming calibrated data )
+ type is:
+   0 for converting from datacard to 16 bit
+   2 for converting from 2 channels to datacard
+   3 for converting to a 3 channel datacard file 
+   4 for a single file(channel_one file) of 16 bit data organized as 
+     3 sequential 16 bit int's for the three channels for each sample.
+ g1 g2 and g3 are optional arguments which specify the gain to be used
+ in the conversion 1.0 is unity gain with a allowed range of
+ 0.125 to 8.0. The gain setting is not supported for type 4
+ sample rate is a optional argument indicating the sampling rate of the
+ source date for modes 2 and 3. It must 180 or greater samples per second
+</pre>
+
+<p align="justify">
+The process then for extracting the data from a Holter recording is as follows
+</p>
+<ul>
+<li>Create the datacard.dat file, if it doesn't already exist by running LX Analysis.<p>
+<li>Run unpackdc perhaps like this "unpackdc datacard.dat chan1.raw chan2.raw chan3.raw 0 8 8 8"<p>
+<li>Run something that will read the resulting files (chan1.raw, chan2.raw, chan3.raw) and
+write the data in a format suitable for the desired analysis. An extremely basic example is
+<a href="http://paulbourke.net/dataformats/holter/parse.c">parse.c</a><p>
+</ul>
+<p>
+
+<center>
+	<img src="http://paulbourke.net/dataformats/holter/channel2.jpg" width=800 height=300 border=1>
+</center><p>
+
+<b>Note</b><p>
+<p align="justify">
+There are international standards for recording medical data, including ECG data. Indeed
+one has the Holter name associated with it, namely the 
+<a href="HolterECGStandard.pdf">Holter ECG Standard</a>, clearly they are just paying lip service
+to the idea of international standards if they don't even support their own format as an export option.
+</p>
+
+<b>Be aware</b><p>
+<p align="justify">
+If you are buying expensive hardware for measuring X, and associated expensive software, insist upfront
+or as part of the tendering process that you have access to the raw data and in it's full resolution
+... if indeed you might want to use the recorded data outside the ecosystem the supplier provides.
+</p>
+
+<b>Challenge</b>
+<p align="justify">
+For the data wranglers out there you will appreciate that running two bits of code to extract
+a text version of a data format is rather messy. Much more elegant would be to be able to read
+the datacard.dat files directly. To date the format has not been reverse engineered. There are
+some useful things known about the format, first, it has a fixed number of bits per sample so it 
+is not compressed in a data dependent way like run length encoding or other more complex compressions.
+For those who might like to take up the challenge and earn the awe and respect of ECG researchers
+internationally here are some examples and information.
+</p>
+
+<ul>
+<li>An example datacard file:
+<a href="http://paulbourke.net/dataformats/holter/datacard.dat.gz">datacard.dat</a>, note there is no header, the file only contains ECG samples,
+no patient data for example.
+<p>
+<li>The above file has three channels, they are presented here as two byte signed int samples 
+(little endian) as extracted by
+unpackdc. <a href="http://paulbourke.net/dataformats/holter/chan1.raw.gz">chan1.raw</a>, <a href="http://paulbourke.net/dataformats/holter/chan2.raw.gz">chan2.raw</a>,
+<a href="http://paulbourke.net/dataformats/holter/chan2.raw.gz">chan3.raw</a>.
+<p>
+<li>The first 10,000 samples can be downloaded in a text format for the above three channels.
+<a href="http://paulbourke.net/dataformats/holter/chan1.txt.gz">chan1.txt</a>, <a href="http://paulbourke.net/dataformats/holter/chan2.txt.gz">chan2.txt</a>
+<a href="http://paulbourke.net/dataformats/holter/chan3.txt.gz">chan3.txt</a>.
+<p>
+<li>In the above datacard.dat and subsequent raw files there 
+are 15552300 samples per channel. So the raw files
+are 31104600 bytes since they are 2 bytes per sample.
+<p>
+<li>The datacard.dat file is 3940144 bytes for all 3 channels, so on average this is 
+23639496/15552300 = 1.52 bytes (exactly) for 3 samples. I have checked this with different datacard.dat files,
+the ratio is always the same so no data dependent encoding.
+I imagine this points to some sort of 4bit delta encoding.
+</ul><p>
+
+</td></tr></table></center>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>BMF file format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>BMF file format</h1>
+Designed by David Farrell<br>
+Implemented as export from "view3ds" and used in 'openuniverse"
+</center>
+<p><br><p>
+
+<p align="justify">
+A BMF file defines facet based models including their texture file names. 
+The facets may be either individual faces described through a vertex list
+(SparceMesh) or mesh strips (StrpMesh). The vertices have both texture
+coordinates, normals, and positions.
+</p>
+
+<b>Header</b>
+<p align="justify">
+The first two unsigned short ints
+give the number of materials and the mesh type.
+The mesh is either a 0 for "sparce" or it is a "strip" mesh.
+</p>
+
+<b>Texture name</b>
+<p align="justify">
+A StripMesh and SparceMesh have much in common, they start with
+the length of the texture (unsigned short int) followed by the
+texture name. The texture name is a '\0' terminated
+C string so the texture name length is at least 1. The textures are 
+saved as JPEG images external to the BMF file. Since this has been designed
+as a Windows format the case sensitivity of the texture names 
+has not be specified.
+</p>
+
+<b>Surface properties</b>
+<p align="justify">
+Then follows the ambient, diffuse and specular values (RGBA).
+A RGBA is defined as follows, note that floats are 32 bits wide. These
+and ints are all little endian.
+</p>
+<pre>
+typedef struct {
+   float r,g,b,a;
+} RGBA;
+</pre>
+
+<b>Vertex list</b>
+<p align="justify">
+Then follows the number of vertices (unsigned short int) and
+the vertices themselves (VERTEX).
+u,v are the texture coordinates, i,j,k the normals, x,y,z the
+vertex positions.
+A VERTEX is defined as
+</p>
+<pre>
+typedef struct {
+   float u,v;
+   float i,j,k;
+   float x,y,z;
+} VERTEX;
+</pre>
+
+After this the two mesh types differ.
+<p>
+
+<b>SparceMesh</b>
+<p align="justify">
+A SparceMesh consists of an indexed list of triangular polygons (TRILIST)
+where p0,p1,p2 index into the vertex list. The vertex indices start
+at 0.
+</p>
+<pre>
+typedef struct {
+   unsigned short int p0,p1,p2;
+} TRILIST;
+</pre>
+
+<b>StripMesh</b>
+<p align="justify">
+A StripMesh consists of an array containing the length of the strips
+and another array with all the strip indices into the vertex list.
+The sum of all the strip lengths should be the same as the number
+of strip indices.
+</p>
+
+<b>Further reading</b>
+<p align="justify">
+For more details see the 
+<a href="http://paulbourke.net/dataformats/bmf_1/bmf.h">header file</a> and 
+<a href="http://paulbourke.net/dataformats/bmf_1/loadbmf.cpp">BMF load software</a>
+by David Farrell, these are part of the openuniverse distribution.
+Two example models are given here, they are the two moons of Mars: 
+<a href="http://paulbourke.net/dataformats/bmf_1/phobos.bmf">phobos.bmf</a> and 
+<a href="http://paulbourke.net/dataformats/bmf_1/deimos.bmf">deimos.bmf</a>.
+My rough code that converts Sparce BMF files is given here:
+<a href="http://paulbourke.net/dataformats/bmf_1/readbmf.c">readbmf.c</a>.
+</p>
+
+</td></tr></table></center>
+</body>
+</html>
+

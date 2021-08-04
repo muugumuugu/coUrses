@@ -1,0 +1,2358 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>ILDA - International Laser Display Association</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>ILDA - International Laser Display Association</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 2002
+</center>
+<p><br><p>
+
+<p align="justify">
+The IDLA image data transfer format (file extension .ild) was designed by the 
+International Laser Display Association to facilitate the transfer of
+laser show content between sites and systems. It supports the storage
+of not just individual frames/objects but time varying sequences
+(animations). It is a binary format employing the so-called "big endian"
+byte ordering (typically SGI, Macintosh, Amiga,....opposite to Intel
+processor based machines).
+</p>
+
+<p align="justify">
+A ILDA file can describe
+three different types of data: 
+<a href="index.html#2D">2D coordinates</a>, 
+<a href="index.html#3D">3D coordinates</a>, and
+<a href="index.html#cindex">index colour palettes</a>. 
+Each data type is represented in a ILDA file
+by a header followed by the data. These types (sections) can appear in
+any order except that colour palette data is supposed to precede the
+2D or 3D data it applies to.
+</p>
+
+<b>Header</b><p>
+<p align="justify">
+The following table will describe the format of the header section
+that precedes each data section. The header contains enough information
+to determine the size of the following data section and so data sections
+not recognised can be skipped over until the next header is reached.
+</p>
+<table width=100%>
+
+<tr><td valign="top">
+<b>Bytes</b>
+</td><td valign="top">
+<b>Name</b>
+</td><td valign="top">
+<b>Comments</b>
+</td></tr>
+
+<tr><td valign="top">
+1 to 4
+</td><td valign="top">
+Signature ("ILDA")
+</td><td valign="top">
+This makes a positive identification that this is the start
+of a header section, it should be the ASCII characters "ILDA".
+It can also be used to quickly identify a file as a valid
+ILDA file since the first section of such a file must be
+a header section.
+</td></tr>
+
+<tr><td valign="top">
+5 to 7
+</td><td valign="top">
+Not used
+</td><td valign="top">
+Supposed to be set to 0
+</td></tr>
+
+<tr><td valign="top">
+8
+</td><td valign="top">
+Format type
+</td><td valign="top">
+This indicates the type of data section that will follow
+the header.
+This must be either 0 
+(<a href="index.html#3D">3D coordinate section</a>), 1 
+(<a href="index.html#2D">2D coordinate section)</a>, or 2 
+(<a href="index.html#cindex">colour palette section</a>). The
+structure of these is described in more detail later.
+</td></tr>
+
+<tr><td valign="top">
+9 to 16
+</td><td valign="top">
+Name
+</td><td valign="top">
+This 8 byte string indicates the name (if there is one) of the current
+frame for format type 0 and 1, and the palette name for format type 2.
+If no name is appropriate then all the bytes should be set to 0.
+</td></tr>
+
+<tr><td valign="top">
+17 to 24
+</td><td valign="top">
+Company name
+</td><td valign="top">
+The name of the company who created the frame or palette.
+If no name is appropriate then all the bytes should be set to 0.
+</td></tr>
+
+<tr><td valign="top">
+25 and 26
+</td><td valign="top">
+Total number of entries in data section
+</td><td valign="top">
+For coordinates this is the number of points in the following
+data section, for colour palettes it is the number of entries in the
+palette. Using this along with the known size for the data section
+entries allows a parsing program to skip over sections they weren't
+interested.
+</td></tr>
+
+<tr><td valign="top">
+27 and 28
+</td><td valign="top">
+Current frame number
+</td><td valign="top">
+For files that contain a number of frames, eg: library of
+graphical shapes, collection of colour palettes, or an
+animation sequence, this is the current number. It ranges
+from 0 up to one the total number of frames minus 1.
+</td></tr>
+
+<tr><td valign="top">
+29 and 30
+</td><td valign="top">
+Total number of frames
+</td><td valign="top">
+The total number of frames and is not used for colour palette
+format types. This is set to 0 in a "null header" 
+to indicate the end of the ILDA file.
+</td></tr>
+
+<tr><td valign="top">
+31
+</td><td valign="top">
+Scanner head
+</td><td valign="top">
+Used for systems with multiple scanners or heads, otherwise
+set to 0 for the default device.
+</td></tr>
+
+<tr><td valign="top">
+32
+</td><td valign="top">
+Not used
+</td><td valign="top">
+Supposed to be set to 0
+</td></tr>
+
+</table><p>
+
+<p align="justify">
+While not strictly necessary for the successful parsing of a ILDA
+file, it seems conventional to place a "null header" at the end of
+the file. A null header has the "total points" fields set to 0.
+</p>
+
+<b>Data</b><p>
+<p align="justify">
+The data section that appears after any header section is one of three
+types depending on the value in the "format code" in the header. The
+three possible data sections are described below.
+</p>
+
+<b><a name="3D">Format type: 0 - 3D Coordinates</b></a><p>
+<p align="justify">
+Each entry in a 3D coordinate section is 8 bytes long consisting of
+three signed short integers for the (x,y,z) point, a single byte that
+is used to set the laser state, and a single byte for the colour index.
+The laser state byte uses the top two bits to blank the laser (turn
+it off) and to indicate the end of the sequence. For the blanking
+a 0 indicates the laser is on, 1 is blanked. The end point indicator
+is set to 1 to indicate the end. The unused bits 0 to 5 in the state
+byte are supposed to be set to 0.
+Code to read the 3D coordinate data might be something like this
+(error checking removed)
+</p>
+<pre>
+   int i;
+   short x,y,z;
+   int status;
+   int colour,blanking,lastpoint;
+
+   for (i=0;i&lt;number_of_points;i++) {
+      fread(&x,sizeof(short),1,fptr);
+      if (swapendian)
+         FIX_SHORT(x);
+      fread(&y,sizeof(short),1,fptr);
+      if (swapendian)
+         FIX_SHORT(y);
+      fread(&z,sizeof(short),1,fptr);
+      if (swapendian)
+         FIX_SHORT(z);
+      status = fgetc(fptr);
+      colour = fgetc(fptr);
+      blanking = (status & 0x40) &gt;&gt; 6;
+      lastpoint = (status & 0x80) &gt;&gt; 7;
+      // do something with this point
+   }
+</pre>
+
+<b><a name="2D">Format type: 1 - 2D Coordinates</b></a><p>
+<p align="justify">
+This is exactly the same as for 3D coordinates except the third
+z coordinate is missing. Each item of a 2D coordinate section is
+therefore only 6 bytes. 
+Note that most software seems to be written to create
+3D sections even for 2D data, the z coordinate is just set to 0.
+</p>
+
+<b><a name="cindex">Format type: 2 - Index Colour Palette</b></a><p>
+<p align="justify">
+Each item in the colour palette is 3 bytes, one byte for each red,
+green, and blue. The first item is the r,g,b value for colour index 0,
+the second item in the colour palette is the r,g,b value for the second
+colour index 1, etc. 
+</p>
+<pre>
+   int i;
+   short r,g,b;
+
+   for (i=0;i&lt;number_of_colours;i++) {
+      r = fgetc(fptr);
+      g = fgetc(fptr);
+      b = fgetc(fptr);
+      // Do something with this colour   
+   }
+</pre>
+
+<p align="justify">
+Since the colour index in the 2D or 3D
+data section is restricted to 1 byte, the maximum number of entries
+in the colour palette is 256. It is good form to provide full colour
+palettes even if some entries aren't used. So a monochromatic system
+should specify 2 colour, a 4 bit system all 16 colours and a 8 bit
+or full colour system all 256 colours. Note that by convention
+colour index 0 and 1 should be set to black (and is used when
+blanking is on) and white respectively and are often assumed to be so.
+</p>
+
+<p align="justify">
+For most systems one can assume a default
+colour palette (except of course this is makes the data less portable).
+For many systems with a limited palette only one colour palette is
+needed and would generally appear at the beginning, the system that
+reads an ILDA file with a colour palette (which may contain colours
+it can't represent) is obliged to choose to the closest colour
+to the ones requested. For laser projection systems that can represent
+a very wide spectrum, while this file format is limited to 256 colours
+at any one time, potentially a different colour palette can precede each
+data section.
+</p>
+
+<b>Changing endian</b><p>
+<p align="justify">
+If an ILDA file is being read on a machine with the opposite endian
+then the following C macros will conveniently change all short integers.
+</p>
+<pre>
+#define SWAP_2(x) ( (((x) & 0xff) &lt;&lt; 8) | ((unsigned short)(x) &gt;&gt; 8) )
+#define FIX_SHORT(x) (*(unsigned short *)&(x) = SWAP_2(*(unsigned short *)&(x)))
+</pre>
+<p>
+
+<b>Default palette</b><p>
+
+<p align="justify">
+The default palette is given below, it consists of different sections.
+</p>
+<ul>
+<li>0 and 1 are black and white, except that 0 should be used during
+blanking.<p>
+<li>2 through 7 are the 6 fully saturated corners of the colour cube.
+<p>
+<li>8 to 73, 74 to 139, 140 to 205 are colour ramps each at a different
+saturation.
+<p>
+<li>206 to 230 are a selection of "special purpose" colours.
+<p>
+<li>231 to 255 is a grey scale ramp.
+</ul><p>
+
+<table>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#000000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;               Black/blanked (fixed)</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FFFFFF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             White (fixed)</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF0000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;               Red (fixed)</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;3&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FFFF00">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;               Yellow (fixed)</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;4&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00FF00">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;               Green (fixed)</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;5&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00FFFF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Cyan (fixed)</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;6&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#0000FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Blue (fixed)</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;7&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF00FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Magenta (fixed)</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;8&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF8080">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Light red</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;9&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF8C80">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;140&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;10&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF9780">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;151&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;11&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FFA380">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;163&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;12&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FFAE80">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;174&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;13&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FFBA80">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;186&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;14&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FFC580">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;197&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;15&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FFD180">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;209&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;16&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FFDC80">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;220&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;17&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FFE880">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;232&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;18&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FFF380">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;243&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;19&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FFFF80">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Light yellow</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;20&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#F3FF80">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;243&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;21&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#E8FF80">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;232&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;22&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#DCFF80">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;220&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;23&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#D1FF80">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;209&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;24&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#C5FF80">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;197&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;25&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#BAFF80">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;186&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;26&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#AEFF80">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;174&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;27&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#A3FF80">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;163&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;28&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#97FF80">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;151&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;29&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#8CFF80">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;140&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;30&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80FF80">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Light green</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;31&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80FF8C">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;140&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;32&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80FF97">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;151&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;33&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80FFA3">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;163&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;34&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80FFAE">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;174&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;35&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80FFBA">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;186&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;36&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80FFC5">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;197&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;37&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80FFD1">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;209&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;38&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80FFDC">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;220&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;39&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80FFE8">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;232&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;40&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80FFF3">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;243&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;41&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80FFFF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Light cyan</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;42&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80F3FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;243&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;43&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80E8FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;232&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;44&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80DCFF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;220&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;45&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80D1FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;209&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;46&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80C5FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;197&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;47&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80BAFF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;186&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;48&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80AEFF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;174&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;49&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80A3FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;163&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;50&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#8097FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;151&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;51&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#808CFF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;140&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;52&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#8080FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Light blue</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;53&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#8C80FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;140&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;54&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#9780FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;151&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;55&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#A380FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;163&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;56&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#AE80FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;174&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;57&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#BA80FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;186&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;58&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#C580FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;197&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;59&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#D180FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;209&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;60&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#DC80FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;220&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;61&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#E880FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;232&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;62&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#F380FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;243&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;63&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF80FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Light magenta</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;64&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF80F3">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;243&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;65&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF80E8">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;232&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;66&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF80DC">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;220&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;67&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF80D1">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;209&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;68&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF80C5">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;197&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;69&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF80BA">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;186&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;70&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF80AE">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;174&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;71&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF80A3">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;163&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;72&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF8097">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;151&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;73&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF808C">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;140&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;74&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF0000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;               Red (cycleable)</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;75&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF1700">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;23&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;76&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF2E00">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;46&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;77&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF4600">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;70&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;78&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF5D00">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;93&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;79&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF7400">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;116&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;80&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF8B00">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;139&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;81&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FFA200">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;162&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;82&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FFB900">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;185&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;83&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FFD100">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;209&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;84&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FFE800">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;232&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;85&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FFFF00">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;               Yellow (cycleable)</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;86&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#E8FF00">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;232&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;87&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#D1FF00">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;209&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;88&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#B9FF00">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;185&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;89&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#A2FF00">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;162&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;90&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#8BFF00">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;139&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;91&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#74FF00">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;116&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;92&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#5DFF00">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;93&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;93&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#46FF00">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;70&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;94&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#2EFF00">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;46&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;95&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#17FF00">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;23&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;96&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00FF00">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;               Green (cycleable)</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;97&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00FF17">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;23&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;98&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00FF2E">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;46&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;99&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00FF46">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;70&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;100&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00FF5D">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;93&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;101&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00FF74">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;116&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;102&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00FF8B">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;139&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;103&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00FFA2">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;162&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;104&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00FFB9">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;185&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;105&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00FFD1">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;209&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;106&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00FFE8">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;232&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;107&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00FFFF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Cyan (cycleable)</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;108&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00E8FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;232&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;109&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00D1FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;209&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;110&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00B9FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;185&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;111&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00A2FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;162&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;112&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#008BFF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;139&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;113&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#0074FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;116&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;114&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#005DFF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;93&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;115&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#0046FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;70&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;116&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#002EFF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;46&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;117&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#0017FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;23&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;118&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#0000FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Blue (cycleable)</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;119&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#1700FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;23&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;120&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#2E00FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;46&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;121&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#4600FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;70&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;122&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#5D00FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;93&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;123&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#7400FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;116&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;124&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#8B00FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;139&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;125&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#A200FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;162&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;126&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#B900FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;185&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;127&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#D100FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;209&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#E800FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;232&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;129&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF00FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Magenta (cycleable)</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;130&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF00E8">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;232&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;131&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF00D1">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;209&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;132&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF00B9">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;185&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;133&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF00A2">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;162&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;134&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF008B">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;139&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;135&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF0074">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;116&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;136&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF005D">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;93&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;137&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF0046">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;70&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;138&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF002E">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;46&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;139&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF0017">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;23&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;140&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#800000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;               Dark red</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;141&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#800C00">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;12&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;142&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#801700">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;23&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;143&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#802300">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;35&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;144&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#802F00">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;47&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;145&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#803A00">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;58&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;146&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#804600">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;70&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;147&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#805100">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;81&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;148&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#805D00">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;93&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;149&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#806900">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;105&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;150&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#807400">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;116&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;151&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#808000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;               Dark yellow</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;152&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#748000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;116&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;153&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#698000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;105&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;154&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#5D8000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;93&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;155&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#518000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;81&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;156&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#468000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;70&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;157&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#3A8000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;58&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;158&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#2F8000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;47&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;159&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#238000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;35&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;160&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#178000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;23&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;161&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#0C8000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;12&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;162&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#008000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;               Dark green</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;163&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00800C">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;12&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;164&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#008017">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;23&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;165&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#008023">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;35&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;166&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00802F">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;47&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;167&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00803A">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;58&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;168&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#008046">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;70&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;169&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#008051">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;81&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;170&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00805D">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;93&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;171&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#008069">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;105&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;172&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#008074">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;116&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;173&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#008080">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Dark cyan</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;174&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#007480">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;116&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;175&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#006980">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;105&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;176&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#005D80">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;93&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;177&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#005180">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;81&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;178&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#004680">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;70&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;179&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#003A80">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;58&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;180&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#002F80">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;47&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;181&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#002380">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;35&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;182&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#001780">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;23&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;183&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#000C80">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;12&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;184&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#000080">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Dark blue</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;185&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#0C0080">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;12&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;186&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#170080">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;23&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;187&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#230080">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;35&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;188&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#2F0080">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;47&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;189&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#3A0080">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;58&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;190&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#460080">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;70&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;191&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#510080">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;81&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#5D0080">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;93&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;193&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#690080">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;105&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;194&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#740080">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;116&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;195&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#800080">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Dark magenta</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;196&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#800074">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;116&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;197&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#800069">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;105&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;198&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80005D">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;93&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;199&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#800051">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;81&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;200&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#800046">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;70&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;201&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80003A">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;58&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;202&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80002F">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;47&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;203&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#800023">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;35&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;204&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#800017">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;23&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;205&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#80000C">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;12&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;206&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FFC0C0">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Very light red</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;207&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF4040">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;64&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;64&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;              Light-medium red</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;208&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#C00000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;               Medium-dark red</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;209&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#400000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;64&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;               Very dark red</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;210&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FFFFC0">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Very light yellow</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;211&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FFFF40">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;64&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;              Light-medium yellow</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;212&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#C0C000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;               Medium-dark yellow</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;213&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#404000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;64&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;64&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;               Very dark yellow</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;214&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#C0FFC0">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Very light green</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;215&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#40FF40">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;64&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;64&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;              Light-medium green</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;216&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00C000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;               Medium-dark green</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;217&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#004000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;64&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;               Very dark green</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;218&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#C0FFFF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Very light cyan</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;219&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#40FFFF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;64&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Light-medium cyan</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;220&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#00C0C0">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Medium-dark cyan</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;221&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#004040">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;64&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;64&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;              Very dark cyan</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;222&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#C0C0FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Very light blue</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;223&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#4040FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;64&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;64&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Light-medium blue</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;224&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#0000C0">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Medium-dark blue</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;225&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#000040">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;64&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;              Very dark blue</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;226&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FFC0FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Very light magenta</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;227&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF40FF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;64&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Light-medium magenta</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;228&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#C000C0">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Medium-dark magenta</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;229&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#400040">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;64&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;64&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;              Very dark magenta</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;230&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FF6060">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;96&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;96&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;              Medium skin tone</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;231&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#FFFFFF">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             White (cycleable)</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;232&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#F5F5F5">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;245&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;245&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;245&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;233&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#EBEBEB">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;235&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;235&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;235&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;234&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#E0E0E0">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;224&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;224&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;224&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Very light gray (7/8 intensity)</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;235&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#D5D5D5">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;213&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;213&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;213&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;236&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#CBCBCB">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;203&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;203&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;203&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;237&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#C0C0C0">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Light gray (3/4 intensity)</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;238&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#B5B5B5">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;181&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;181&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;181&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;239&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#ABABAB">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;171&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;171&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;171&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;240&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#A0A0A0">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;160&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;160&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;160&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Medium-light gray (5/8 int.)</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;241&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#959595">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;149&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;149&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;149&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;242&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#8B8B8B">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;139&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;139&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;139&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;243&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#808080">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;128&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;             Medium gray (1/2 intensity)</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;244&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#757575">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;117&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;117&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;117&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;245&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#6B6B6B">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;107&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;107&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;107&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;246&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#606060">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;96&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;96&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;96&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;              Medium-dark gray (3/8 int.)</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;247&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#555555">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;85&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;85&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;85&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;248&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#4B4B4B">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;75&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;75&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;75&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;249&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#404040">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;64&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;64&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;64&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;              Dark gray (1/4 intensity)</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;250&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#353535">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;53&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;53&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;53&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;251&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#2B2B2B">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;43&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;43&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;43&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;252&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#202020">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;32&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;32&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;32&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;              Very dark gray (1/8 intensity)</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;253&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#151515">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;21&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;21&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;21&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;254&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#0B0B0B">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;11&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;11&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;11&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;255&nbsp;&nbsp;&nbsp;</td>
+<td width=20 bgcolor="#000000">&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;               Black (cycleable/changeable)</td>
+</tr>
+</table>
+
+</td></tr></table></center>
+</body>
+</html>
+
+
+

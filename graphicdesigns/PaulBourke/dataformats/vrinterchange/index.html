@@ -1,0 +1,980 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>A File Format for the Interchange of Virtual Worlds</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>A File Format for the Interchange of Virtual Worlds</h1>
+<h2>Bernie Roehl and Kerry Bonin</h2>
+<h3>First Draft - May 1994</h3>
+</center>
+
+<p><br><p>
+
+<h2>Premise</h2>
+
+        As the Virtual Reality industry matures, there is an
+increasing need for standardization.  In particular, there is a need
+for a standard file format for storing descriptions of both individual
+objects and entire worlds.
+
+<P>
+
+        This document proposes such a file format.  It addresses such
+issues as the description of object geometry, object hierarchy,
+material properties, and various other elements that are typically
+used to describe a virtual environment.  The proposed format is not
+intended to replace the native formats used by the various VR systems;
+instead, it is designed to be a kind of "lingua franca" for the
+exchange of world descriptions.  In this sense, it's similar to the
+Rich Text Format often used for the interchange of word processing
+documents.
+
+<P>
+
+        The primary purpose of the format is to enable third party
+developers to create and distribute objects and worlds that can be
+used by the entire VR community.  Object creation is one of the more
+tedious aspects of world-building; having a standard format allows
+large databases of virtual objects to be created more easily than they
+can be at present.  A standard format not only simplifies the work of
+the world-builder, it also enhances the usefulness of all VR systems
+since their users gain access to a larger collection of resources.
+
+<P>
+
+<h2>Some Background</h2>
+
+<P>
+
+        The specifications for this format grew out of an informal
+discussion held at the Meckler Virtual Reality Conference in May of
+1994.  Representatives from VREAM, Superscape, Straylight, Virtek and
+others were present; the discussion was lively and open, and there was
+general agreement on the need for a standard file format.
+
+<P>
+
+<h2>Why Not DXF?</h2>
+
+<P>
+
+        The only format that all vendors currently support is DXF.
+However, DXF was never intended for this purpose; it was originally
+designed to meet the needs of CAD users.  It therefore has many
+features which are of no use to VR developers, and lacks many features
+that VR developers would find useful.  Many of the existing DXF
+translators and input routines support only a subset of the full DXF
+specification, often forcing world-builders to "tweak" the files after
+they are imported.  DXF also makes no provision for storing world
+layout or object hierarchy descriptions.
+
+<P><br><P>
+
+<h2>Basic Syntax</h2>
+
+<P>
+
+        A world description file is considered to be a stream of
+printable ascii characters.  The advantage of an ascii format is that
+it's human-readable; it can be printed on paper, created or modified
+using a text editor, sent via email, and so forth.  It also has the
+advantage of platform-independence; concerns about word lengths,
+byte-ordering, floating-point formats and so on are eliminated.
+
+<P>
+
+        The file is free-format; line boundaries are ignored.  Spaces,
+tabs, carriage returns and line feeds are all treated simply as
+whitespace.  The use of whitespace to enhance readability is strongly
+encouraged; in particular, indentation should be used to make clear
+the structure and organization of the data.
+
+<P>
+
+        The file consists simply of a series of tagged items of the
+format
+
+<P>
+<pre>
+                tagname { ... }
+</pre>
+<P>
+
+        The { } characters enclose data that is specific to the tag.
+Each tagged item can contain other tagged items, nested to any level;
+the resulting file looks somewhat like a C program:
+
+<P>
+<pre>
+top-level-tagname
+        {
+        second-level-tagname
+                {
+                third-level-tagname
+                        {
+                        ...
+                        }
+                another-third-level-tagname
+                        {
+                        }
+                }
+        another-second-level tagname
+                {
+                ...
+                }
+        }
+</pre>
+<P>
+
+        Any unrecognized tags are simply ignored, along with any items
+contained within them; this ensures that the format is extensible and
+that old parsers will still be able to deal with newer versions of the
+format.  Ignoring a tag consists of simply skipping everything within
+the matching { } markers; however, see the description of the STRING
+data type later in this document for an important exception to this.
+The ordering of tags is generally unimportant, except as specifically
+noted below.
+
+<P>
+
+        The syntax is designed to be very easy to parse; in any case,
+sample parsers will be freely distributed to any interested parties.
+Also provided will be a small "test suite" of objects and worlds that
+will allow anyone developing a parser to veri
+
+<P>
+
+        The vast majority of tags are optional; they can be omitted by
+world-builders and ignored by import and translate functions.  It is
+important to note that importing an object into a VR system and
+re-exporting it may involve a loss of information, since not all VR
+systems support all the features specified in the format.  For
+example, some VR systems only support triangles; when importing a file
+containing facets (polygons) with more than three sides, they
+typically decompose the facets into triangles.  If they re-export the
+file again, the original n-sided facet information is no longer
+available.
+
+<P><br><P>
+
+<h2>Fundamental Data Types</h2>
+
+<P>
+
+        There are several data types that are used throughout this
+document.  In addition to the types listed below, some tags may use
+additional types that are tag-specific.
+
+<P>
+<dl>
+<dt><B>REAL</B>   
+<dd>A signed, single-precision floating-point number.
+<dd>For example: -137.1294
+
+<dt><B>NUM</B>
+<dd>An unsigned decimal integer with 32-bit precision, 
+typically used as an array index.
+<dd>For example: 15
+
+<dt><B>STRING</B> 
+<dd>A character string.  Strings are always enclosed in double-quotes (") 
+for readability; any { or } symbols within a string should be ignored 
+while skipping a tagged item.  If a " or \ character must be included 
+in string, it should be preceded by a \.
+<dd>For example:  "the \"delimiters\" are } and {, and the escape is \\"
+
+<dt><B>ID</B>
+<dd>An unsigned 32-bit integer, specified in either decimal or hex 
+        (hex uses the 0x prefix).  IDs are only meaningful within a 
+        single file; they should not be used internally within an application.
+        IDs are generated when the file is created, and are discarded after 
+        parsing.
+<dd>For example: 0x9348736
+
+<dt><B>HANDLE</B> 
+<dd>An unsigned 32-bit integer, specified in either decimal or hex 
+        (hex uses the 0x prefix).  HANDLEs differ from Ids in that they 
+        are used by the application, not the parser.  For example, if it's 
+        anticipated that the application may need to reference a particular 
+        facet within an object, the facet can be provided with a HANDLE.
+
+<dt><b>DATE</B>   
+<dd>To avoid the ambiguity associated with the mm/dd/yy vs dd/mm/yy 
+        conventions, a DATE is specified as monthname, date, year; it may 
+        optionally be followed by a time in the form hh:mm:ss using a 
+        24-hour clock.
+<dd>For example: May 16, 1994 16:23:45
+
+<dt><B>BOOLEAN</B>
+<dd>Either of the values TRUE or FALSE.
+<dd>For example: TRUE
+
+<dt><b>COLOR</B>  
+<dd>An RGB triplet, where each of R, G and B is a REAL in the range 0.0 
+        through 1.0 inclusive.  The color triplet need not be normalized 
+        (i.e. the components need not sum to 1.0).
+<dd>For example: 0.2 0.3 0.2
+
+<dt><B>FNAME</B>  
+<dd>A lowercase STRING consisting of no more than 12 characters 
+        in the format "????????.???"; all the characters (except the ".") 
+        should be alphanumeric, and the first should be alphabetic.  
+        This syntax is chosen for reasons of DOS compatibility.
+
+<dt><B>ANGLE</B>  
+<dd>A REAL value giving a rotation angle in radians.  
+
+<dt><B>UNAME</B>  
+<dd>A STRING value identifying a specific user.  The recommended format 
+        for this is the full name of the user, followed by his or her 
+        electronic mail address enclosed in "<>" characters.
+<dd>For example:  Kerry L. Bonin 
+</dl>
+
+<P><br><P>
+
+<h2>Conventions</h2>
+
+        The definition of all object geometry and location/orientation
+information is done using a left-handed coordinate system, oriented so
+that if X points to the right and Y points up, then Z points forwards.
+All positive rotations around an axis are clockwise when viewed from
+the positive end of the axis looking towards the origin.
+
+<P>
+
+        Where applicable, rotations are carried out in the order yaw,
+pitch, roll; in other words, YXZ.
+
+<P>
+
+<h2>Tags</h2>
+
+        Tag names consist of alphanumeric characters, plus '_'; the
+first character must be alphabetic.  No specific length limit is
+imposed on tag names, but they ought to be unique in the first 32
+characters.  Tag names are not case-sensitive; "thing", "THING" and
+"Thing" are all equivalent.
+
+<P>
+
+        Many of the defined tags appear only inside other tagged
+items; however, there are two that may appear at any point in the
+file:
+
+<P>
+<pre>
+                comment { STRING }
+                include { FILENAME }
+</pre>
+<P>
+
+        Comments can always be ignored, and may be nested.  Files that
+are included should be treated as if the entire contents of the file
+had been inserted in place of the include.  Included files can include
+other files, but there may be some limits imposed by the underlying
+operating system as to the number of simultaneously open files.
+
+<P>
+
+        Several tags can appear inside the definition of any entity
+(vertex, facet, shape, object, material, etc):
+
+<P>
+<pre>
+                Identifier { ID }
+                Application_handle { HANDLE }
+                Name { STRING }
+</pre>
+<P>
+
+        An Identifier allows an entity to subsequently be referenced;
+it can be thought of as an "address".  Only entities that will be
+referenced elsewhere in the file should be given an Identifier.
+Identifiers are only meaningful within a single file, and are
+discarded after parsing.
+
+<P>
+
+        The Application_handle allows an entity to be assigned a
+handle by which it can be referenced by the application software.  Any
+entity can also be assigned a Name; its use is application-dependent.
+
+<P>
+
+<h2>Overall File Structure</h2>
+
+<P>
+
+        The file is made up of a number of sections.  More sections
+may be defined later, but those that are currently defined are Maps,
+Materials, Shapes, Objects, Lights, Cameras, Sounds and
+Global_attributes; all sections are optional.  The Maps, if used, must
+be defined before the Materials.  Shapes must be defined before the
+objects that reference them, and lights and cameras must be defined
+after any objects that they're attached to.
+
+<P>
+
+<h2>Maps</h2>
+
+<P>
+
+        A map is rectangular array of values that can be used as a
+texture (by systems which support texture mapping) or as a bump or
+opacity map (for those few systems that support such things).  Maps in
+a variety of formats can be supported; the type of map, as well as its
+dimensions and "depth", are all determined from the external file in
+which the map is stored.  Recommended map formats are PCX (for
+8-bit-deep maps), TGA (for 24-bit deep maps) and FLC (for animated
+maps).
+
+<P>
+
+The maps used in a world are listed in a Map_list, the format of which is:
+
+<P>
+<pre>
+        Map_list
+                {
+                Count { n }
+                Map { FNAME }
+                Map { FNAME }
+                Map { FNAME }
+                ...
+                }
+</pre>
+<P>
+
+        The Count tag specifies the number of Map entries which
+follow; it must precede any Map tags.  This same convention is adopted
+for any array-type data, to allow import and translation routines to
+allocate the entire array and then fill it with data.  The order in
+which the Maps are specified is significant, since the maps are
+identified using an index value.
+
+<P>
+
+<h2>Materials</h2>
+
+<P>
+
+The Materials list has the following format:
+
+<P>
+<pre>
+        Material_list
+                {
+                Count { n }
+                Material { ... }
+                Material { ... }
+                ...
+                }
+</pre>
+<P>
+
+        A Material is a definition of what a surface looks like; it
+can contain a great deal of information (needed on some systems), but
+the only required tag is the Diffuse_color.  All other tags can be
+omitted when creating the file, and ignored during parsing.  The
+format of a Material is as follows:
+
+<P>
+<pre>
+        Material
+                {
+                Name { STRING }
+                Rendering_mode {  type }
+                Diffuse_color { COLOR }
+                Ambient_color { COLOR }
+                Transparency_color { COLOR }
+                Specular_color { COLOR }
+                Specular_exponent { REAL }
+                Refractive_index { REAL }
+                Texture_map { NUM }
+                Bump_map { NUM }
+                Opacity_map { NUM }
+                Reflection_map { NUM }
+                Reflection_blur { REAL }
+                Transparency_falloff { REAL }
+                }
+</pre>
+<P>
+
+        The Rendering_mode type can be one of WIREFRAME, UNLIT, FLAT,
+GOURAUD or PHONG.  The default should be GOURAUD if it's available,
+otherwise FLAT if it's available, otherwise UNLIT.  UNLIT materials
+always have the same color, regardless of lighting; FLAT materials
+have a constant color across their surface, the brightness of which
+varies depending on lighting.  Many of the parameters are included
+just for the sake of completeness, especially for VR systems that
+pre-compute much of the surface property information.
+
+<P>
+
+        The various maps are identified by a NUM which is an index
+into the array of maps; this allows the same map to be used
+repeatedly, and in a number of ways.
+
+<P>
+
+        A materials list can be very simple:
+
+<P>
+<pre>
+        Material_list
+                {
+
+                Count { 5 }
+                Material { Diffuse_color { .5 .3 .1 } }
+                Material { Diffuse_color { .1 .1 .7 } }
+                Material { Diffuse_color { .2 .3 .6 } }
+                Material { Diffuse_color { .7 .4 .1 } }
+                Material { Diffuse_color { .6 .3 .1 } }
+                }
+</pre>
+<P>
+
+        When converting to a fixed palette, the palette entry with the
+minimum "distance" from the specified RGB color should be used.  This
+mapping can be done when the Material_list is processed; the result
+(using the above example) would be a five-element array of bytes which
+contains the index into the palette of the entry most closely matching
+the specified RGB triplet.  Better results may be obtained by
+"weighting" the colors; the expression would be something like
+
+<P>
+<pre>
+        distance        = 0.3 * (red - palette[i].red)
+                        + 0.6 * (green - palette[i].green)
+                        + 0.1 * (blue - palette[i].blue)
+</pre>
+<P>
+
+        Needless to say, there's no need to compute the square root
+since we're just choosing a palette entry which gives the minimum
+distance.
+
+<P>
+
+<h2>Shapes</h2>
+
+<P>
+
+        A Shape is a geometric description, consisting of a collection
+of vertices and facets.  It is not the same as an Object, which stores
+location, orientation and attachment information.
+
+<P>
+
+        The format of a Shape is as follows; almost all the tags are optional:
+
+<P>
+<pre>
+        Shape
+                {
+                Name { STRING }
+                Identifier { ID }
+                Application_handle { HANDLE }
+                Bounding_box { REAL REAL REAL REAL REAL REAL }
+                Material_table
+                        {
+                        Count { n }
+                        Entries { NUM NUM NUM ... }
+                        }
+                Vertex_list
+                        {
+                        Count { n }
+                        Vertex { ... }
+                        Vertex { ... }
+                        ...
+                        }
+                Facet_list
+                        {
+                        Count { n }
+                        Facet { ... }
+                        Facet { ... }
+                        ...
+                        }
+                }
+</pre>
+<P>
+
+        The Material_table is optional; it allows a level of
+indirection in the specification of materials.  Each facet contains an
+index into this table, whose entries in turn index the Material_list
+specified earlier in the file.  If no Material_table is specified, the
+index value from the facet indexes the Material_list directly.  Note
+that the Material_table for a shape is a kind of default value, which
+is used if an Object doesn't specify one.  The translation or import
+of a file that uses Material_tables may just do the mapping once at
+load time and replace a facet's map index with an index into the
+file's Material_list, or even into raw offsets into the palette.
+
+<P>
+
+        The Bounding_box is entirely optional, and is intended only to
+give a rough idea of how the vertex values should be scaled.  It
+specifies the minimum X, Y, and Z values followed by the maximum X, Y,
+and Z values; the actual bounding information can (and should) be
+derived from the coordinates of the vertices comprising the Shape.
+
+<P>
+
+        All Shapes should have an Identifier, so that they may be
+referenced by Objects.
+
+<P>
+
+<h2>Vertices</h2>
+
+<P>
+
+        A Vertex always contains an X, Y, Z triple; it may also have
+additional information associated with it.  The format for a Vertex
+is:
+
+<P>
+<pre>
+        Vertex
+                {
+                Point3D { REAL REAL REAL }
+                Normal3D { REAL REAL REAL }
+                Color { COLOR }
+                Texture_Point2D { REAL REAL }
+                Opacity_Point2D { REAL REAL }
+                Bump_Point2D { REAL REAL }
+                Application_handle { HANDLE }
+                }
+</pre>
+<P>
+
+        The Point3D contains the X, Y and Z values of the vertex
+coordinates.  The Normal3D tag contains a vertex normal (used for
+Gouraud and Phong shading); this normal need not be of unit magnitude.
+The Color tag is used for systems that do a kind of Gouraud shading
+without the lighting calculation.  The various Point2D values are u,v
+positions in a map; these are in the range 0.0 to 1.0 inclusive.
+
+<P>
+
+A very simple vertex list might look like this:
+
+<P>
+<pre>
+        Vertex_list
+                {
+                Count { 3 }
+                Vertex { Point3D { 15 12 17 } }
+                Vertex { Point3D { 27  5 18.6 } }
+                Vertex { Point3D { 2 129 27.9 } }
+                }
+</pre>
+<P>
+
+<h2>Facets</h2>
+
+<P>
+
+        A Facet (also called a "face" or a "polygon") is defined to be
+a flat, convex shape with an arbitrary number of vertices.  "Flat"
+means that all the vertices in the facet are co-planar; "convex" means
+the corners of the shape all "point" outwards.  Facets are not
+permitted to have holes in them.
+
+<P>
+
+The format for a Facet is as follows:
+
+<P>
+<pre>
+        Facet
+                {
+                Vertex_count { NUM }
+                Vertex_index_list { NUM NUM NUM NUM ... }
+                Is_doublesided { BOOLEAN }
+                Is_interior { BOOLEAN }
+                Base_facet { ID }
+                Front_material { NUM }
+                Back_material { NUM }
+                Normal3D { REAL REAL REAL }
+                Identifier { ID }
+                Application_handle { HANDLE }
+                }
+</pre>
+<P>
+
+        Only the Vertex_count and Vertex_index_list tags required; the
+Vertex_count must be given before the Vertex_index_list.  Each of the
+NUMs in the Vertex_index_list is an index into the vertex array for
+the shape.  The vertices are numbered starting from zero, and are
+listed in a clockwise order as seen from the "front" of the facet.  If
+the Vertex_count is 1, a point should be created rather than a facet;
+similarly, a Vertex_count of 2 defines a line.
+
+<P>
+
+        If Is_doublesided is TRUE, then the facet can be seen from
+both sides; the Back_material is used to paint the back side of the
+facet.  The Front_material and Back_material are both indices into the
+Material_table for the object or shape, or into the global
+Material_list as appropriate.
+
+<P>
+
+        A facet flagged as being "interior" is on the inside of a
+concave shape; for example, a cup would have all the inside surfaces
+(the ones in contact with liquid if the cup were full) flagged as
+interior.  Not all systems will make use of this flag, but object
+designers would do well to include it since it's easy to set and is
+potentially of great benefit to those VR systems which do make use of
+it.
+
+<P>
+
+        If a Base_facet tag is specified, then the current facet is a
+kind of "decal" that appears only on the surface of the Base_facet.
+If the Base_facet is not visible (i.e., is backfacing or completely
+clipped) then no processing needs to be done on the current facet.
+The current facet is always drawn immediately after its Base_facet; no
+additional sorting is required.
+
+<P>
+
+        The Normal3D tag, if specified, contains a vector
+perpendicular to the plane of the facet and pointing outward from the
+"front" of the facet.  It need not be a unit vector.
+
+<P>
+
+A minimal facet might look like this:
+
+<P>
+<pre>
+        Facet
+                {
+                Vertex_count { 5 }
+                Vertex_index_list { 3 2 8 7 3 }
+                Front_material { 7 }
+                }
+</pre>
+<P>
+
+        This would define a 5-sided facet, using vertices 3, 2, 8, 7
+and 3.  It would use material number 7 in an object's Material_table;
+if the object does not have a Material_table, the Material_table for
+the Shape is used.  If the Shape has no Material_table either, then
+the global Material_list is indexed directly.
+
+<P>
+
+        In a very simple system (fixed 256-color palette, no lighting,
+no material tables at runtime, etc) then this number would be used to
+index an array of bytes that contain the offsets into the palette of
+the various colors.
+
+<P>
+
+        Note that edge information is not specifically stored in the
+file, but can easily be derived for those systems that require it.
+
+<P>
+
+<h2>Objects</h2>
+
+<P>
+
+        An Object consists of a pointer to a Shape, a specification of
+location and orientation, an optional Material_table and other
+information.  The complete format is:
+
+<P>
+<pre>
+        Object
+                {
+                Name { STRING }
+                Identifier { ID }
+                Instance_of_shape { ID }
+                Location { REAL REAL REAL }
+                Rotation { REAL REAL REAL }
+                Attached_to { ID }
+                Contained_within { ID }
+                Is_invisible { BOOLEAN }
+                Layer { NUM }
+                Text { STRING }
+                Pivot { REAL REAL REAL }
+                Facet_behind { ID }
+                Application_handle { HANDLE }
+                }
+</pre>
+<P>
+
+        The Instance_of_shape tag specifies the ID of the Shape this
+object uses for its geometry information.  The Location tag gives the
+location in X, Y and Z of the origin of the object in world
+coordinates, or in the coordinate system of the object it's
+Attached_to (if any).  The Rotation tag gives the angles of rotation
+around X, Y and Z (although they are not performed in that order).
+The Pivot is the point (in object coordinates) around which the object
+should rotate; if no Pivot is specified, the origin of the object in
+its own coordinate system should be used.  Since not all systems
+support pivot points other than the origin, the use of Pivot is
+discouraged.
+
+<P>
+
+        The Attached_to tag gives the ID of the object to which this
+object is attached, to establish a hierarchy.  The parent objects
+should be defined before their children.  The Contained_within tag
+gives the ID of the object inside which this object is contained; the
+container should be specified before the contents.
+
+<P>
+
+        The Is_invisible tag indicates whether the object can be seen
+or not.  By default, all objects are visible.  Another way to make an
+Object invisible is to omit its Instance_of_shape tag.
+
+<P>
+
+        The Layer is simply a number, and the Text simply a string;
+their use is application-dependent.  The Facet_behind tag is used as a
+hint for sorting; it specifies the ID of an already-specified facet on
+another object, to which this object should be attached for purposes
+of visibility determination.  If the facet is visible (i.e., not
+backfacing), this object is drawn after the one the facet belongs to;
+otherwise, this object is drawn first.
+
+<P>
+
+<h2>Cameras</h2>
+
+<P>
+
+        A world can contain any number of cameras; the first Camera
+specified in the file should be active when the application starts up.
+The format of a Camera is:
+
+<P>
+<pre>
+                Camera
+                        {
+                        Name { STRING }
+                        Application_handle { HANDLE }
+                        Field_of_view { ANGLE }
+                        Aspect_ratio { REAL }
+                        Associated_with { ID }
+                        }
+</pre>
+<P>
+
+        The field of view is measured horizontally; the aspect ratio
+can be used to compute the vertical field of view.  The
+Associated_with tag specifies which object this camera is associated
+with; the camera uses that object's location and orientation
+information.  Remember that Objects can be flagged as being invisible,
+and need not specify a Shape.  A Camera without a visible object
+should still use an invisible object to get its
+location/orientation/attachment information from.
+
+<P>
+
+<h2>Lights</h2>
+
+<P>
+
+        A world can contain any number of lights; however, they should
+be listed in order of importance since most systems impose some kind
+of limit. The format of a Light is:
+
+<P>
+<pre>
+                Light
+                        {
+                        Name { STRING }
+                        Application_handle { HANDLE }
+                        Is_spot { BOOLEAN }
+                        Associated_with { ID }
+                        Color { COLOR }
+                        Hotspot { ANGLE }
+                        Falloff { ANGLE }
+                        Is_on { BOOLEAN }
+                        Casts_shadows { BOOLEAN }
+                        Shadow_bias { REAL }
+                        Shadow_range { REAL }
+                        Shadow_map_size { REAL }
+                        Show_cone { BOOLEAN }
+                        }
+</pre>
+<P>
+
+All lights are assumed to be directional, unless the Is_spot tag value
+is TRUE.  The Associated_with tag contains the ID of the object that
+this light source uses for position and orientation information.
+Remember that Objects can be flagged as being invisible, and need not
+specify a Shape.
+
+<P>
+
+        The default value for the Is_on tag is TRUE; it need only be
+specified if the light should be off initially.  Most systems can
+ignore the most of the information, including anything related to
+shadows; it's included for completeness, and for renderers that
+precompute much of the surface material information.
+
+<P>
+
+<h2>Sounds</h2>
+
+<P>
+
+A world can contain any number of sound sources, some of which may be
+associated with specific objects.
+
+<P>
+<pre>
+                Sound
+                        {
+                        Name { STRING }
+                        Application_handle { HANDLE }
+                        Associated_with { ID }
+                        Is_on { BOOLEAN }
+                        Volume { REAL }
+                        Data { FNAME }
+                        }
+</pre>
+<P>
+
+The Associated_with tag is optional; if present, the sound should
+appear to come from the object with the specified ID.  The FNAME in
+the Data tag is the name of the file the sound data should be loaded
+from; that file will also contain type and other information (such as
+sampling rate and bits per sample).
+
+<P>
+
+<h2>World Attributes</h2>
+
+<P>
+
+        In addition to objects, cameras, light sources and sounds, a
+virtual world may have a large number of properties.  The following
+list provides a starting point:
+
+<P>
+<pre>
+                Global_attributes
+                        {
+                        Gravity_vector { REAL REAL REAL }
+                        Ambient_light { COLOR }
+                        Temperature { REAL }
+                        Has_horizon { BOOLEAN }
+                        Sky_color { COLOR }
+                        Ground_color { COLOR }
+                        Fog { COLOR }
+                        }
+</pre>
+<P>
+
+        Eventually, a Local_attributes tag may be defined in order to
+allow the various attributes to vary from place to place within the
+virtual world.
+
+<P>
+
+<h2>An Example</h2>
+
+<P>
+<pre>
+comment { Three cubes, a camera and a light }
+
+Material_list
+        {
+        Count { 3 }
+        Material { Diffuse_color { 1 0 0 } }    comment { red }
+        Material { Diffuse_color { 0 1 0 } }    comment { green }
+        Material { Diffuse_color { 0 0 1 } }    comment { blue }
+        }
+
+Shape
+        {
+        comment { two red faces, two green faces, two blue faces }
+        Identifier { 0x1234 }
+        Vertex_list
+                {
+                Count { 8 }
+                Vertex { Point3d { 100 200 300 } }
+                Vertex { Point3d { 700 200 300 } }
+                Vertex { Point3d { 700 800 300 } }
+                Vertex { Point3d { 100 800 300 } }
+                Vertex { Point3d { 100 200 900 } }
+                Vertex { Point3d { 700 200 900 } }
+                Vertex { Point3d { 700 800 900 } }
+                Vertex { Point3d { 100 800 900 } }
+                }
+        Facet_list
+                {
+                Count { 6 }
+                Facet
+                        {
+                        Vertex_count { 4 } Vertex_index_list { 3 2 1 0 } Front_material { 0 }
+                        }
+                Facet
+                        {
+                        Vertex_count { 4 } Vertex_index_list { 2 6 5 1 } Front_material { 1 }
+                        }
+                Facet
+                        {
+                        Vertex_count { 4 } Vertex_index_list { 6 7 4 5 } Front_material { 2 }
+                        }
+                Facet
+                        {
+                        Vertex_count { 4 } Vertex_index_list { 4 7 3 0 } Front_material { 0 }
+                        }
+                Facet
+                        {
+                        Vertex_count { 4 } Vertex_index_list { 7 6 2 3 } Front_material { 1 }
+                        }
+                Facet
+                        {
+                        Vertex_count { 4 } Vertex_index_list { 5 4 0 1 } Front_material { 2 }
+                        }
+                }
+        }
+
+comment { Now that we've defined the shape, let's instance it three times }
+
+Object { Instance_of { 0x1234 } Location { 0 0 0 } }
+
+Object { Instance_of { 0x1234 } Location { 1000, 0, 2000 } }
+
+Object { Instance_of { 0x1234 } Location { 1000, 0, 2000 } }
+
+comment { And finally, here are the light and the camera }
+
+Object { Name { "lightsource" } Identifier { 0x9012 } Location { 0 0 0 } }
+Light { Associated_with { 0x9012 } }
+
+Object { Identifier { 0x5678 } Location { -1000 -1000 -1000 } Rotation { 0.25 0.25 0 } }
+Camera { Associated_with { 0x5678 } }
+</pre>
+<P>
+
+</td></tr></table></center>
+</body>
+</html>

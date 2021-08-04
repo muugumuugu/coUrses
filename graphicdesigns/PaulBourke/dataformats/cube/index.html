@@ -1,0 +1,162 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Gaussian Cube File Format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Gaussian Cube Files</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+December 2003<p>
+
+<table width=100%><tr><td valign="top">
+<center>
+<a href="http://paulbourke.net/dataformats/cube/index_ro.html">Romanian version</a> by Irina Vasilescu.
+<br>
+<a href="http://paulbourke.net/dataformats/cube/index_sw.html">Swedish translation</a> by Weronika Pawlak.
+<br>
+<a href="http://paulbourke.net/dataformats/cube/index_po.html">Portuguese translation</a> by Diana Gomes.
+<br>
+<a href="http://paulbourke.net/dataformats/cube/index_ma.html">Macedonian translation</a> by Jimmy Anastasovski.
+<br>
+<!-- Supposedly poorly done if not totally wrong
+<a href="index_nl.html">Danish translation</a> by Nastasya Zemina.
+<br>
+-->
+<a href="http://paulbourke.net/dataformats/cube/index_pl.html">Polish translation</a> courtesy Michał Debinski.
+<br>
+<a href="http://paulbourke.net/dataformats/cube/index_bl.html">Belarusian</a> by Volunteer Translator Group.
+<br>
+<a href="http://paulbourke.net/dataformats/cube/index_no.html">Norwegian</a> by Lars Olden.
+<br>
+<a href="http://paulbourke.net/dataformats/cube/index_ge.html">German translation</a> by Philipp Egger.
+<br>
+<a href="http://paulbourke.net/dataformats/cube/index_tu.html">Turkish translation</a> by Zoltan Solak.
+<br>
+
+</center>
+</td><td valign="top">
+
+<center>
+<a href="http://paulbourke.net/dataformats/cube/index_uk.html">Ukrainian translation</a> by Anna Matesh.
+<br>
+<a href="http://paulbourke.net/dataformats/cube/index_hu.html">Hungarian translation</a> by Elana Pavlet.
+<br>
+<a href="http://paulbourke.net/dataformats/cube/index_in.html">Indonesian translation</a> by Jordan Silaen.
+<br>
+<a href="http://paulbourke.net/dataformats/cube/index_ru.html">Russian translation</a> by Sandi Wolfe.
+<br>
+<a href="http://paulbourke.net/dataformats/cube/index_ir.html">Irish translation</a> by BestReviewsBase.
+<br>
+<a href="http://paulbourke.net/dataformats/cube/index_sp.html">Spanish translation</a> by Laura Mancini.
+<br>
+<a href="http://paulbourke.net/dataformats/cube/index_so.html">Slovenian translation</a> by Jurij Rodionov.
+<br>
+<a href="http://paulbourke.net/dataformats/cube/index_du.html">Dutch version</a> by Arno Hazekamp.
+<br>
+<a href="http://paulbourke.net/dataformats/cube/index_hi.html">Hindi version</a> by ShopitKart Team.
+</center>
+</td></tr></table>
+
+</center>
+<p><br><p>
+
+<b>Introduction</b><br>
+<p align="justify">
+The cube file describes volumetric data as well as atom positions, it originates from
+the Gaussian software package. The file consists of a header which includes the atom
+information and the size as well as orientation of the volumetric data. This is
+followed by the volumetric data, one scalar per voxel element. All aspects of the
+file are text (human readable), originally the numerical values were 5 wide for
+integers that started each header line (after the first)
+and floating point values were formatted
+12.6, that is, 12 characters wide with 6 decimal places.
+</p>
+
+<b>Header</b><br>
+<p align="justify">
+The first two lines of the header are comments, they are generally ignored by parsing
+packages or used as two default labels.
+</p>
+<p align="justify">
+The third line has the number of atoms included in the file followed by the position
+of the origin of the volumetric data.
+</p>
+<p align="justify">
+The next three lines give the number of voxels along each axis (x, y, z) followed
+by the axis vector. Note this means the volume need not be aligned with the coordinate
+axis, indeed it also means it may be sheared although most volumetric packages won't 
+support that. The length of each vector is the length of the side of the voxel thus
+allowing non cubic volumes. If the sign of the number of voxels in a dimension is
+positive then the units are Bohr, if negative then Angstroms.
+</p>
+<p align="justify">
+The last section in the header is one line for each atom consisting of 5 numbers,
+the first is the atom number, the second is the charge, and
+the last three are the x,y,z coordinates of the atom center.
+</p>
+
+<b>Volumetric data</b><br>
+<p align="justify">
+The volumetric data is straightforward, one floating point number for each volumetric
+element. The original Gaussian format arranged the values in the format shown below
+in the example, most parsing programs can read any white space separated format.
+Traditionally the grid is arranged with the x axis as the outer loop and the z
+axis as the inner loop, for example, written as
+</p>
+<pre>
+   for (ix=0;ix&lt;NX;ix++) {
+      for (iy=0;iy&lt;NY;iy++) {
+         for (iz=0;iz&lt;NZ;iz++) {
+            printf("%g ",data[ix][iy][iz]);
+            if (iz % 6 == 5)
+               printf("\n");
+         }
+         printf("\n");
+      }
+   }
+</pre>
+
+<b>Example</b><br>
+<p align="justify">
+In the following example the volumetric data is a 40 by 40 by 40 grid,
+each voxel is 0.283459 units wide and the volume is aligned with the
+coordinate axis. There are three atoms.
+</p>
+<pre>
+ CPMD CUBE FILE.
+ OUTER LOOP: X, MIDDLE LOOP: Y, INNER LOOP: Z
+    3    0.000000    0.000000    0.000000
+   40    0.283459    0.000000    0.000000
+   40    0.000000    0.283459    0.000000
+   40    0.000000    0.000000    0.283459
+    8    0.000000    5.570575    5.669178    5.593517
+    1    0.000000    5.562867    5.669178    7.428055
+    1    0.000000    7.340606    5.669178    5.111259
+ -0.25568E-04  0.59213E-05  0.81068E-05  0.10868E-04  0.11313E-04  0.35999E-05
+      :             :             :           :            :            :
+      :             :             :           :            :            :
+      :             :             :           :            :            :
+        In this case there will be 40 x 40 x 40 floating point values
+      :             :             :           :            :            :
+      :             :             :           :            :            :
+      :             :             :           :            :            :
+</pre>
+
+</td></tr></table></center><p>
+</body>
+</html>

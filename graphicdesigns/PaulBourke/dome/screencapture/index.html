@@ -1,0 +1,267 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Screen Capture for warping using the spherical mirror</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Screen Capture for warping using the spherical mirror</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+October 2010<p>
+</center>
+<p align="justify">Note that the software discussed in the first part of this
+document is incompatible with current version of the OS. The 
+<a href="index.html#update">second half</a> discusses
+an alternative that has been tested with Mac OS-X 10.8.3 (March 2013).
+<p><br><p>
+
+
+<p align="justify">
+The following describes one way of warping fisheye images for dome projection using
+a spherical mirror and software that can create fisheye views but not warped fisheye
+views. This is based upon Quartz Composer (Mac only) and two patches, one is 
+"<a href="../warppatch/index.html">pbmesh</a>" available from Kineme, the other is 
+"v002 Screen Capture" from V002. The
+former takes an image (or image stream) and applies an arbitrary warping, for
+example a calibrated mesh for a particular projector-mirror-dome arrangement. The
+later is a very high performing screen capture.
+</p>
+
+<p align="justify">
+Please note that as with many
+software solutions the comments below are valid as of the time of writing but may
+age as time passes.
+</p>
+
+<p align="justify">
+The hardware/software configuration to use this technique is to run the fisheye generating software
+on one display (preferably fullscreen) and the Quartz Composer fullscreen on another
+display (generally the projected display). For example, the following illustrates this
+with Stellarium which while it can do warping it doesn't use the standard warp files
+most users with the spherical mirror expect and that allows them to create a very
+precise result. 
+(The same comments here apply to NightShade which also doesn't use the
+conventional warp mesh files).
+The image below on the left is a screen dump of the display running Stellarium,
+the image on the right is the screen connected to the projector. Any interaction on
+the left screen is immediately warped and presented on the right screen, and hence on
+the dome.
+</p>
+
+<center><table <tr><td valign="bottom" nowrap>
+	<a href="http://paulbourke.net/dome/screencapture/screen1.jpg"><img src="http://paulbourke.net/dome/screencapture/screen1s.jpg" width=400 height=320 border=1></a><br>
+	<font size=-1>
+	Screen dump from Stellarium in fisheye projection mode, 180 degrees FOV.
+	</font>
+</td><td width=10>
+	&nbsp;
+</td><td valign="bottom" nowrap>
+   <a href="http://paulbourke.net/dome/screencapture/screen2.jpg"><img src="http://paulbourke.net/dome/screencapture/screen2s.jpg" width=400 height=225 border=1></a><br>
+   <font size=-1>
+	Screen dump of warped output image, in this case a 16x9 HD projector.
+   </font>
+</td></tr></table></center><p>
+
+<p align="justify">
+While only the commercial version of Celestia supports fisheye, it also does not support
+warping of fisheye (although some versions have been created that do). The solution
+outlined here has been tested successfully with a fisheye supported version of Celestia.
+</p>
+
+<b>Notes</b>
+<ul>
+<li><p align="justify">
+The resolution of the result on the dome is limited by the screen resolution of the
+display the fisheye generating application is running on. The higher the resolution of this
+display the better the result. For example for a good HD spherical mirror projection one
+should aim for up to 1600 pixel high fisheye, this is only really possible with a 30 inch
+2560x1600 pixel display.
+</p>
+<li><p align="justify">
+Further, the resolution is generally limited by the number of pixels vertically, so 4x3 or
+5x4 aspect displays are more effective than HD (16x9).
+</p>
+<li><p align="justify">
+One would not choose to use this method for movie playback since this can be achieved
+with "<a href="../warpplayer/index.html">warpplayer</a> directly or using Quartz Composer and
+the "pbmesh" plug-in. In particular, this approach would not in general give smooth
+movie playback.
+</p>
+</ul>
+
+<p align="justify">
+The Quartz Composer patch could be as simple as the following.
+</p>
+
+<center>
+<img src="http://paulbourke.net/dome/screencapture/screen3.jpg" width=608 height=497 border=1>
+</center>
+<p>
+
+<b>Example: NightShade</b><p>
+
+<p align="justify">
+A more detailed example using NightShade is presented below. The example here uses two
+HD displays but of course one would normally be an HD projector used with the
+spherical mirror. While there are a few ways to configure this, the example here
+uses a 1000x1000 pixel window for the fisheye, the NightShade config file can be
+edited to achieve this. 
+</p>
+
+<pre>
+fullscreen                     = FALSE
+screen_w                       = 1000
+screen_h                       = 1000
+</pre>
+
+<p align="justify">
+The Quartz Composer patch and sample wasp mesh are given here:
+<a href="http://paulbourke.net/dome/screencapture/nightshade_screencopy.zip">nightshade_screencopy.zip</a>.
+Note the size and the position of the capture region will match the size and
+position of the NightShade window. The Quartz Composer viewer window will
+be run full screen, see later.
+</p>
+
+<center><table><tr><td>
+   <a href="http://paulbourke.net/dome/screencapture/qc.jpg"><img src="http://paulbourke.net/dome/screencapture/qc_s.jpg" width=800 height=450 border=1></a>
+</td></tr></table></center><p>
+
+<p align="justify">
+The layout is shown below. The display on the right is really the image for the
+projector, the display on the left is NightShade running in a window that matches the
+capture region. The left hand screen is therefore the operators interface, note that
+the rest of the screen can be used for other notes or applications relevant to the
+presentation.
+</p>
+
+<center><table><tr><td>
+	<a href="http://paulbourke.net/dome/screencapture/photo.jpg"><img src="http://paulbourke.net/dome/screencapture/photo_s.jpg" width=800 height=480 border=1></a>
+</td></tr></table></center><p>
+
+<p align="justify">
+And finally the following are screen dumps of the two displays. The position of the
+NightShade window is not achieved by guessing, 
+the Screen Capture patch optionally draws a dotted frame around the capture region.
+</p>
+
+<center><table><tr><td>
+   <a href="http://paulbourke.net/dome/screencapture/qc1.jpg"><img src="http://paulbourke.net/dome/screencapture/qc1_s.jpg" width=400 height=225 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/dome/screencapture/qc2.jpg"><img src="http://paulbourke.net/dome/screencapture/qc2_s.jpg" width=400 height=225 border=1></a>
+</td></tr></table></center><p>
+
+<p><br><br><br><p>
+
+<a name="update">
+<h3>Update, March 2013</h3>
+</a>
+<p align="justify">
+The screen capture patch described above has not been developed for the last
+few releases of MacOS-X, and fails for 10.8. It was also unfortunately limited
+in the size of the region it could capture and thus the full resolution of
+HD projectors could not be utilised. The following describes an alternative
+approach based upon Syphon, a frame work for transferring frame buffers
+ between applications.
+</p>
+
+<p align="justify">
+Screen area to Syphon. This is used to capture a region of the screen and acts
+as a Syphon server, making the region of the screen available to Syphon clients.
+</p>
+<dd>
+<a href="http://paulbourke.net/dome/screencapture/Desktop_to_syphon_3.zip">Desktop_to_syphon_3.zip</a>
+</dd>
+<p>
+<p align="justify">
+One now just needs a Syphon patch for Quartz Composer, this acts as a Syphon
+client.
+</p>
+<dd>
+Syphon patch for Quartz Composer: <a href="http://syphon.v002.info">
+http://syphon.v002.info</a>.
+</dd>
+<p>
+<center><img src="http://paulbourke.net/dome/screencapture/plugin.png" width=529 height=272 border=0></center><p>
+
+<b>Set up</b><p>
+<p align="justify">
+The following shows the window being captured on the left, the "Desktop_to_Syphon"
+application control panel on the upper left. The window on the lower right is the
+captured image.
+</p>
+<center><a href="http://paulbourke.net/dome/screencapture/syphon.png"><img src="http://paulbourke.net/dome/screencapture/syphon_small.png" width=800 height=450 border=1></a>
+</center><p>
+
+<p align="justify">
+The following two screen dumps illustrate how it works in practice.
+The first window is the operators display, it has the window for the software creating the fisheye
+image. The capture area should be as large as possible in order to maximise
+resolution. The example here uses Nightshade which cannot be operated in
+fullscreen mode since it also controls the secondary display. 
+<br>
+The second screendump is the Quartz Composer Viewer window in fullscreen mode,
+this would normally be what is sent to the data projector. 
+</p>
+<center>
+<a href="http://paulbourke.net/dome/screencapture/screen1.png"><img src="http://paulbourke.net/dome/screencapture/screen1_small.png" width=800 height=450 border=1></a>
+</center><p>
+
+<center>
+<a href="http://paulbourke.net/dome/screencapture/screen2.png"><img src="http://paulbourke.net/dome/screencapture/screen2_small.png" width=800 height=450 border=1></a>
+</center><p>
+
+<b>Notes</b><p>
+<ul>
+<li><p align="justify">
+Using a current iMac (at the time of writing) a frame rate of 60fps (typical projector
+refresh) is readily achieved. Of course it does depend somewhat on the resourced being
+used by the fisheye application.
+</p>
+<li><p align="justify">
+Small error in the "Desktop_to_Syphon" application, the width and height are actually the
+right and bottom bounds.
+</p>
+<li><p align="justify">
+For an HD projector best results are achieved with a screen capture at least 1200 pixels
+square, and for good quality spherical mirror environments even as high as 1600. As such
+displays with high vertical pixel counts should be used.
+</p>
+<li><p align="justify">
+For regular production installations it is convenient if the screen capture area and hence
+the application window is in the same location. Depending on the application this may be achieved by using the program in fullscreen mode. For cases where the window is manually positioned
+it is helpful to create a background image containing an alignment pattern. One way to do this
+is to set the window up carefully once, do a fullscreen capture (command-shift-3) and use 
+the resulting image (or a suitably edited version) as the background pattern.
+</p>
+<li><p align="justify">
+Maximum vertical extent can be increased by moving the dock to the left or right side
+of the display.
+</p>
+</ul>
+
+<p align="justify">
+Sample Quartz Composer patch used to create the demonstration above: 
+<a href="http://paulbourke.net/dome/screencapture/syphon.zip">syphon.zip</a>. This can of course be integrated into any Quartz
+Composer based show controller.
+</p>
+<center>
+<a href="http://paulbourke.net/dome/screencapture/qc.png"><img src="http://paulbourke.net/dome/screencapture/qc_small.png" width=800 height=375 border=1></a>
+</center><p>
+
+</td></tr></table></center>
+
+</body>
+</html>

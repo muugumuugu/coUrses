@@ -1,0 +1,1380 @@
+<html>
+<head><link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>VIVID 2.0 format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Vivid 2.0</h1>
+Written and Copyright 1989-1992 by Stephen B. Coy<br>
+March 14, 1992<p>
+</center>
+<p><br><p>
+
+<b>Input File Format</b>
+
+<pre>
+     One thing to keep in mind while creating Vivid input files
+is that Vivid's parser is case sensitive.  Macros (see
+preprocessor section) are also case sensitive.
+
+     Vivid uses a right-handed coordinate system for defining the
+location of objects in space.  A right-handed coordinate system
+can be visualized as having the x axis pointing to the right, the
+y axis pointing into the screen and the z axis pointing up.  Each
+object in a scene file will be defined as having a location in
+space defined by an x, y, z triple in this coordinate system.
+
+     Colors are defined by an r, g, b triple where each component
+generally falls in the range 0..1.  To make picking colors easier
+Vivid includes the file color.vc which contains a few dozen
+predefined colors.  Their names and rgb values can be had by
+viewing or printing color.vc.  If this file is #included at the
+top of you input file these names can be used anywhere an rgb
+triple is called for.
+
+     Simple math operations are now supported by the parser.
+These operations are supported on numbers and on vectors (rgb
+triples and xyz coordinates).  The following is a list of the
+operations supported.  Vectors operations supported include cross
+product, addition, subtraction, scaling, and dot product.
+Numerical operations include multiplication, division, addition,
+subtraction and exponentiation.  Sine, cosine, tangent, arcsine,
+arccosine, arctangent and square root functions are also
+supported.
+
+    Vector ops
+    ----------
+    a b c cross x y z       cross product, yields a vector
+    a b c dot x y z         dot product, yields a number
+    a b c + x y z           vector addition, yields a vector
+    a b c - x y z           vector subtraction, yields a vector
+    a b c * n               scale a vector by n
+    a b c / n               scale a vector by 1/n
+    -(a b c)                negate a vector
+
+    Numeric ops
+    -----------
+    sin(x), cos(x), tan(x)  trig functions
+    asin(x), acos(x), atan(x)
+    sqrt(x)                 returns square root of x
+    pow(x y)                returns x to the yth power
+    *, /, +, -              normal mathematical operations
+
+     It should be noted that these operations introduce some
+ambiguity to the input language.  This problem is aggravated by
+the fact that the parser can only look one token ahead when it
+tries to decide how to treat its current input.  I encourage you
+to avoid any such problems by generously using parantheses to
+eliminate any possible ambiguity in your equations.  For example:
+
+    n * a b c can result in either
+    (n*a) b c or
+    (n*a) (n*b) (n*c)
+    depending on how the parser is feeling that day.
+
+     If you really want to I'm sure that you could figure out
+what the parser is doing but that may change in the future so
+save yourself the trouble and just add the parentheses.
+
+     Comments can also be included in the input file.  Like
+comments in computer programs, comments in Vivid input files are
+ignored by the input parser.  Comments in Vivid use the same
+syntax as comments in C++ do.  Multi-line comments start with /*
+and end with */.  Anything between the comment delimeters is
+ignored.  Single line comments start with // and end at the end
+of the line.  For example:
+
+/*      This is a comment
+    which spans multiple lines  */
+
+//      This is a single line comment
+
+     Comments should be used as notes in your input files to help
+remind you or anyone else reading the file what the input is
+trying to do.  Comments can also be used to block out part of the
+input file while you are setting it up to help speed up test
+renderings.
+
+     Normally an input file will be made up of a studio
+definition which describes the image size, antialiasing and
+viewpoint followed by the definitions for lights, surfaces, and
+objects.  Object definitions only deal with the geometry of the
+object.  The surface characteristics (color, shine) of the object
+are taken from the last surface definition preceding the object.
+</pre>
+
+<b>Preprocessor</b>
+
+<pre>
+     To make writing input files easier, Vivid's parser also has
+a preprocessor.  Currently, the preprocessor only supports two
+functions, the definition of macros and support for include
+files.  Because of the way I implemented the preprocessor Vivid
+creates a temporary file on the disk called xyzzy.v.  (Didn't I
+already mention this? deja vu) At this time, Vivid does not
+delete the file after it is done using it.  The reason I leave
+this is that it is sometimes useful to look at when trying to
+figure out what the preprocessor is doing with your input
+definition.  Feel free to delete it at any time.
+
+     Macros allow you to associate a name with a string of
+characters.  When the parser sees the name in the input file it
+will substitute the appropriate string before continuing.  A
+simple example of this is the color definitions in the file
+color.vc.  In color.vc the colors white and blue are defined like
+this:
+
+#define blue    (0 0 1)
+#define white   (1 1 1)
+
+     Once defined you can then use the word "white" wherever you
+would normally have to type (1 1 1).  For example, to create a
+blue surface with a white highlight you could then do this:
+
+surface {
+    diffuse blue
+    shine 20 white
+}
+
+     Macro names must start with a letter and may contain
+letters, numbers, and the underscore character "_".  Macro names
+are case sensitive.  Note than in the examples I define the
+colors with parentheses around the rgb values.  This is not
+required but helps eliminate any potential parser problems as
+mentioned in the section on the parser's math ability.  You can
+undefine a macro using the #undef keyword.
+
+#undef blue
+
+     If you define the same macro more than once the old values
+are put onto a stack and the newest one will always be used.  If
+you then undefine the macro, only the newest one will be deleted
+and the next newest definition will then be active.  If you want
+to define a macro that is longer than one line you have to use
+the backslash, "\", as a continuation character.
+
+#define BLUE_PLASTIC 
+    surface {    
+        diffuse blue
+        shine 20 white
+    }
+
+     Notice that the last line does not have a backslash after
+it.  Once defined you can then just use the name BLUE_PLASTIC in
+the input file wherever you would normally type in the whole
+surface declaration.
+
+     The other preprocessor directive is #include.  This allows
+you to include other files into your input file.  Look at the
+sample input files and notice that almost the first thing in the
+file is a line like:
+
+#include color.vc
+
+     This causes the parser to read in the file color.vc which
+defines a standard set of colors for use in creating input files.
+Using Dan Farmer's color editor it is quite easy to create new
+colors to add to this file.  The include command is also useful
+for including objects into your scene.  Combined with the
+transformation commands this will allow you to create objects as
+seperate files and inlcude them into the scene at any location
+and orientation.  You may also inlcude multiple copies of an
+object.
+</pre>
+
+<b>The Studio</b>
+
+<pre>
+     The studio structure in the scene file defines all those
+things that are neither lights, objects or clips.  This includes
+the resolution of the final image, the location of the camera
+(viewpoint), the direction the camera is pointing, the background
+color, and various rendering options.  Some of the options have
+default values.  These are the values these options will take on
+if they are left out of the studio definition.  The studio
+definition looks like this:
+
+studio {
+    from x y z
+    at x y z
+    up x y z
+    angle ang
+    resolution i j
+    start line
+    stop line
+    aspect asp
+    projection mode
+
+    ambient acolor
+    background bcolor
+    haze density
+
+    antialias mode
+    threshold dist
+    jitter
+
+    aperture size
+    focal_length dist
+    samples n
+
+    no_shadows
+    no_exp_trans
+    caustics
+
+    depth max_depth
+    bunching n
+}
+
+"from" is the location of the camera.
+
+"at" is where in the scene the camera is pointed.
+
+"up" is a vector pointing up, usually 0 0 1.  This can be
+        played with to roll the image around the axis of
+        the camera.
+
+"angle" is the field-of-view angle given in degrees.
+
+"resolution" is the size of the image in pixels, i pixels
+        across and j pixels down.  This can also be
+        controlled from the command line using the -i
+        switch.
+
+"start" and "stop" allow you to start and stop the
+        rendering at the specified line numbers.  I use
+        this for testing new input files and isolating
+        bugs.  Those of you with networks might want to
+        consider using this to split up an image for
+        rendering on multiple computers.  After the
+        sections are done you can then use paste.exe to
+        glue them together.  Currently there is a problem
+        with using start and the resume (-r) flag.  Avoid
+        the combination.
+
+"aspect" is the aspect ratio of the screen.  This is the
+        ratio of width to height of the screen you are
+        rendering your images for.  I've found that my
+        Nec 3D has an aspect ratio of about 4/3 and that
+        my Amiga 1084 has an aspect ratio of about 1.2.
+        To determine the proper aspect ratio for your
+        screen measure the width and height of a screen
+        image.  The aspect ratio of your screen can be
+        found by dividing the width by the height.
+        Determining the correct aspect ratio of your
+        screen will insure that circles come out looking
+        like circles instead of ovals.  Remember, aspect
+        ratio should the the width/height ratio of the
+        displayed image regardless of the image
+        resolution.  Together with the resolution these
+        are used to determine the aspect ratio of the
+        pixels.
+
+"projection" controls how the 3d world is mapped onto the
+        2d screen.  The default is "flat".  This is the
+        standard perspective projection you've all come
+        to know and love.  "spherical" projection
+        produces an effect somewhat like a fisheye lens.
+        Things can look pretty strange.  Unique to the
+        "spherical" mode is the field of view angle can
+        be greater than 180 degrees.  Try a 360 degree
+        panorama some time.  The "orthographic"
+        projection mode produces an image where all the
+        eye rays are parallel to each other.  For this
+        mode the "angle" parameter has no meaning and is
+        replaced with a "width" parameter.  Width defines
+        how wide the screen is in the world coordinate
+        system.  Generally, I think that this mode is
+        useless but it was easy to code so why not? The
+        final mode is the "parallax" projection mode.
+        This produces a 2-point projection instead of a
+        3-point projection like the "flat" mode.  In the
+
+        "parallax" mode, all vertical lines stay vertical
+        on the screen.  This was implemented specifically
+        for architectural renderings but is sometimes
+        useful in other contexts.  Note that "vertical"
+        is defined by the direction of the up vector.
+
+"ambient" is the color of the light that is everywhere in
+        the image.  In "the real world" when light
+        strikes diffuse surfaces such as walls, some of
+        it is scattered back into the room.  This is why
+        you can still see under a desk even though no
+        light is shining directly underneath it.  Most
+        ray tracers, including Vivid, can't handle this
+        diffuse interreflection.  But, all hope is not
+        lost.  To fake diffuse interreflection Vivid
+        allows you to set an ambient light value.  This
+        acts like a light that is shining in every
+        direction at once and does not cast any shadows.
+        For an inside scene values of about .2 .2 .2 seem
+        to work well.  Outside scenes look a bit more
+        realistic with a higher ambient value because of
+        the scattering of light the atmosphere does.
+        Most ray traced images that you will see just
+        have the ambient value set to 0 0 0 or black.
+        This produces the sharpest contrasts and gives
+        the image a super-real effect.  The default value
+        for ambient is 0 0 0.
+
+"background" is the color that will be returned if no
+        objects are hit while tracing a ray.  Popular
+        choices are black and sky_blue.  If haze is
+        defined then this is the color of the haze.  (see
+        below) The background color defaults to black.
+        Alternatively you can do the following:
+
+            background {
+                palette.map
+                up x y z
+            }
+
+         This produces a graduated background using the
+        colors in the file palette.map.  The file can
+        have any name but is required to have the .map
+        extension.  The file is the same format as the
+        img2gif palette files.  The first color in the
+        file is the color that will appear in the
+        direction of the up vector.  If no up vector is
+        specified then the up vector from the studio
+        structure will be used.
+
+"haze" is the density of the fog or haze in the scene.
+        The haze density defaults to 0.  This means that
+        there is no haze.  A value of .5 means that for
+        every unit a ray travels, half of its color is
+        determined by the background color.  This
+        function is exponential, ie if the haze density
+        is given as .5 the color of a ray going 1 unit
+        will be .5 times the color of the object it hits
+        and .5 times the background color.  A ray going 2
+        units will be .25 the color of the object and .75
+        times the background color.  For most images this
+        parameter can be ignored and the default value of
+        0 used.
+
+"antialias" determines whether or not antialiasing is
+        performed and what type is used.  This can also
+        be controlled from the command line using the -a
+        switch.  The valid modes are:
+
+    none -- Do one ray per pixel, right through the
+        center.  Results are blocky but relatively quick.
+        This is the default.
+    quick -- This does a subsampling approximation of the
+        image.  In areas of even color the most speedup
+        is gained.  This is the fastest mode but the
+        results are not useful for much more than test
+        images.  At best (ie on a blank image) this
+        should be about 15 times faster than the above
+        mode.  In general I notice about a 3-5 times
+        speedup.  This is a great mode for doing test
+        renderings.
+    corners -- Shoot a ray at each corner of the pixel
+        and average the results.  Since the corners are
+        shared by adjoining pixels this means about one
+        ray per pixel.  The results are almost as quick
+        as none but usually have a better look. 
+        Effectively this is the same as running a
+        smoothing filter over the image.
+    adaptive -- Rays are shot at the corners of the
+        pixel.  If they are within a certain threshold of
+        each other the program moves on to the next
+        pixel.  If they differ by more than the threshold
+        value, the pixel is subdivided into four
+        subpixels and sampled again.  The corners of the
+        subpixels are then compared against the threshold
+        and if they are still too far apart the are
+        subdivided once more.  The effective result of
+        this is that in areas of constant or smoothly
+        changing intensity only one ray per pixel is
+        shot.  At edges or other sharp color transitions
+        up to 25 rays per pixel may be averaged to
+        determine the color of the pixel.  The result is
+        fairly good antialiasing without too much undo
+        overhead.
+
+"threshold" is the threshold value used by the adaptive
+        mode of antialiasing.  The default threshold is
+        16.  Valid values are 0..255.  This parameter
+        also affects the quick mode.  In general, lower
+        values will produce better results but take more
+        time.
+
+"jitter" is a flag telling the system to add a little bit
+        of randomness to the direction each ray is shot.
+        Combined with antialiasing this helps to break up
+        the patterns sometimes caused by sampling an
+        image on a regular grid.  Images with regular
+        patterns such as checkerboards disappearing into
+        the horizon will benefit most from jitter.
+
+"aperture" is an optional parameter which allows the ray
+        tracer to model a more realistic camera.  The
+        default aperture is 0 which models a pinhole
+        camera.  With an aperture greater than 0 objects
+        at the focal length (see below) will appear in
+        sharp focus while objects nearer or further from
+        the viewpoint will be blurred.  The larger the
+        aperture, the more exaggerated the blurring will
+        be.  Using this option will greatly increase the
+        amount of time needed to generate an image
+        because Vivid uses distributed ray tracing to
+        model the effects of a camera with a non-zero
+        aperture.  This causes the number of rays
+        necessary to calculate the color of a pixel to
+        increase greatly.  The default is to shoot 8 rays
+        instead of one ray whenever aperture is greater
+        than zero.  This value can be controlled with the
+        "samples" parameter below.
+
+"focal_length" determines the distance from the camera to
+        the focal plane where objects are rendered in
+        focus.  This option is used in conjunction with
+        the aperture option.  Objects which are a
+        distance equal to the focal length away from the
+        camera will be in sharp focus.  The default for
+        the focal length is the distance between the
+        "from" and "at" points which determine the
+        viewpoint and the viewing direction.
+
+"samples" controls the number of rays shot when a
+        non-zero aperture is used.  The default is 8.
+
+"no_shadows" causes all shadow calculations to be turned
+        off.  The speed increase gained by turning
+        shadows off is especially useful when doing test
+        images of a new scene.  The can also be
+        controlled using the command line switch -n.
+
+"no_exp_trans" is a wonderfully intuitive name for a flag
+        that turns off the exponential attenuation of the
+        rays as they pass through transparent objects.
+        Got that? Let me try again.  Normally when Vivid
+        shoots a ray through a transparent object (glass)
+        the color of the ray is tinted by the color of
+        the glass and is a function of the distance that
+        the ray has to travel through the glass.  For
+        example if you have two sheets of coke-bottle
+        green glass where one is 1/4 inch thick and the
+        other is 2 inches thick, light passing through
+        the thicker one will be darker.  The relationship
+        between the thickness and the amount of tinting
+        is exponential.  This causes problems with single
+        sided glass because when Vivid tries to compute
+        the thickness of the glass the distance
+        calculated is from the glass to whatever wall or
+        floor the ray hits next.  Hence the windows will
+        tend to be way dark.  When you set the
+        no_exp_trans flag in the studio structure Vivid
+        only uses the transparent color of the surface to
+        calculate the tint and totally ignores the
+        distance that the ray travels.  This tinting also
+        affects shadow rays.
+
+"caustics" is an experimental flag which turns on Vivid's
+        faked caustics.  Caustics are those neat patterns
+        of light that are produced as light passes
+        through a transparent object.  I've been playing
+        around with a couple of ways to get some of the
+        effect without having to spend a few days per
+        image doing the real thing.  The effect is pretty
+        subtle but does seem to make some images look
+        better.  Joe Bob says check it out.
+
+"depth" lets you limit the maximum recursion level to
+        which rays will be traced.  At a depth of 1 only
+        eye rays are traced.  A depth of 2 will trace 1st
+        level reflections and refractions.  The maximum
+        value allowed is 20.  This is also the default
+        value.  This can also be changed using the
+        command line switch -d.
+
+"bunching" allows you to control the branching factor of
+        the tree created by the bounding boxes.  I'm not
+        really sure what an optimal value is but the
+        default value of 4 seems to work well for most
+        cases.  At any rate, values less than two are
+        guaranteed to cause grief.  Higher values will
+        cause the bounding box tree to branch more at
+        each level and therefore be shallower.  Lower
+        values will do the opposite.  I find that
+        experimenting with takes more time than I ever
+        save so the only time I use it is when I am close
+        to running out of memory.  Using a higher value
+        like 8 or 12 will create fewer composite
+        (bounding box) nodes in the tree and save soom
+        memory.  Feel free not to ignore it without fear
+        of missing out on something.
+</pre>
+
+<b>Lights</b>
+
+<pre>
+     Lights come in four flavors, point, directional, spherical
+and spot.  Just as the name implies a point light is a light
+source occupying a single point in space.  It has position,
+color, and attributes determining how much the intensity of the
+light falls off with distance.  A directional light acts like a
+point light source infinitely far away with no reduction in
+intensity over distance.  A spherical light source actually has a
+radius to it and can provide shadows with penumbra (soft edges).
+This feature, however, adds a considerable amount to the time
+needed to render the image.  Spot lights produce a cone of light
+that falls off on the edges.  These are quite nice for
+highlighting areas of your model.  In most cases they also
+produce the least number of shadow rays making them quicker than
+just putting a point light inside a cone.
+
+     The definition for a point light source looks like this:
+
+light {
+    type point
+    falloff f            // defaults to 0
+    position x y z
+    color r g b
+}
+
+     The falloff parameter determines how the intensity of the
+light is reduced over distance(dist).  In the real world the
+light intensity falls off as 1/(dist*dist) (f=2).  Vivid also
+allows the light to fall off as 1/dist (f=1) and not to fall off
+at all (f=0).  Why would you want to use anything except f=2?
+Simplicity is one reason.  With f=0 you can set the light's color
+to 1 1 1 and know that whatever objects the light falls on will
+be illuminated fully regardless of the distance of the light from
+the object.  With f=2 you must take into account this distance.
+If the object you wish to be illuminated is 3 units away from the
+light then in order to get the same amount of illumination that
+f=0 provides you must set the color to 9 9 9 ie 3^2.  For f=1 the
+color would have to be 3 3 3.  In the real world much of the
+light around us does not come directly from the light source.  It
+often bounces off of other objects on its way to the object we
+are interested in.  Since Vivid, like most ray tracers, does not
+model this interobject diffuse reflection we can achieve much the
+same effect by have the light intensity fall off linearly with
+distance, ie f=1.  The default value is f=0.
+
+     The definition for a directional light source looks like:
+
+light {
+    type directional
+  color r g b
+    direction dx dy dz
+}
+
+or the direction can be replaced by a from and at pair:
+
+light {
+    type directional
+    color r g b
+    from x y z
+    at x y z
+}
+
+The direction vector points along the direction the light is
+travelling.  Since the light is assumed to be at infinity, there
+is no falloff parameter.  If you are having difficulty
+understanding how the direction parameter works is is sometimes
+useful to note that direction x y z is the same as center 0 0 0
+at x y z.
+
+     The definition for a spherical light source looks like:
+
+light {
+    type spherical
+    position x y z
+    radius r
+    color r g b
+    falloff f
+    samples n
+}
+
+     Spherical lights differ from point lights in that the
+shadows they cast have penumbra.  Normally when a ray hits a
+surface a shadow ray is shot toward each light.  If the shadow
+ray hits any surface on the way to the light then that light is
+blocked and the surface is in the shadow of the blocking object.
+With spherical light sources multiple shadow rays are shot.  Each
+one is shot to a random point within the radius of the light.  If
+the light is half blocked by an object, approximately half the
+shadow rays will be blocked and half will pass through to the
+light.  The ratio of blocked to not-blocked shadow rays is then
+used to determine how strong the shadow is.  As you might expect,
+the extra shadow rays will add a lot of extra time to the
+rendering.  Some references refer to these light sources as
+extended light sources.  The number of shadow rays shot each time
+is controlled by the samples parameter.  The default value for
+this is 16.
+
+     The definition for a spot light source looks like:
+
+light {
+    type spot
+    position x y z
+    direction dx dy dz
+    min_angle angle1
+    max_angle angle2
+    color r g b
+    falloff f
+}
+
+     Like the directional light, the direction parameter may be
+replaced with the at x y z to specify where the light is shining.
+Min_angle and max_angle define the shape of the cone of light
+produced by the spot light.  Everything within the min_angle
+angle of the axis of the light will be fully illuminated.  From
+there the light intensity will fall off until max_angle is
+reached.  For example if you want a cone of light 30 degrees wide
+with sharp edges you would define min_angle and max_angle to be
+30.  To get the same size light but one that fades out at the
+edges you would define max_angle to be 30 and min_angle to be 0.
+
+     Each light source can also have a couple of other
+parameters.  They are no_shadows and no_spec.  As you've probably
+guessed, these allow you to turn off shadows and specular
+highlights for each light.  Used together with a directional
+light source of low intensity (.2 .2 .2) this is often a nice
+alternative to global ambient light.  Global ambient light tends
+to make objects appear flat whereas this technique will provide
+subtle shading without the shadows and spots of your "real" light
+sources.
+
+     One thing to note is that even if a light is within the
+viewing scene it will not appear as an object.  If you want you
+lights to be visible you can wrap a transparent shell around them
+using a sphere.  Example:
+
+//      Define a point light at 2 3 4 that shows up in the scene
+//      as a light with radius 1.
+
+light {
+    center 2 3 4
+    type point
+    color white
+}
+
+//      glass shell
+
+surface {
+    ambient white        // same color as the light
+    transparent white    // totally transparent
+}
+sphere {
+  center 2 3 4
+    radius 1
+}
+</pre>
+
+<b>Surfaces</b>
+
+<pre>
+     Surface structures allow you to define the surface
+characteristics of the objects you are rendering such as color,
+reflectivity and texture.  When a surface is defined in the input
+file, it is applied to all the primitives following it until a
+new surface is defined.  This allows multiple objects to be
+entered without having to repeat the surface characteristics.  A
+simple surface structure looks like this:
+
+surface {
+    diffuse r g b        // defaults to 0 0 0 (black)
+    ambient r g b        // defaults to 0 0 0
+    specular r g b       // defaults to 0 0 0
+    shine pow            // defaults to 0
+    transparent r g b    // defaults to 0 0 0
+    ior num              // defaults to 1.0
+    fuzz magnitude       // defaults to 0.0
+    no_antialias         // turn off antialiasing
+}
+
+     All of these components of the surface are figured in when
+the ray tracer determines the color of an object in the scene.
+The diffuse color is the actual color of the object as seen when
+illuminated by a full white light.  A value of 0 0 0 signifies a
+black object while a value of 1 1 1 indicates white.  The
+brightness of this component depends on the amount of light
+falling on the surface at that point.  The ambient term is
+sometimes also referred to as the self-luminous component.  This
+is the color the object will appear in a totally dark scene.  The
+specular component specifies the reflectivity of the surface.  A
+value of 1 1 1 will produce a mirror-like reflection.  The shine
+value determines how large the specular spot will appear on a
+surface.  Low values, 1..10, will produce large, soft-edged
+specular highlights while high values, 1000 or more, will produce
+a small, sharp spot.  Traditionally the brightness and color of
+the spot is in direct proportion to the specular component.  The
+problem is that sometimes it would be nice to have a blue object
+with specular highlights without having the extra overhead of
+tracing reflected rays.  Therefore Vivid allows a second form for
+defining specular spots:
+
+    shine pow r g b
+
+     In this case the color given will be used instead of the
+specular component of the surface.  The transparent component
+allows you to define how transparent the surface is.  A value of
+1 1 1 will appear glass-like because it allows all colors to pass
+through while a value of 1 0 0 will produce a surface like red
+glass since it only allows red light to pass through.  A surface
+with a transparent component of .9 .9 .9 will appear partially
+transparent with the amount of light passed through based on the
+thickness of the object the light is passing through.  The index
+of refraction, ior, determines how much the ray is bent as it
+passes into the transparent surface.  In reality this is related
+to the relative density of the surface.  To simulate glass values
+of about 1.1 to 1.3 seem to work best.  The ior of diamond is
+2.6.  Fuzz is a way of adding random noise to the surface normal
+of the object when its color is determined.  Since the diffuse
+color of the object is affected by the angle the light hits the
+surface this randomization can produce a sort of coarse texuture
+to an object.  Applied to mirrored or transparent surfaces this
+produces an affect much like frosted glass.  Generally, small
+values of fuzz, .01 to .3, seem to work best.
+
+     The no_antialias flag tells the adaptive antialiasing to
+effectively turn off for that surface.  In general this is not
+something that you want to do except in a few special cases.  The
+original reason for this parameter was that fuzzy surfaces can
+cause the adaptive antialias option to shoot lots of rays and
+slow down the image generation considerably.  By adding the
+no_antialias flag to the surface definition you still get the
+benefits of the adaptive antialiasing along the edges of the
+objects but you avoid the slowdown that can be caused by any
+large, fuzzy surfaces.  Note, however, that this will change the
+look of the surface.  Try cutting the amount of fuzz in half when
+using this option to preserve the amount of color variation in
+the surface.
+
+     As an aid to those of us that can't type, some keywords may
+be abbreviated: surf, diff, amb, spec and trans.  I trust that
+you'll be able to figure out what goes with what.
+
+     Some examples are probably in order.
+
+//    simple red surface
+surface {
+    diff 1 0 0
+}
+
+//    self-luminous blue
+surface {
+    ambient 0 0 1
+}
+
+//      mirror with specular highlights
+surface {
+    spec 1 1 1
+    shine 100
+}
+
+//      glass with some reflection
+
+surface {
+    spec .3 .3 .3
+    shine 30
+    trans .7 .7 .7
+    ior 1.2
+}
+
+     In general, the rule of thumb is that amb+diff+spec+trans
+should be less than or equal to 1 1 1.  Of course since we are
+defining our own universe anything is possible.
+</pre>
+
+<b>Bump Mapping</b>
+
+<pre>
+     Bump mapping is a means of giving a surface some texture
+which enhances the realism of the surface by adding ripples or
+bumps to the surface.  The surface isn't actually distorted but
+its normal is.  This allows a simple surface to appear very
+complicated.  Bump definitions are included inside of the simple
+surface definitions, ie:
+
+surface {
+    diffuse red
+    bump {
+        ...
+    }
+}
+
+A sample wave bump map looks like this:
+
+bump {
+    wave {
+        center 1 2 3
+        wavelength 2.0
+        amplitude 0.2
+        damping 0.9          // defaults to 1.0
+        phase 0.0            // defaults to 0.0
+    }
+}
+
+     Center defines the source of the wave.  Wavelength defines
+the crest to crest distance of the wave.  Amplitude defines the
+maximum amount that the surface normal is bumped.  Values under 1
+are definitely best.  The damping parameter defines how much the
+amplitude falls with distance.  In the example given the
+amplitude will decrease by 10% for each wavelength of distance
+from the source.  The phase is a number between 0 and 1 which
+defines a starting offset for the phase of the wave.  This can be
+used in animations to create a wave which appears to move
+realistically by incrementing the phase by a small amount for
+each frame.  More than one wave may be defined within the bump
+structure.  By defining three or four wave sources at various
+locations with differing wavelengths and amplitudes a very
+realistic rippled surface can be created.
+
+     Turbulence can also be used to perturb the normal of a
+surface.  The definition of turbulence looks like this:
+
+bump {
+    turbulence {
+        scale 1 1 1
+        offset 0 0 0
+        amplitude .5
+        terms 4
+    }
+}
+
+     The turbulence function takes the location of the ray
+intersection and returns a random number in the range +-
+amplitude.  The scale and offset factors are applied to the xyz
+location before the turbulence function is called.  The terms
+parameter allows you to build a fractal-like surface.  When
+terms&gt;1 the turbulence function is summed multiple times.  Each
+successive term in the sum has its scaling doubled and the
+amplitude halved.  This produces the varying levels of
+self-similarity associated with fractals.  The sample file
+vivid1.v uses this feature and a non-symmetric scaling to produce
+the "spun-chrome" look on the large sphere.  Turbulence and wave
+definitions may be included with each other inside a bump
+definition.
+</pre>
+
+<b>Textured Surfaces</b>
+
+<pre>
+     Vivid also allows the use of solid texturing to enhance the
+realism of the surfaces rendered.  Textured surfaces are really
+just two surfaces with some definition of which appears where on
+the object and how the two surfaces are blended together.  The
+surfaces can be "layered" in one of three patterns checker,
+spherical or noise.  The checker pattern produces a 3-d checker.
+The size of the blocks is controlled by the scale factor.  If one
+of the scale parameters is 0 then the pattern is assumed not to
+change along that axis.  An example would be a simple
+checkerboard pattern with checkers 2 units on a side colored
+black and white.  This pattern is defined to extend infinitely
+along the z axis.
+
+surface {
+    texture {
+        pattern checker
+        scale 2 2 0
+        offset 0 0 0                 // default
+        fuzz 0                       // default
+        blend 0                      // default
+        surface { diff black }
+        surface { diff white }
+    }
+}
+
+     A scale of 2 0 0 would create a pattern which changes every
+2 units in the x direction but is continuous in the y and z
+directions.  This is equivalent to 2-unit thick slabs of material
+stacked along the x axis.  The spherical pattern produces
+concentric layers of alternating surfaces.  When one of the scale
+parameters is 0 concentric cylinders are formed with the axis of
+the cylinders along the zero'ed axis.  This is useful for wood
+textures.  The spherical pattern also requires 2 radius
+definitions for the layers.  The first radius is used for the
+first surface, etc.
+
+surface {
+    texture {
+        pattern spherical
+        scale 2 2 0
+        radius 1
+        radius 2
+        surface { diff black }
+        surface { diff white }
+    }
+}
+
+     The noise pattern uses the output of the noise function
+directly to pick between the two surfaces.  This is useful for
+producing textures like granite.  By using unequal scaling values
+in the x y and z directions you can get a streaked looking
+surface.  I've also used this using tan and brown surfaces to
+produce a fine wood-grain look.
+
+surface {
+    texture {
+        pattern noise
+        terms 4
+        scale x y z
+        surface { diff white }
+        surface { diff black }
+    }
+}
+
+     The fuzz and blend parameters may be used to soften the
+edges between the two surfaces.  Their values range from 0 to 1.
+The blend parameter produces a smooth transition between the
+surfaces.  The value of the blend parameter determines the width
+of this transition area.  The fuzz parameter adds noise to the
+point being checked in proportion to its value.  This produces a
+coarse, speckled transition between the surfaces.
+
+     The turbulence function mention in the bump map section may
+also be applied to textured surfaces.  By varying the parameters
+the effect can be made to range from a slight perturbation of the
+pattern, to a marble look, to excessive turbulence.  A simple
+example is presented below.
+
+     Due to the way Vivid's parser works if you want to bump map
+a surface which is also textured the bump definition must appear
+in the surface structure before the texture definition.  Also
+notice that the surfaces defined in a texture definition need not
+be simple surfaces.  They may also be textured.  The following is
+a definition for a checkerboard surface with checks 10 units on a
+side.  Half the checks are black while the other half have a
+red/white marble finish.
+
+surface {
+    texture {
+        pattern checker
+        scale 10 10 0
+        surface { diff black }
+        surface {
+            texture {
+                pattern checker
+                scale 1 0 0
+                blend 0.7
+                turbulence {
+            amplitude 3
+                    terms 4
+                }
+                surface { diff white }
+                surface { diff red }
+            }
+        }
+    }
+}
+
+     Vivid also allows a Mandelbrot pattern as demonstrated in
+the sample input file vivid1.v.  The Mandelbrot pattern was put
+into Vivid as a joke one evening.  Currently the format for
+specifying it is terrible.  The first two parameters of the scale
+value determine the x y scaling of the set while the 3rd
+parameter determines the maximum number of iterations.  The
+result of the iteration calculation is then scaled by the max
+number of iterations to determine the relative percentages of the
+surface parameters for that point.
+
+     OK, the way it works is like this.  The actual point of
+intersection, x y z, is tranlated using the scale and offset
+values before being put into the Mandelbrot calculation.
+
+     new_x = x * scale_x + offset
+
+     Like I said, this is about a backwards as I could make it
+and still have it work.  Since the point is multiplied by the
+scale rather than divided the pattern gets bigger as the scale
+value gets smaller.  Normally the Mandelbrot set extends from -2
+to +1 along the x axis (more or less).  If you want to get it to
+fit from -20 to +10 you would have to scale it by 0.1 in the x
+and y axes.  Stupid? Yes.  Now, since the offset is added on
+after the multiplication that makes it work in the Mandelbrot
+coordinate system rather than the world coordinate system.
+Continuing the example above, if you wanted to move the center of
+the set to world coordinates 300, 100 you would have to give an
+offset of 30 10.
+
+     Using macros I think you can alleviate most of this garbage.
+    #define ITERATION_LIMIT         (64)
+    #define SCALE                   (10)
+    #define X_OFFSET                (300)
+    #define Y_OFFSET                (100)
+
+    surf {
+        texture {
+            pattern mandelbrot
+            scale (1/SCALE) (1/SCALE) ITERATION_LIMIT
+            offset (X_OFFSET/SCALE) (Y_OFFSET/SCALE) 0
+          //  etc...
+
+            }
+
+     Now all you have to do is change the defines and things will
+work much more like you expect.
+
+     Once I figure out a reasonable way of doing this Mandelbrot
+and Julia sets will become a real part of Vivid.  (Yeah, I know I
+said that last time but it's still true.)
+</pre>
+
+<b>Sphere</b>
+
+<pre>
+     The sphere is the simplest of the primitives supported by
+Vivid and generally the fastest to perform an intersection test
+with.  The format for a sphere is:
+
+sphere {
+    center x y z
+    radius r
+}
+
+where x y z is the location in space for the center of the sphere
+and r is the sphere's radius.  As an example here is the
+definition for two glass spheres, one which is hollow and one
+which is solid.
+
+//    glass surface
+
+surface { trans 1 1 1 shine 200 1 1 1 ior 1.2 }
+
+//      solid globe
+
+sphere { center 1 0 0 radius .9 }
+
+//      hollow globe
+
+sphere { center -1 0 0 radius .9 }      // outer surface
+sphere { center -1 0 0 radius .8 }     // inner surface
+
+     Just for laughs vivid also includes a fuzzy spheres option.
+These spheres appear fuzzy because they have no fixed radius.  To
+define a fuzzy sphere define a normal sphere and add a fuzz
+parameter.  This defines how much larger the radius will randomly
+be.  Each time the ray tracer performs an intersection test with
+the fuzzy sphere, the radius to test against is randomly chosen
+to lie between the radius and radius+fuzz.
+
+//      fuzzy sphere with radius between 0.5 and 2
+sphere {
+    center 0 1 2
+    radius .5
+    fuzz 1.5
+}
+</pre>
+
+<b>Ring</b>
+
+<pre>
+     The ring primitive may also be described as a washer or
+disk.  The definition for a ring consists of a location, a
+surface normal, and a minimum and maximum radius.  The minimum
+radius may be zero producing a disk without a center hole.
+Because the intersection for the ring is faster than for a
+polygon the ring is a good choice for use as a ground plane
+underneath the objects you are ray tracing.  The format for the
+ring definition is:
+
+ring {
+    center x y z
+    normal a b c
+    min_radius r0
+    max_radius r1
+}
+
+     The surface normal a b c does not have to be normalized.  If
+you just want a disk without a center hole the min/max radius
+definitions may be replaced with a single radius definition as
+follows.
+
+ring {
+    center x y z
+    normal a b c
+    radius r
+}
+
+     Whoa, just got a clue that not everyone knows what a surface
+normal is.  A surface normal is a vector that is perpendicular to
+a surface, ie one that points straight out from the surface.  For
+example, the surface normal for the floor in you room would be a
+vector pointing straight up into the air.  The surface normal of
+your monitor is the vector pointing straight out between you
+eyes.  Simple enough? Ok, now a normalized vector is one which
+has been scaled to have its length equal exactly 1.  This is
+usually done by calculating the length of the vector then
+dividing each of the vector's components by the length.  Vectors
+of length 0 cause no end of problems.
+</pre>
+
+<b>Polygon</b>
+
+<pre>
+     Polygons may have any number of vertices (well, a minimum of
+three is required).  The vertices must all lie within the same
+plane otherwise the results will be strange.  The order of the
+vertices may be either clockwise or counter clockwise.
+
+polygon {
+    points 4
+    vertex  1  1 0
+    vertex  1 -1 0
+    vertex -1 -1 0
+    vertex -1  1 0
+}
+
+     This will produce a square polygon 2 units on a side
+centered at the origin with a surface normal equal to 0 0 1.
+</pre>
+
+<b>Triangular Patch</b>
+
+<pre>
+     The triangular patch is useful for building objects with
+complex shapes that you want to appear smooth.  The patch is
+defined by three vertices and explicit surface normals for each
+vertex.  In general, manually entering in patches will probably
+be too tedious to be of much use but when using computer
+generated input files the results will be worth the extra
+programming effort.
+
+patch {
+    vertex 1 0 0 normal .1 0 1
+    vertex 0 1 1 normal 0 .1 1
+    vertex 0 0 .5 normal -.1 -.1 1
+}
+</pre>
+
+<b>Cone</b>
+
+<pre>
+     The cones implemented by Vivid are actually truncated cones.
+They have a radius both at their base and at their apex.  When
+these radii are equal the cone does a fair imitation of a
+cylinder.  To get a pointed cone enter 0 for one of the radii.
+
+cone {
+    base 1 1 1 base_radius 4
+    apex 0 0 5 apex_radius 1
+}
+
+     Rings are useful for putting caps on the ends of cones.
+Even for a cone at an odd angle the position and normal of the
+ring can be easily calculated.  To cap the apex end of the cone
+the ring's center is equal to the apex, the ring's radius is
+equal to the apex_radius and the ring's normal is equal to
+apex-base.  Using the example above the definition for a ring to
+cap the apex end of the cone would look like this:
+
+ring {
+    center 0 0 5
+    radius 1
+    normal -1 -1 4
+}
+</pre>
+
+<b>Transformations</b>
+
+<pre>
+     Vivid's transformation commands allow you to move and scale
+objects.  Transformation commands apply to all the primitives
+following them until they are "popped" from the transformation
+stack.  The format for a transformation command is:
+
+transform {
+    scale           s
+    rotate          x y z
+    translate       dx dy dz
+}
+
+     Scale changes the size of the objects.  Scale may also be
+defined as a vector to create objects that are scaled differently
+in each axis.  Unfortunately this doesn't work with all
+primitives, only polygons and patches can be scaled
+non-uniformally.  The rotate command rotates the object the given
+number of degrees around each axis.  The translate command moves
+the object.  Any of these may be left out or used more than once.
+They can also be used in any order and will be applied to the
+objects in the order that they are given.  It is very important
+that you get the order correct.  An object that is rotated 90
+degrees around the Z axis and translated 10 units along the X
+axis will end up at 10 0 0 with a 90 degree twist whereas if the
+operations are applied in the other order the object will end up
+at 0 10 0.  Sometimes it helps to play around with real objects a
+bit and work through some of the transformations first.  Remember
+that all rotations are done around the axes, not necessarily
+around the center of the object.  This should also be kept in
+mind when building new objects.  Put 0 0 0 at the objects
+"natural" center of rotation.  This will help greatly when
+building scenes with the objects.  For example, the natural
+"center" for a car model would be at ground level in the center
+of the car.  This allows the car to fairly easily be placed in
+the scene where you want it.
+
+     To remove a transformation from the transform stack use the
+"transform_pop" command.  Sometimes you will want to nest
+transform commands.  This is useful for creating multi-part
+objects that move relative to each other but also need to move as
+a whole unit.  For example, say you want to create a tank model
+with a turret that you can rotate.  Assume that the body of your
+tank model is in the file tank.vo and the turret is in turret.vo.
+To place the tank in your scene, your input file would look like
+this:
+
+#define TURRET_ANGLE    (30)    // rotation for turret
+
+transform { translate x y z }   // move whole tank
+
+#include tank.vo                // include body geometry
+transform { rotate 0 0 TURRET_ANGLE }
+#include turret.vo              // include turret geometry
+
+transform_pop           // clean up transform stack
+transform_pop
+
+     Using this technique complicated models can be built and
+positioned with relative ease.  There is currently one major
+drawback to using transformations, surface textures don't move
+with the object.  This isn't too big a deal for single frame
+images but will make animating textured objects look very poor.
+</pre>
+
+<b>Clipping</b>
+
+<pre>
+     Primitives can also be "clipped" to produce more complicated
+shapes.  Basically the way a clip works is that a primitive is
+defined with a clipping surface which cuts off part of that
+primitive.  For example a sphere can be clipped against a plane
+to produce a hemisphere or a cone can be used to clip a hole
+through another cone.  There are three types of clipping surface:
+planes, spheres and cones.  Clips are defined within a
+primitive's definiton.  You may have more than one clip per
+primitive.  Clips also transform along with their primitives.
+
+    A clipping plane is defined by a point and a normal.
+
+    clip {
+        center x y z
+        normal x y z
+    }
+
+     The part of the primitive on the normal side of the plane
+will be kept while the part on the other side will disappear into
+the Ronald Reagan Memorial Library.  (You may think I'm lying but
+you'll never really _know_ until you go check.) For example, if
+you want to get a hemipshere of radius 1 centered at the origin
+if would look like:
+
+    sphere {
+        center 0 0 0 radius 1
+        clip {
+            center 0 0 0 normal 0 0 1
+        }
+    }
+
+    Note that the clip's normal is pointing upward.  This will
+give you the top half of the sphere.  If you change the normal to
+0 0 -1 you will get the bottom half.
+
+    Clipping spheres are defined as:
+    clip {
+        center x y z
+        radius r
+        inside or outside
+    }
+
+     With a clipping sphere you can choose to either keep the
+part of the primitive inside of the sphere or the part of the
+primitive outside of the sphere.  You may have already guessed
+this but that's why the inside and outside keywords are there.
+
+    Clipping cones look like:
+
+    clip {
+        apex x y z      apex_radius r
+        base x y z      base_radius r
+        inside or outside
+    }
+
+     Just like the cone primitive you may also just define a
+single radius to get a cylinder.
+
+     Sometimes you will want to apply the same clips to a group
+of primitives.  To do this define global clips using the
+global_clip keyword:
+    global_clip {
+        clip { ... }
+        clip { ... }
+        clip { ... }
+    }
+
+     The clip_pop keyword will cause the previous section of
+clips to be popped off the stack much like the transform_pop does
+for transformations.
+</prE>
+
+<b>File Formats</b>
+
+<pre>
+     The information included here about the file formats is to
+aid people in writing their own image manipulation utilities
+compatible with the Vivid formats.  I encourage you to experiment
+and share any interesting results with the rest of us.
+
+     img -- This is the format of the files output by Vivid.  The
+images are stored 24-bits per pixel with a simple run length
+encoding scheme to help keep the size down.  The run length
+encoding works by replacing a repetitive string of the same color
+with a count value and that color written only once.  "Runs" of
+the same color are not allowed to continue beyond the end of the
+scanline to make working a scanline at a time easier.  The format
+consists of a 10 byte header followed by the image data.  The
+16-bit numbers in the header are stored most significant byte
+first.  This format is compatible with that used by Alias
+Research.  (I think.)
+
+&lt;2-bytes&gt;    x size of image
+&lt;2-bytes&gt;    y size of image
+&lt;2-bytes&gt;    first scanline, usually 0
+&lt;2-bytes&gt;    last scanline, usually y size - 1
+&lt;2-bytes&gt;    number of bitplanes, always 24
+&lt;image data&gt;
+
+The image data format looks like:
+
+&lt;1-byte&gt;    a repeat count for the following color
+&lt;1-byte&gt;    blue, 0..225
+&lt;1-byte&gt;    green, 0..255
+&lt;1-byte&gt;    red, 0..255
+
+This is repeated as many times as necessary to complete the
+image.  Note: runs do not wrap from one scan line to the next.
+This helps simplify post-processing.  It has been noted (hi Ray!)
+that in some of Vivid's antialiasing modes an extra scan line is
+output to the file.  This may eventually get fixed but for now
+the best thing to do is to always use the info in the header
+rather than looking for the end of file.
+
+     map -- This is the format used for palette files.  This
+format was chosen to be compatible with fractint.  The file is in
+plain ASCII text and consists of 256 lines each containing the
+red, green and blue value for that palette entry.  The rgb values
+are integers in the range 0..255.
+</pre>
+
+</td></tr></table></center>
+</body>
+</html>
+

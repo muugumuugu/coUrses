@@ -1,0 +1,191 @@
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>PVL (Processed VoLume) file format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>PVL (Processed VoLume) file format<br>
+As used by Drishti</h1>
+Collated by <a href="../index.html">Paul Bourke</a><br>
+June 2009, update April 2014
+</center>
+<p><br><p>
+
+<p align="justify">
+The description that follows is extracted with only minor editing from the
+Drishti online help. Some additional comments.
+</p>
+<ul>
+<li>All binary data is Intel endian.<p>
+<li>The third raw format is often convenient for "pure" raw data with no header.<p>
+<li>While the interpretation of the axes is open, the data is notionally written
+with the first coordinate (eg: z) varying the slowest and the third coordinate (x)
+varying the fastest. For example:
+<pre>
+   for (k=0;k&lt;NZ;k++) { // z axis
+      for (j=0;j&lt;NY;j++) { // y axis
+         for (i=0;i&lt;NX;i++) { // x axis
+            fwrite(,,,);
+         }
+      }
+   }  
+</pre>
+</ul>
+<p>
+
+<h3>From the Drishti Manual</b></h3>
+
+<b>RAW Format</b>
+<p align="justify">
+The datatype for volume data in the RAW file can be either unsigned byte, 
+unsigned short (2 bytes), unsigned int (4 bytes) or float (4 bytes). There are 
+three options for the format of RAW files : 
+</p>
+
+<ul>
+<li>[single byte][NZ][NY][NX][volume data]<br>
+A single byte specifies the voxel type.<br>
+<dl>
+<dd>0 : unsigned byte - 1 byte per voxel</dd>
+<dd>2 : unsigned short - 2 bytes per voxel</dd>
+<dd>4 : unsigned integer - 4 bytes per voxel</dd>
+<dd>8 : float - 4 bytes per voxel</dd>
+</dl>
+<p align="justify">
+NX, NY and NZ are the grid dimensions written as 4-byte integers and volume data is the 
+complete volumetric data with x as the fastest varying loop index. The file size for 
+such a raw formatted file is 1+12+NX*NY*NZ*sizeof(datatype) 
+</p>
+<p align="justify">
+For example for volume of size 128x128x128 with datatype as unsigned 
+short (2-bytes per voxel) the file size would be 13+128*128*128*2 = 4194317 bytes. 
+</p>
+
+<li>[NZ][NY][NX][volume data] <br>
+<p align="justify">
+NX, NY and NZ are the grid dimensions written as 4-byte integers and volume data is the 
+complete volumetric data with X as the fastest varying loop index. The user needs to 
+specify voxel type in the dialog for reading raw files. The file size for such a raw 
+formatted file is 12+NX*NY*NZ*sizeof(datatype) 
+</p>
+<p align="justify">
+For example for volume of size 128x128x128 with datatype as unsigned short 
+(2-bytes per voxel) the file size would be 12+128*128*128*2 = 4194316 bytes. 
+</p>
+
+<li>[header][volume data] <br>
+<p align="justify">
+A user defined header can be as big as the user wants. The header will be skipped while 
+loading the volume data. The user will have to specify number of header bytes to skip.
+</p>
+<p align="justify">
+The volume data is the complete volumetric data with X as the fastest varying loop index. 
+The user will have to specify grid size (NX,NY,NZ) and voxel type in the dialog for 
+reading raw files. 
+The file size for such a raw formatted file is NX*NY*NZ*sizeof(voxel type) 
+</p>
+<p align="justify">
+For example for volume of size 128x128x128 with datatype as unsigned short 
+(2-bytes per voxel) the file size would be 128*128*128*2 = 4194304 bytes. 
+</p>
+</ul>
+
+<b>PVL Format</b><br>
+<p align="justify">
+PVL stands for Processed Volume. This file is generated from the RAW data by DrishtiImport. 
+The format for PVL is as follows :
+</p>
+The first 4 bytes are all zero.<p>
+Followed by 128 byte comment.<p>
+The next 12 bytes contain grid size as three 4-byte integers - [NZ][NY][NX].<p>
+<p align="justify">
+Followed by voxel data with 2-bytes per voxel irrespective of the original volume 
+data type. The first byte of the 2-byte voxel information is the voxel intensity 
+and the second byte is the voxel gradient magnitude. The voxel gradient is 
+numerically computed using Sobel transform. The voxel intensity and gradient 
+information is scaled to fit in one byte.
+</p>
+The file size of a 128x128x128 volume is 4+128+12+128*128*128*2 = 4194448 bytes. 
+<p>
+
+<b>Update</b><p>
+<p align="justify">
+Since the above was written the so called "pvl.nc" format seems to have changed.
+To create data files that can be read directly into Dristhi (tested on version 2.4)
+one creates two files, the first might be called "test.pvl.nc" and the second
+"test.pvl.nc.001". The first file is a small human readable text file with
+various parameters related to the volume, for example the dimensions. An example is
+given below
+</p>
+<pre>&lt;!DOCTYPE Drishti_Header&gt;
+&lt;PvlDotNcFileHeader&gt;
+  &lt;rawfile&gt;&lt;/rawfile&gt;
+  &lt;voxeltype&gt;unsigned char&lt;/voxeltype&gt;
+  &lt;pvlvoxeltype&gt;unsigned char&lt;/pvlvoxeltype&gt;
+  &lt;gridsize&gt;200 100 256&lt;/gridsize&gt;
+  &lt;voxelunit&gt;micron&lt;/voxelunit&gt;
+  &lt;voxelsize&gt;1 1 1&lt;/voxelsize&gt;
+  &lt;description&gt;makepvlvol.c&lt;/description&gt;
+  &lt;slabsize&gt;201&lt;/slabsize&gt;
+  &lt;rawmap&gt;0 255 &lt;/rawmap&gt;
+  &lt;pvlmap&gt;0 255 &lt;/pvlmap&gt;
+&lt;/PvlDotNcFileHeader&gt;
+</pre>
+<p align="justify">
+  voxeltype refers to voxeltype of the original dataset from which the
+preprocessed volume was generated.
+</p>
+<p align="justify">
+ pvlvoxeltype refers to voxeltype of the preprocessed volume (unsigned
+char if not specified).
+</p>
+
+<p align="justify">
+The second file contains the raw volxel values.
+Note the gridsize parameters are listed in order z, y, x.
+The slabsize should be the z depth + 1 if the volumetric data
+is stored in a single file.
+The volumetric data is of the same format as the first raw format above and
+written in z,y,x order, namely
+</p>
+[single byte][NZ][NY][NX][volume data]<br>
+A single byte specifies the voxel type.<br>
+<dl>
+<dd>0 : unsigned byte - 1 byte per voxel</dd>
+<dd>2 : unsigned short - 2 bytes per voxel</dd>
+</dl>
+<p>
+<p align="justify">
+For example
+</p>
+<pre>
+   fputc(0,fraw);
+   fwrite(&nz,sizeof(int),1,fraw);
+   fwrite(&ny,sizeof(int),1,fraw);
+   fwrite(&nx,sizeof(int),1,fraw);
+   for (k=0;k&lt;nz;k++) {
+      for (j=0;j&lt;ny;j++) {
+         for (i=0;i&lt;nx;i++) {
+            c = i % 256;
+            fputc(c,fraw);
+         }
+      }
+   }
+</pre>
+</td></tr></table></center>
+</body>
+</html>
+

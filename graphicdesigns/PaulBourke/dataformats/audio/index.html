@@ -1,0 +1,901 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Audio File Formats</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Creating AIFF Audio Formatted files</h1>
+<b>Also: Sun .au sound file format, and WAVE sound file format</b>
+Written by <a href="../index.html">Paul Bourke</a><br>
+September 1996<p>
+</center>
+<p>
+
+This document briefly describes the minimal requirements for creating an AIFF formatted
+sound file of a single channel, it includes some example C source, and finally it contains
+the complete description of the format for version 1.3 of the specification.
+<p>
+
+There are only three required sections, a 
+<b>header</b>, 
+<b>common</b> chunk, and
+<b>sound data</b> chunk.
+<p>
+The <b>header</b> simply consists of the letters "FORM", the total 
+size in bytes of
+the remainder of the file, followed by the letters "AIFF".
+<p>
+The <b>common</b> chunk starts with the letters "COMM" followed by the
+size of the rest of common chunk, 18. The data of the common chunk
+consists of the number of channels, the number of samples in each 
+channel, the size in bits of the samples, and finally the sampling
+rate.
+<p>
+The <b>sound data</b> chunk starts with the letters "SSND" followed by the
+size of the rest of the data chunk in bytes. The first two fields
+of the sound data chunk are the offset and block size which are
+usually 0. The rest of the sound data chunk consists of the actual
+sound samples. For multiple channels the samples are in interleaved
+order.
+<p>
+<b>C Source code</b><p>
+
+<font color="#ff0000">
+<pre>
+/*
+   Write an AIFF sound file
+   Only do one channel, only support 16 bit.
+   Supports sample frequencies of 11, 22, 44KHz (default).
+   Little/big endian independent!
+*/
+void Write_AIFF(FILE *fptr,double *samples,long nsamples,int nfreq)
+{
+   unsigned short v;
+   int i;
+   unsigned long totalsize;
+   double themin,themax,scale,themid;
+
+   /* Write the form chunk */
+   fprintf(fptr,"FORM");
+   totalsize = 4 + 8 + 18 + 8 + 2 * nsamples + 8;
+   fputc((totalsize & 0xff000000) &gt;&gt; 24,fptr);
+   fputc((totalsize & 0x00ff0000) &gt;&gt; 16,fptr);
+   fputc((totalsize & 0x0000ff00) &gt;&gt; 8,fptr);
+   fputc((totalsize & 0x000000ff),fptr);
+   fprintf(fptr,"AIFF");
+
+   /* Write the common chunk */
+   fprintf(fptr,"COMM");
+   fputc(0,fptr);                               /* Size */
+   fputc(0,fptr);
+   fputc(0,fptr);
+   fputc(18,fptr);
+   fputc(0,fptr);                               /* Channels = 1 */
+   fputc(1,fptr);
+   fputc((nsamples & 0xff000000) &gt;&gt; 24,fptr);   /* Samples */
+   fputc((nsamples & 0x00ff0000) &gt;&gt; 16,fptr);
+   fputc((nsamples & 0x0000ff00) &gt;&gt; 8,fptr);
+   fputc((nsamples & 0x000000ff),fptr);
+   fputc(0,fptr);                               /* Size = 16 */
+   fputc(16,fptr);
+   fputc(0x40,fptr);                            /* 10 byte sampee rate */
+   if (nfreq == 11025)
+      fputc(0x0c,fptr);
+   else if (nfreq == 22050)
+      fputc(0x0d,fptr);
+   else
+      fputc(0x0e,fptr);
+   fputc(0xac,fptr);
+   fputc(0x44,fptr);
+   fputc(0,fptr);
+   fputc(0,fptr);
+   fputc(0,fptr);
+   fputc(0,fptr);
+   fputc(0,fptr);
+   fputc(0,fptr);
+
+   /* Write the sound data chunk */
+   fprintf(fptr,"SSND");
+   fputc((2*nsamples+8 & 0xff000000) &gt;&gt; 24,fptr);/* Size      */
+   fputc((2*nsamples+8 & 0x00ff0000) &gt;&gt; 16,fptr);
+   fputc((2*nsamples+8 & 0x0000ff00) &gt;&gt; 8,fptr);
+   fputc((2*nsamples+8 & 0x000000ff),fptr);
+   fputc(0,fptr);                                /* Offset    */
+   fputc(0,fptr);
+   fputc(0,fptr);
+   fputc(0,fptr);
+   fputc(0,fptr);                                /* Block     */
+   fputc(0,fptr);
+   fputc(0,fptr);
+   fputc(0,fptr);
+
+   /* Find the range */
+   themin = samples[0];
+   themax = themin;
+   for (i=1;i&lt;nsamples;i++) {
+      if (samples[i] &gt; themax)
+         themax = samples[i];
+      if (samples[i] &lt; themin)
+         themin = samples[i];
+   }
+   if (themin &gt;= themax) {
+      themin -= 1;
+      themax += 1;
+   }
+   themid = (themin + themax) / 2;
+   themin -= themid;
+   themax -= themid;
+   if (ABS(themin) &gt; ABS(themax))
+      themax = ABS(themin);
+   scale = 32760 / (themax);
+
+   /* Write the data */
+   for (i=0;i&lt;nsamples;i++) {
+      v = (unsigned short)(scale * (samples[i] - themid));
+      fputc((v & 0xff00) &gt;&gt; 8,fptr);
+      fputc((v & 0x00ff),fptr);
+   }
+}</pre>
+</font>
+
+<p><br><br><br><p>
+
+
+
+<p><center><p>
+<H1>Audio Interchange File Format: "AIFF"</H1>
+<b>A Standard for Sampled Sound Files, Version 1.3</b>
+</center>
+<P>The Audio Interchange File Format (Audio IFF) provides a standard for storing sampled sounds.  The format is quite flexible, allowing for the storage of monaural or multichannel sampled sounds at a variety of sample rates and sample widths.
+<P>Audio IFF conforms to the <I>"EA IFF 85"  Standard for Interchange Format Files</I> developed by Electronic Arts.
+<P>Audio IFF is primarily an <B>interchange</B> format, although application designers should find it flexible enough to use as a data storage format as well. If an application does choose to use a different storage format, it should be able to convert to and from the format defined in this document. This will facilitate the sharing of sound data between applications.
+<P>Audio IFF is the result of several meetings held with music developers over a period of ten months in 1987-88.
+<P>Another "EA IFF 85" sound storage format is <I>"8SVX" IFF 8-bit Sampled Voice</I>, by Electronic Arts. "8SVX", which handles 8-bit monaural samples, is intended mainly for storing sound for playback on personal computers.  Audio IFF is intended for use with a larger variety of computers, sampled sound instruments, sound software applications, and high fidelity recording devices.
+<p><b>Data types</b>
+<P>A C-like language will be used to describe data structures in this document.   The  data types used are listed below:
+<TABLE>
+<TR><TD>char:
+	<TD>8 bits, signed.  A char can contain more than just ASCII characters.  It
+		can contain any number from -128 to 127 (inclusive).
+<TR><TD>unsigned char:
+	<TD>8 bits, unsigned. Contains any number from zero to 255 (inclusive).
+<TR><TD>short:
+	<TD>16 bits, signed. Contains any number from -32,768 to 32,767 (inclusive).
+<TR><TD>unsigned short:
+	<TD>16 bits, unsigned. Contains any number from zero to 65,535 (inclusive).
+<TR><TD>long:
+	<TD>32 bits, signed. Contains any number from -2,147,483,648 to 2,147,483,647
+		(inclusive).
+<TR><TD>unsigned long:
+	<TD>32 bits, unsigned.  Contains any number from zero to 4,294,967,295
+		(inclusive).
+<TR><TD>extended:
+	<TD>80 bit IEEE Standard 754 floating point number (Standard Apple Numeric
+		Environment [SANE] data type Extended).
+<TR><TD>pstring:
+	<TD>Pascal-style string, a one byte count followed by text bytes.  The total
+		number of bytes in this data type should be even.  A pad byte can be added at
+		the end of the text to accomplish this.  This pad byte is not reflected in the
+		count.
+<TR><TD>ID:
+	<TD>32 bits, the concatenation of four printable ASCII character in the range
+	' ' (SP, 0x20) through '~' (0x7E).  Spaces (0x20) cannot precede printing
+	characters; trailing spaces are allowed. Control characters are forbidden.
+<TR><TD>OSType:
+	<TD>32 bits. A concatenation of four characters, as defined in Inside
+		Macintosh, vol II.
+</TABLE>
+<p><b>Constants</b>
+<P>Decimal values are referred to as a string of  digits, for example 123, 0, 100 are all decimal numbers.  Hexadecimal values are preceded by a 0x - e.g. 0x0A12, 0x1, 0x64.
+<P><I>Data Organization</I>
+<P>All data is stored in Motorola 68000 format.  Data is organized as follows:
+<BR><BR>
+<CENTER>
+<IMG SRC="http://paulbourke.net/dataformats/audio/aiff1.gif" ALT="data organization">
+</CENTER>
+<p><b>Referring to Audio IFF</b>
+<P>The official name for this standard is <I>Audio Interchange File Format</I>.  If an application program needs to present the name of this format to a user, such as in a "Save as..." dialog box, the name can be abbreviated to <I>Audio IFF</I>.
+<p><b>File Structure</b>
+<P>The <I>"EA IFF 85"  Standard for Interchange Format Files</I>  defines an overall structure for storing data in files.  Audio IFF conforms to the  "EA IFF 85"  standard.  This document will describe those portions of "EA IFF 85" that are germane to Audio IFF.  For a more complete discussion of "EA IFF 85", please refer to the document <I>"EA IFF 85"  Standard for Interchange Format Files</I>.
+<P>An "EA IFF 85"  file is made up of a number of <I>chunks</I> of data.  Chunks are the building blocks of "EA IFF 85" files.  A chunk consists of some header information followed by data:
+<BR><BR>
+<CENTER>
+<IMG SRC="http://paulbourke.net/dataformats/audio/aiff2.gif" ALT="chuck format">
+</CENTER>
+<P>A chunk can be represented using our C-like language in the following manner:
+<PRE>
+typedef struct {
+    ID              ckID;       /* chunk ID */
+    long            ckSize;     /* chunk Size   */
+    char            ckData[];   /* data */
+} Chunk;	
+</PRE>
+<P><I>ckID</I>  describes the format of the <I>data</I> portion  a chunk.  A program can determine how to interpret the chunk data by examining <I>ckID</I>.
+<P><I>ckSize</I>  is the size of the data portion of the chunk, in bytes.  It does not include the 8 bytes used by <I>ckID</I> and <I>ckSize</I>.
+<P><I>ckData</I>  contains the data stored in the chunk.  The format of this data is determined by <I>ckID</I>.  If the data is an odd number of bytes in length, a zero pad byte must be added at the end.  The pad byte is not included in <I>ckSize</I> .
+ 
+<P>Note that an array with no size specification (e.g.  <TT>char ckData[];</TT>) indicates a variable-sized array in our C-like language.  This differs from standard C.
+<P>An Audio IFF file is a collection of a number of different types of chunks.  There is a <I>Common Chunk</I>   which contains important parameters describing the sampled sound, such as it's length and sample rate.  There is a <I>Sound Data Chunk</I>  that contains the actual audio samples.  There are several other optional chunks that define markers, list instrument parameters, store application-specific information, etc.  All of these chunks are described in detail in later sections of this document. 
+<P>The chunks in a Audio IFF file are grouped together in a  container chunk.  "EA IFF 85" defines a number of container chunks, but the one used by Audio IFF is called a FORM.  A FORM has the following format: 
+<PRE>
+typedef struct {
+    ID          ckID;   
+    long        ckSize;
+    ID          formType;   
+    char        chunks [];
+} Chunk;	
+</PRE>
+<P><I>ckID</I> is always 'FORM'.  This indicates that this is a FORM chunk.
+<P><I>ckSize</I>  contains the size of data portion of the 'FORM' chunk.  Note that the data portion has been broken into two parts, <I>formType</I> and <I>chunks</I>[].
+<P><I>formType</I>  describes what's in the 'FORM' chunk.  For Audio IFF files, <I>formType</I> is always 'AIFF'.   This indicates that the chunks within the FORM pertain to sampled sound.  A FORM chunk of <I>formType</I> 'AIFF' is called a <I>FORM AIFF</I>.
+<P><I>chunks</I>  are the chunks contained within the FORM.  These chunks are called <I>local chunks</I>.  A FORM AIFF along with its local chunks make up an Audio IFF file.
+<P>Here is an example of a simple Audio IFF file.  It consists of a file containing single FORM AIFF which contains two local chunks, a Common Chunk and a Sound Data Chunk.
+<BR><BR>
+<CENTER>
+<IMG SRC="http://paulbourke.net/dataformats/audio/aiff3.gif" ALT="common chunk and sound data chunk">
+</CENTER>
+<P>There are no restrictions on the ordering of local chunks within a FORM AIFF.
+<P>On an Apple II, the FORM AIFF is stored in a ProDOS file.   The file type is 0xD8 and the aux type is 0x0000.  AIFF versions 1.2 and earlier used file type 0xCB, which is incorrect.  Please see the Apple II File Type Note for file type 0xD8 and aux type 0x0000 for strategies on dealing with this inconsistency.
+<P>On a Macintosh, the FORM AIFF is stored in the data fork of an Audio IFF file.  The Macintosh file type of an Audio IFF file is 'AIFF'.  This is the same as the <I>formType</I> of the FORM AIFF.
+<P>Macintosh or Apple II applications should not store any information in Audio IFF file's resource fork, as this information may not be preserved by all applications.   Applications can use the <I>Application Specific Chunk</I>, defined later in this document, to store extra information specific to their application.    
+<P>On an operating system that uses file extensions, such as MS-DOS or UNIX, it is recommended that Audio IFF file names have a ".AIF" extension.
+<P>A more detailed example of an Audio IFF file can be found in the Appendix.  Please refer to this example as often as necessary while reading the remainder of this document.
+<p><b>Local Chunk Types</b>
+<P>The formats of the different local chunk types found within a FORM AIFF are described in the following sections.  The <I>ckIDs</I> for each chunk are also defined.
+<P>There are two types of chunks, those that are required and those that are optional.  The Common Chunk is required.  The Sound Data chunk is required if the sampled sound has greater than zero length. All other chunks are optional.  All applications that use FORM AIFF must be able to read the required chunks, and can choose to selectively ignore the optional chunks.  A program that copies a FORM AIFF should copy all of the chunks in the FORM AIFF.
+<P><I>Common Chunk</I>
+<P>The Common Chunk describes fundamental parameters of the sampled sound.
+<PRE>
+#define CommonID    'COMM'  /* ckID for Common Chunk */
+typedef struct {
+    ID              ckID;   
+    long            ckSize;
+    short           numChannels;
+    unsigned long   numSampleFrames;
+    short           sampleSize;
+    extended        sampleRate;
+} CommonChunk;  
+</PRE>
+<P><I>ckID</I>  is always 'COMM'.  <I>ckSize</I>  is the size of the data portion of the chunk, in bytes.  It does not include the 8 bytes used by <I>ckID</I> and <I>ckSize</I>.  For the Common Chunk, <I>ckSize</I> is always 18.
+ 
+<P><I>numChannels</I>  contains the number of audio channels for the sound.  A value of 1 means monophonic sound, 2 means stereo, and 4 means four channel sound, etc.  Any number of audio channels may be represented.
+<P>The actual sound samples are stored in another chunk, the <I>Sound Data Chunk</I>, which will be described shortly.   For multichannel sounds, single sample points from each channel are interleaved.  A set of interleaved sample points is called a <I>sample frame</I>.  This is illustrated below for the stereo case.
+<BR><BR>
+<CENTER>
+<IMG SRC="http://paulbourke.net/dataformats/audio/aiff4.gif" ALT="sample frame">
+</CENTER>
+<P>For monophonic sound, a sample frame is a single sample point.
+<P>For multichannel sounds, the following conventions should be observed:
+	
+<BR><BR>
+<CENTER>
+<IMG SRC="http://paulbourke.net/dataformats/audio/aiff5.gif" ALT="multichannel sound">
+</CENTER>
+<P><I>numSampleFrames</I>  contains the number of sample frames in the <I>Sound Data Chunk</I>.  Note that <I>numSampleFrames</I>   is the number of sample frames, not the number of bytes nor the number of sample points in the <I>Sound Data Chunk</I>.  The total number of sample points in the file is <I>numSampleFrames</I>  times <I>numChannels</I>.
+<P><I>sampleSize</I>  is the number of bits in each sample point.  It can be any number from 1 to 32.  The format of a sample point will be described in the next section, the <I>Sound Data Chunk</I>.
+<P><I>sampleRate</I>  is the sample rate at which the sound is to be played back, in <I>sample frames</I> per second.
+<P>One and only one Common Chunk is required in every FORM AIFF.
+<p><b>Sound Data Chunk</b>
+<P>The Sound Data Chunk contains the actual sample frames.
+<PRE>
+#define SoundDataID 'SSND'  /* ckID for Sound Data Chunk */
+typedef struct {
+    ID                  ckID;
+    long                ckSize;
+    unsigned long       offset;
+    unsigned long       blockSize;
+    unsigned char       soundData[];
+} SoundDataChunk;   
+</PRE>
+<P><I>ckID</I>  is always 'SSND'.  <I>ckSize</I>  is the size of the data portion of the chunk, in bytes.  It does not include the 8 bytes used by <I>ckID</I> and <I>ckSize</I>.
+ 
+<P><I>offset</I>  determines where the first sample frame in the <I>soundData</I> starts.  <I>offset</I> is in bytes.  Most applications won't use <I>offset</I> and should set it to zero.  Use for a non-zero <I>offset</I> is explained in the <I>Block-Aligning Sound Data</I> section below.
+<P><I>blockSize</I>  is used in conjunction with <I>offset</I> for block-aligning sound data.  It contains the size in bytes of the blocks that sound data is aligned to.  As with <I>offset</I>, most applications won't use <I>blockSize</I> and should set it to zero.  More information on <I>blockSize</I> is in the <I>Block-Aligning Sound Data</I> section below.
+<P><I>soundData</I>  contains the sample frames that make up the sound.  The number of sample frames in the <I>soundData</I> is determined by the <I>numSampleFrames</I> parameter in the <I>Common Chunk</I>.
+<P><I>Sample Points</I>
+<P>Each sample point in a sample frame is a linear,   2's complement value.  The sample points are from 1 to 32 bits wide, as determined by the <I>sampleSize</I>  parameter in the <I>Common Chunk</I>.  Sample points are stored in an integral number of contiguous bytes.  One to 8 bit wide sample points are stored in one byte, 9 to 16 bit wide sample points are stored in two bytes, 17 to 24 bit wide sample points are stored in 3 bytes, and 25 to 32 bit wide samples are stored in 4 bytes.  When the width of a sample point is less than a multiple of 8 bits, the sample point data is left justified, with the remaining bits zeroed.  An example case is illustrated below.   A 12 bit sample point, binary 101000010111, is stored left justified in two bytes.  The remaining bits are set to zero.
+<BR><BR>
+<CENTER>
+<IMG SRC="http://paulbourke.net/dataformats/audio/aiff6.gif" ALT="sample points">
+</CENTER>
+<P><I>Sample Frames</I>
+<P>Sample frames are stored contiguously in order of increasing time.  The sample points within a sample frame are packed together, there are no unused bytes between them.  Likewise, the sample frames are packed together with no pad bytes.
+<P><I>Block-Aligning Sound Data</I>
+<P>There may be some applications that, to insure real time recording and playback of audio,  wish to align sampled sound data with fixed-size blocks.  This can be accomplished with the <I>offset</I> and <I>blockSize</I> parameters, as shown below. 
+<BR><BR>
+<CENTER>
+<IMG SRC="http://paulbourke.net/dataformats/audio/aiff7.gif" ALT="Block-Aligning Sound Data">
+</CENTER>
+<P>In the above figure, the first sample frame starts at the beginning of block N.  This is accomplished by skipping the first <I>offset</I> bytes of the <I>soundData</I>.  Note too that the soundData array can extend beyond valid sample frames, allowing the <I>soundData</I> array to end on a block boundary.
+<P><I>blockSize</I> specifies the size in bytes of the block that is to be aligned to.  A <I>blockSize</I> of zero indicates that the sound data does not need to be block-aligned.  Applications that don't care about block alignment should set <I>blockSize</I> and <I>offset</I> to zero when writing Audio IFF files.  Applications that write block-aligned sound data should set <I>blockSize</I> to the appropriate block size.  Applications that modify an existing Audio IFF file should try to preserve alignment of the sound data, although this is not required.  If an application doesn't preserve alignment, it should set <I>blockSize</I> and <I>offset</I> to zero.  If an application needs to realign sound data to a different sized block, it should update <I>blockSize</I> and <I>offset</I> accordingly.
+<P>The Sound Data Chunk is required unless the <I>numSampleFrames</I> field in the <I>Common Chunk</I> is zero.  A maximum of one Sound Data Chunk can appear in a FORM AIFF.
+<p><b>Marker Chunk</b>
+<P>The Marker Chunk contains markers that point to positions in the sound data.   Markers can be used for whatever purposes an application desires.  The <I>Instrument Chunk</I>, defined later in this document, uses markers to mark loop beginning and end points, for example.
+<P><I>Markers</I>
+<P>A marker has the following format.
+<PRE>
+typedef short   MarkerId;
+typedef struct {
+    MarkerId            id;
+    unsigned long       position;
+    pstring             markerName;
+} Marker;
+</PRE>
+<P><I>id</I>  is a number that uniquely identifies the marker within a FORM AIFF.  The id can be any positive non-zero integer, as long as no other marker within the same FORM AIFF has the same id. 
+<P>The marker's position in the sound data is determined by <I>position</I> .  Markers conceptually fall between two sample frames.  A marker that falls before the first sample frame in the sound data is at position zero, while a marker that falls between the first and second sample frame in the sound data is at position 1.  Note that the units for position  are sample frames, not bytes nor sample points.
+<BR><BR>
+<CENTER>
+<IMG SRC="http://paulbourke.net/dataformats/audio/aiff8.gif" ALT="sample frames">
+</CENTER>
+<P><I>markerName</I>  is a Pascal-style text string containing the name of the mark.
+<P>Note:  Some "EA IFF 85" files store strings as C-strings (text bytes followed by a null terminating character) instead of Pascal-style strings.  Audio IFF uses <I>pstrings</I> because they are more efficiently skipped over when scanning through chunks.  Using <I>pstrings</I>, a program can skip over a string by adding the string count to the address of the first character.  C strings require that each character in the string be examined for the null terminator.
+<P><I>Marker Chunk Format</I>
+<P>The format for the data within a Marker Chunk is shown below.  
+<PRE>
+#define MarkerID    'MARK'  /* ckID for Marker Chunk */
+typedef struct {
+    ID                  ckID;   
+    long                ckSize;
+    unsigned short      numMarkers;
+    Marker              Markers[];
+} MarkerChunk;
+</PRE>
+<P><I>ckID</I>  is always 'MARK'.  <I>ckSize</I>  is the size of the data portion of the chunk, in bytes.  It does not include the 8 bytes used by <I>ckID</I> and <I>ckSize</I>.
+ 
+<P><I>numMarkers</I>  is the number of markers in the Marker Chunk.
+<P><I>numMarkers</I>, if non-zero,  it is followed by the markers themselves.  Because all fields in a marker are an even number of bytes in length, the length of any marker will always be even.  Thus, markers are packed together with no unused bytes between them.  The markers need not be ordered in any particular manner.
+<P>The Marker Chunk is optional.  No more than one Marker Chunk can appear in a FORM AIFF.
+<p><b>Instrument Chunk</b>
+<P>The Instrument Chunk defines basic parameters that an instrument, such as a sampler, could use to play back the sound data.
+<P><I>Looping</I>
+<P>Sound data can be looped, allowing a portion of the sound to be repeated in order to lengthen the sound.  The structure below describes a loop:
+<PRE>
+typedef struct {
+    short           playMode;
+    MarkerId        beginLoop;
+    MarkerId        endLoop;
+} Loop;
+</PRE>
+<P>A loop is marked with two points, a begin position and an end position.  There are two ways to play a loop, forward looping and forward/backward looping.  In the case of forward looping, playback begins at the beginning of the sound, continues past the begin position and continues to the end position, at which point playback restarts again at the begin position.  The segment between the begin and end positions, called the <I>loop segment</I>,  is played over and over again, until interrupted by something, such as the release of a key on a sampling instrument, for example.
+<BR><BR>
+<CENTER>
+<IMG SRC="http://paulbourke.net/dataformats/audio/aiff9.gif" ALT="sample frames">
+</CENTER>
+<P>With forward/backward looping,  the loop segment is first played from the begin position to the end position, and then played <I>backwards</I>  from the end position back to the begin position.   This flip-flop pattern is repeated over and over again until interrupted.
+<P><I>playMode</I>  specifies which type of looping is to be performed.
+<PRE>
+#define NoLooping               0
+#define ForwardLooping          1
+#define ForwardBackwardLooping  2
+</PRE>
+<P>If <TT>NoLooping</TT>  is specified, then the loop points are ignored during playback.
+<P><I>beginLoop</I>  is a the marker id that marks the begin position of the loop segment.
+<P><I>endLoop</I>  marks the end position of a loop.  The begin position must be less than the end position.  If this is not the case, then the loop segment has zero or negative length and no looping takes place.
+ 
+<P><I>Instrument Chunk Format</I>
+<P>The format of the data within an Instrument Chunk is described below.
+<PRE>
+#define InstrumentID    'INST'  /* ckID for Instrument Chunk */
+typedef struct {
+    ID              ckID;   
+    long            ckSize;
+    char            baseNote;
+    char            detune;
+    char            lowNote;
+    char            highNote;
+    char            lowVelocity;
+    char            highVelocity;
+    short           gain;
+    Loop            sustainLoop;
+    Loop            releaseLoop;
+} InstrumentChunk;
+</PRE>
+<P><I>ckID</I>  is always 'INST'.  <I>ckSize</I>  is the size of the data portion of the chunk, in bytes.  For the Instrument Chunk, <I>ckSize</I> is always 20.
+ 
+<P><I>baseNote</I>  is the note at which the instrument plays back the sound data without pitch modification.  Units are MIDI (MIDI is an acronym for Musical Instrument Digital Interface) note numbers, and are in the range 0 through 127.  Middle C is 60.
+<P><I>detune</I>  determines how much the instrument should alter the pitch of the sound when it is played back.  Units are in <I>cents</I>  (1/100 of a semitone) and range from  -50 to +50.  Negative numbers mean that the pitch of the sound should be lowered, while positive numbers mean that it should be raised.
+<P><I>lowNote</I>  and <I>highNote</I>  specify the suggested range on a keyboard for playback of the sound data.  The sound data should be played if the instrument is requested to play a note between the low and high notes, inclusive.   The base note does not have to be within this range.  Units for <I>lowNote</I>   and <I>highNote</I>  are MIDI note values.
+<P><I>lowVelocity</I>  and <I>highVelocity</I>  specify the suggested range of velocities for playback of the sound data.  The sound data should be played if the note-on velocity is is between low and high velocity, inclusive.   Units are MIDI velocity values, 1 (lowest velocity) through 127 (highest velocity).
+<P><I>gain</I>  is the amount by which to change the gain of the sound when it is played.  Units are decibels.  For example, 0 db means no change, 6 db means double the value of each sample point, while -6 db means halve the value of each sample point.
+<P><I>sustainLoop</I>  specifies a loop that is to be played when an instrument is sustaining a sound.
+<P><I>releaseLoop</I>  specifies a loop that is to be played when an instrument is in the release phase of playing back a sound.  The release phase usually occurs after a key on an instrument is released.
+<P>The Instrument Chunk is optional.  No more than one Instrument Chunk can appear in a FORM AIFF.
+<p><b>MIDI Data Chunk</b>
+<P>The MIDI Data Chunk can be used to store MIDI data (please refer to <I>Musical Instrument Digital Interface Specification 1.0</I>, available from the International MIDI Association, for more details on MIDI).
+<P>The primary purpose of this chunk is to store MIDI System Exclusive messages, although other types of MIDI data can be stored in this block as well.   As more instruments come on the market, they will likely have parameters that have not been included in the Audio IFF specification.  The MIDI System Exclusive messages for these instruments may contain many parameters that are not included in the <I>Instrument Chunk</I>.  For example, a new sampling instrument may have more than the two loops defined in the <I>Instrument Chunk</I>.  These loops will likely be represented in the MIDI System Exclusive message for the new machine.  This MIDI System Exclusive message can be stored in the MIDI Data Chunk.
+<PRE>
+#define MIDIDataID  'MIDI'  /* ckID for MIDI Data Chunk */
+typedef struct {
+    ID                  ckID;
+    long                ckSize;
+    unsigned char       MIDIdata[];
+} MIDIDataChunk;
+</PRE>
+<P><I>ckID</I>  is always ' MIDI'.  <I>ckSize</I>  is the size of the data portion of the chunk, in bytes.  It does not include the 8 bytes used by <I>ckID</I> and <I>ckSize</I>.
+ 
+<P><I>MIDIData</I>  contains a stream of MIDI data.
+<P>The MIDI Data Chunk  is optional.  Any number of MIDI Data Chunks may exist in a FORM AIFF.  If MIDI System Exclusive messages for several instruments are to be stored in a FORM AIFF, it is better to use one MIDI Data Chunk per instrument than one big MIDI Data Chunk for all of the instruments.
+<p><b>Audio Recording Chunk</b>
+<P>The Audio Recording Chunk contains information pertinent to audio recording devices.	
+<PRE>
+#define AudioRecordingID  'AESD'        /* ckID for Audio Recording */
+                                        /*   Chunk.                 */
+typedef struct {
+    
+    ID                  ckID;
+    long                ckSize;
+    unsigned char       AESChannelStatusData[24];
+} AudioRecordingChunk;
+</PRE>	
+<P><I>ckID</I>  is always 'AESD'.  <I>ckSize</I>  is the size of the data portion of the chunk, in bytes.  For the Audio Recording Chunk, <I>ckSize</I> is always 24.
+<P>The 24 bytes of <I>AESChannelStatusData</I>  are specified in the <I>AES Recommended Practice for Digital Audio Engineering -  Serial Transmission Format for Linearly Represented Digital Audio Data</I>, section 7.1, Channel Status Data.   That document describes a format for real-time digital transmission of digital audio between audio devices.  This information is duplicated in the Audio Recording Chunk for convenience.  Of general interest would be bits 2, 3, and 4 of byte 0, which describe recording emphasis.
+<P>The Audio Recording Chunk is optional.  No more than one Audio Recording Chunk may appear in a FORM AIFF.
+<p><b>Application Specific Chunk</b>
+<P>The Application Specific Chunk can be used for any purposes whatsoever by manufacturers of applications.  For example, an application that edits sounds might want to use this chunk to store editor state parameters such as magnification levels, last cursor position, and the like.
+<PRE>
+#define ApplicationSpecificID  'APPL'   /* ckID for Application */
+                                        /*  Specific Chunk.     */
+typedef struct {
+    ID          ckID;   
+    long        ckSize;
+    OSType      applicationSignature;
+    char        data[];
+} ApplicationSpecificChunk;
+</PRE>
+<P><I>ckID</I>  is always 'APPL'.  <I>ckSize</I>  is the size of the data portion of the chunk, in bytes.  It does not include the 8 bytes used by <I>ckID</I> and <I>ckSize</I>.
+ 
+<P><I>applicationSignature</I>  identifies a particular application.  For Macintosh applications, this will be the application's four character signature. For Apple II applications, <I>applicationSignature</I> should always be '<TT>pdos</TT>', or the hexadecimal bytes 0x70646F73.  If <I>applicationSignature</I> is '<TT>pdos</TT>', the beginning of the data area is defined to be a Pascal-style string (a length byte followed by ASCII string bytes) containing the name of the application.  This is necessary because Apple II applications do not have a four-byte signature as do Macintosh applications.
+<P><I>data</I>  is the data specific to the application.
+<P>The Application Specific Chunk is optional.  Any number of Application Specific Chunks may exist in a single FORM AIFF.
+
+<p><b>Comments Chunk</b>
+<P>The Comments Chunk is used to store comments in the FORM AIFF.  "EA IFF 85" has an <I>Annotation Chunk</I> that can be used for comments, but the Comments Chunk has two features not found in the "EA IFF 85"  chunk.  They are: 1) a time-stamp for the comment; and 2) a link to a marker.
+<P><I>Comment</I>
+<P>A comment consists of a time stamp, marker id, and a text count followed by text.  
+<PRE>
+typedef struct {
+    unsigned long       timeStamp;
+    MarkerID            marker;
+    unsigned short      count;
+    char                text;
+} Comment;
+</PRE>
+<P><I>timeStamp</I>  indicates when the comment was created.  Units are the number of seconds since January 1, 1904.  (This time convention is the one used by the Macintosh.  For procedures that manipulate the time stamp, see The Operating System Utilities chapter in <I>Inside Macintosh, vol II</I> ). For a routine that will convert this to an Apple II GS/OS format time, please see Apple II File Type Note for filetype 0xD8, aux type 0x0000.
+<P>A comment can be linked to a marker.  This allows applications to store long descriptions of markers as a comment.  If the comment is referring to a marker, then <I>marker</I> is the ID of that marker.  Otherwise, <I>marker</I> is zero, indicating that this comment is not linked to a marker.
+<P><I>count</I>  is the length of the text that makes up the comment.  This is a 16 bit quantity, allowing much longer comments than would be available with a <TT>pstring</TT>.
+<P><I>text</I>  contains the comment itself.  This text must be padded with a byte at the end to insure that it is an even number of bytes in length.  This pad byte, if present, is not included in <I>count</I>.
+<P><I>Comments Chunk Format</I>
+<PRE>
+#define CommentID       'COMT'  /* ckID for Comments Chunk.  */
+typedef struct {
+    ID                  ckID;
+    long                ckSize;
+    unsigned short      numComments;
+    Comment             comments[];
+} CommentsChunk;
+</PRE>
+<P><I>ckID</I>  is always ' COMT'.  <I>ckSize</I>  is the size of the data portion of the chunk, in bytes.  It does not include the 8 bytes used by <I>ckID</I> and <I>ckSize</I>.
+ 
+<P><I>numComments</I>  contains the number of comments in the Comments Chunk.  This is followed by the  comments themselves.  Comments are always an even number of bytes in length, so there is no padding between comments in the Comments Chunk.
+<P>The Comments Chunk is optional.  No more than one Comments Chunk may appear in a single FORM AIFF.
+
+<p><b>Text Chunks - Name, Author, Copyright, Annotation</b>
+<P>These four chunks are included in the definition of every "EA IFF 85" file. All are text chunks; their data portion consists solely of text.  Each of these chunks is optional.
+<PRE>
+#define NameID          'NAME'  /* ckID for Name Chunk.  */
+#define AuthorID        'AUTH'  /* ckID for Author Chunk.  */
+#define CopyrightID     '(c) '  /* ckID for Copyright Chunk.  */
+#define AnnotationID    'ANNO'  /* ckID for Annotation Chunk.  */
+typedef struct {
+    ID                  ckID;
+    long                ckSize;
+    char                text[];
+} TextChunk;
+</PRE>
+<P><I>ckID</I> is either ' <TT>NAME</TT>', ' <TT>AUTH</TT>', '<TT>(c)</TT> ', or ' <TT>ANNO</TT>', depending on whether the chunk as a Name Chunk, Author Chunk, Copyright Chunk, or Annotation Chunk, respectively.  For the Copyright Chunk, the 'c' is lowercase and there is a space (0x20) after the close parenthesis.
+<P><I>ckSize</I> is the size of the data portion of the chunk, in this case the <I>text</I>.
+<P><I>text</I>  contains pure ASCII characters.  It is not a <TT>pstring</TT> nor a C string.  The number of characters in  <I>text</I> is determined by <I>ckSize</I>.  The contents of <I>text</I> depend on the chunk, as described below:
+<P><I>Name Chunk</I>
+<P><I>text</I>  contains the name of the sampled sound.  The Name Chunk is optional.  No more than one Name Chunk may exist within a FORM AIFF.
+<P><I>Author Chunk</I>
+<P><I>text</I>  contains one or more author names.  An author in this case is the creator of a sampled sound. The Author Chunk is optional.  No more than one Author Chunk may exist within a FORM AIFF.
+<P><I>Copyright Chunk</I>
+<P>The Copyright Chunk contains a copyright notice for the sound.  text contains a date followed by the copyright owner.  The chunk ID '(c) ' serves as the copyright characters '&copy;'.  For example, a Copyright Chunk containing the text "1988 Apple Computer, Inc." means "&copy; 1988 Apple Computer, Inc."  
+<P>The Copyright Chunk is optional.  No more than one Copyright Chunk may exist within a FORM AIFF.
+<P><I>Annotation Chunk</I>
+<P><I>text</I>  contains a comment.  Use of this chunk is discouraged within FORM AIFF.  The more powerful <I>Comments Chunk</I> should be used instead.   The Annotation Chunk is optional.  Many Annotation Chunks may exist within a FORM AIFF.
+  
+<p><b>Chunk Precedence</b>
+<P>Several of the local chunks for FORM AIFF may contain duplicate information.  For example, the <I>Instrument Chunk</I> defines loop points and MIDI system exclusive data in the <I>MIDI Data Chunk</I> may also define loop points.  What happens if these loop points are different?  How is an application supposed to loop the sound?
+<P>Such conflicts are resolved by defining a precedence for chunks:
+<BR><BR>
+<CENTER>
+<IMG SRC="http://paulbourke.net/dataformats/audio/aiff10.gif" ALT="precedence for chunks">
+</CENTER>
+<P>The <I>Common Chunk</I> has the highest precedence, while the <I>Application Specific Chunk</I> has the lowest.  Information in the <I>Common Chunk</I> always takes precedence over conflicting information in any other chunk.  The <I>Application Specific Chunk</I>  always loses in conflicts with other chunks. By looking at the chunk hierarchy, for example, one sees that the loop points in the <I>Instrument Chunk</I>  take precedence over conflicting loop points found in the <I>MIDI Data Chunk</I>.
+<P>It is the responsibility of applications that write data into the lower precedence chunks to make sure that the higher precedence chunks are updated accordingly.
+<p>
+<b>Appendix </b> 
+<P>Illustrated below is an example of a FORM AIFF.  An Audio IFF file is simply a file containing a single FORM AIFF.  On a Macintosh, the FORM AIFF is stored in the data fork of a file and the file type is 'AIFF'.
+<BR><BR>
+<CENTER>
+<IMG SRC="http://paulbourke.net/dataformats/audio/aiff11.gif" ALT="Form AIFF">
+</CENTER>
+
+<p><br><br><br><p>
+
+<center>
+<h1>Sun .au sound file format</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+November 2001<p>
+</center>
+<p>
+
+<p align="justify">
+The .au file format, originally by SUN, is (fortunately)
+a very straightforward audio format, unfortunately it isn't widely
+supported outside the UNIX community. 
+The file format is split into three parts....
+</p>
+<ul>
+<li><p align="justify">
+A header containing basic information such as the length, number of
+channels, sample frequency, and data format.
+</p>
+<li><p align="justify">
+A variable length informational field. This is designed for copyright
+information, authors name, etc. 
+</p>
+<li><p align="justify">
+The audio data which may be stored in a number of formats.
+</p>
+</ul>
+
+<b>Header</b>
+<p align="justify">
+The header is a total of six 4 byte quantities. The description of
+each 4 byte word is described below.
+</p>
+<ul>
+<li>A "magic" identification word of ".snd", otherwise
+known as 0x2e736e64.
+<p>
+<li>A data offset (bytes) to the audio data. If there is no
+information section then this would be 24, the size of the remainder
+of this header.
+<p>
+<li>The data size (bytes) of the audio data. Since this can be
+worked out knowing the file length and the data offset above, it is
+permitted to set this to 0xffffffff.
+<p>
+<li>The encoding type used for the data, a number from 1, 2, 3, 4, 5,
+6, 7, 23, 24, 25, 26, 27. See later.
+<p>
+<li>The sampling frequency in Hz. 
+The most commonly used frequencies are
+11025, 16000, 22050, 32000, 44100, and 48000 Hz.
+<p>
+<li>The number of channels. For more than one channel the samples
+are interleaved.
+<p>
+</ul>
+
+The header field names from SUN are as follows.
+<pre>
+typedef struct {
+   u_32 magic;       /* magic number */
+   u_32 hdr_size;    /* size of this header */
+   u_32 data_size;   /* length of data (optional) */
+   u_32 encoding;    /* data encoding format */
+   u_32 sample_rate; /* samples per second */
+   u_32 channels;    /* number of interleaved channels */
+} Audio_filehdr;
+</pre>
+
+<b>Information</b>
+<p align="justify">
+This can be any information at all, it automatically starts 24 bytes
+from the start of the file. If the data offset is 0 then this section
+is empty. The length of this section is calculated by subtracting 24
+from the data offset field in the header.
+</p>
+
+<b>Audio samples</b>
+<p align="justify">
+The audio samples can be encoded in a number of formats, the exact format
+is described in the 4th word of the header. The options are:
+</b>
+<ul>
+<li>1 = 8 bit ISDN u-law<p>
+<li>2 = 8 bit linear PCM<p>
+<li>3 = 16 bit linear PCM<p>
+<li>4 = 24 bit linear PCM<p>
+<li>5 = 32 bit linear PCM<p>
+<li>6 = 32 bit IEEE floating point<p>
+<li>7 =  64 bit IEE floating point<p>
+<li>23 = 4 bit CCITT G721 ADPCM<p>
+<li>24 = CCITT G722 ADPCM<p>
+<li>25 = CCITT G723 ADPCM<p>
+<li>26 = 5 bit CCITT G723 ADPCM<p>
+<li>27 = 8 bit ISDN a-law<p>
+</ul>
+
+<b>Simple C source code</b>
+<p align="justify">
+The following source stores a time series in the AU format as
+16 bit samples, one channel.
+</p>
+<font color="#ff0000">
+<pre>
+/*
+   Write an AU (Sun) sound file
+   Only do one channel, only support 16 bit.
+   Supports any (reasonable) sample frequency
+   Little/big endian independent!
+*/
+void Write_AU(FILE *fptr,double *samples,long nsamples,int nfreq)
+{
+   unsigned short v;
+   int i;
+   unsigned long totalsize;
+   double themin,themax,scale,themid;
+
+   /* Write the form chunk */
+   fprintf(fptr,".snd");
+   fputc(0,fptr);                               /* Data offset */
+   fputc(0,fptr);
+   fputc(0,fptr);
+   fputc(24,fptr);
+   totalsize = 2 * nsamples;
+   fputc((totalsize & 0xff000000) &gt;&gt; 24,fptr);  /* Data size, octets */
+   fputc((totalsize & 0x00ff0000) &gt;&gt; 16,fptr);
+   fputc((totalsize & 0x0000ff00) &gt;&gt; 8,fptr);
+   fputc((totalsize & 0x000000ff),fptr);
+   fputc(0,fptr);                               /* Encoding, 16 PCM */
+   fputc(0,fptr);
+   fputc(0,fptr);
+   fputc(3,fptr);
+   fputc((nfreq & 0xff000000) &gt;&gt; 24,fptr);      /* Sample frequency (Hz) */
+   fputc((nfreq & 0x00ff0000) &gt;&gt; 16,fptr);
+   fputc((nfreq & 0x0000ff00) &gt;&gt; 8,fptr);
+   fputc((nfreq & 0x000000ff),fptr);
+   fputc(0,fptr);                               /* Channels */
+   fputc(0,fptr);
+   fputc(0,fptr);
+   fputc(1,fptr);
+
+   /* Find the range */
+   themin = samples[0];
+   themax = themin;
+   for (i=1;i&lt;nsamples;i++) {
+      if (samples[i] &gt; themax)
+         themax = samples[i];
+      if (samples[i] &lt; themin)
+         themin = samples[i];
+   }
+   if (themin &gt;= themax) {
+      themin -= 1;
+      themax += 1;
+   }
+   themid = (themin + themax) / 2;
+   themin -= themid;
+   themax -= themid;
+   if (ABS(themin) &gt; ABS(themax))
+      themax = ABS(themin);
+   scale = 32760 / (themax);
+
+   /* Write the data */
+   for (i=0;i&lt;nsamples;i++) {
+      v = (unsigned short)(scale * (samples[i] - themid));
+      fputc((v & 0xff00) >> 8,fptr);
+      fputc((v & 0x00ff),fptr);
+   }
+}
+</pre>
+</font>
+
+<p><br><br><br><p>
+
+<center>
+<h1>WAVE sound file format</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+November 2001<p>
+</center>
+<p>
+
+<p align="justify">
+WAVE audio files are one of the common
+formats used to store and play audio data. They support variable sampling
+frequencies, multiple channels, and a number of compression algorithms.
+The following gives the minimal requirements necessary to save audio
+data in this format, it doesn't address compression and only considers
+sampled audio data.
+</p>
+
+<p align="justify">
+A WAVE file consists of a number of "chunks", each of these chunks
+includes an identifier, the size of the chunk in bytes, and any
+data associated with the chunk. There are two chunks that are
+required in order to successfully save sampled audio waveforms, they
+are a format chunk, and the sample data chunk 
+The main advantage of using this chunk structure is that when parsing
+a WAVE file you don't need to interpret every chunk type but can skip
+over the ones you don't need or don't understand.
+</p>
+
+<b>RIFF</b> header.
+<p align="justify"> 
+The header consists of the characters "RIFF" followed by the
+size of the rest file, followed by the characters "WAVE" indicating the 
+file type. After this the file contains chunks, while there are a number
+of potential chunks only the minimum are considered below, a format and
+data chunk. In general chunks can appear in any order but the format
+chunk must appear before the data chunk, since it contains information
+required for the successful interpretation of the data.
+</p>
+
+<b>Format</b> chunk.
+<p align="justify"> 
+The format chunk has a chunk identifier of the 4 characters "fmt " 
+(note space at end) followed by the following fields.
+</p>
+<ul>
+<li>chunk size (4 bytes, unsigned long)<br>
+<p align="justify">
+This does not include the 4 bytes of the chunk identifier or the 4 bytes
+of the chunk size....ie: it is the remaining size of the chunk.
+For the simple uncompressed WAVE 
+file discussed here this will always be 16 bytes.
+</p>
+<li>format tag (2 bytes, unsigned long)<br>
+<p align="justify">
+For uncompressed data this field is 1.
+</p>
+<li>number of channels (2 bytes, unsigned long)<br>
+<p align="justify">
+This contains the number of channels, 1 for mono, 2 for stereo....
+Any number of channels are supported although not all systems will make
+sense of them.
+</p>
+<li>samples per second (4 bytes, unsigned long)<br>
+<p align="justify">
+This is the sampling frequency in Hz that the waveform is to be
+played at. This may be any frequency but the standards are 11025,
+22050, and 44100 Hz.
+</p>
+<li>average bytes per second (4 bytes, unsigned long)<br>
+<p align="justify">
+This is a hint for players so they can determine buffering requirements.
+It is common to attempt to buffer one second of all channels.
+</p>
+<li>block alignment (2 bytes, unsigned short)<br>
+<p align="justify">
+The block alignment is the storage (bytes) required for one time step, that is,
+the number of channels times the sample width in bytes.
+</p>
+<li>bits per sample (2 bytes, unsigned short)<br>
+<p align="justify">
+This is the bits used to represent each sample, in this example it will
+be 16 but others are supported. The samples for 16 bit sample is a signed
+short integer.
+</p>
+</ul>
+<p>
+
+<b>Sample Data</b> chunk.
+<p align="justify"> 
+The sample data chunk contain the actual samples of the waveform,
+it starts with a chunk identifier of "data" followed by the chunk
+size in bytes, and finally the samples themselves. As before the
+chunk size does not include the 4 bytes for the identifier or the 4 bytes
+for the chunk size. Chunks must end on even boundaries and the
+chunk size also does not include any padding to make this so.
+The actual number of samples is the chunk size divided by the 
+block alignment setting in the format chunk. Multiple samples are
+generally interleaved.
+</p>
+
+<b>Simple C source code</b>
+<p align="justify">
+
+</p>
+<font color="#ff0000">
+<pre>
+/*
+   Write an WAVE sound file
+   Only do one channel, only support 16 bit.
+   Supports any (reasonable) sample frequency
+   Little/big endian independent!
+*/
+void Write_WAVE(FILE *fptr,double *samples,long nsamples,int nfreq)
+{
+   unsigned short v;
+   int i;
+   unsigned long totalsize,bytespersec;
+   double themin,themax,scale,themid;
+
+   /* Write the form chunk */
+   fprintf(fptr,"RIFF");
+   totalsize = 2 * nsamples + 36;
+   fputc((totalsize & 0x000000ff),fptr);        /* File size */
+   fputc((totalsize & 0x0000ff00) &gt;&gt; 8,fptr);
+   fputc((totalsize & 0x00ff0000) &gt;&gt; 16,fptr);
+   fputc((totalsize & 0xff000000) &gt;&gt; 24,fptr);
+   fprintf(fptr,"WAVE");
+   fprintf(fptr,"fmt ");                        /* fmt_ chunk */
+   fputc(16,fptr);                              /* Chunk size */
+   fputc(0,fptr);
+   fputc(0,fptr);
+   fputc(0,fptr);
+   fputc(1,fptr);                               /* Format tag - uncompressed */
+   fputc(0,fptr);
+   fputc(1,fptr);                               /* Channels */
+   fputc(0,fptr);
+   fputc((nfreq & 0x000000ff),fptr);            /* Sample frequency (Hz) */
+   fputc((nfreq & 0x0000ff00) &gt;&gt; 8,fptr);
+   fputc((nfreq & 0x00ff0000) &gt;&gt; 16,fptr);
+   fputc((nfreq & 0xff000000) &gt;&gt; 24,fptr);
+   bytespersec = 2 * nfreq;
+   fputc((bytespersec & 0x000000ff),fptr);      /* Average bytes per second */
+   fputc((bytespersec & 0x0000ff00) &gt;&gt; 8,fptr);
+   fputc((bytespersec & 0x00ff0000) &gt;&gt; 16,fptr);
+   fputc((bytespersec & 0xff000000) &gt;&gt; 24,fptr);
+   fputc(2,fptr);                               /* Block alignment */
+   fputc(0,fptr);
+   fputc(16,fptr);                              /* Bits per sample */
+   fputc(0,fptr);
+   fprintf(fptr,"data");
+   totalsize = 2 * nsamples;
+   fputc((totalsize & 0x000000ff),fptr);        /* Data size */
+   fputc((totalsize & 0x0000ff00) &gt;&gt; 8,fptr);
+   fputc((totalsize & 0x00ff0000) &gt;&gt; 16,fptr);
+   fputc((totalsize & 0xff000000) &gt;&gt; 24,fptr);
+
+   /* Find the range */
+   themin = samples[0];
+   themax = themin;
+   for (i=1;i&lt;nsamples;i++) {
+      if (samples[i] &gt; themax)
+         themax = samples[i];
+      if (samples[i] &lt; themin)
+         themin = samples[i];
+   }
+   if (themin &gt;= themax) {
+      themin -= 1;
+      themax += 1;
+   }
+   themid = (themin + themax) / 2;
+   themin -= themid;
+   themax -= themid;
+   if (ABS(themin) &gt; ABS(themax))
+      themax = ABS(themin);
+   scale = 32760 / (themax);
+
+   /* Write the data */
+   for (i=0;i&lt;nsamples;i++) {
+      v = (unsigned short)(scale * (samples[i] - themid));
+      fputc((v & 0x00ff),fptr);
+      fputc((v & 0xff00) &gt;&gt; 8,fptr);
+   }
+}</pre>
+</font>
+
+</td></tr></table></center>
+</body>
+</html>
+

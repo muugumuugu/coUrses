@@ -1,0 +1,148 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>MagicPlanet Display</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Magic Planet Display: How To</h1>
+See also: <a href="../../papers/magicplanet/index.html">Magic Planet display presentation</a><br>
+Written by <a href="../index.html">Paul Bourke</a><br>
+May 2012
+</center><p>
+
+<b>Introduction</b><p>
+
+<p align="justify">
+In the following the Magic Planet display will be discussed from generally a technical 
+perspective and how one might create content. The display itself is one of a number of
+similar systems on the market, indeed there are many home built versions as well. There
+are a number of ways one might project onto the surface of a sphere, these include multiple
+interior projectors inside a rear projection globe surface and multiple projectors projecting
+onto the outside of the sphere. In this case there is a single projector and a fisheye lens
+in the base of the sphere. Compared to multiple projectors this greatly simplifies the 
+system, reduces the dimensions and cost, 
+and by hiding the projection hardware adds to the overall elegance.
+</p>
+
+<center><table width=100%><tr><td>
+	<img src="http://paulbourke.net/dome/magicplanet/photo1.jpg" width=400 height=531 border=1>
+</td><td valign="center">
+	<img src="http://paulbourke.net/dome/magicplanet/diag1.jpg" width=400 height=408 border=0>
+</td></tr></table></center><p>
+
+<p align="justify">
+Any content for a display such as this needs to be created in an image format that
+captures the spherical field of view of the display. While one can make up a range
+of possible formats, there are three in fairly common usage: cubic maps also known as
+environment maps, 360 degree fisheye, or spherical projection also known as equirectangular
+projection.
+</p>
+
+<b>Cubic map projection</b><p>
+<p align="justify">
+This is to imagined as a cube surrounding the camera folded out and presented flat.
+</p>
+<center>
+	<img src="http://paulbourke.net/dome/magicplanet/cubic.png" width=600 height=932 border=0>
+</center><p>
+
+<b>360 degree angular fisheye projection</b><p>
+<p align="justify">
+Note the outer rim of the circle maps to a single point at the south pole.
+The center of the circle is the north pole.
+</p>
+<center>
+   <img src="http://paulbourke.net/dome/magicplanet/360fisheye.png" width=800 height=409 border=0>
+</center><p>
+
+<b>Spherical projection</b><p>
+<p align="justify">
+This is perhaps the more widely known projection. The top edge maps to a single
+point at the north pole, similarly the bottom edge maps to the south pole.
+<p>
+<center>
+   <img src="http://paulbourke.net/dome/magicplanet/spherical.png" width=700 height=707 border=0>
+</center><p>
+
+<p align="justify">
+The data projector takes an image, in this case as a 4x3 aspect rectangle 
+(resolution SXGA: 1400x1050 pixels) and the central
+circular portion is projected into the sphere. An example of this is illustrated below.
+To be clear, the pixel in the center of the image is mapped to the north pole of the
+sphere. A ring about 70% of the radius of the circle is projected onto the equator
+of the sphere. The outer rim of the circle projects to the lowest rim of the sphere.
+</p>
+
+<b>Circular projected image</b><p>
+<center>
+   <img src="http://paulbourke.net/dome/magicplanet/fisheye.png" width=600 height=450 border=0>
+</center><p>
+
+<p align="justify">
+The requirement then for the content generation software is to create an image in one
+of the three projection formats presented above. Then that image is image mapped (warped) into
+the form of the circular image to be projected. Note that this mapping is highly non-linear.
+This mapping can be derived in a number of ways, one is to create a simulation of the optics
+and geometric arrangement of the components. The approach here is the same employed by
+the software supplied with Magic Planet, namely a curve which describes where a
+point on the sphere appears on the circular image. Since the lens is assumed to be
+circularly symmetric in longitude this is only a one dimensional mapping between latitude
+and radius on the circular projected image plane. 
+</p>
+
+<p align="justify">
+There are three standard Magic Planet display sizes and each has its own geometry/optics.
+Supplied with each display is a default calibration file, this is a straight line approximation
+to the real lens curve derived by measuring the radial distance on the image for known
+latitudes. The solid lines in the following figure are the latitude to radius mappings
+supplied. For this exercise it was decided to fit a simple curve through these points to
+create a smooth continuous parametric mapping.
+</p>
+
+<center>
+	<img src="http://paulbourke.net/dome/magicplanet/calibrate.png" width=780 height=754 border=0>
+</center><p>
+
+<p align="justify">
+To a first approximation the analytic curves (solid colour for each display size)
+above can be fitted with a parameter free function, namely
+</p>
+
+<center>
+   <img src="http://paulbourke.net/dome/magicplanet/equation1.png" width=200 height=56 border=0>
+</center><p>
+
+<p align="justify">
+For an idealised geometry this can also ready be derived as the form of the mapping.
+In summary the above allows one to map a latitude value to a radius on the projected 
+circular image. The angle on the projected image is mapped directly to longitude, the
+lens is radially symmetric. Details not explicitly discussed here include two further
+parameters. The first is the realisation that the projected image does not go all the way
+to -90 degrees, the South pole. This then forms a minimum angle for the circular projected 
+image. The second is that the circular image is not necessarily exactly centered on the
+lens which manifests itself as a skewing of the image on the sphere, 
+a translational offset is provided for to compensate for this.
+</p>
+
+<center>
+	<img src="http://paulbourke.net/dome/magicplanet/mapping.png" width=600 height=283 border=0>
+</center><p>
+
+</td></tr></table></center><p>
+</body>
+</html>
+

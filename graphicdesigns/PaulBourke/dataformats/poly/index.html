@@ -1,0 +1,293 @@
+<html>
+<head><link rel=StyleSheet href="http://paulbourke.net/dataformats/pdbstyle.css" type="text/css" media=all>
+<title>Polygon data files</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Polygon data files (.poly)</h1>
+Voxblast User Reference Guide, Page 46<br>
+University of Iowa, Image Analysis Facility
+</center>
+<p><br><p>
+
+<p align="justify">
+A polygon data file is a ASCII file containing a list of geometric objects. 
+A polygon data tile is divided into 
+<b>OBJECT</b>, <b>VERTEX</b>, <b>LIGHT</b> and <b>MATERIAL</b> 
+sections. The sections can be in any order in the file, but only one 
+section of each type is permitted.
+</p>
+
+<p><br><p>
+
+The first section is the OBJECT section. It begins with the header:
+<p>
+<b>OBJECT N</b>
+<br>
+<p align="justify">
+where N is the number of objects being described. Each object is next listed (one per line). Objects have 
+material, lighting and vertex attributes. Object lines have the format (mat, lht and vindexes are all integers):
+XX.YY.z mat lht vindexl vindex2 vindex3
+</p>
+
+<p align="justify">
+The periods after the XX and YY codes are necessary, even if the 'z' string is non-existent. Code values (as 
+well as section headers) are case sensitive.
+</p>
+
+<p align="justify">
+XX are two ASCII characters which describe the type of the object Valid types are listed below:
+</p>
+
+<pre>
+Code  Type            Description
+====  ====            ===========
+ EN   END             End of rendering list. Each list MUST end with this object.
+ CL   CLEAR           Clear zbuffer and image buffers.
+ Zc   Z CLEAR         Clear the zbuffer only.
+ IC   IMAGE CLEAR     Clear the image buffer to the background color only.
+ P0   POLYGON         Treat the three vertexes as corners of a 3D triangle 
+                      which is to be filled.	
+ LI   LINE            Treat the first two vertexes as endpoints of a 3D line.
+ ME   MESH            Treat the three vertexes as the corners of a 3D triangle. 
+                      Only the outline of the triangle is drawn.
+ TE   TEXT            Read the next line from the polygon file. 
+                      Draw its ASCII contents as a text string located at the 
+                      position described by the first of the three vertexes. 
+                      Use the current text attributes.
+                      (Default text attributes:FONT=(),SIZE=9,ROT=(),CENTER=O,FLIP=O)
+ TA   TEXT ATTRIBUTES Use the MAT, LHT and VINDEX parameters to set the 
+                      current text attributes. The font number (FONT) is 
+                      taken from MAT. The size of the font in pixels (SIZE) 
+                      is taken from LHT. The angle of the font ~OT) is taken 
+                      from VINDEXi. The center of drawing (CENTER) is taken 
+                      from VINDEX2. The vertical flip parameter (FLIP) is 
+                      taken from VINDEX3.  
+</pre>
+
+<p align="justify">
+Text is always drawn flat on the image starting at the location obtained from the positioning vertex. 
+Although the text is 'flat' it does have the same Z depth as the positioning vertex and is normally zbuffered. 
+The angle of the text can be controlled with an accuracy of one degree. The size of the font can also be 
+specified in pixels. Alternate fonts can be selected, but currently only font 0 is defined. Text can be flipped 
+vertically by setting the FLIP attribute to - 1. By default, text is drawn from its upper left corner. Alternate 
+centering points can be specified with the centering attribute. Its values specify the location of the 
+positioning vertex with respect to the complete text string.
+</p>
+
+<pre>
+Centering value	Positioning vertex location
+      0                upper left
+      1                upper center
+      2                upper right
+      3                center left
+      4                centered
+      5                center right
+      6                lower left
+      7                lower center
+      8                lower right
+</pre>
+
+<p align="justify">
+YY are two ASCII characters which describe the style of rendering. Valid styles are listed below:
+</p>
+
+<pre>
+Code  Type           Description
+====  ====           ===========
+ FL   FLAT           Object is colored according to the color of its first vertex. 
+                     Vertex color determined by light, normal and material.
+ SM   SMOOTH         Object is colored by interpolation between its vertexes. 
+                     Vertex color determined by lights, normals and materials.
+ TE   TEXTURED       Object is colored using the volume color palette and opacity 
+                     table where the object intersects the volume. Outside the 
+                     volume, color is the volume background color and opacity is 
+                     from the first vertex.
+ VC   VERTEX COLORED Object is colored by interpolation between vertexes. 
+                     Vertex normals are treated as direct RGB colors.
+</pre>
+
+<p align="justify">
+z is a string of optional characters. Normally the string is absent. Valid optional characters are listed below:
+</p>
+
+<pre>
+Char  Type               Description
+ w    Zbuffer writing    The existence of this option disables zbuffer writing 
+                         (but not reading).
+ z    Zbuffer comparison The existence of this option disables zbuffer reading 
+                         (but not writing).
+</pre>
+
+<p align="justify">
+MAT is an index into the entries listed in the MATERIAL section. 
+The first MATERIAL entry is considered to have an index of 0.
+</p>
+
+<p align="justify">
+LRT is an index into the entries listed in the LIGHT section. 
+The first LIGHT entry is considered to have an index of 0.
+</p>
+
+<p align="justify">
+VINDEXi, VINDEX2, VINDEX3 are a set of indexes into the VERTEX section. 
+The first VERTEX entry is considered to have an index of 0.
+</p>
+
+<p><hr><p>
+
+The next section is the VERTEX section. It begins with the header:
+<p>
+<b>VERTEX N</b>
+<p>
+
+<p align="justify">
+where N is the number of vertexes being described. Each vertex is next 
+listed (one per line). Vertexes have locations in 3D and normals. Vertex 
+lines have the format (all floating point numbers): X	Y Z NX NY NZ
+</p>
+
+<p align="justify">
+The X,Y,Z coordinates are specified in pixel coordinates (or units of 1 
+interpixel spacing) and (0,0,0) matches the center of the voxel volume.  
+NX,NY,NZ are a normalized vector representing a normal to the object at a 
+position in space.
+</p>
+
+<p><hr><p.
+
+The next section is the LIGHT section. It begins with the header:
+<br>
+<b>LIGHT N</b>
+<br>
+
+<p align="justify">
+where N is the number of lights being described. Each light is next 
+listed (one per line). Lights have ambient and diffuse intensities as 
+well as a direction in 3D. Light lines have the format (all floating 
+point numbers): A D NX NY NZ
+</p>
+
+A is the intensity of the ambient light color (0-1.0).
+<p>
+D is the intensity of the diffuse light color (0-1.0).
+<p>
+NX,NY,NZ are a normalized vector representing the direction along which 
+uniform parallel light rays travel.
+<p>
+
+<p><hr><p>
+
+The next section is the MATERIAL section. It begins with the header:
+<p>
+<b>MATERIAL N</b>
+<p>
+
+<p align="justify">
+where N is the number of materials being described. Each material is next 
+listed (one per line).  Materials have ambient and diffuse ROB colors as 
+well as specular highlight controls and an alpha (opacity) value. Material 
+lines have the format (all floating point numbers): DR DG DB AR AG AB SK SN A
+</p>
+
+DR,DG,DB are the diffuse color components of the material.
+<p>
+AR,AG,AB are the ambient color components of the material.
+<p>
+SK is the intensity of the specular highlights.
+<p>
+SN is the 'power' of the specular highlights (sk*(NeH)sn).
+<p>
+A is the material alpha value or opacity. 0.0 is completely transparent. 1.0 is completely opaque.
+<p>
+
+<p><hr><p>
+
+<p align="justify">
+There is an extension to the '.poly' format called the binary '.poly' format. 
+In this format, replacements for the OBJECT and VERTEX sections named 
+BINOBJECT and BINVERTEX are used instead. These sections appear in a 
+normal '.poly' file as the following:
+</p>
+
+<pre>
+	BINOBJECT NO
+	INCLUDE "objfile"
+	BINEERTEX NV
+	INCLUDE "vertfile"
+</pre>
+
+<p align="justify">
+NO is the number of objects and NV is the number of verticies. The 
+difference is that the actual objects and verticies are stored in 
+secondary files (in the same directory as the main '.poly' file) named by 
+the INCLUDE line following the BINOBJECT or BINVERTEX headers. The 
+format of the data in the secondary object and vertex files is operating 
+system dependent and will not be documented here. The binary format is 
+optimized for higher speed reading and writing and is generally much 
+faster than the
+</p>
+
+<p align="justify">
+ASCII '.poly' format. The binary format is not portable between the 
+various operating Systems supported by Voxblast.
+</p>
+
+<p><hr><p>
+<h3>Example</h3>
+<pre>
+OBJECT 302938
+PO.SM. 0 0 21 19 0
+PO.SM. 0 0 19 22 0
+PO.SM. 0 0 23 21 0
+PO.SM. 0 0 22 23 0
+PO.SM. 0 0 59 56 1
+PO.SM. 0 0 56 60 1
+PO.SM. 0 0 61 59 1
+PO.SM. 0 0 60 61 1
+PO.SM. 0 0 73 71 2
+PO.SM. 0 0 71 74 2
+
+   --- cut ---
+
+PO.SM. 0 0 160027 160024 160026
+PO.SM. 0 0 160027 160026 160025
+EN.FL. -2002900929 0 439322782 39039 33947648
+VERTEX 160028
+-67.000000 27.000000 -53.202957 0.485363 -0.327481 -0.810665
+-65.000000 46.000000 -53.749752 0.111754 -0.071040 -0.991193
+-65.000000 54.000000 -53.398724 -0.341703 -0.374501 -0.861967
+-80.000000 3.000000 -52.426643 0.185204 0.270632 -0.944700
+-81.000000 9.000000 -52.565025 -0.188820 -0.302131 -0.934379
+-86.000000 14.000000 -52.254501 0.101770 -0.078637 -0.991695
+-84.000000 14.000000 -52.359135 0.156994 0.056373 -0.985989
+-57.000000 15.000000 -52.257877 0.462587 0.815115 -0.348713
+
+   --- cut ---    
+
+5.607843 -63.000000 20.226406 0.809614 0.430568 0.398918
+5.000000 -62.733334 20.226406 -0.307325 0.921065 0.239145
+5.000000 -63.000000 20.979094 -0.309164 0.469521 0.827023
+LIGHT 1
+1.000000 1.000000 0.000000 0.000000 0.000000
+MATERIAL 1
+0.549020 0.549020 0.549020 0.200000 0.200000 0.200000 0.949020 15.000 1.000
+</pre>
+
+</td></tr></table></center>
+</body>
+</html>
+

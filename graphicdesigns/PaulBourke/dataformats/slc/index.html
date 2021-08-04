@@ -1,0 +1,277 @@
+<html>
+<head><link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>SLC format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>SLC - SLiCe format</h3>
+</center>
+<p><br><p>
+
+<p align="justify">
+This is a 2 1/2 dimension file describing slices (contours) through a 
+solid model typically for rapid prototyping applications such as
+stereo-lithography. It was created by "3D systems" around 1994.
+</p>
+
+      <h3>Introduction</h3>
+      <p>The SLC file format is a &quot;21/2D&quot; contour representation of 
+        a CAD model.&nbsp; It consists of successive cross-sections taken at ascending 
+        Z intervals in which solid material is represented by interior and exterior 
+        boundary polylines. SLC data can be generated from various sources, either 
+        by conversion from CAD solid or surface models or more directly from systems 
+        that produce data arranged in layers, such as CT-scanners.</p>
+      <h3>Definition of Terms</h3>
+      <h4>Segment</h4>
+      <p>A segment is a straight line connecting two X/Y vertices points.</p>
+      <h4>Polyline</h4>
+      <p>A Polyline is an ordered list of X/Y vertices points connected continuously 
+        by each successive line segment.&nbsp; The polyline must be closed whereby 
+        the last point must equal the first point in the vertices list.</p>
+      <h4>Contour Boundary</h4>
+      <p>A boundary is a closed polyline representing interior or exterior solid 
+        material.&nbsp; An exterior boundary has its polyline list in counter-clockwise 
+        order.&nbsp;The solid material is inside the polyline. An interior boundary 
+        has its polyline list in clockwise order and solid material is outside 
+        the polyline.</p>
+      <h4>Contour Layer</h4>
+      <p>A contour layer is a list of exterior and interior boundaries representing 
+        the solid material at a specified Z cross-section of the CAD model. The 
+        cross-section slice is taken parallel to the X/Y plane and has a specified 
+        layer thickness.</p>
+      <h3>Data Formats</h3>
+      <p>Byte 8 bits<br>
+        Character 1 Byte<br>
+        Unsigned Integer 4 Bytes<br>
+        Float 4 Bytes<br>
+        IEEE Format</p>
+      <p>Most significant byte of FLOAT is specified in the highest addressed 
+        byte.&nbsp; The byte ordering follows the Intel PC Little Indian/Big Indian 
+        scheme.</p>
+      <p>Address 0 1 2<br>
+        3<br>
+        Low Word<br>
+        High Word<br>
+        LSB MSB LSB MSB<br>
+        <br>
+        Most UNIX RISC Workstations are Big Indian/Little Indian, therefore they 
+        need to byte swap all Unsigned Integers and Floats before outputting to 
+        the SLC file.</p>
+      <h3>Overview of the SLC File Structure</h3>
+      <p>The SLC file is divided into a header section, a 3D reserved section, 
+        a sample table section, and the contour data section.</p>
+      <h4>Header Section</h4>
+      <p>The Header section is an ASCII character string containing global information 
+        about the part and how it was prepared.<br>
+        The header is terminated by a carriage return, line feed and control-Z 
+        character (0x0d,0x0a,0x1a) and can be a maximum of 2048 bytes including 
+        the termination characters.</p>
+      <p>The syntax of the header section is a keyword followed by its appropriate 
+        parameter.</p>
+      <h3>Header Keywords</h3>
+      <h4>&quot;-SLCVER &lt;X.X&gt;&quot;</h4>
+      <p>specifies the SLC file format version number.&nbsp; The version number 
+        of this specification is 2.0.</p>
+      <h4>&quot;-UNIT &lt;INCH/MM&gt;&quot;</h4>
+      <p>indicates which units the SLC data is represented in.</p>
+      <h4>&quot;-TYPE &lt;PART/SUPPORT/WEB&gt;&quot;</h4>
+      <p>specifies the CAD model type.&nbsp; PART and SUPPORT must be closed contours.&nbsp; 
+        WEB types can be open polylines or line segments.</p>
+      <h4>&quot;-PACKAGE &lt;vendor specific&gt;&quot;</h4>
+      <p>identifies the vendor package and version number that produced the SLC 
+        file.&nbsp; A maximum of 32 bytes.</p>
+      <h4>&quot;-EXTENTS &lt;minx,maxx miny,maxy minz,maxz&gt;&quot;</h4>
+      <p>describes the X, Y, and Z extents of the CAD model.</p>
+      <h4>&quot;-CHORDDEV &lt;value&gt;&quot;</h4>
+      <p>specifies the cordal deviation, if used, to generate the SLC data.</p>
+      <h4>&quot;-ARCRES &lt;value in degrees&gt;&quot;</h4>
+      <p>specifies the arc resolution, if used, to generate the SLC data.</p>
+      <h4>&quot;-SURFTOL &lt;value&gt;&quot;</h4>
+      <p>specifies the surface tolerance, if used, to generate the SLC data.</p>
+      <h4>&quot;-GAPTOL &lt;value&gt;&quot;</h4>
+      <p>specifies the gap tolerance, if used, to generate the SLC data.</p>
+      <h4>&quot;-MAXGAPFOUND &lt;value&gt;&quot;</h4>
+      <p>specifies the maximum gap size found when generating the SLC data.</p>
+      <h4>&quot;-EXTLWC &lt;value&gt;&quot;</h4>
+      <p>specifies if any line width compensation has been applied to the SLC 
+        data by the CAD vendor.</p>
+      <h4>3D Reserved Section</h4>
+      <p>This 256-byte section is reserved for future use.</p>
+      <h4>Sampling Table Section</h4>
+      <p>The sample table describes the sampling thickness (layer thickness or 
+        slice thickness) of the part.&nbsp; There can be up to 256 entries in 
+        the table.&nbsp; Each entry describes the Z start, the slice thickness, 
+        and what line width compensation is desired for that sampling range.</p>
+      <p>Sampling Table Size<br>
+        1 Byte<br>
+        Sampling Table Entry<br>
+        4 Floats<br>
+        <br>
+        Minimum Z Level<br>
+        1 Float<br>
+        Layer Thickness<br>
+        1 Float<br>
+        Line Width Compensation<br>
+        1 Float<br>
+        Reserved<br>
+        1 Float</p>
+      <p>The first sampling table entry Z start value must be the very first Z 
+        contour layer. For example, if the cross-sections were produced with a 
+        single thickness of 0.006 inches and the first Z level of the part is 
+        0.4 inches and a line width compensation value of 0.005 is desired, then 
+        the sampling table will look like the following:</p>
+      <p>Sample Table Size<br>
+        1<br>
+        Sample Table Entry<br>
+        0.4&nbsp; 0.006&nbsp; 0.005&nbsp; 0.0<br>
+        <br>
+        If for example, the part was sliced with 2 different layer thickness the 
+        Sample Table could look like the following:</p>
+      <p>Sample Table Size<br>
+        2<br>
+        Sample Table Entry 1<br>
+        0.4&nbsp; 0.005&nbsp; 0.004&nbsp; 0.0<br>
+        Sample Table Entry 2<br>
+        2.0&nbsp; 0.010&nbsp; 0.005&nbsp; 0.0<br>
+        <br>
+        Slice thickness must be even multiples of one other to avoid processing 
+        problems.</p>
+      <h4>Contour Data Section</h4>
+      <p>The contour data section is a series of successive ascending Z cross-sections 
+        or layers with the accompanying contour data.&nbsp; Each Contour Layer 
+        contains the minimum Z layer value, number of boundaries followed by the 
+        list of individual boundary data. The boundary data contains the number 
+        of x,y vertices for that boundary, the number of gaps, and finally the 
+        list of floating point vertices points.&nbsp;<br>
+        <br>
+        The location of a gap can be determined when a vertice point repeats itself.&nbsp;&nbsp;To 
+        illustrate, given the contour layer in section 2.4 the contour section 
+        could be as follows:</p>
+      <p>Z Layer<br>
+        0.4<br>
+        Number of Boundaries<br>
+        2<br>
+        Number of Vertices for the 1st<br>
+        Boundary 5<br>
+        Number of Gaps for the 1st<br>
+        Boundary 0<br>
+        Vertex List for 1st Boundary<br>
+        0.0, 0.0<br>
+        <br>
+        1.0, 0.0<br>
+        <br>
+        1.0, 1.0<br>
+        <br>
+        0.0, 1.0<br>
+        <br>
+        0.0, 0.0<br>
+        <br>
+        * Notice the direction of the vertice list is counter-clockwise indicating 
+        the solid material is inside the polylist.&nbsp; Also, notice that the 
+        polylist is closed because the last vertice is equal to the first vertice.</p>
+      <p>Number of Vertices for the 2nd<br>
+        Boundary 5<br>
+        Number of Gaps for the 2nd<br>
+        Boundary 0<br>
+        Vertex List for 2nd Boundary<br>
+        0.2, 0.2<br>
+        <br>
+        0.2, 0.8<br>
+        <br>
+        0.8, 0.8<br>
+        <br>
+        0.8, 0.2<br>
+        <br>
+        0.2, 0.2<br>
+        <br>
+        * Notice the direction of the vertice list is clockwise indicating the 
+        solid material is outside the polylist. Also, notice that the polylist 
+        is closed because the last vertice is equal to the first vertice.</p>
+      <p>The Contour Layers are stacked in ascending order until the top of the 
+        part.&nbsp; The last layer, or the top of the part, is indicated by the 
+        Z level and a termination unsigned integer (0xFFFFFFFF).<br>
+        <br>
+        Contour Layer Section Description<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; Contour Layer<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Minimum Z Level<br>
+        Float<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Number of Boundaries<br>
+        Unsigned Integer<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Number of<br>
+        Vertices Unsigned Integer<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Number of Gaps<br>
+        Unsigned Integer<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Vertices List<br>
+        (X/Y) Number of Vertices * 2 Float<br>
+        <br>
+        Repeat Number of Boundaries<br>
+        1<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; Repeat Contour Layer until Top of<br>
+        Part<br>
+        &nbsp;&nbsp;&nbsp; Top of Part<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Maximum Z Level<br>
+        1 Float<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Termination Value<br>
+        Unsigned Integer (0xFFFFFFFF)<br>
+        Minimum Z Level for a given Contour Layer<br>
+        <br>
+        Note that a one-inch cube based at the origin 0,0,0 can be represented 
+        simply by only one contour layer and the Top of Part Layer data.</p>
+      <p>Suppose the cube was to be imaged in 0.010 layers. The sample table would 
+        have a single entry with its starting Z level at 0.0 and layer thickness 
+        at 0.01.&nbsp; The contour layer data section could be as follows:<br>
+        <br>
+        Z Layer<br>
+        0.0<br>
+        Number of Boundaries<br>
+        1<br>
+        Number of Vertices for the 1st<br>
+        Boundary 5<br>
+        Number of Gaps for the 1st<br>
+        Boundary 0<br>
+        Vertex List for 1st Boundary<br>
+        0.0, 0.0<br>
+        <br>
+        1.0, 0.0<br>
+        <br>
+        1.0, 1.0<br>
+        <br>
+        0.0, 1.0<br>
+        <br>
+        0.0, 0.0<br>
+        Z Layer<br>
+        1.0<br>
+        Termination Value<br>
+        0xFFFFFFFF<br>
+        <br>
+        Notice that only one contour was necessary to describe the entire part.&nbsp; 
+        The initial contour will be imaged until the next minimum contour layer 
+        or the top of the part at the specified layer thickness described in the 
+        sampling table.&nbsp; This part could have had 100 identical contour layers, 
+        but that would have been redundant.&nbsp; This is why the contour Z value 
+        is referred to as the minimum Z value.&nbsp;&nbsp; It gets repeated until 
+        the next contour or top of the part.</p>
+
+To help identify such a file 
+<a href="http://paulbourke.net/dataformats/slc/box.slc">here's an example of a slided box</a>
+<p>
+
+</td></tr></table></center>
+</body>
+</html>
+

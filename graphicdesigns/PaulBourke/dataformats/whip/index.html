@@ -1,0 +1,1835 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>DWF format </title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>DWF format</h1>
+From AutoDesk<br>
+Edited by <a href="../index.html">Paul Bourke</a>
+</center>
+</h1>
+
+<p><br></P>
+
+<P>The DWF format is intended only for the efficient viewing of drawings
+Similar
+to an electronic plot. It is not intended for the interchange of higher
+level data 
+between applications, especially as most DWF data is post-tessellation.</P>
+
+<P>For example, a CAD application generates a <I>.dwf</I> file based on
+a drawing in the application's native format. This <I>.dwf</I> file is
+then transmitted and displayed by a much simpler viewing application, such
+as an Internet Web browser. Due to the lack of non-visual data, the DWF
+is not intended to be read back into the original CAD application, although
+the <I>.dwf</I> file can refer to another file in the application's native
+format with a DWF link or an embed operation.</P>
+
+<P><A NAME="Fileo"></A><B><FONT SIZE=+2>File Organization</FONT></B></P>
+
+<P><I>.dwf</I> files are organized into three main sections as shown in
+figure 1.<A NAME="Fig3"></A></P>
+
+<UL>
+<LI>File identification header </LI>
+
+<LI>File data block </LI>
+
+<LI>File termination trailer</LI>
+</UL>
+
+<CENTER><P><IMG SRC="http://paulbourke.net/dataformats/whip/Image26.gif" HEIGHT=240 WIDTH=360></P></CENTER>
+
+<CENTER><P><I>Figure 1. DWF file organization</I></P></CENTER>
+
+<P>The data in the header and the trailer are encoded as readable ASCII
+text. Data in the file data block is delimited by operation codes (opcodes)
+and argument data used by the opcodes (operands) as in table 1.</P>
+
+<CENTER><P><A NAME="Tabl2"></A><I>Table 1. File data block</I></P></CENTER>
+
+<CENTER><TABLE BORDER=1 CELLPADDING=9 WIDTH=100% BORDERCOLOR="#000000" >
+<TR>
+<TD WIDTH="17%" VALIGN="TOP"><FONT SIZE=-1>&lt;opcode&gt;</FONT></TD>
+
+<TD WIDTH="17%" VALIGN="TOP"><FONT SIZE=-1>&lt;operand&gt;</FONT></TD>
+
+<TD WIDTH="17%" VALIGN="TOP"><FONT SIZE=-1>&lt;opcode&gt;</FONT></TD>
+
+<TD WIDTH="17%" VALIGN="TOP"><FONT SIZE=-1>&lt;operand&gt;</FONT></TD>
+
+<TD WIDTH="17%" VALIGN="TOP"><FONT SIZE=-1>&lt;opcode&gt;</FONT></TD>
+
+<TD WIDTH="17%" VALIGN="TOP"><FONT SIZE=-1>&lt;operand&gt;</FONT></TD>
+</TR>
+</TABLE></CENTER>
+
+<P>&nbsp;</P>
+
+<P>There are two types of opcode-operand pairs: readable ASCII text and
+coded binary. All DWF operations have a readable ASCII opcode/operand form,
+and most operations also have a coded binary opcode/operand form. By using
+the proper opcode form, you can create a file that is humanly readable
+or one that is more efficient from a processing and storage point of view
+or, more commonly, a mixture of both types.</P>
+
+<P>An application reading a <I>.dwf</I> file may not understand a set of
+opcodes, especially when the application reading the file outdates the
+application that created the file. For this reason, DWF is designed to
+allow a file reader to skip most opcodes. In order for the file reader
+to skip an opcode, it must know the length of its operand. DWF has three
+categories of opcodes:</P>
+
+<DIR>
+<P><I>1. Single-byte opcodes</I> that must be recognized for efficiency
+reasons and thus cannot be skipped.</P>
+
+<P>A reader application need <I>not</I> implement these opcodes but must
+be able to compute their operand length, which requires that the opcode
+be recognized. If a single-byte opcode is unrecognized by a DWF reading
+application, the rest of the file cannot be read.</P>
+
+<P><I>2. Extended ASCII opcodes</I> (humanly readable) that have delimited
+and nestable operands.</P>
+
+<P>By following some simple rules, a reader application can safely skip
+such an opcode/operand pair without understanding the operation or its
+contents.</P>
+
+<P><I>3. Extended binary opcodes</I> that indicate their operand length
+so that a reader application can easily skip past the unknown operation
+and data.</P>
+</DIR>
+
+<P>To improve the readability of <I>.dwf</I> files, an opcode may be preceded
+by white-space. White-space is defined as any number of ASCII spaces, tabs,
+carriage returns, or line feeds.</P>
+
+<P><A NAME="Filef"></A><B><FONT SIZE=+2>File Format Details</FONT></B></P>
+
+<P>This section describes each block of the <I>.dwf</I> file format in
+detail.</P>
+
+<P><A NAME="Filei"></A><B><FONT SIZE=+1>File Identification
+Header</FONT></B></P>
+
+<P>The file header has two basic functions:</P>
+
+<UL>
+<LI>To allow for easy identification of <I>.dwf</I> files by human or machine.
+</LI>
+
+<LI>To identify which version of the DWF specification, for example 00.30,
+was used to encode the file.</LI>
+</UL>
+
+<CENTER><P><A NAME="Tabl3a"></A><I>Table 2a. File header</I></P></CENTER>
+
+<CENTER><TABLE BORDER=1 CELLPADDING=9 WIDTH=100% BORDERCOLOR="#000000" >
+<TR>
+<TD VALIGN=TOP WIDTH="16%" BGCOLOR="#0000A0"><FONT COLOR="#FFFFFF"><FONT SIZE=-1>Byte</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-1>0</FONT></TD>
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-1>1</FONT></TD>
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-1>2</FONT></TD>
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-1>3</FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP"><FONT SIZE=-1>4</FONT></TD>
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-1>5</FONT></TD>
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-1>6</FONT></TD>
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-1>7</FONT></TD>
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-1>8</FONT></TD>
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-1>9</FONT></TD>
+<TD WIDTH="8%" VALIGN="TOP"><FONT SIZE=-1>10</FONT></TD>
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-1>11</FONT></TD>
+</TR>
+
+<TR>
+<TD VALIGN=TOP WIDTH="16%" BGCOLOR="#0000A0"><FONT COLOR="#FFFFFF"><FONT SIZE=-1>Character</font></FONT></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-2>(</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-2>D</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-2>W</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-2>F</font></TD>
+
+<TD WIDTH="13%" VALIGN="TOP"><FONT SIZE=-2>(space)</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-2>V</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-2>0</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-2>0</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-2>.</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-2>3</font></TD>
+
+<TD WIDTH="8%" VALIGN="TOP"><FONT SIZE=-2>0</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-2>)</font></TD>
+</TR>
+
+<TR>
+<TD VALIGN=TOP WIDTH="16%" BGCOLOR="#0000A0"><FONT COLOR="#FFFFFF">ASCII
+(Hex)</FONT></TD>
+
+<TD WIDTH="6%" VALIGN="TOP">
+<CENTER><P><FONT SIZE=-2>28</font></P></CENTER>
+</TD>
+
+<TD WIDTH="6%" VALIGN="TOP">
+<CENTER><P><FONT SIZE=-2>44</font></P></CENTER>
+</TD>
+
+<TD WIDTH="6%" VALIGN="TOP">
+<CENTER><P><FONT SIZE=-2>57</font></P></CENTER>
+</TD>
+
+<TD WIDTH="6%" VALIGN="TOP">
+<CENTER><P><FONT SIZE=-2>46</font></P></CENTER>
+</TD>
+
+<TD WIDTH="13%" VALIGN="TOP">
+<CENTER><P><FONT SIZE=-2>20</font></P></CENTER>
+</TD>
+
+<TD WIDTH="6%" VALIGN="TOP">
+<CENTER><P><FONT SIZE=-2>56</font></P></CENTER>
+</TD>
+
+<TD WIDTH="6%" VALIGN="TOP">
+<CENTER><P><FONT SIZE=-2>30</font></P></CENTER>
+</TD>
+
+<TD WIDTH="6%" VALIGN="TOP">
+<CENTER><P><FONT SIZE=-2>30</font></P></CENTER>
+</TD>
+
+<TD WIDTH="6%" VALIGN="TOP">
+<CENTER><P><FONT SIZE=-2>2E</font></P></CENTER>
+</TD>
+
+<TD WIDTH="6%" VALIGN="TOP">
+<CENTER><P><FONT SIZE=-2>33</font></P></CENTER>
+</TD>
+
+<TD WIDTH="8%" VALIGN="TOP">
+<CENTER><P><FONT SIZE=-2>30</font></P></CENTER>
+</TD>
+
+<TD WIDTH="6%" VALIGN="TOP">
+<CENTER><P><FONT SIZE=-2>29</font></P></CENTER>
+</TD>
+</TR>
+</TABLE></CENTER>
+
+<P>&nbsp;</P>
+
+<P>The header, shown in table 2, is 12 bytes that can be interpreted as
+a, possibly undetermined, ASCII string, for example, &quot;<FONT SIZE=-1>(DWF
+V00.30)</font>&quot;. The first six bytes are the constant &quot;<FONT SIZE=-1>(DWF
+V.</font>&quot; which identify this as a <I>.dwf</I> file. Note
+that these are in upper case This constant is followed by a 5-byte version
+number in the format shown in table 3.</P>
+
+<CENTER><P><A NAME="Tabl4"></A><I>Table 3. The 5-byte version number</I></P></CENTER>
+
+<CENTER><TABLE BORDER=1 CELLPADDING=9 WIDTH=100% BORDERCOLOR="#000000" >
+<TR>
+<TD VALIGN=TOP WIDTH="12%" BGCOLOR="#0000A0"><B><FONT COLOR="#FFFFFF">Byte</FONT></B></TD>
+
+<TD VALIGN=TOP WIDTH="15%" BGCOLOR="#0000A0"><B><FONT COLOR="#FFFFFF">Symbol</FONT></B></TD>
+
+<TD VALIGN=TOP WIDTH="73%" BGCOLOR="#0000A0"><B><FONT COLOR="#FFFFFF">Description</FONT></B></TD>
+</TR>
+
+<TR>
+<TD WIDTH="12%" VALIGN="TOP"><FONT SIZE=-1>6 &amp; 7</font></TD>
+
+<TD WIDTH="15%" VALIGN="TOP"><FONT SIZE=-1>&lt;0 ..
+99&gt;</font></TD>
+
+<TD WIDTH="73%" VALIGN="TOP"><FONT SIZE=-1>ASCII integer;
+The major revision value of the format used.</font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="12%" VALIGN="TOP"><FONT SIZE=-1>8</font></TD>
+
+<TD WIDTH="15%" VALIGN="TOP"><B><FONT SIZE=-1>.</font>
+</B>(period)</TD>
+
+<TD WIDTH="73%" VALIGN="TOP"><FONT SIZE=-1>ASCII decimal
+point</font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="12%" VALIGN="TOP"><FONT SIZE=-1>9 &amp; 10</font></TD>
+
+<TD WIDTH="15%" VALIGN="TOP"><FONT SIZE=-1>&lt;0 ..
+99&gt;</font></TD>
+
+<TD WIDTH="73%" VALIGN="TOP"><FONT SIZE=-1>ASCII integer;
+minor revision value of the format used</font></TD>
+</TR>
+</TABLE></CENTER>
+
+<P>&nbsp;</P>
+
+<P>The application generating a DWF format should specify the lowest possible
+version number that an application reading the file would need to support
+in order to properly use the data. Generally, a reader<FONT COLOR="#FF0000">
+</FONT>application should not attempt to read a file with a higher major
+revision value than what it was designed for. If the minor revision value<FONT SIZE=-2>
+</FONT>is higher, this indicates that the file may contain opcodes unknown
+to the reader, which can and should be skipped.</P>
+
+<P><A NAME="Filed"></A><B><FONT SIZE=+1>File Data Block</font></B></P>
+
+<P>The file data block starts at the 13th byte of a <I>.dwf</I> file, and
+is a series of opcode and operand pairs, as in table 4.</P>
+
+<CENTER><P><A NAME="Tabl5"></A><I>Table 4. Opcode, operand pairs</I></P></CENTER>
+
+<CENTER><TABLE BORDER=1 CELLPADDING=9 width=100% BORDERCOLOR="#000000" >
+<TR>
+<TD WIDTH="17%" VALIGN="TOP"><FONT SIZE=-1>&lt;opcode&gt;</font></TD>
+
+<TD WIDTH="17%" VALIGN="TOP"><FONT SIZE=-1>&lt;operand&gt;</font></TD>
+
+<TD WIDTH="16%" VALIGN="TOP"><FONT SIZE=-1>&lt;opcode&gt;</font></TD>
+
+<TD WIDTH="16%" VALIGN="TOP"><FONT SIZE=-1>&lt;operand&gt;</font></TD>
+
+<TD WIDTH="15%" VALIGN="TOP"><FONT SIZE=-1>&lt;opcode&gt;</font></TD>
+
+<TD WIDTH="17%" VALIGN="TOP"><FONT SIZE=-1>&lt;operand&gt;</font></TD>
+</TR>
+</TABLE></CENTER>
+
+<P>&nbsp;</P>
+
+<P><A NAME="Whit"></A><B>White Space</FONT></B></P>
+
+<P>An opcode may be preceded by any number of white-space characters, which
+are defined as any number of ASCII spaces, tabs, carriage returns, or line
+feeds.</P>
+
+<P><A NAME="Opco"></A><B>Opcode Forms</FONT></B></P>
+
+<P>Opcodes are a single byte in length except for two special cases: extended
+ASCII and extended binary. This allows for over 200 operations.</P>
+
+<P><B>Note</B>: Some values in the range from 0 to 255 of a byte are not
+legal for opcode use.</P>
+
+<P>These single-byte opcodes may have operands that are either readable
+ASCII or coded binary. Some common operations have separate opcodes for
+both ASCII and binary operand forms. Generally, if an operand is formatted
+as readable ASCII, then its single-byte opcode is also a readable ASCII
+character, which allows the file to be edited with a normal text editor.
+The following example shows a line drawing operation using the <FONT SIZE=-1>L</font>
+single-byte opcode followed by a readable ASCII operand:</P>
+
+<UL>
+<P><FONT SIZE=-1>L 500,20300 90100,48000</font></P>
+</UL>
+
+<P>This line could also be represented using a binary-coded operand, as
+shown in the following<FONT COLOR="#FF0000"> </FONT>example, which uses
+the l</FONT> opcode. In this example, each underlined
+character represents a byte of binary operand data:</P>
+
+<UL>
+<P><FONT SIZE=-1>l<U>XXXXYYYYxxxxyyyy</U></font></P>
+</UL>
+
+<P>Except for the two special types of opcodes extended ASCII and extended
+binary, a file reader <I>must</I> know how to compute the operand length.</P>
+
+<P><A NAME="Ille"></A><B>Illegal Opcodes</FONT></B></P>
+
+<P>The ASCII representations for the following cannot be used as opcodes:</P>
+
+<TABLE CELLSPACING=0 CELLPADDING=9 WIDTH=100%>
+<TR>
+<TD WIDTH="50%" VALIGN="TOP">
+<LI>A space (<FONT SIZE=-1>0x20</font>)</LI>
+</TD>
+
+<TD WIDTH="50%" VALIGN="TOP">
+<LI>A double quotation mark (<FONT SIZE=-1>0x22</font>)</LI>
+</TD>
+</TR>
+
+<TR>
+<TD WIDTH="50%" VALIGN="TOP">
+<LI>A tab (<FONT SIZE=-1>0x09</font>)</LI>
+</TD>
+
+<TD WIDTH="50%" VALIGN="TOP">
+<LI>A period (<FONT SIZE=-1>0x2E</font>)</LI>
+</TD>
+</TR>
+
+<TR>
+<TD WIDTH="50%" VALIGN="TOP">
+<LI>A hyphen (<FONT SIZE=-1>0x2D</font>)</LI>
+</TD>
+
+<TD WIDTH="50%" VALIGN="TOP">
+<LI>Parentheses (<FONT SIZE=-1>0x28</font>
+and <FONT SIZE=-1>0x29</font>)</LI>
+</TD>
+</TR>
+
+<TR>
+<TD WIDTH="50%" VALIGN="TOP">
+<LI>the ASCII digits 0-9 (<FONT SIZE=-1>0x30 -
+0x39</font>)</LI>
+</TD>
+
+<TD WIDTH="50%" VALIGN="TOP">
+<LI>A curly brackets (<FONT SIZE=-1>0x7B</font>
+and <FONT SIZE=-1>0x7D</font>)</LI>
+</TD>
+</TR>
+
+<TR>
+<TD WIDTH="50%" VALIGN="TOP">
+<LI>A carriage return (<FONT SIZE=-1>0x0D</font>)</LI>
+</TD>
+
+<TD WIDTH="50%" VALIGN="TOP">
+<LI>A square brackets (<FONT SIZE=-1>0x5B</font>
+and <FONT SIZE=-1>0x5D</font>)</LI>
+</TD>
+</TR>
+
+<TR>
+<TD WIDTH="50%" VALIGN="TOP">
+<LI>A line feed (<FONT SIZE=-1>0x0A</font>)</LI>
+</TD>
+
+<TD WIDTH="50%" VALIGN="TOP">
+<LI>A backwards slash (<FONT SIZE=-1>0x5C</font>)</LI>
+</TD>
+</TR>
+
+<TR>
+<TD VALIGN="TOP" COLSPAN=2>
+<LI>A single quotation mark (<FONT SIZE=-1>0x27</font>)</LI>
+</TD>
+</TR>
+</TABLE>
+
+<P><A NAME="Bina"></A><B>Binary Operands</FONT></B></P>
+
+<P>In the case of an opcode with a binary coded operand, the binary data
+is stored in <BR>
+little-endian format. On systems with big-endian processors, such as Motorola-,
+Sun-, and Hewlett Packard-based systems, byte swapping <I>must</I> be performed
+before writing or reading the <I>.dwf</I> file.</P>
+
+<P><A NAME="Exta"></A><B>The Extended ASCII opcode</FONT></B></P>
+
+<P>The single-byte opcode, (</FONT>, open parenthesis
+character, indicates an extended and possibly nested readable ASCII opcode.
+Following the open parenthesis character, (</FONT>,
+is a multiple-byte, string token opcode followed by white space, followed
+by zero or more operands, followed by a close parenthesis terminator, )</FONT>,:</P>
+
+<UL>
+<P><FONT SIZE=-1>(Origin 240 120)</font></P>
+</UL>
+
+<P>Extended ASCII opcodes may be nested:</P>
+
+<UL>
+<P><FONT SIZE=-1>(Owner (FirstName Brian)(LastName
+Mathews))</font></P>
+</UL>
+
+<P>&nbsp;</P>
+
+<P>Extended ASCII opcodes may contain literal strings surrounded by the
+single <BR>
+quote mark, '</FONT>,:</P>
+
+<UL>
+<P><FONT SIZE=-1>(Account (Person 'Brian Mathews
+;-)') (Company 'Autodesk \'ADSK\''))</font></P>
+</UL>
+
+<P><B>Note:</B> Inside a quoted string, the, \ , character may be used
+to treat a subsequent, ' , or, \ , character as literal data.</P>
+
+<P><A NAME="Extb"></A><B>The Extended binary opcode</FONT></B></P>
+
+<P>The single-byte opcode open curly brace character, {</FONT>
+, indicates an extended and possibly nested binary section of data. Immediately
+following the open curly brace character, {</FONT>
+, is a 4-byte integer that represents the length (in bytes) of the binary
+data. Following the length field is a 2-byte extended-binary opcode, which
+allows for over 65,000 operations. Finally, the binary stream is terminated
+with a closed curl brace character, }</FONT>.
+For example, the binary data for a raster of pixels can be represented
+as</P>
+
+<UL>
+<P><FONT SIZE=-1>{cccc<B>ee</B>xxxxxxxxx}</font></P>
+</UL>
+
+<P>where <I><U>cccc</FONT></U></I> is the length
+of the binary data, <B><I><U>ee</FONT></U></I></B>
+is the opcode for a raster, and <I><U>xxxxxxxxx</FONT></U></I>
+is the raster data. The extended binary opcode and the terminating character,
+}</FONT> , are counted as part of the binary data
+stream. Thus, the value of <I><U>cccc</FONT></U></I>
+is 12 (nine <U><FONT SIZE=-1>x</font></U>'s,
+two <U><FONT SIZE=-1>e</font></U>'s, and
+one <U><FONT SIZE=-1>}</font></U> ) in
+this example, which is encoded as a little-endian binary value.</P>
+
+<P><A NAME="Skipu"></A><B>Skipping Unrecognized Opcodes</FONT></B></P>
+
+<P>Skipping extended ASCII and extended binary opcodes.</P>
+
+<P><A NAME="Skipea"></A><B>Skipping extended ASCII opcodes</B></P>
+
+<P>If a reader application does not recognize an extended ASCII opcode,
+it should keep scanning the file while matching open paren characters,(</FONT>,
+with closed paren characters,)</FONT> , until
+the terminating closed paren character, )</FONT>
+, is found. If a single quote character ,<FONT SIZE=-1>'</font>
+, is found, scanning should continue until a matching single quote,<FONT SIZE=-1>'</font>
+, is found, ignoring any open paren, <FONT SIZE=-1>(</font>
+, or closed paren, <FONT SIZE=-1>)</font>
+, characters inside.</P>
+
+<P><B>Note:</B> While parentheses may be nested, single quote marks are
+not, as the latter always contain a single literal string.</P>
+
+<P>A backslash character, \</FONT> , indicates
+a literal character will follow that should <I>not </I>be used for literal
+string termination. Thus, the following would pass the operand This
+is\was a <FONT SIZE=-1>'</FONT>happy<FONT SIZE=-1>'</FONT> face :-) comment!</FONT>
+to the Comment opcode:</P>
+
+<UL>
+<P><FONT SIZE=-1>(Comment 'This is\\was a \'happy\'
+face :-) comment!')</font></P>
+</UL>
+
+<P><B>&nbsp;</B></P>
+
+<P><A NAME="Skipeb"></A><B>Skipping extended binary opcodes</B></P>
+
+<P>It is possible, although not recommended, for an extended ASCII opcode
+to contain nested extended binary data, as in</P>
+
+<UL>
+<P><FONT SIZE=-1>(Embedded_DWG (FileName house.dwg)
+{<I><U>ccccXXXXXXXXXX</U></I>})</font></P>
+</UL>
+
+<P>where <I><U>cccc</FONT></U></I> represents
+a 4-byte little-endian integer indicating the length of the binary data,
+11 in this example represented by &quot;<I><U>XXXXXXXXXX</FONT></U></I>&quot;
+plus the terminating curly brace, &quot;}&quot;.</P>
+
+<P>To skip any binary object, either opcode or operand data, the four byte
+count <I><U>cccc</FONT></U></I> <I>must</I> be
+used rather than searching for the curly brace character, }</FONT>.
+Also, notice that this method allows a reader application to skip even
+a <I>nested</I> set of binary streams as the parent streams <I><U>cccc</FONT></U></I>
+count includes the subobjects data.</P>
+
+<P>If the four-byte binary data run count <I><U>cccc</FONT></U></I>
+has the value zero, this indicates that the DWF writing application was
+unable to compute the length of the binary data. Such an opcode can not
+be skipped, and therefore the reading application must either know how
+to parse the opcode, or must fail to read the remainder of the <I>.dwf</I>
+file. Obviously, DWF writing applications should refrain from this practice
+whenever possible.</P>
+
+<P><A NAME="Log"></A><B>The Logical Coordinate System</FONT></B></P>
+
+<P>Most of the coordinates specified in <I>.dwf</I> files are in <I>logical</I>
+coordinates, as opposed to <I>screen</I> or <I>device</I> coordinates.
+Logical coordinates are specified as the positive range of 32-bit signed
+integers (31 bits of precision) with a legal range from 0 to a maximum
+of 2,147,483,647 (2<SUP>31 </SUP>-</FONT> 1).
+Normally, a DWF writing application should scale the geometric primitives
+of the illustration that is being stored so that a large portion of this
+31-bit range is used. This allows a DWF reading application to scale the
+illustration for the desired display or a user to zoom in on the drawing
+with sufficient precision to render fine details.</P>
+
+<P><A NAME="Inte"></A><B>Integer Versus Floating-Point Values</B></P>
+
+<P>Thirty-two-bit integer values are used because they allow for more precision
+and greater computing speed than 32-bit floating-point values. Out of a
+floating-point numbers 32 bits, 8 bits are used to store exponent and
+sign information, leaving only 24 bits of true precision (not to be confused
+with a floating point number's large range).</P>
+
+<P>If a map were drawn with DWFs 31-bit integer coordinates, over 21,000
+kilometers (&gt;12,000 miles) of distance could be uniquely resolved down
+to 1-centimeter increments. If 32-bit floating-point coordinates were used,
+only 167 kilometers (100 miles) could be resolved to this level of detail.
+By contrast, AutoCAD uses 64 bit double-sized floating point coordinates
+to address this issue, with a resulting 52 bits of precision and an enormous
+range. For the more limited purpose of representing an electronic plot,
+DWF's 31 bits of precision are more than adequate.</P>
+
+<P><A NAME="Rela"></A><B>Relative Logical Coordinates</B></P>
+
+<P>Depending upon the opcode in use, these logical coordinate values may
+be encoded in a <I>.dwf</I> file literally as absolute coordinates or as
+relative coordinates. Whereas absolute logical coordinates may only range
+from 0 to 2,147,483,647 (31-bit unsigned), relative coordinates may range
+from negative 2,147,483,647 to positive 2,147,483,647 (32-bit signed).
+A relative coordinate is formed from an absolute coordinate by taking the
+literal coordinate and subtracting from it the previous absolute coordinate
+in the file.</P>
+
+<P>Relative coordinates are used in order to increase the effectiveness
+of the DWF's data compression algorithm, which tries to find repeating
+patterns of data. Common drawings have objects, represented by sequences
+of lines, circles, and so forth, that may occur multiple times, such as
+the four tires in an illustration of a car. If absolute coordinates were
+used, each of the lines and circles that make up an object would have differing
+coordinates for each instance of that object in an illustration, due to
+their differing positions. If relative coordinates are used, however, only
+the first coordinate in the sequence of coordinates differs for each instance
+of the object. Since the remainder of the coordinate sequence is independent
+of the object instance, the data compression algorithm will find longer
+and more frequent sequences of repeating data.</P>
+
+<P><A NAME="Sixt"></A><B>Sixteen bit coordinates</B></P>
+
+<P>For many applications, the extreme level of detail allowed by DWFs
+31-bit logical coordinates is not necessary and may be undesirable due
+to the increased file size needed to store such large values. For this
+reason, many drawing operations allow for 16-bit integer relative coordinates
+to be used 16-bit signed relative values. When a DWF reading application
+is given either a 32-bit or a 16-bit relative coordinate, its value is
+converted to a full 31-bit absolute logical coordinate before use. This
+is a lossless form of compression since the full 31 bits of precision are
+preserved even when storing only a 16 bit value.</P>
+
+<P><A NAME="Howo"></A><B><FONT SIZE=+1>How Opcodes are
+Selected</font></B></P>
+
+<P>When assigning an opcode to an operation, apply the following principles:</P>
+
+<UL>
+<LI>By default, a new operation is assigned to an extended ASCII opcode
+so that it is humanly readable, can be easily skipped by older DWF reading
+applications, and doesn't use one of the scarce single-byte opcodes. If
+the operand to this operation represents binary information, this binary
+information should be converted to a readable ASCII form for storage in
+the <I>.dwf</I> file. </LI>
+
+<LI>If the operation's operand represents a large amount of binary information
+which would be inefficient to convert to a readable ASCII form, then the
+operation should be assigned an extended binary opcode. This has the advantage
+of storing the binary data more efficiently from a processing and storage
+point of view. Also, the conversion doesn't use one of the scarce single-byte
+opcodes and it still allows older DWF reading applications to skip unrecognized
+operations. </LI>
+
+<LI>If an operation is expected to be used frequently in a <I>.dwf</I>
+file and the operation has a relatively small operand, it should be assigned
+one of the scarce single-byte opcodes. For common operations with large
+operands, the space savings from a single-byte opcode is not justified
+and an extended style opcode should be used instead. Single-byte opcodes
+<I>must</I> be known to the DWF-reading application and, thus, cannot be
+skipped.</LI>
+</UL>
+
+<P><A NAME="Execf"></A><B><FONT SIZE=+1>Execution of
+the File Data Block</font></B></P>
+
+<P>To preserve proper drawing order, the opcodes found in the <I>.dwf</I>
+file should be executed in the order they are received.</P>
+
+<P><A NAME="Filet"></A><B><FONT SIZE=+1>File Termination
+Trailer</font></B></P>
+
+<P>The DWF trailer is simply a special opcode indicating the end of the
+DWF data sequence file, normally at the end of the file. It is possible
+for an application to store non-DWF data following the <I>.dwf</I> file
+termination opcode.</P>
+
+<CENTER><P><A NAME="Tabl3b"></A><I>Table 2b. File trailer</I></P></CENTER>
+
+<CENTER><TABLE BORDER=1 CELLPADDING=9 WIDTH=100% BORDERCOLOR="#000000" >
+<TR>
+<TD VALIGN=TOP WIDTH="16%" BGCOLOR="#0000A0"><FONT COLOR="#FFFFFF"><FONT SIZE=-1>Byte</font></FONT></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-1>0</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-1>1</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-1>2</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-1>3</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-1>4</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-1>5</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-1>6</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-1>7</font></TD>
+
+<TD WIDTH="8%" VALIGN="TOP"><FONT SIZE=-1>8</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-1>9</font></TD>
+</TR>
+
+<TR>
+<TD VALIGN=TOP WIDTH="16%" BGCOLOR="#0000A0"><FONT COLOR="#FFFFFF"><FONT SIZE=-1>Character</font></FONT></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-2>(</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-2>E</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-2>n</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-2>d</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-2>0</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-2>f</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-2>D</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-2>W</font></TD>
+
+<TD WIDTH="8%" VALIGN="TOP"><FONT SIZE=-2>F</font></TD>
+
+<TD WIDTH="6%" VALIGN="TOP"><FONT SIZE=-2>)</font></TD>
+</TR>
+
+<TR>
+<TD VALIGN=TOP WIDTH="16%" BGCOLOR="#0000A0"><FONT COLOR="#FFFFFF">ASCII
+(Hex)</FONT></TD>
+
+<TD WIDTH="6%" VALIGN="TOP">
+<CENTER><P><FONT SIZE=-2>28</font></P></CENTER>
+</TD>
+
+<TD WIDTH="6%" VALIGN="TOP">
+<CENTER><P><FONT SIZE=-2>45</font></P></CENTER>
+</TD>
+
+<TD WIDTH="6%" VALIGN="TOP">
+<CENTER><P><FONT SIZE=-2>6E</font></P></CENTER>
+</TD>
+
+<TD WIDTH="6%" VALIGN="TOP">
+<CENTER><P><FONT SIZE=-2>64</font></P></CENTER>
+</TD>
+
+<TD WIDTH="6%" VALIGN="TOP">
+<CENTER><P><FONT SIZE=-2>4F</font></P></CENTER>
+</TD>
+
+<TD WIDTH="6%" VALIGN="TOP">
+<CENTER><P><FONT SIZE=-2>66</font></P></CENTER>
+</TD>
+
+<TD WIDTH="6%" VALIGN="TOP">
+<CENTER><P><FONT SIZE=-2>44</font></P></CENTER>
+</TD>
+
+<TD WIDTH="6%" VALIGN="TOP">
+<CENTER><P><FONT SIZE=-2>57</font></P></CENTER>
+</TD>
+
+<TD WIDTH="8%" VALIGN="TOP">
+<CENTER><P><FONT SIZE=-2>46</font></P></CENTER>
+</TD>
+
+<TD WIDTH="6%" VALIGN="TOP">
+<CENTER><P><FONT SIZE=-2>29</font></P></CENTER>
+</TD>
+</TR>
+</TABLE></CENTER>
+
+<P><A NAME="Exam"></A><B><FONT SIZE=+2>Example</font></B></P>
+
+<P>Following is an example of a <I>.dwf</I> file that uses readable ASCII
+opcodes exclusively. This same example could be represented more efficiently
+using binary coding, but it is difficult to show this in a printed document.</P>
+
+<P><FONT SIZE=-1>(DWF V01.00)<BR>
+(DrawingInfo</font></P>
+
+<UL>
+<P><FONT SIZE=-1>(SourceFilename house plan.dwg)<BR>
+(Description 'Blueprints for the first floor of the new library.')<BR>
+(Creator 'AutoCAD R13C4')<BR>
+(Created 820497600 'January 1, 1996')<BR>
+(Author 'Brian P. Mathews, Autodesk')<BR>
+(Bounds 1,1 9750000,256234000)<BR>
+(Scale 0.0001 0.0001 meter)<BR>
+(Projection stretched</font></P>
+</UL>
+
+<P><FONT SIZE=-1>) <BR>
+(Comment This is a DWF comment! )<BR>
+(View 30,40 6500,9000)<BR>
+(Layer 1 Electrical)</font></P>
+
+<UL>
+<P><FONT SIZE=-1>(Comment changing the color from
+the default)<BR>
+C 132<BR>
+(Comment 'drawing some lines :-)' )<BR>
+L 25,30 250,400 L 100,150 120,119 L 200,150 120,219<BR>
+L 400,150 120,19<BR>
+(Comment Removing some of the spaces)<BR>
+L25,30 250,400L100,150 120,119L200,150 120,219</font></P>
+</UL>
+
+<P><FONT SIZE=-1>(Layer 2 Heating)</font></P>
+
+<UL>
+<P><FONT SIZE=-1>C12<BR>
+L250,300 250,400<BR>
+(URL 'http://www.autodesk.com')</font></P>
+
+<UL>
+<P><FONT SIZE=-1>v (Comment The following line
+wont be visible.)<BR>
+L40,15 120,19<BR>
+V (Comment Subsequent geometry will be visible.)</font></P>
+</UL>
+
+<P><FONT SIZE=-1>(URL)<BR>
+L430,115 120,19</font></P>
+</UL>
+
+<P><FONT SIZE=-1>(EndOfDWF)</font></P>
+
+<P><FONT SIZE=-1>&nbsp;</font> 
+
+
+
+<P><A NAME="Opcm"></A><B><FONT SIZE=+2>Opcode Mnemonics</font></B></P>
+
+<CENTER><P><A NAME="Tabl6"></A><I>Table 1. Opcode mnemonics</I></P></CENTER>
+
+<CENTER><TABLE BORDER=1 CELLPADDING=9 WIDTH=100% BORDERCOLOR="#000000" >
+<TR>
+<TD VALIGN=TOP WIDTH="15%" HEIGHT="33" BGCOLOR="#0000A0"><B><FONT COLOR="#FFFFFF"><FONT SIZE=-1>Mnemonic</font></FONT></B></TD>
+
+<TD VALIGN=TOP WIDTH="85%" HEIGHT="33" BGCOLOR="#0000A0"><B><FONT COLOR="#FFFFFF"><FONT SIZE=-1>Meaning</font></FONT></B></TD>
+</TR>
+
+<TR>
+<TD WIDTH="15%" VALIGN="TOP"><B><FONT SIZE=-1>&lt;B&gt;</font></B></TD>
+
+<TD WIDTH="85%" VALIGN="TOP"><FONT SIZE=-1>Unsigned
+byte of binary memory</font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="15%" VALIGN="TOP"><B><FONT SIZE=-1>&lt;S&gt;</font></B></TD>
+
+<TD WIDTH="85%" VALIGN="TOP"><FONT SIZE=-1>Signed short
+integer (two bytes) of binary memory, stored in little-endian format. If
+used to represent a coordinate value, then it is interpreted to be a relative
+coordinate.</font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="15%" VALIGN="TOP"><B><FONT SIZE=-1>&lt;US&gt;</font></B></TD>
+
+<TD WIDTH="85%" VALIGN="TOP"><FONT SIZE=-1>Unsigned
+short integer (two bytes) of binary memory, stored in little-endian format.
+If used to represent a coordinate value, then it is interpreted to be an
+absolute coordinate.</font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="15%" VALIGN="TOP"><B><FONT SIZE=-1>&lt;L&gt;</font></B></TD>
+
+<TD WIDTH="85%" VALIGN="TOP"><FONT SIZE=-1>Signed long
+integer (four bytes) of binary memory, stored in little-endian format.
+If used to represent a coordinate value, then it is interpreted to be a
+relative coordinate.</font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="15%" VALIGN="TOP"><B><FONT SIZE=-1>&lt;UL&gt;</font></B></TD>
+
+<TD WIDTH="85%" VALIGN="TOP"><FONT SIZE=-1>Unsigned
+long integer (four bytes) of binary memory, stored in little-endian format.
+If used to represent a coordinate value, then it is interpreted to be an
+absolute coordinate.</font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="15%" VALIGN="TOP"><B><FONT SIZE=-1>&lt;I&gt;</font></B></TD>
+
+<TD WIDTH="85%" VALIGN="TOP"><FONT SIZE=-1>Integer (signed
+or unsigned) value expressed as a series of ASCII-coded bytes (including
+the hyphen (-),and the ASCII digits 0- 9); sequence is terminated by a
+non-digit character.</font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="15%" VALIGN="TOP"><B><FONT SIZE=-1>&lt;F&gt;</font></B></TD>
+
+<TD WIDTH="85%" VALIGN="TOP"><FONT SIZE=-1>Floating-point
+(signed or unsigned) value expressed as a series of ASCII coded bytes (including
+the hyphen (-), the period (.), &quot;E&quot; and the ASCII digits 0- 9).</font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="15%" VALIGN="TOP"><B><FONT SIZE=-1>&lt;R&gt;</font></B></TD>
+
+<TD WIDTH="85%" VALIGN="TOP"><FONT SIZE=-1>Nested (recursive)
+set of opcodes.</font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="15%" VALIGN="TOP"><B><FONT SIZE=-1>&lt;T&gt;</font></B></TD>
+
+<TD WIDTH="85%" VALIGN="TOP"><FONT SIZE=-1>ASCII text
+string (a series of ASCII characters) terminated by a &quot;</FONT>)</FONT>&quot;
+and possibly enclosed in </FONT>'</FONT>
+marks.</font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="15%" VALIGN="TOP"><B><FONT SIZE=-1>[
+]</font></B></TD>
+
+<TD WIDTH="85%" VALIGN="TOP"><FONT SIZE=-1>Optional
+pattern that may occur in the data stream exactly once, or not at all.</font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="15%" VALIGN="TOP"><B><FONT SIZE=-1>[
+]<SUP>+</SUP></font></B></TD>
+
+<TD WIDTH="85%" VALIGN="TOP"><FONT SIZE=-1>Pattern that
+must occur in the data stream at least one time and may repeat multiple
+times.</font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="15%" VALIGN="TOP"><B><FONT SIZE=-1>[
+]<SUP>*</SUP></font></B></TD>
+
+<TD WIDTH="85%" VALIGN="TOP"><FONT SIZE=-1>Pattern that
+may occur once, many times, or not at all.</font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="15%" VALIGN="TOP"><B><FONT SIZE=-1>\</font></B></TD>
+
+<TD WIDTH="85%" VALIGN="TOP"><FONT SIZE=-1>Indicates
+that the expression continues on the next line because it would not fit
+in the table properly (the \ is not part of the data stream).</font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="15%" VALIGN="TOP"><B><FONT SIZE=-1>&lt;ws&gt;</font></B></TD>
+
+<TD WIDTH="85%" VALIGN="TOP"><FONT SIZE=-1>Number of
+ASCII white-space bytes, including the space, tab, line feed, or carriage
+return characters.</font></TD>
+</TR>
+</TABLE></CENTER>
+
+
+
+<P><B><FONT SIZE=+2>
+Opcodes Listed by Format</font></B>
+
+<P>This section lists opcodes by single byte, extended ASCII, and extended
+binary formats. It is a convenient, quick reference to the standard opcode
+definitions in chapter 5.</P>
+
+<P><A NAME="Sing"></A><B><FONT SIZE=+1>Single Byte Opcodes</font></B></P>
+
+<CENTER><P><A NAME="Tabl9"></A><I>Table 1. Single byte formatted opcodes
+</I></P></CENTER>
+
+<CENTER><TABLE BORDER=1 CELLPADDING=9 WIDTH=100% BORDERCOLOR="#000000" >
+<TR>
+<TD VALIGN=TOP WIDTH="10%" BGCOLOR="#0000A0">
+<CENTER><P><B><FONT COLOR="#FFFFFF"><FONT SIZE=-2>ASCII</font></FONT></B></P></CENTER>
+</TD>
+
+<TD VALIGN=TOP WIDTH="7%" BGCOLOR="#0000A0">
+<CENTER><P><B><FONT COLOR="#FFFFFF"><FONT SIZE=-2>Hex</font></FONT></B></P></CENTER>
+</TD>
+
+<TD VALIGN=TOP WIDTH="40%" BGCOLOR="#0000A0">
+<CENTER><P><B><FONT COLOR="#FFFFFF"><FONT SIZE=-2>Operand
+Format</font></FONT></B></P></CENTER>
+</TD>
+
+<TD VALIGN=TOP WIDTH="43%" BGCOLOR="#0000A0">
+<CENTER><P><B><FONT COLOR="#FFFFFF"><FONT SIZE=-2>Refer
+to</font></FONT></B></P></CENTER>
+</TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>Ctrl-C</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>03</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;B&gt;&lt;B&gt;&lt;B&gt;&lt;B&gt;</font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/SetColr.html">Set
+Color</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>Ctrl-f</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>06</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;B<SUB>count</SUB>&gt;[&lt;US<SUB>Ecount</SUB>&gt;]\</font></B>
+
+<P><B><FONT SIZE=-2>&lt;B<SUB>c-i</SUB>&gt;+&lt;B<SUB>b+i</SUB>&gt;&lt;L<SUB>cs</SUB>&gt;\</font></B></P>
+
+<P><B><FONT SIZE=-2>&lt;L<SUB>p&amp;f</SUB>&gt;</font></B></P>
+</TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/SetFnt.html">Set
+Font</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP"><FONT SIZE=-2>Ctrl-G</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP"><FONT SIZE=-2>07</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP"><B><FONT SIZE=-2>&lt;B&gt;[&lt;US&gt;]&lt;S&gt;&lt;S&gt;&lt;UL&gt;\</font></B>
+
+<P><B><FONT SIZE=-2>&lt;S&gt;&lt;S&gt;&lt;UL&gt;[&lt;S&gt;&lt;S&gt;&lt;UL&gt;]<SUP>+</SUP></font></B></P>
+</TD>
+
+<TD WIDTH="43%" VALIGN="TOP"><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwGrdPolyt.html">Draw
+Gouraud Polytriangle</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP"><FONT SIZE=-2>Ctrl-k</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP"><FONT SIZE=-2>11</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP"><B><FONT SIZE=-2>B<SUB>CS-count</SUB>&gt;[&lt;US<SUB>CS-count</SUB>&gt;]\</font></B>
+
+<P><B><FONT SIZE=-2>[&lt;B<SUB>P-counti</SUB>&gt;[US<SUB>P-counti</SUB>&gt;]]<SUP>+</SUP>\</font></B></P>
+
+<P><B><FONT SIZE=-2>&lt;S<SUB>x1</SUB>&gt;&lt;S<SUB>y1</SUB>&gt;[&lt;S<SUB>xj</SUB>&gt;&lt;S<SUB>yj</SUB>&gt;]<SUP>+</SUP></font></B></P>
+</TD>
+
+<TD WIDTH="43%" VALIGN="TOP"><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwContrSet.html">Draw
+Contour Set</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>Ctrl-L</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>0C</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;S&gt;&lt;S&gt;&lt;S&gt;&lt;S&gt;</font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwLine.html">Draw
+Line</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26>-</TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>8D</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;B&gt;[&lt;US&gt;][&lt;S&gt;&lt;S&gt;]<SUP>+</SUP></font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwPlymkr.html">Draw
+Polymarker</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>Ctrl-P</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>10</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;B&gt;[&lt;US&gt;][&lt;S&gt;&lt;S&gt;]<SUP>+</SUP></font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwPlylnPlygon.html">Draw
+Polyline</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>Ctrl-R</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>12</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;S&gt;&lt;S&gt;&lt;US&gt;</font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwCircArcWdg.html">Draw
+Circle</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>Ctrl-x</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>18</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;L</font><SUB><FONT SIZE=-1>f</font></SUB><FONT SIZE=-2>&gt;&lt;L<SUB>H</SUB>&gt;&lt;L<SUB>x</SUB>&gt;&lt;L<SUB>y</SUB>&gt;</font></B>
+
+<P><B><FONT SIZE=-2>&lt;B<SUB>count</SUB>&gt;[&lt;US<SUB>Ecount</SUB>&gt;]&lt;US<SUB>ci</SUB>&gt;<SUP>+</SUP></font>
+</B></P>
+</TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwTxt.html">Draw
+Text</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>C</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>43</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>[&lt;ws&gt;]&lt;I&gt;</font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/SetColr.html">Set
+Color</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP"><FONT SIZE=-2>E</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP"><FONT SIZE=-2>45</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP"><B><FONT SIZE=-2>[&lt;ws&gt;]&lt;I&gt;,&lt;I&gt;&lt;ws&gt;&lt;I&gt;,&lt;I&gt;\</font></B>
+
+<P><B><FONT SIZE=-2>&lt;ws&gt;&lt;I&gt;,&lt;I&gt;&lt;ws&gt;&lt;I&gt;</font></B></P>
+</TD>
+
+<TD WIDTH="43%" VALIGN="TOP"><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwElpsArcWdg.html">Draw
+Ellipse</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>F</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>46</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><I><FONT SIZE=-2>None</font></I></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/SetFilMod.html">Set
+Fill Mode</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>G</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>47</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>[&lt;ws&gt;]&lt;I&gt;</font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/SetMkrGlyph.html">Set
+Marker Glyph</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>K</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>71</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;B<SUB>CS-count</SUB>&gt;[&lt;US<SUB>CS-count</SUB>&gt;]\</font></B>
+
+<P><B><FONT SIZE=-2>[&lt;B<SUB>P-counti</SUB>&gt;[US<SUB>P-counti</SUB>&gt;]]<SUP>+</SUP>\</font></B></P>
+
+<P><B><FONT SIZE=-2>&lt;L<SUB>x1</SUB>&gt;&lt;L<SUB>y1</SUB>&gt;[&lt;L<SUB>xj</SUB>&gt;&lt;L<SUB>yj</SUB>&gt;]<SUP>+</SUP></font></B></P>
+</TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwContrSet.html">Draw
+Contour Set</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>L</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>4C</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>[&lt;ws&gt;]&lt;I&gt;,&lt;I&gt;&lt;ws&gt;&lt;I&gt;,&lt;I&gt;</font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwLine.html">Draw
+Line</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>M</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>4D</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>[&lt;ws&gt;]&lt;I&gt;[&lt;ws&gt;&lt;I&gt;,&lt;I&gt;]<SUP>+</SUP></font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwPlymkr.html">Draw
+Polymarker</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>O</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>4F</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;UL&gt;&lt;UL&gt;</font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/SetCurPt.html">Set
+<I>CurrentPoint</I>.</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>P</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>50</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>[&lt;ws&gt;]&lt;I&gt;[&lt;ws&gt;&lt;I&gt;,&lt;I&gt;]<SUP>+</SUP></font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwPlylnPlygon.html">Draw
+Polyline/Polygon</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>R</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>52</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>[&lt;ws&gt;]&lt;I&gt;,&lt;I&gt;,&lt;I&gt;&lt;ws&gt;&lt;I&gt;,&lt;I&gt;</font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwCircArcWdg.html">Draw
+Circle</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>S</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>53</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>[&lt;ws&gt;]&lt;I&gt;</font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/SetMkrSz.html">Set
+Marker Size</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>V</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>56</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><I><FONT SIZE=-2>None</font></I></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/SetVis.html">Set
+Visibility</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP"><FONT SIZE=-2>b</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP"><FONT SIZE=-2>62</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP"><B><FONT SIZE=-2>&lt;B&gt;[&lt;US&gt;]&lt;L&gt;&lt;L&gt;\</font></B>
+
+<P><B><FONT SIZE=-2>[&lt;L&gt;&lt;L&gt;&lt;L&gt;&lt;L&gt;&lt;L&gt;&lt;L&gt;]<SUP>+</SUP></font></B></P>
+</TD>
+
+<TD WIDTH="43%" VALIGN="TOP"><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwPlyBezCrv.html">Draw
+PolyB&eacute;zier curve</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>c</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>63</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;B&gt;</font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/SetColr.html">Set
+Color</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>e</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>65</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;L&gt;&lt;L&gt;&lt;UL&gt;&lt;UL&gt;&lt;US&gt;&lt;US&gt;&lt;US&gt;</font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwElpsArcWdg.html">Draw
+Ellipse</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>f</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>66</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><I><FONT SIZE=-2>None</font></I></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/SetFilMod.html">Set
+Fill Mode</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP"><FONT SIZE=-2>g</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP"><FONT SIZE=-2>67</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP"><B><FONT SIZE=-2>&lt;B&gt;[&lt;US&gt;]&lt;L&gt;&lt;L&gt;&lt;UL&gt;\</font></B>
+
+<P><B><FONT SIZE=-2>&lt;L&gt;&lt;L&gt;&lt;UL&gt;[&lt;L&gt;&lt;L&gt;&lt;UL&gt;]<SUP>+</SUP></font></B></P>
+</TD>
+
+<TD WIDTH="43%" VALIGN="TOP"><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwGrdPolyt.html">Draw
+Gouraud Polytriangle</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>l</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>6C</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;L&gt;&lt;L&gt;&lt;L&gt;&lt;L&gt;</font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwLine.html">Draw
+Line</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>m</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>6D</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;B&gt;[&lt;US&gt;][&lt;L&gt;&lt;L&gt;]<SUP>+</SUP></font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwPlymkr.html">Draw
+Polymarker</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>p</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>70</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;B&gt;[&lt;US&gt;][&lt;L&gt;&lt;L&gt;]<SUP>+</SUP></font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwPlylnPlygon.html">Draw
+Polyline</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>r</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>72</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;L&gt;&lt;L&gt;&lt;UL&gt;</font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwCircArcWdg.html">Draw
+Circle</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>s</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>73</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;UL&gt;</font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/SetMkrSz.html">Set
+Marker Size</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>t</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>74</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;B&gt;[&lt;US&gt;][&lt;L&gt;&lt;L&gt;]<SUP>+</SUP></font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwPlytringl.html">Draw
+Polytriangle</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>v</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>76</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><I><FONT SIZE=-2>None</font></I></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/SetVis.html">Set
+Visibility</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP"><FONT SIZE=-2>w</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP"><FONT SIZE=-2>77</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP"><B><FONT SIZE=-2>&lt;B&gt;[&lt;US&gt;][&lt;L&gt;&lt;L&gt;]<SUP>+</SUP></font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP"><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwTxtrdPlytri.html">Draw
+Textured Polytriangle</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>x</font></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>78</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;US<SUB>ws</SUB>&gt;&lt;US<SUB>ics</SUB>&gt;&lt;L<SUB>f</SUB>&gt;&lt;US</font><SUB><FONT SIZE=-1>q</font></SUB><FONT SIZE=-2>&gt;\</font>
+</B>
+<P><B><FONT SIZE=-2>&lt;B<SUB>os-count</SUB>&gt;[&lt;US<SUB>os-Ecount</SUB>&gt;]\</font></B></P>
+
+<P><B><FONT SIZE=-2>[&lt;B<SUB>os-posi</SUB>&gt;[&lt;US<SUB>os-Eposi</SUB>&gt;]]<SUP>*</SUP>\</font></B></P>
+
+<P><B><FONT SIZE=-2>&lt;B<SUB>us-count</SUB>&gt;[&lt;US<SUB>us-Ecount</SUB>&gt;]\</font></B></P>
+
+<P><B><FONT SIZE=-2>[&lt;B<SUB>us-posj</SUB>&gt;[&lt;US<SUB>us-Eposj</SUB>&gt;]]<SUP>*</SUP>\</font></B></P>
+
+<P><B><FONT SIZE=-2>&lt;L</font><SUB><FONT SIZE=-1>f</font></SUB><FONT SIZE=-2>&gt;&lt;L<SUB>H</SUB>&gt;&lt;L<SUB>x</SUB>&gt;&lt;L<SUB>y</SUB>&gt;&lt;L</font><SUB><FONT SIZE=-1>D0</font></SUB><FONT SIZE=-2>&gt;&lt;L</font><SUB><FONT SIZE=-1>D</font><FONT SIZE=-2>1</font></SUB><FONT SIZE=-2>&gt;\</font></B></P>
+
+<P><B><FONT SIZE=-2>&lt;L</font><SUB><FONT SIZE=-1>D</font><FONT SIZE=-2>2</font></SUB><FONT SIZE=-2>&gt;&lt;L</font><SUB><FONT SIZE=-1>D</font><FONT SIZE=-2>3</font></SUB><FONT SIZE=-2>&gt;&lt;L</font><SUB><FONT SIZE=-1>D</font><FONT SIZE=-2>4</font></SUB><FONT SIZE=-2>&gt;&lt;L</font><SUB><FONT SIZE=-1>D</font><FONT SIZE=-2>5</font></SUB><FONT SIZE=-2>&gt;&lt;L</font><SUB><FONT SIZE=-1>D</font><FONT SIZE=-2>6</font></SUB><FONT SIZE=-2>&gt;&lt;L</font><SUB><FONT SIZE=-1>D</font><FONT SIZE=-2>7</font></SUB><FONT SIZE=-2>&gt;\</font></B></P>
+
+<P><B><FONT SIZE=-2>&lt;B<SUB>count</SUB>&gt;[&lt;US<SUB>Ecount</SUB>&gt;]&lt;US<SUB>ci</SUB>&gt;<SUP>+</SUP></font></B></P>
+</TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwTxt.html">Draw
+Text</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><I><FONT SIZE=-2>N/A</font></I></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>87</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;US&gt;</font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/SetMkrGlyph.html">Set
+Marker Glyph</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><I><FONT SIZE=-2>N/A</font></I></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>8C</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;B&gt;[&lt;S&gt;&lt;S&gt;&lt;S&gt;&lt;S&gt;]<SUP>+</SUP></font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwLine.html">Draw
+Line</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="10%" VALIGN="TOP" HEIGHT=26><I><FONT SIZE=-2>N/A</font></I></TD>
+
+<TD WIDTH="7%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>92</font></TD>
+
+<TD WIDTH="40%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;L&gt;&lt;L&gt;&lt;UL&gt;&lt;US&gt;&lt;US&gt;</font></B></TD>
+
+<TD WIDTH="43%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwCircArcWdg.html">Draw
+Circle</A></font></TD>
+</TR>
+</TABLE></CENTER>
+
+<P><FONT SIZE=+1>&nbsp;</FONT></P>
+
+<P><A NAME="Extao"></A><B><FONT SIZE=+1>Extended ASCII
+Opcodes</font></B></P>
+
+<CENTER><P><A NAME="Tabl10"></A><I>Table 2. Extended ASCII formatted opcodes</I></P></CENTER>
+
+<CENTER><TABLE BORDER=1 CELLPADDING=9 WIDTH=100% BORDERCOLOR="#000000" >
+<TR>
+<TD VALIGN=TOP WIDTH="20%" BGCOLOR="#0000A0"><B>
+<FONT COLOR="#FFFFFF">
+<FONT SIZE=-2>ASCII Extended Opcode</font></FONT></B></TD>
+
+<TD VALIGN=TOP WIDTH="47%" BGCOLOR="#0000A0">
+<CENTER><P><B><FONT COLOR="#FFFFFF"><FONT SIZE=-2>Operand
+Format</font></FONT></B></P></CENTER>
+</TD>
+
+<TD VALIGN=TOP WIDTH="32%" BGCOLOR="#0000A0"><B><FONT COLOR="#FFFFFF"><FONT SIZE=-2>Refer
+to</font></FONT></B></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(Author</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;ws&gt;&lt;T&gt;)</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DefDwgAuth.html">Define
+Drawing Author</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(Background</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;ws&gt;&lt;I&gt;,&lt;I&gt;,&lt;I&gt;,&lt;I&gt;[&lt;ws&gt;])</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DefDwgBack.html">Define
+Drawing Background</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=33><FONT SIZE=-2>(Bezier</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=33><B><FONT SIZE=-2>&lt;ws&gt;&lt;I&gt;&lt;ws&gt;&lt;I&gt;,&lt;I&gt;\</font></B>
+
+<P><B><FONT SIZE=-2>[&lt;ws&gt;&lt;I&gt;,&lt;I&gt;&lt;ws&gt;&lt;I&gt;,&lt;I&gt;&lt;ws&gt;&lt;I&gt;,\</font></B></P>
+
+<P><B><FONT SIZE=-2>&lt;I&gt;]<SUP>+</SUP>[&lt;ws&gt;])</font></B></P>
+</TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=33><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwPlyBezCrv.html">Draw
+PolyBezier curve</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(Bounds</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;ws&gt;&lt;I&gt;,&lt;I&gt;&lt;ws&gt;&lt;I&gt;,&lt;I&gt;[&lt;ws&gt;])</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DefDwgBds.html">Define
+Drawing Bounds</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(Clip</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;ws&gt;&lt;I&gt;,&lt;I&gt;&lt;ws&gt;&lt;I&gt;,&lt;I&gt;[&lt;ws&gt;])</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>
+<A HREF="http://paulbourke.net/dataformats/whip/SetClip.html">Set Clip</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(Color</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;ws&gt;&lt;I&gt;,&lt;I&gt;,&lt;I&gt;,&lt;I&gt;[&lt;ws&gt;])</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>
+<A HREF="http://paulbourke.net/dataformats/whip/SetColr.html">Set Color</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(ColorMap</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;ws&gt;&lt;I&gt;[&lt;ws&gt;&lt;I&gt;,&lt;I&gt;,&lt;I&gt;,&lt;I&gt;]<SUP>+</SUP>[&lt;ws&gt;])</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>
+<A HREF="http://paulbourke.net/dataformats/whip/SetColrMap.html">Set Color Map</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(Comment</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>[&lt;ws&gt;&lt;T&gt;])</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/Comment.html">Comment</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(ContourSet</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;ws&gt;&lt;I<SUB>CS-count</SUB>&gt;[&lt;ws&gt;&lt;I<SUB>P-counti</SUB>&gt;]<SUP>+</SUP>\</font></B>
+
+<P><B><FONT SIZE=-2>&lt;ws&gt;&lt;I<SUB>xl</SUB>&gt;,&lt;I<SUB>yl</SUB>&gt;[&lt;ws&gt;&lt;I<SUB>xj</SUB>&gt;,&lt;I<SUB>yj</SUB>&gt;]<SUP>+</SUP></font></B></P>
+</TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwContrSet.html">Draw Contour Set</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(Created</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;ws&gt;&lt;I&gt;&lt;ws&gt;&lt;T&gt;)</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DefDwgCreaTim.html">Define Drawing Creation Time</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(Creator</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>[&lt;ws&gt;&lt;T&gt;])</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DefDwgCreat.html">Define Drawing Creator</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(Description</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>[&lt;ws&gt;&lt;T&gt;])</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DefDwgDesc.html">Define Drawing Description.</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(DrawingInfo</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>[&lt;ws&gt;&lt;T&gt;])</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DefDwgInfoBlk.html">Define Drawing Information Block</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP"><FONT SIZE=-2>(EmbedFile</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP"><B><FONT SIZE=-2>&lt;ws&gt;(&lt;T&gt;/&lt;T&gt;;[&lt;T&gt;])\</font></B>
+
+<P><B><FONT SIZE=-2>&lt;ws&gt;(&lt;T&gt;)&lt;ws&gt;(&lt;T&gt;)&lt;ws&gt;{&lt;D&gt;})</font></B></P>
+</TD>
+
+<TD WIDTH="32%" VALIGN="TOP"><FONT SIZE=-2>
+<A HREF="http://paulbourke.net/dataformats/whip/EmbdSrcFil.html">Embed Source File</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP"><FONT SIZE=-2>(EmbedRef</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP"><B><FONT SIZE=-2>&lt;ws&gt;(&lt;T&gt;/&lt;T&gt;;[&lt;T&gt;])\</font></B>
+
+<P><B><FONT SIZE=-2>&lt;ws&gt;(&lt;T&gt;)&lt;ws&gt;(&lt;T&gt;)&lt;ws&gt;(&lt;T&gt;))</font></B></P>
+</TD>
+
+<TD WIDTH="32%" VALIGN="TOP"><FONT SIZE=-2>
+<A HREF="http://paulbourke.net/dataformats/whip/EmbdSrcFil.html">Embed Source File</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP"><FONT SIZE=-2>(Gouraud</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP"><B><FONT SIZE=-2>&lt;ws&gt;&lt;I&gt;&lt;ws&gt;&lt;I&gt;,&lt;I&gt;&lt;ws&gt;\</font></B>
+
+<P><B><FONT SIZE=-2>&lt;I&gt;,&lt;I&gt;,&lt;I&gt;,&lt;I&gt;&lt;ws&gt;&lt;I&gt;,&lt;I&gt;&lt;ws&gt;\</font></B></P>
+
+<P><B><FONT SIZE=-2>&lt;I&gt;,&lt;I&gt;,&lt;I&gt;,&lt;I&gt;[&lt;ws&gt;&lt;I&gt;,&lt;I&gt;&lt;ws&gt;\</font></B></P>
+
+<P><B><FONT SIZE=-2>&lt;I&gt;,&lt;I&gt;,&lt;I&gt;,&lt;I&gt;]<SUP>+</SUP>[&lt;ws&gt;])</font></B></P>
+</TD>
+
+<TD WIDTH="32%" VALIGN="TOP"><FONT SIZE=-2>
+<A HREF="http://paulbourke.net/dataformats/whip/DrwGrdPolyt.html">Draw Gouraud Polytriangle</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP"><FONT SIZE=-2>(Image</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP"><B><FONT SIZE=-2>&lt;ws&gt;&lt;I&gt;,&lt;I&gt;&lt;ws&gt;\</font></B>
+
+<P><B><FONT SIZE=-2>&lt;I&gt;,&lt;I&gt;&lt;ws&gt;&lt;I&gt;,&lt;I&gt;&lt;ws&gt;&lt;T&gt;\</font></B></P>
+
+<P><B><FONT SIZE=-2>[&lt;ws&gt;[,]&lt;I&gt;]<SUP>+</SUP>)</font></B></P>
+</TD>
+
+<TD WIDTH="32%" VALIGN="TOP"><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwImg.html">Draw
+Image</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(Layer</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;ws&gt;&lt;I&gt;[&lt;ws&gt;&lt;T&gt;])</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/SetLyr.html">Set Layer</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(LineCap</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;ws&gt;&lt;T&gt;)</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/SetLinCap.html">Set Line Cap</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(LineJoin</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;ws&gt;&lt;T&gt;)</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/SetLinJoin.html">Set Line Join</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(LinePattern</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;ws&gt;&lt;T&gt;)</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/SetLinPat.html">Set Line Pattern</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(LineWeight</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;ws&gt;&lt;I&gt;[&lt;ws&gt;])</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/SetLinWgt.html">Set Line Weight</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(Modified</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;ws&gt;&lt;I&gt;&lt;ws&gt;&lt;T&gt;)</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DefDwgModTim.html">Define
+Drawing Modification Time</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(Projection</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;ws&gt;&lt;T&gt;)</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/SetProj.html">Set
+Projection</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(Scale</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;ws&gt;&lt;F&gt;&lt;ws&gt;&lt;F&gt;&lt;ws&gt;&lt;T&gt;)</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DefDwgScl.html">Define
+Drawing Scale</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(SourceCreated</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>&lt;ws&gt;&lt;I&gt;&lt;ws&gt;&lt;T&gt;)</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DefDwgCreaTim.html">Define
+Source Drawing Creation Time</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(SourceFilename</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>[&lt;ws&gt;&lt;T&gt;])</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DefSrcDwgFilnm.html">Define
+Source Drawing Filename</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP"><FONT SIZE=-2>(SourceModified</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP"><B><FONT SIZE=-2>&lt;ws&gt;&lt;I&gt;&lt;ws&gt;&lt;T&gt;)</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP"><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DefSrcDwgModTm.html">Define
+Source Drawing Modification Time</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(URL</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>[&lt;ws&gt;&lt;T&gt;])</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/SetUrlLnk.html">Set
+URL Link</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="20%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2>(View</font></TD>
+
+<TD WIDTH="47%" VALIGN="TOP" HEIGHT=26><B><FONT SIZE=-2>[&lt;ws&gt;&lt;I&gt;,&lt;I&gt;&lt;ws&gt;&lt;I&gt;,&lt;I&gt;][&lt;ws&gt;])</font></B></TD>
+
+<TD WIDTH="32%" VALIGN="TOP" HEIGHT=26><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DefInitVw.html">Define
+Initial View</A></font></TD>
+</TR>
+</TABLE></CENTER>
+
+<P><FONT SIZE=+1>&nbsp;</FONT></P>
+
+<P><A NAME="Extbo"></A><B><FONT SIZE=+1>Extended Binary
+Opcodes</font></B></P>
+
+<CENTER><P><A NAME="Tabl11"></A><I>Table 3. Extended binary formatted opcodes</I></P></CENTER>
+
+<CENTER><TABLE BORDER=1 CELLPADDING=9 WIDTH=100% BORDERCOLOR="#000000" >
+<TR>
+<TD VALIGN=TOP WIDTH="34%" BGCOLOR="#0000A0"><FONT COLOR="#FFFFFF"><B><FONT SIZE=-2>Extended
+Binary</font></B> </FONT>
+<P><B><FONT COLOR="#FFFFFF"><FONT SIZE=-2>Opcode (Hex)</font></FONT></B></P>
+</TD>
+
+<TD VALIGN=TOP WIDTH="34%" BGCOLOR="#0000A0">
+<CENTER><P><B><FONT COLOR="#FFFFFF"><FONT SIZE=-2>Operand
+Format</font></FONT></B></P></CENTER>
+</TD>
+
+<TD VALIGN=TOP WIDTH="31%" BGCOLOR="#0000A0"><B><FONT COLOR="#FFFFFF"><FONT SIZE=-2>Refer
+to</font></FONT></B></TD>
+</TR>
+
+<TR>
+<TD WIDTH="34%" VALIGN="TOP" HEIGHT=20><FONT SIZE=-2>00
+01</font></TD>
+
+<TD WIDTH="34%" VALIGN="TOP" HEIGHT=20><B><FONT SIZE=-2>&lt;B&gt;[&lt;B&gt;&lt;B&gt;&lt;B&gt;&lt;B&gt;]<SUP>+</SUP></font></B></TD>
+
+<TD WIDTH="31%" VALIGN="TOP" HEIGHT=20><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/SetColrMap.html">Set
+Color Map</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="34%" VALIGN="TOP"><FONT SIZE=-2>00 02</font></TD>
+
+<TD WIDTH="34%" VALIGN="TOP"><B><FONT SIZE=-2>&lt;US&gt;&lt;US&gt;&lt;L&gt;&lt;L&gt;&lt;L&gt;&lt;L&gt;\</font></B>
+
+<P><B><FONT SIZE=-2>'&lt;T&gt;'[&lt;B&gt;]<SUP>+</SUP></font></B></P>
+</TD>
+
+<TD WIDTH="31%" VALIGN="TOP"><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DrwImg.html">Draw
+Image</A></font></TD>
+</TR>
+
+<TR>
+<TD WIDTH="34%" VALIGN="TOP" HEIGHT=20><FONT SIZE=-2>00
+03</font></TD>
+
+<TD WIDTH="34%" VALIGN="TOP" HEIGHT=20><B><FONT SIZE=-2>&lt;US&gt;&lt;L&gt;&lt;L&gt;&lt;UL&gt;&lt;R&gt;</font></B></TD>
+
+<TD WIDTH="31%" VALIGN="TOP" HEIGHT=20><FONT SIZE=-2><A HREF="http://paulbourke.net/dataformats/whip/DefMrkrGlph.html">Define
+Marker Glyph.</A></font></TD>
+</TR>
+</TABLE></CENTER>
+
+</td></tr></table></center>
+</BODY>
+</HTML>

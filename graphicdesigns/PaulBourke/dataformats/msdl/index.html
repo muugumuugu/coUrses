@@ -1,0 +1,1527 @@
+<html>
+<HEAD><link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>MSDL - Manchester Scene Description Language</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>MSDL - Manchester Scene Description Language</h1>
+</center>
+<p><br><p>
+
+<H1><A NAME=SECTION0002000000000000000> Introduction</A></H1>
+<P>
+The University of Manchester Computer Graphics Unit serves as a centre for
+computer graphics research, and over the years many novel graphics
+packages have been developed here. However as each researcher develops 
+something, he or she is forced to cobble together a way of telling their 
+application exactly what it is they want a picture of. Consequently a huge 
+number of ways have been devised of positioning mirrored spheres over
+chess boards!
+<P>
+In an attempt to reduce the duplication of effort, the CGU research group
+developed a scene language flexible enough to cope with the requirements of
+most graphics research programs. The language allows users to create a
+text file containing a description of a 3 dimensional scene, which could 
+then be read by all users of the language.
+<P>
+To encourage its use a parser was developed to actually read the language 
+files, thereby minimising the amount of effort a programmer needs to expend 
+to use a `standard' solution. The parser has been in use for some time now,
+and has proved a useful tool in graphics research.
+<P>
+This report outlines the <em>Manchester Scene Description Language</em> 
+(MSDL), designed for
+describing scenes which are to be used by a user's graphics application
+package.  
+This document consists of a description of the language, a discussion of 
+some example scenes, an outline of the process of generating the MSDL
+parser, and information on linking the parser to a users application.
+Included with the MSDL kit is a <tt>README</tt> file which includes a list of the
+distributions contents, and information on building the parser for different
+platforms.
+<P>
+The parser is built using
+<tt>lex(1)</tt> and <tt>yacc(1)</tt> and consists of a C or
+Clibrary. The users application calls a function in this library to begin
+reading an MSDL file. As the parser reads the file it calls functions to
+generate object primitives in the scene. These functions are supplied by the 
+user and placed inside his or her application. Consequently the application
+is not reliant on the type definitions used internally by the parser, 
+and can define its own, copying the information provided by the reader into
+them.
+<P>
+MSDL is available principally by anonymous ftp from the Manchester ftp site 
+<tt>ftp.mcc.ac.uk (130.88.203.12)</tt>, together with some sample MSDL scenes, 
+and other Manchester sourced software. Information on the CGU, MSDL,
+other products and current research is available on the WorldWideWeb 
+pages at <tt>http://info.mcc.ac.uk/CGU/MSDL/MSDL-intro.html</tt>.
+<P>
+MSDL has been made available for use in the academic community. If you wish
+to use it for other purposes please contact us.
+It is supplied <em>as-is</em>, we do not guarantee its suitability for any
+particular use, and is not a supported product of the University of Manchester.
+However as we use it ourselves we would be interested in your comments and
+criticisms, which should be emailed to the Manchester general queries address,
+<tt>cgu-info@mcc.ac.uk</tt>, preferably with MSDL in the subject field.
+<P>
+
+<H1><A NAME=SECTION0003000000000000000> The Manchester SDL</A></H1>
+<P>
+<A NAME=propSDL>&nbsp;</A>
+<P>
+Several scene description languages are in current use, and some of the
+features of these influenced the design of MSDL. Most of these file formats 
+are keyed to the
+peculiarities of particular applications, and as MSDL was designed to be
+primarily used for research purposes no effort was made to make it compatible
+with these application languages.
+<P>
+<UL><LI>	Greg Ward's <em>Radiance</em> 
+<LI>	Craig Kolb's <em>Rayshade.4.0</em>
+<LI>	David Buck's <em>DKBTrace, version 2.12</em> 
+<LI>	Meiko Ray-Tracer's SDL.
+<LI>	Eric Haines' <em>Neutral File Format (NFF)</em>
+<LI>	Stefan M&#252;ller's extension to NFF.
+</UL>
+<P>
+Possibly the most popular of the non-application specific file formats 
+examined was NFF.  This was
+written with parsing to a local (more complex) file format in mind.  
+Syntax that is close to NFF's is used where it is convenient.
+<P>
+
+<H2><A NAME=SECTION0003100000000000000> An overview of MSDL</A></H2>
+<P>
+This section outlines the most important features of MSDL, leaving a
+more comprehensive treatment of the format for later in this document.
+<P>
+We feel that an important logical separation should be made
+between the following purposes of any SDL:
+<P>
+<UL><LI>	Describing the objects that make up the scene.
+<LI>	Viewing the scene and specifying rendering parameters that will 
+	affect <em>how</em> the scene is rendered.
+</UL>
+<P>
+This version of MSDL is concerned primarily with the first goal. 
+However we feel that a `sample' camera definition should be included with 
+most MSDL files,
+as without it the user may find it unnecessarily difficult to determine a
+reasonable view, given that he or she may not know what scale the scene is
+defined with.
+<P>
+To that end MSDL allows an optional view definition, which the application
+may ignore if it wishes.
+<P>
+MSDL files are plain text files, designed to be created both by users and
+their applications. Consequently it is possible to process MSDL files using 
+other programs. Using pre-processors such as <tt>cpp</tt> &<tt>m4</tt> the user
+can build up libraries of standard objects, which are <tt>#include</tt>'ed into
+specific scenes. However, for flexibility, we have included the ability to
+place C-style comments inside MSDL files without having to use a pre-processor.
+<P>
+The ability to assemble standard libraries of objects leads to the 
+notion of three ways to describe an object, each of which has a language 
+keyword associated with it:
+<DL ><DT>defobj
+<DD> - Define an object, but <em>do not</em> instantiate it.
+<DT>object
+<DD> - Define an object, <em>and</em> create an instance of it. 
+<DT>instobj
+<DD> - Instantiate a previously defined object.
+<P>
+ </DL>
+<P>
+Other commands allow the user to manage surface properties, and transformations
+in the same manner.
+<P>
+<DL ><DT>defprops
+<DD> - Define a surface property, but do not instantiate it.
+<DT>props
+<DD> - Define a surface property, and create an instance of it.
+<DT>instprops
+<DD> - Instantiate a previously defined surface property
+<DT>deftrans
+<DD> - Define (only) a transformation
+<DT>trans
+<DD> - Define and instantiate 
+<DT>insttrans
+<DD> - Instantiate
+<P>
+ </DL>
+<P>
+This define and instantiate approach allows an MSDL user to easily create 
+scenes which contain large numbers of repeated objects. 
+Figure <A HREF="index.html#figlecture"><IMG ALIGN=MIDDLE SRC="http://paulbourke.net/dataformats/msdl/images/cross_ref_motif.gif"></A>
+shows a view of an MSDL file representing a lecture theatre in the Computer
+Science department of Manchester University. To generate it a model for a 
+single seat was constructed, which was instantiated to form a row, and several
+rows were instantiated to form the seating for the theatre.
+<P>
+<A NAME=376>&nbsp;</A><P><A NAME=figlecture>&nbsp;</A><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_figure374.gif"><P>
+<P>
+A users application employs MSDL by calling a function provided inside the
+parser supplied in this package. This function (<tt>msdl()</tt>) loads an
+MSDL text file into its internal store. It then processes the scene, to take
+into account the effects of instantiating objects, to determine the collection
+of objects which the application needs to know about.
+<P>
+The parser then goes through each of these objects, calling a corresponding
+<tt>create()</tt> function. These functions are supplied in the distribution as
+skeleton code. When the user writes his or her application they fill in
+these skeleton routines, to perform something meaningful to their application.
+<P>
+For example MSDL scripts can contain NURBS surfaces. However some applications
+may not be able to cope with these, and so will wish to convert them to
+something convenient for their internal use. So the application programmer
+could write a NURBS tessellation routine, which is called inside the 
+<tt>create_nurb()</tt> function, to generate something for the applications use.
+<P>
+This process is described graphically in figure <A href="index.html#figoverview"><IMG ALIGN=MIDDLE SRC="http://paulbourke.net/dataformats/msdl/images/cross_ref_motif.gif"></A>
+and covered in more
+detail in section <A HREF="index.html#seclinking"><IMG ALIGN=MIDDLE SRC="http://paulbourke.net/dataformats/msdl/images/cross_ref_motif.gif"></A>.
+<P>
+<A NAME=386>&nbsp;</A><P><A NAME=figoverview>&nbsp;</A><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_figure384.gif"><P>
+<P>
+Finally it is worth pointing out that the MSDL parser passes the information
+contained in the script onto the reading application. If the application 
+chooses to use the data in the file for different purposes (for example an
+application might want to use the specularly reflecting information for
+something else) then the parser will be none the wiser. This means that users
+wishing to generate portable MSDL files have to ensure their applications
+uses the information consistently.
+<P>
+The next section discusses the way in which a user describes a scene in the
+MSDL language. Following that is a short section on generating some sample 
+scenes. The final sections of the report cover the information an application
+programmer wishing to link the MSDL parser into his or her system needs to 
+know.
+<P>
+
+
+<H3><A NAME=SECTION0003210000000000000> Object Primitives</A></H3>
+<P>
+MSDL allows the user to define objects which can be grouped,
+transformed and have properties attached to them. These objects are defined
+in terms of primitives, which can be polygons,
+triangles, spheres, cylinders, cones, discs, boxes, NURBS and polyhedra.
+<P>
+This section consists of a definitions of the different primitives, followed
+by a BNF syntax. Examples of how on might create one of the primitives is
+given in typewritten font.
+<P>
+Throughout this report, keywords are shown in <b>boldface</b>, parameters are 
+delimited by <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap1979.xbm">, and both are separated by <em>any</em> white space 
+characters. Within parameter brackets the type of data expected is either
+defined, or should be self-apparent.
+<P>
+<UL><LI><P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular394.gif"><P>
+<P>
+- Defines a polygon with <em>nverts</em> vertices.  The vertices should be
+provided in counter-clockwise order when viewing the <em>front</em> of the
+polygon (Picture a right-handed screw being screwed into the back of the
+polygon, turned in the direction the vertices were defined - the screw will
+point along the polygon normal).  Also, the angle subtended at <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap1991.xbm"> by
+<IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap1993.xbm"> and <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap1995.xbm"> should be non-zero and convex (i.e., <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap1997.xbm">), so that the polygon normal can be found using a cross product.
+(This is consistent with NFF).
+<P>
+We might define a simple polygon by writing :
+<PRE><TT>
+polygon
+	4
+	0.0 0.0 0.0
+	1.0 0.0 0.0
+	1.0 1.0 0.0
+	0.0 1.0 0.0
+end</TT></PRE>
+</UL>
+<P>
+The <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap1999.xbm"> mentioned in the syntax will be described
+momentarily.  First, let's look at a special case of <b>polygon</b> which
+the user can define in an effort to simplify their MSDL files, and perhaps ease
+the improvement of internal storage and manipulation methods in their
+implementation:
+<P>
+<UL><LI><P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular414.gif"><P>
+<P>
+- Defines a triangle with vertices <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2005.xbm">. 
+The vertices should be given in counter-clockwise order when viewing the <em>front</em> of the triangle, so that the correct patch normal can be found using a
+cross product.  (Again this is consistent with NFF.)
+<P>
+</UL>
+<P>
+Again, we see <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2007.xbm"> appearing in the syntax: There are, in
+fact, several optional parameters; not all of which are applicable to 
+all objects. 
+They are described in greater detail in the
+grammar description given later.
+Two options unique to <b>triangle</b>, <b>polygon</b>,
+and <b>polyhedron</b> are:
+<P>
+<DL ><DT><DD><P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular434.gif"><P>
+<P>
+- This associates the given surface normals with the previously given points. 
+These need not be unit vectors.
+<P>
+<DT><DD><P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular441.gif"><P>
+<P>
+- This associates the given <em>facet</em> normal with the polygon (or
+polyhedron face). If this is supplied, it will override any `cross-product'
+calculation that may be carried out to evaluate the normal.
+<P>
+ </DL>
+<P>
+So if we were defining a triangle, with the vertices normals define we could
+write something like the following :
+<PRE><TT>
+triangle
+	0.0 0.0 0.0
+	5.0 0.0 0.0
+	0.0 3.0 0.0
+	vnorm 0.0 0.0 1.0
+	      0.0 0.0 1.0
+	      0.0 0.0 1.0
+end</TT></PRE>
+<P>
+Let's take a look at the rest of the object primitives available:
+<UL><LI>
+<P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular450.gif"><P>
+<P>
+- A sphere with the given centre and radius.  Note that the radius can be
+positive or negative, but not zero.  A negative radius results in a sphere whose
+radius is the modulus of that given, but whose surface is inward-facing. 
+Again, this is NFF-consistent.
+<P>
+The vectors <b>up</b> and <b>tpz</b> (Theta, Phi Zero) describe, respectively,
+the `North pole' and the point on the `equator' where <em>theta</em> (cf.
+longitude) is zero(<IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2027.xbm">).  If not given by the user, <b>up</b> is taken to
+be <b>k</b>, and <b>tpz</b> is taken to be <b>i</b> [unit vectors lying along the
+world coordinate axes: <b>i</b>, <b>j</b>, <b>k</b>].  Note that these are <em>directions</em>, not positions on the surface of the sphere.  An error will result
+if <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2029.xbm">.
+<P>
+The keywords <b>`theta'</b> and <b>`phi'</b> are used to define part-spheres
+(hemispheres, `dish' shapes, `Edam-cheese-with-a-slice-missing' shapes, and so
+on).  The two reals given after each keyword refer to `how much we sweep out'
+along the corresponding direction; <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2031.xbm"> increases around the equator (0 and
+1 at <b>tpz</b>), whereas <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2037.xbm"> is minimum(0) at the `South pole' and
+maximum(1) at the `North pole'.  To clarify; a hemisphere might be defined
+by:
+<PRE><TT>
+sphere name lampshade
+	16.0	20.0	18.77
+	3.2
+	phi	0.5	1.0
+	instprops	Transp_light_blue
+end</TT></PRE>
+<P>
+Or, equivalently:
+<P>
+<PRE><TT>
+sphere name lampshade
+	16.0	20.0	18.77
+	3.2
+	up  0	0	-1
+	phi	0	0.5
+	instprops	Transp_light_blue</TT></PRE>
+<P>
+Filling in missing chunks of sphere that will result when the user starts to
+manipulate <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2031.xbm"> and <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2037.xbm"> is the user's problem!
+<P>
+Of course many applications may not be able to cope with all the possible
+shapes one can generate with this primitive. An application should choose a
+meaningful behaviour if it finds something it can't cope with, e.g., create
+as much as it can, then display a warning.
+
+<P>
+<LI>
+<P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular486.gif"><P>
+<P>
+- A right circular cylinder, extending between the points <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2051.xbm"> and
+<IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2053.xbm">, with the given cross-sectional radius.  The same negative radius
+rule applies; inward-pointing for negative.  The optional keyword `<b>capped'</b> indicates whether an endcap should be added to the end of the cylinder
+associated with the keyword - so <b>`capped'</b> might appear 0,1 or 2 times in
+a <b>cylinder</b> definition.
+<P>
+The vector <b>tz</b> (Theta Zero) describes the point on the cylinder's rim
+where <em>theta</em> (cf. longitude) is zero(<IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2055.xbm">).  An error results if
+<IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2057.xbm"> is zero.  If not given by the user,
+<b>tz</b> is evaluated as follows:
+<OL><LI>	Find the unit normal along <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2059.xbm">.
+<LI>	Find which of <b>n</b>'s 3 components has the smallest magnitude.  Note
+	the unit vector (<b>l</b> = <b>i</b>, <b>j</b> or <b>k</b>) which
+	corresponds to this axis.
+<LI>	<IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2061.xbm"> (normalized).
+</OL>
+<P>
+Again, filling in missing chunks of cylinder that will result when the user
+starts to manipulate <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2031.xbm"> is the user's problem.
+<P>
+An example cylinder is shown in section <A HREF="index.html#secexamples"><IMG ALIGN=MIDDLE SRC="http://paulbourke.net/dataformats/msdl/images/cross_ref_motif.gif"></A>.
+
+<P>
+<LI><P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular529.gif"><P>
+<P>
+- A right circular cone, extending between the points <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2079.xbm"> and <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2081.xbm">, with the given cross-sectional radii at its ends.  The same negative
+radius rule applies as did for cylinders and spheres.  Note that the radii can
+now take the value zero - i.e., cones which come to a point <em>are</em>
+allowed.  If ABS(<IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2083.xbm">) differs from ABS(<IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2085.xbm">) then an
+error results (unless one radius is zero), resulting in a call to one
+of the error handling routines outlined in section <A HREF="index.html#secerrors"><IMG ALIGN=MIDDLE SRC="http://paulbourke.net/dataformats/msdl/images/cross_ref_motif.gif"></A>.
+<P>
+The keywords <b>tz</b> and <b>theta</b> serve the same purpose as they do in the
+cylinder description
+<P>
+<LI><P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular555.gif"><P>
+<P>
+- A single-sided flat circular disc, with the given midpoint and radius,
+orientated according to the given normal vector.  The normal vector need not be
+a unit vector.  This has been included largely for compatibility with NFF.
+<P>
+The keywords <b>tz</b> and <b>theta</b> mean the same as they did in the 
+cylinder definition, 
+except that now we don't have to evaluate the normal, it is given.
+
+<P>
+<LI><P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular571.gif"><P>
+<P>
+- An axis-aligned cuboid, with `bottom-left' and `top-right' vertices as
+defined.  The optional keyword <b>in</b> is used if the user wishes to define
+the box's surface normals as inwards-pointing.  The default is
+outwards-pointing.
+<P>
+An example, an useful, box might then be defined 
+<PRE><TT>
+defobj unit_cube
+    box
+      0.0 0.0 0.0 1.0 1.0 1.0
+    end
+end</TT></PRE>
+
+<P>
+<LI>
+<P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular581.gif"><P>
+<P>
+- This defines a Non-Uniform Rational B-Spline surface.  The user must provide
+the order of the NURBS (in both dimensions), its knot vectors, and its control
+points. The control points entered <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2127.xbm"> direction first, so if we think of the
+control point list as an array, the <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2127.xbm"> direction would form the rows, and
+the information would be entered into the MSDL file as lists of rows.
+<P>
+You may find the Manchester NURBS library <A HREF="index.html#hewitt92">[3]</A> useful in using
+NURBS in your application. Although MSDL itself does not require this 
+library most NURBS applications will need it!
+<P>
+<A NAME=647>&nbsp;</A><P><A NAME=fignurbs>&nbsp;</A><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_figure645.gif"><P>
+<P>
+An example NURBS surface, in this case representing a sphere, would then
+look like:
+<P>
+<PRE><TT>
+/* A NURBS sphere, generated by Manchester NURBS library */
+nurbs
+   order 3    3
+   cpts  9    5
+   knots
+{  /* First the knots for the U direction */
+             0
+               0
+               0
+            0.25
+            0.25
+             0.5
+             0.5
+            0.75
+            0.75
+               1
+               1
+               1}
+{
+	/* Then the knots for V */
+               0
+               0
+               0
+             0.5
+             0.5
+               1
+               1
+               1}
+
+               0               0           -0.25               1
+               0               0       -0.176777        0.707107
+               0               0           -0.25               1
+               0               0       -0.176777        0.707107
+               0               0           -0.25               1
+               0               0       -0.176777        0.707107
+               0               0           -0.25               1
+               0               0       -0.176777        0.707107
+               0               0           -0.25               1
+        0.176777               0       -0.176777        0.707107
+           0.125           0.125          -0.125             0.5
+               0        0.176777       -0.176777        0.707107
+          -0.125           0.125          -0.125             0.5
+       -0.176777               0       -0.176777        0.707107
+          -0.125          -0.125          -0.125             0.5
+               0       -0.176777       -0.176777        0.707107
+           0.125          -0.125          -0.125             0.5
+        0.176777               0       -0.176777        0.707107
+            0.25               0               0               1
+        0.176777        0.176777               0        0.707107
+               0            0.25               0               1
+       -0.176777        0.176777               0        0.707107
+           -0.25               0               0               1
+       -0.176777       -0.176777               0        0.707107
+               0           -0.25               0               1
+        0.176777       -0.176777               0        0.707107
+            0.25               0               0               1
+        0.176777               0        0.176777        0.707107
+           0.125           0.125           0.125             0.5
+               0        0.176777        0.176777        0.707107
+          -0.125           0.125           0.125             0.5
+       -0.176777               0        0.176777        0.707107
+          -0.125          -0.125           0.125             0.5
+               0       -0.176777        0.176777        0.707107
+           0.125          -0.125           0.125             0.5
+        0.176777               0        0.176777        0.707107
+               0               0            0.25               1
+               0               0        0.176777        0.707107
+               0               0            0.25               1
+               0               0        0.176777        0.707107
+               0               0            0.25               1
+               0               0        0.176777        0.707107
+               0               0            0.25               1
+               0               0        0.176777        0.707107
+               0               0            0.25               1
+end</TT></PRE>
+<P>
+
+<P>
+<LI><P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular650.gif"><P>
+<P>
+- Used for objects not conveniently described by the other primitives.  The
+user provides the vertices, (<IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2165.xbm"> of them), that make up the object,
+between a pair of braces ({}).  The order in which the vertices are
+given is important - the polyhedron face information will reference the first
+vertex listed as `vertex 1', the second as `vertex 2', and so on.
+<P>
+After the vertices, the user gives the <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2167.xbm"> faces that make up the
+surface of the object.  This face information is a list of vertex-lists; each
+vertex-list describing one face and consisting of a list of integers in the
+range [1...verts] which reference vertices given in the vertex list.  These
+lists should give the vertices in a counter-clockwise order as one looks at the
+face, and the angle subtended at the second vertex by the first and third
+vertices should be non-zero and convex.  Each vertex-list (describing one face)
+is delimited by a newline character in the MSDL file at the end of the list.  
+The list of
+vertex-lists (describing the whole polyhedron) is delimited by a pair of
+braces.
+<P>
+Note that the options <b>vnorm</b> and <b>fnorm</b> can be used with the
+polyhedron primitive.  An ordered list of <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2169.xbm"> vectors following the
+keyword <b>vnorm</b> will be taken as the normals associated with the
+listed vertices.  An ordered list of <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2171.xbm"> vectors following the
+keyword <b>fnorm</b> will be taken as the normals associated with the
+described faces.
+<P>
+A simple example of a polyhedron would be that of a box,
+<P>
+<PRE><TT>
+/* A unit box represented as a polyhedron */
+polyhedron
+	{
+	  0.0 0.0 0.0
+	  1.0 0.0 0.0
+	  1.0 1.0 0.0
+	  0.0 1.0 0.0
+	  0.0 0.0 0.0
+	  1.0 0.0 0.0
+	  1.0 1.0 0.0
+	  0.0 1.0 0.0
+	}
+	{
+	  [ 1 2 3 4 ]
+	  [ 2 3 7 6 ]
+	  [ 1 4 8 5 ]
+	  [ 3 4 8 7 ]
+	  [ 6 7 8 5 ]
+	  [ 1 2 6 5 ]
+	}
+end</TT></PRE>
+
+<P>
+</UL>
+
+<H2><A NAME=SECTION0003200000000000000> Objects</A></H2>
+<P>
+
+
+
+<H3><A NAME=SECTION0003220000000000000> Object Transformations</A></H3>
+<P>
+As mentioned earlier, the user can apply transformations to any of the objects. 
+The transformations will be stored hierarchically - i.e., they should be 
+applied
+to all objects or object primitives that make up the <em>objects</em> block in
+which they appear (see the BNF grammar, and section <A HREF="index.html#seccomp"><IMG ALIGN=MIDDLE SRC="http://paulbourke.net/dataformats/msdl/images/cross_ref_motif.gif"></A>).  
+They can also be defined (named) and
+instantiated elsewhere in the MSDL file.
+<P>
+The various transformation options are outlined here:
+<DL ><DT><DD><P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular703.gif"><P>
+<P>
+- Translates (shifts) the object by the given vector.
+<P>
+<DT><DD><P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular709.gif"><P>
+<P>
+- Rotates the object about the given axis (about the origin),
+through <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2181.xbm"> degrees, e.g., ``rotate x 90''.
+<P>
+<DT><DD><P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular715.gif"><P>
+<P>
+- Scales the object by the specified amount (about the origin) along the
+corresponding axes.
+<P>
+<DT><DD><P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular721.gif"><P>
+<P>
+- The given matrix (defined by 16 reals) is to be used to transform 
+the object.
+<P>
+ </DL>
+<P>
+Note that if the user wishes to scale or rotate an object about a particular
+point <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2193.xbm">, they can shift the object by <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2195.xbm">, carry out the desired scale/rotate and shift it back by <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2197.xbm">.
+<P>
+As mentioned earlier, the option to assign names to (presumably complex)
+transformations, for ease of use elsewhere in the MSDL, has been included.  The
+precise syntax for this is shown in the BNF grammar in appendix <A HREF="index.html#Gram_Sec"><IMG ALIGN=MIDDLE SRC="http://paulbourke.net/dataformats/msdl/images/cross_ref_motif.gif"></A>,
+but it is directly analogous to the defprops, props and
+instprops syntax already explained.
+<P>
+An example transformation might look like
+<P>
+<PRE><TT>
+rotate x 20.0      /* Rotate by 20 degree around X axis */
+scale 1.0 2.0 1.0  /* Stretch in y */</TT></PRE>
+<P>
+
+
+<H3><A NAME=SECTION0003230000000000000> Composite objects</A></H3>
+<P>
+<A NAME=seccomp>&nbsp;</a>
+<P>
+In creating any complicated scenes you will probably want to perform operations
+(such as rotations) on groups of objects. To allow you to do this MSDL lets
+you to group a sequence of objects into composites.
+<P>
+MSDL allows you to group any number of objects into a named group. In 
+addition MSDL composites can contain other composites, to generate a 
+hierarchy. This hierarchy is communicated to the parent application by use
+of the <tt>create_comp()</tt> and <tt>end_comp()</tt> functions. (See 
+section <A HREF="index.html#seclinking"><IMG ALIGN=MIDDLE SRC="http://paulbourke.net/dataformats/msdl/images/cross_ref_motif.gif"></A> for more details).
+<P>
+A BNF extract for the a composite object would then look like:
+<P>
+<P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular753.gif"><P>
+<P>
+We might then wish to create a composite object by writing :
+<P>
+<PRE><TT>
+compobj chair
+
+/* Rotate the entire chair by 90 degrees */
+rotate x 90.0
+
+instobj legs
+instobj back
+instobj bottom
+end</TT></PRE>
+<P>
+
+
+<H3><A NAME=SECTION0003240000000000000> Object Syntax</A></H3>
+<P>
+We want to define a grammar to specify the syntax of this part of the MSDL.  The
+full grammar for the MSDL can be found in appendix <A HREF="index.html#Gram_Sec"><IMG ALIGN=MIDDLE SRC="http://paulbourke.net/dataformats/msdl/images/cross_ref_motif.gif"></A> of this report.
+<P>
+<P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular763.gif"><P>
+<P>
+<P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular862.gif"><P>
+<P>
+Again, this piece of BNF includes some ambiguous parameters; these are:
+<UL><LI>	R<IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2251.xbm"> - The set of positive and negative real numbers.
+<LI>	R+ - The set of positive real numbers.
+<LI>   R4 - The set of 4-vectors with real components.
+<LI>	axis - The set of characters {x,X,y,Y,z,Z}.
+<LI>	R - The set of real numbers.
+</UL>
+<P>
+
+
+<H2><A NAME=SECTION0003300000000000000> Surface Properties</A></H2>
+<P>
+
+
+
+<H3><A NAME=SECTION0003310000000000000> Surface Property Primitives</A></H3>
+<P>
+<A NAME=secsurfprops>&nbsp;</a>
+<P>
+The user needs to be able to associate surface properties with object
+primitives.  As mentioned earlier, one can define three different types of <em>property</em> block; one that associates a <em>name</em> with a particular set of
+attributes (<b>defprops</b>); one that associates an object (and possibly a
+name) with a particular set of attributes (<b>props</b>); and one that merely
+instantiates an already existing set of attributes (<b>instprops</b>).
+<P>
+Before looking at the syntax of how one goes about defining these sets of
+surface properties, let's consider the different properties we can assign to
+surfaces in our scene.  Many of these properties should be assigned a default
+value if the user fails to provide one, but this is implementation dependent,
+and will need to be supplied by the user:
+<P>
+<DL ><DT><DD><P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular894.gif"><P>
+<P>
+- Associate the given name with the surface properties being defined - for
+possible instantiation elsewhere.
+<P>
+<DT><DD><P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular899.gif"><P>
+<P>
+- The emissivity of the surface being defined, in <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2257.xbm">.  Included for radiosity calculations.
+<P>
+<DT><DD><P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular911.gif"><P>
+<P>
+- The Ambient Reflection Coefficient of the surface.
+<P>
+<DT><DD><P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular916.gif"><P>
+<P>
+- The Diffuse Reflection Coefficient of the surface.
+<P>
+<DT><DD><P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular921.gif"><P>
+<P>
+- The Specular Reflection Coefficient of the surface.
+<P>
+<DT><DD><P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular926.gif"><P>
+<P>
+- The Transmission Coefficient of the surface - determines the maximum
+fraction of the incident light that could pass through the surface.  Zero
+implies opaque, one implies transparent.
+<P>
+<DT><DD><P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular931.gif"><P>
+<P>
+- The power to which the `<IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2269.xbm">' term is raised if a Phong
+illumination model is used. This parameter is included in MSDL for convenience,
+many user applications may not use it.
+<P>
+<DT><DD><P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular936.gif"><P>
+<P>
+- The refractive index of the material; a 3-vector is needed as the user may
+wish to account for its variation with wavelength.
+<P>
+<DT><DD><P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular943.gif"><P>
+<P>
+- Assigns a texture to the surface.  If the keyword <b>`file'</b> is included,
+then a bitmap found in the named file is used, otherwise the name is that
+of a procedural texture (e.g., WOOD, MARBLE) which would be implementation
+dependent.
+<P>
+ </DL>
+<P>
+Objects in MSDL are normally defined in some hierarchy (that is you can group
+objects, and have groups of groups, and so on). If you assign a surface 
+property to a group it will apply to all the members of the group <em>EXCEPT</em>
+for objects in groups which have that property already defined.
+<P>
+As an example of this suppose we define a table which consists of a top, and
+four legs. If we define the table top to be white, group all the table 
+together, then assign a `pine' property to the group, the table top will 
+still be white.
+<P>
+
+<H3><A NAME=SECTION0003320000000000000> Surface Property Syntax</A></H3>
+<P>
+Again, here is a piece of BNF grammar to specify the syntax of this part of the
+language:  Remember, we should be able to do three things; define only; define
+and instantiate; instantiate only.  (The full grammar for the MSDL can be found
+in appendix <A HREF="index.html#Gram_Sec"><IMG ALIGN=MIDDLE SRC="http://paulbourke.net/dataformats/msdl/images/cross_ref_motif.gif"></A> of this report).
+<P>
+<P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular953.gif"><P>
+<P>
+<b>Explanatory note:</b>  The terminology used: Square brackets <b>[....]</b>,
+refer to 0 or 1 occurrences of the bracketed item.  Braces <b>{....}</b>, refer
+to 0 or more occurrences of the braced item, and the | symbol should be read
+as <b>`OR'</b>.  Some undefined types appear in the grammar; these are defined
+as:
+<P>
+<UL><LI>	<em>R3nn</em> - The set of 3-vectors with real, non-negative components.
+<LI>	<em>R3_01</em> - The set of 3-vectors with components all in the
+				range <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2315.xbm">.
+</UL>
+<P>
+Note from the grammar that when defining a set of surface properties, we can
+instantiate simpler, previously-defined sets, rather than write all the
+information down again.  Any conflict due to duplication will be resolved by 
+taking the most recently defined value.
+<P>
+Note that <em>naming</em> sets of surface properties defined using <b>defprops</b> is compulsory.
+<P>
+As an example lets define a sample surface, which is highly specular, and
+has a texture file mapped onto it. To demonstrate its use we'll define the
+properties first, and instantiate them later in the scene.
+<P>
+<PRE><TT>
+defprops shiny_picture
+	src 0.8 0.8 0.8
+	arc 0.1 0.1 0.1
+	texture file portrait.tif
+end
+
+....
+  instprops shiny_picture
+....</TT></PRE>
+<P>
+
+
+<H2><A NAME=SECTION0003400000000000000> Lights</A></H2>
+<P>
+Lights with zero surface area (point light sources) are discussed here. Area
+light sources are discussed in section <A HREF="index.html#secsurfprops"><IMG ALIGN=MIDDLE SRC="http://paulbourke.net/dataformats/msdl/images/cross_ref_motif.gif"></A>.
+<P>
+Three types of light are supported by the language; <b>point</b>, <b>directional</b> and <b>spot</b> - these are specified in MSDL using text commands
+followed by parameters, which follow the syntax:
+<P>
+<P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular1016.gif"><P>
+<P>
+- A point light-source, located at <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2321.xbm">, emitting the specified amount
+of light uniformly in all directions. The units things like 
+lights &colour are measured in are 
+application specific, but where possible desirable units are recommended. In 
+this case <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2323.xbm"> should be used. 
+<P>
+<P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular1029.gif"><P>
+<P>
+- As <b>point</b>, except positioned at <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2329.xbm">, so that all objects in the
+scene see the light along the given direction.
+<P>
+<P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular1039.gif"><P>
+<P>
+- This is a spotlight, situated at <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2339.xbm"> and
+pointing towards <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2341.xbm">.  The spread of the beam
+is controlled by the
+positive integer <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2343.xbm">; which is the power to which the
+`<IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2345.xbm">' term is raised, if the applications' lighting model requires
+it .The intensity of the
+light (<IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2347.xbm">) is given by <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2349.xbm">.  The final variable ; <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2351.xbm">; gives
+the maximum value of `<IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2353.xbm">' (in degrees) that we'll bother evaluating the
+illumination for; any bigger than that and we <em>can't see</em> the source -
+as if the spot has a conical shutter around it.
+
+<P>
+
+
+<H3><A NAME=SECTION0003410000000000000> Light Syntax</A></H3>
+<P>
+Here is a short BNF grammar to specify the syntax of this part of the MSDL.  
+(The
+full grammar for MSDL can be found in appendix <A HREF="index.html#Gram_Sec"><IMG ALIGN=MIDDLE SRC="http://paulbourke.net/dataformats/msdl/images/cross_ref_motif.gif"></A> of this
+report).
+<P>
+<P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular1068.gif"><P>
+<P>
+Some of the terms that appear in this piece of BNF are not defined in the
+grammar as shown; these are:
+<UL><LI>	R3 - The set of 3-vectors with real components.
+<LI>	R3+ - The set of 3-vectors with real, positive components.
+<LI>	natural - The set of natural numbers.
+<LI>	R_090- The set of real numbers in the range [0,90].
+</UL>
+<P>
+So for example if we wanted to define a spot light pointing towards the
+origin we might define a light using :
+<P>
+<PRE><TT>
+spot 
+	0.0 100.0 0.0    0.0 0.0 0.0
+	1.0 0.0 0.0 /* Red light */
+	10 45</TT></PRE>
+<P>
+
+
+<H3><A NAME=SECTION0003420000000000000> Other options</A></H3>
+<P>
+MSDL has been used in the past extensively in radiosity applications. 
+Consequently an option has been added to MSDL to allow some control over the
+way in which an application will subdivide a given primitive for radiosity
+calculations.
+<P>
+The option
+<P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular1078.gif"><P>
+<P>
+can be added to any primitive <em>except polyhedra</em>. This information is 
+never used by MSDL, and is simply stored and passed to the routine the 
+parser calls in the application.
+<P>
+
+
+<H2><A NAME=SECTION0003500000000000000> The View</A></H2>
+<P>
+The view syntax used in MSDL forms a superset of the information used by
+NFF, DKBTrace and PHIGS. MSDL files need not contain a view definition, and
+is provided merely for the users convenience.
+<P>
+<P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular1087.gif"><P>
+<P>
+The position <b>from</b> defines the projection reference point for the view
+frustum, whilst <b>towards</b> defines the view reference point - both are
+given in <em>world coordinates</em>.
+<P>
+If the view plane normal (<b>vpn</b>) is not supplied, then it is taken to be
+the unit vector lying along the line (<b>towards</b> - <b>from</b>).
+<P>
+The <b>up</b> vector (which need not be normalized) determines the v-axis of
+the <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2377.xbm"> view reference coordinate system (<b>vpn</b> determines the
+n-axis).  More specifically, the v-axis lies along the orthogonal projection of
+the <b>up</b> vector onto the <em>view plane</em> (the plane through <b>from</b>, orthogonal to <b>vpn</b>).  The u-axis of the view reference
+coordinates is taken to be the vector lying in the view plane which forms an
+orthogonal right-handed set with the v- and n-axes.
+<P>
+The <b>window</b> is defined in the <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2379.xbm"> coordinates in the view plane. 
+Four reals define the window; (bottom-left.u, bottom-left.v, top-right.u,
+top-right.v).
+<P>
+The distances <b>front</b> and <b>back</b> are optional.  They define the
+front and back clipping planes, and the distances are measured from <b>from</b>, increasing towards and beyond <b>towards</b>.  They are included for
+compatibility with PHIGS.
+<P>
+The keyword <b>parallel</b> is used to indicate that a parallel (as opposed to
+perspective) projection, is desired.
+<P>
+A sample view then might look like
+<P>
+<PRE><TT>
+view
+	from 100.0 0.0 0.0
+	towards 0.0 0.0 0.0
+	up 0.0 0.0 1.0
+	window -10.0 -10.0 10.0 10.0
+end</TT></PRE>
+<P>
+
+
+<H1><A NAME=SECTION0004000000000000000> Generating MSDL files</A></H1>
+<P>
+<A NAME=secexamples>&nbsp;</a>
+<P>
+As a r&#233;sum&#233; of the capabilities of MSDL we'll now discuss some simple
+scenes<A NAME=tex2html6 HREF="index.html#1136"><IMG ALIGN=MIDDLE SRC="http://paulbourke.net/dataformats/msdl/images/foot_motif.gif"></A>.
+<P>
+We'll construct a simple scene from a collection of objects, beginning with
+a unit box. As we're going to use that several times we'll only define it.
+<P>
+<PRE><TT>
+defobj unitbox
+  box
+       0.0 0.0 0.0
+       1.0 1.0 1.0
+  end
+end</TT></PRE>
+<P>
+Now we can instantiate several of these building boxes, moving each up slightly
+to form a very simple model of a child's building box set.
+<P>
+<PRE><TT>
+instobj unitbox
+  shift 0.0 0.0 0.0
+end
+
+instobj unitbox
+  shift 0.0 0.0 1.0
+end
+
+instobj unitbox
+  shift 0.0 0.0 2.0
+end</TT></PRE>
+<P>
+To make the scene more interesting we can place surface properties in each
+of the boxes;
+<P>
+<PRE><TT>
+/* lowest brick in the tower */
+instobj unitbox
+  props
+    drc 1.0 0.0 0.0
+    texture file first_brick.tif
+  end
+  shift 0.0 0.0 0.0
+end
+
+instobj unitbox
+  props
+    drc 1.0 0.0 0.0
+    texture file second_brick.tif
+  end
+  shift 0.0 0.0 1.0
+end
+
+/* top brick in the tower */
+instobj unitbox
+  props
+    drc 1.0 0.0 0.0
+    texture file third_brick.tif
+  end
+  shift 0.0 0.0 2.0
+end</TT></PRE>
+<P>
+Just to make the simple scene more interesting we'll generate a 
+floor, upon which the tower of bricks rests.
+<P>
+<PRE><TT>
+polygon
+  4
+  -4.0 -4.0 0.0
+  -4.0 4.0 0.0
+   4.0 4.0 0.0
+   4.0 -4.0 0.0
+end</TT></PRE>
+<P>
+Figure <A HREF="index.html#figchilds"><IMG ALIGN=MIDDLE SRC="http://paulbourke.net/dataformats/msdl/images/cross_ref_motif.gif"></A> shows the scene if rendered using wire-frame.
+<P>
+So that we can render the scene we'll place a spot light above the tower,
+pointing down at an angle
+<PRE><TT>
+spot 0.0 0.0 100.0 
+     10.0 0.0 0.0
+     1.0 1.0 1.0 /* Its a white light */
+     10.0 60.0</TT></PRE>
+<P>
+<A NAME=1140>&nbsp;</A><P><a naME=figchilds>&nbsp;</A><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_figure1138.gif"><P>
+<P>
+Having exhausted the possibilities with simple objects lets move on to 
+composite object; this example is a circular table, with a
+single central leg, and a square flat base which fixes it to the floor:
+<PRE><TT>
+/* An example of a complex composite */
+
+compobj coffee_table
+
+  /* position the whole thing where we want it in the scene */
+  shift 10.0 20.0 15.0
+
+  /* The table top */
+  cylinder
+    0.0 0.0 0.0 capped 0.0 0.0 1.0 capped 1.0
+    scale 10.0 10.0 0.1  shift 0.0 0.0 10.0
+    instprops dark_wood
+  end
+
+  /* The leg */
+  cylinder
+    0.0 0.0 0.0	0.0 0.0 1.0	1.0  
+    scale 2.0 2.0 9.8  shift 0.0 0.0 0.2
+    instprops  metallic_grey
+  end
+
+  /* The base */
+  box  -2.0 -2.0 0.0    2.0 2.0 0.2
+    instprops  metallic_grey
+  end
+
+
+end	/* coffee table */</TT></PRE>
+<P>
+Admittedly we haven't defined the properties `dark_wood' or `metallic_grey'
+yet, but we're assuming that's been done elsewhere.
+<P>
+Included with the MSDL kit is a sample scene file, which was used as a test for
+a radiosity/shadow algorithm here at Manchester. This file contains 3 
+polygons, one of which is a light source by virtue of having a defined
+emission. Figure <A HREF="index.html#figsimple"><IMG ALIGN=MIDDLE SRC="http://paulbourke.net/dataformats/msdl/images/cross_ref_motif.gif"></A> shows the view you should get if you
+load the file into your application.
+<P>
+<A NAME=1631>&nbsp;</A><P><A NAME=figsimple>&nbsp;</A><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_figure1144.gif"><P>
+<P>
+
+
+
+<H2><A NAME=SECTION0004100000000000000> Creating libraries of objects</A></H2>
+<P>
+In any sizeable scene objects will need to be defined and instantiated
+many times, and in order to save time generating new scenes you may wish 
+to generate a collection of pre-defined objects, which can be added to new
+scenes. Inside the pre-defined files use <b>defobj</b> to define and attach
+a name to a complicated object, so it can be <b>instobj</b>'ed by a scene.
+<P>
+An MSDL file which has been constructed from existing definitions might look
+like:
+<PRE><TT>
+#include &quot;chairs&quot;
+#include &quot;tables&quot;
+
+compobj
+  name room
+  instobj big_comfy_chair
+    shift 10 0 10
+  end
+  instobj nice_coffee_table
+    shift 5 0 5
+  end
+end</TT></PRE>
+<P>
+Then before passing this file to the MSDL reader you must use a pre-processor
+to create a plain MSDL file. (See section <A HREF="index.html#seclinking"><IMG ALIGN=MIDDLE SRC="http://paulbourke.net/dataformats/msdl/images/cross_ref_motif.gif"></A> for another, and
+less clumsy, way of using pre-processors).
+<P>
+As MSDL files are text files it is possible for user applications to write 
+MSDL files. If you intend to use this method to produce libraries to 
+be used in other scenes then we advise you prefix all names with an 
+underscore (<tt>_</tt>) to
+help reduce any confusing name clashes.
+
+
+<H1><A NAME=SECTION0005000000000000000> Building <tt>libmsdl.a</tt></A></H1>
+<P>
+The MSDL kit consists of a collection of C routines which constitute 
+an MSDL parser, together with this documentation and some sample MSDL files.
+<P>
+The Makefile allows you to build a library for linking into your
+application, and can be compiled for either C or C. To compile for C
+simply type <tt>make</tt>. This will call <tt>lex(1)</tt>, <tt>yacc(1)</tt> and 
+<tt>cc(1)</tt> to generate <tt>libmsdl.a</tt>.
+<P>
+To compile the library for Cedit the <tt>Makefile</tt>, changing the 
+definitions of
+<tt>$(CC)</tt> and <tt>$(CFLAGS)</tt>. A Cversion of the library will use 
+<tt>new</tt> &<tt>delete</tt> to manage memory, which should avoid some of the
+memory leakage problems less forgiving Ccompilers can exhibit.
+<P>
+Included with the library is a sample program which 
+illustrates how you link this library with an application, and then call the
+parser. This can be generated by typing <tt>make tester</tt>. Once compiled the
+parser can be verified by typing <tt>tester simple.msdl</tt>, which will parse
+a trivial file. If there are no errors <tt>tester</tt> will terminate normally.
+<P>
+If you wish to debug your applications reader define VERBOSE in 
+<tt>$(CFLAGS)</tt>, and recompile.
+The reader should display the information it is storing in its internal
+records for you to compare with your application. If you compile
+<tt>libmsdl.a</tt> with VERBOSE defined then the library will display 
+debugging information as it fills its internal structures. This may or may
+not be of use to you!
+<P>
+MSDL creates its own internal representation of the scene, which by
+default <em>isn't</em> <tt>free()</tt>'d at the end. (In earlier versions of
+MSDL its storage was used by the application itself, and so it made
+sense to keep it hanging around after parsing). If you wish to clean it up,
+as you probably should, define CLEANUP in the Makefile.
+<P>
+
+
+<H1><A NAME=SECTION0006000000000000000> Linking your application to the MSDL reader</A></H1>
+<P>
+<A NAME=seclinking>&nbsp;</A>
+<P>
+The MSDL reader parses the file, filling in its internal data structures as
+it goes. Once completed the reader traverses its structures calling 
+the relevant <tt>create_star</tt> routines for each data item. These routines are
+defined as skeletons in <tt>application.c</tt>.
+<P>
+It is anticipated that the application reading MSDL files will have its own
+internal data format for things like polygons, lights etc, which will need
+to be filled in. This data can be copied from the MSDL record <tt>Tobject*</tt>
+passed to the
+skeleton routine. (The definition of <tt>Tobject</tt> can be found in 
+<tt>msdl_types.h</tt>, but is repeated in this document for your convenience.)
+<P>
+If you are writing your application from scratch, and do not have existing
+object definitions you <em>may</em> wish to use the MSDL types. If you do ensure 
+CLEANUP <b>isn't</b> defined when you compile.
+<P>
+The <tt>create_view</tt> routine is only called if the MSDL file being parsed 
+contains a view definition. Otherwise it is up to the application 
+to choose a meaningful default.
+<P>
+Each of these object routines is passed two parameters, and takes the form
+<PRE><TT>
+  void create_polygon (Tobject*, Tmatrix );</TT></PRE>
+<P>
+The second item is the <em>global</em> transformation which may need to be
+applied to the object.
+<P>
+The MSDL structures are hierarchical, that is 
+transformations applied to node structures need to be applied to leaf items.
+As the user application may not employ a hierarchical store the 
+global transform is accumulated for the application and passed as the
+second parameter. 
+In a hierarchical application this can be ignored, and
+only the transform stored inside the <tt>Tobject</tt> copied.
+<A NAME=tex2html7 HREF="index.html#1633"><IMG ALIGN=MIDDLE SRC="http://paulbourke.net/dataformats/msdl/images/foot_motif.gif"></A>, otherwise apply the global transform.
+<P>
+When the MSDL parser wishes to indicate to the application that the following
+objects are children of the previous object (i.e., it is stepping one 
+level down
+in its tree) it calls <tt>create_comp()</tt>, and calls <tt>end_comp()</tt> 
+when stepping back
+up. This should allow hierarchical applications to generate the correct data.
+<P>
+Once the relevant create routines have been written and linked into your
+application, your program needs to call the function <tt>msdl(FILE *) </tt> to
+start the parser reading the relevant file.
+<P>
+So, to summarise, in order to enable your application to read MSDL files 
+you will need to;
+<P>
+<UL><LI> make <tt>libmsdl.a</tt>
+<LI> copy <tt>application.c</tt> into wherever your main app is stored, and rename it to
+  something meaningful, e.g., ReadMSDL.c
+<LI> Fill in that file with <tt>create_star</tt> routines
+<LI> Inside your application call something like :
+<P>
+<PRE><TT>
+  FILE *fp;
+  
+    /* Initialise any global variables used by your create routines */
+
+  fscanf(stdin, &quot;Enter filename : %s\n&quot;, filename);
+  fp = fopen(filename, ``r'');
+  msdl(fp);
+  ..</TT></PRE>
+  This parses the file and calls the skeleton routines. If you intend to use 
+  a pre-processor to generate your MSDL files, and are working on a UNIX-like
+  system you may be able to use <tt>popen(3S)</tt> to
+  pre-process as you parse the file. So you will need to write something
+  resembling:
+<PRE><TT>
+
+  fp = popen(``/lib/cpp -P filename.msdl'', ``r'');
+  msdl(fp);
+  ..</TT></PRE>
+<P>
+<LI> Link the parser into your application.
+</UL>
+<P>
+
+
+<H2><A NAME=SECTION0006100000000000000> Creating objects</A></H2>
+<P>
+These routines are supplied as skeletons in <tt>application.c</tt>.
+Most applications will not be able to cope
+with all the primitives defined in MSDL, these applications should leave the
+relevant create functions as skeletons.
+<P>
+<UL><LI>	<tt>create_view()</tt>	- create a view in your world.
+<LI>	<tt>create_comp()</tt> 	- Start creating a composite object in your world.
+<LI>	<tt>end_comp()</tt>	- Finish creating a composite object. 
+<LI>	<tt>create_triangle()</tt>- create a triangle in your world.
+<LI>	<tt>create_polygon()</tt>	- create a polygon in your world.
+<LI>	<tt>create_sphere()</tt>	- create a sphere in your world.
+<LI>	<tt>create_cylinder()</tt>- create a cylinder in your world.
+<LI>	<tt>create_cone()</tt>	- create a cone in your world.
+<LI>	<tt>create_disc()</tt>	- create a disc in your world.
+<LI>	<tt>create_box()</tt>	- create a box in your world.
+<LI>	<tt>create_nurb()</tt>	- create a NURBS in your world.
+<LI>	<tt>create_polyhedron()</tt> - create a polyhedron in your world.
+<LI>	<tt>create_spot_lt()</tt>	- create a spot light in your world.
+<LI>	<tt>create_directional_lt()</tt> - create a directional light in your world.
+<LI>	<tt>create_point_lt()</tt>	- create a spot light in your world.
+<LI>	<tt>create_view()</tt>		- create a view in your world.
+<LI>   <tt>create_problem()</tt>  - Handle an error
+</UL>
+<P>
+As discussed earlier all the functions concerned with creating objects have 
+2 arguments
+passed to them. These are a pointer to the object (<tt>Tobject*</tt>) and a 
+global transformation matrix.
+<P>
+The transformation stored in an object is only intended to be applied to that 
+object and not
+to it's children and parents.  The transformation matrix given is one
+which would put the object in the correct place if it's parents are
+ignored.
+<P>
+The object is a structure which contains all the information gathered
+about the primitive, and is of the form:-
+<P>
+<PRE><TT>
+typedef struct object {
+     .... /* Internal store removed for clarity */
+	
+     Tstring            name;        /* what's it called                  */
+     Tsprops            sprops;      /* surface properties                */
+     Tmatrix            trans;       /* transformation matrix             */
+     Tptchs             psplit;      /* 3x4, 4x5x6 or what ?              */
+
+     union {                            /* specific stuff */
+         struct {                 /* polygon-specific stuff */
+             Tpolydat        vvnfn;
+         } polg;
+
+         struct {                 /* tri-strip specific stuff */
+             Tpolydat        vvnfn;
+         } tri;
+
+         struct {                /* sphere-specific stuff */
+             Tpt3       centre,         /* centre                           */
+                        up,             /* N pole (from centre) vector      */
+                        tpz;            /* THETA=PHI=0 (from centre) vector */
+             Tfloat     radius;         /* the radius                       */
+             TThetaPhi  theta,          /* THETA start and finish           */
+                        phi;            /* PHI start and finish             */
+         } sph;
+
+        struct {                /* disc specific stuff */
+             Tpt3       centre,         /* the centre                       */
+                        normal,         /* the surface normal               */
+                        theta_zero;     /* the vector indicating theta zero */
+             Tfloat     radius;         /* the radius                       */
+             TThetaPhi  theta;          
+        } disc;
+
+         struct {               /* cylinder specifics */
+             Tpt3       top,            /* the top                          */
+                        bottom,         /* the bottom                       */
+                        theta_zero;     /* vector indicating theta zero     */
+             Tfloat     radius;         /* the radius                       */
+             Tbit       tcapped,        /* is the top capped                */
+                        bcapped;        /* is the bottom capped             */
+             TThetaPhi  theta;          
+         } cyl;
+
+         struct {               /* Cone specifics */
+             Tpt3       bottom,         /* the bottom                       */
+                        top,            /* the top                          */
+                        theta_zero;     /* vector indicating theta zero     */
+             Tbit       bcapped,        /* is the bottom capped?            */
+                        tcapped;        /* is the top capped ?              */
+             Tfloat     bradius,        /* the radius at the bottom         */
+                        tradius;        /* the radius at the top            */
+             TThetaPhi  theta;          
+         } cone;
+         
+         struct {               /* NURBS specifics */
+           Tpint        order_u,
+                        order_v,
+                        no_cpts_u,
+                        no_cpts_v;
+           Tfloat       *knots_u,       /* an array of the u_knots          */
+                        *knots_v;       /* an array of the v_knots          */
+           Tpt4         *cpts;          /* an array of u&amp;v control points   */
+
+         } nurb;
+
+         struct {               /* Polyhedron specifics */
+           Tpolydat     vvnfn;          /* verts, vert_norms, face_norms    */
+           Tfarray      flist;          /* the faces                        */
+         } polh;
+         
+         struct {               /* Box details */
+           Tpt3         bl,             /* bottom - left                    */
+                        tr;             /* top    - right                   */
+           Tbit         in;             /* is it pointing inwards           */
+         } box;
+       } spec;                /* specifics for this object type */
+   } Tobject;</TT></PRE>
+<P>
+(This type, and all the structures used by it are defined in 
+<tt>msdl_types.h</tt>).
+<P>
+Although most of the definition should be self-explanatory a few points are
+worthy of note.
+<P>
+The type <tt>Tpolydat</tt> is a structure containing 3 <tt>Tpint</tt>'s and an array of
+<tt>Tpt3</tt>'s. The Tpints indicate how many vertices there are, how many
+vertex normals there are ( either equal to the number of vertices or
+none ) and the number of facet normals . The array contains these
+points and vectors in that order. i.e. the first facet normal will be
+stored at <tt>vvnfn.data[ vvnfn.no_verts+ vvnfn.no_vnorms]</tt>.
+<P>
+The type <tt>Tfarray</tt> contains an array of pointers to single faces and a
+count of how many faces there are. A single face contains a counter of
+how many vertices make up a face and an array containing an index to
+the vertices. The actual co-ordinates of a vertex will have to
+be retrieved from the <tt>vvnfn</tt> data.
+<P>
+
+<H2><A NAME=SECTION0006200000000000000> Creating Lights</A></H2>
+<P>
+There are two ways to create lights in your world, i.e. lights with no 
+surface area (which might be suitable for local illumination models or 
+ray tracing) and
+objects with surface properties that emit light. If your scene
+contains point lights, directional lights, and spot lights then
+separate create functions are called. These are:
+<P>
+<UL><LI>	<tt>create_spot_lt()</tt>	- create a spot light in your world.
+<LI>	<tt>create_directional_lt()</tt> - create a directional light in your world.
+<LI>	<tt>create_point_lt()</tt>	- create a spot light in your world.
+</UL>
+<P>
+Note that if you define your lights actually to be objects with emission 
+values then your objects reader must detect them in functions such as
+<tt>create_polygon</tt>.
+<P>
+Each function is passed a pointer to a <tt>Tlight</tt>.
+<P>
+<PRE><TT>
+ typedef struct lights {
+     Tlight             ltype;          /* pt, dir, sp            */
+
+     union { /* specifics for the different light types           */
+         struct { /* point light       */
+             Tpt3       locn;           /* location               */
+             Tspectra   inten;          /* intensity              */
+         } point;
+
+         struct { /* directional light */
+             Tpt3       along;          /* see light along &quot;along&quot;*/
+             Tspectra   inten;          /* intensity              */
+         } direc;
+
+         struct { /* spot light        */
+             Tpt3       locn,           /* located at...          */
+                        at;             /* pointing at...         */
+             Tspectra   inten;          /* intensity              */
+             Tpint      exp;            /* cos^exp                */
+             Tpint      cutoff;         /* should be in [0,90]    */
+         } spot;
+     } spec;
+
+     ptr2llist          next;
+ } Tlights;</TT></PRE>
+<P>
+
+
+<H2><A NAME=SECTION0006300000000000000> Creating the View</A></H2>
+<P>
+The view is optional in your MSDL file and if none is defined this
+function will not be called.
+<P>
+The <tt>create_view</tt> routine is passed a pointer to
+a <tt>Tview</tt>, which is defined as
+<P>
+<PRE><TT>
+typedef struct view {
+    Tpt3  from,			/* viewing FROM here */
+          towards,		/* looking TOWARDS this point */
+          vpn,			/* view plane normal */
+          up;			/* up vector */
+    struct {
+      TptUV     bl,			
+                tr;
+    }		window;			/* window in viewing plane */
+    Tfloat      fpd,			/* front plane distance */
+                bpd;			/* back plane distance */
+    Tboolean    persp;			/* TRUE if perspective */
+} Tview;</TT></PRE>
+<P>
+
+
+<H2><A NAME=SECTION0006400000000000000> Error handling</A></H2>
+<P>
+<A NAME=secerrors>&nbsp;</a>
+<P>
+If the MSDL parser detects an error while reading a file it calls the
+function
+<P>
+<tt>create_problem(char *prob, int line_number)</tt>.
+<P>
+This is 
+defined in <tt>application.c</tt> to print the error and <tt>exit(2)</tt>, though
+the application writer will probably wish to change this to something more
+meaningful to the application, e.g., bring up a dialog box.
+<P>
+
+
+<H1><A NAME=SECTION0007000000000000000> Credits and closing remarks</A></H1>
+<P>
+<DL ><DT>Initial programming
+<DD> Neil Gatenby
+<DT>Completion and debugging
+<DD> Alex Knowles, Neil Gatenby, Martin Preston
+<DT>Documentation
+<DD> Martin Preston, Neil Gatenby, Terry Hewitt, Chris Lilley,
+ Alex Knowles
+<DT>Testers
+<DD> David Hutchinson, Dean Gammage, Neil Gatenby, Martin Preston, Richard Andrews, Antonio Costa
+<P>
+ </DL>
+<P>
+Particular thanks go to 
+Dr Pete Jinks (Computer Science Dept.,
+University of Manchester) whose help with <tt>lex(1)</tt> and <tt>yacc(1)</tt> 
+has been invaluable, and Terry and Chris, who helped polish up the 
+documentation.
+<P>
+
+
+<H1><A NAME=SECTION0008000000000000000> BNF Grammar for the Manchester Scene Description Language</A></H1>
+<P>
+<A NAME=Gram_Sec>&nbsp;</a>
+<P>
+<P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular1248.gif"><P>
+<P>
+<P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular1329.gif"><P>
+<P>
+<P><IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tabular1427.gif"><P>
+<P>
+<UL><LI>	R - The set of real numbers.
+<LI>	natural - The set of natural numbers.
+<LI>	R+ - The set of positive real numbers.
+<LI>	R<IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2251.xbm"> - The set of positive and negative real numbers.
+<LI>	R_090- The set of real numbers in the range [0,90].
+<LI>	R2 - the set of 2-vectors with real components.
+<LI>	R3 - The set of 3-vectors with real components.
+<LI>	R4 - The set of 4-vectors with real components.
+<LI>	R3_01- The set of 3-vectors with components all in the
+				range <IMG ALIGN=BOTTOM ALT="" SRC="http://paulbourke.net/dataformats/msdl/_29709_tex2html_wrap2485.xbm">.
+<LI>	R3+ - The set of 3-vectors with real, positive components.
+<LI>	<em>R3nn</em> - The set of 3-vectors with
+				real, non-negative components.
+<LI>	axis - The set of characters {x,X,y,Y,z,Z}.
+</UL>
+<P>
+
+
+<P><H2>References</H2><P>
+<DL COMPACT>
+<DT><A NAME=buck><B>1</B></A><DD>
+David Buck.
+DKBTrace, version 2.12.
+Available from <tt>alfred.ccs.carleton.edu (134.117.1.1)</tt>.
+<P>
+<DT><A NAME=haines><B>2</B></A><DD>
+Eric Haines.
+Neutral file format (NFF).
+Available from <tt>gondwana.ecr.mu.oz.au (128.250.70.62)</tt>.
+<P>
+<DT><A NAME=hewitt92><B>3</B></A><DD>
+W. T. Hewitt and D. Yip.
+The NURBS Procedure Library.
+Technical report, Computer Graphics Unit, University of
+  Manchester, 1992.
+CGU 76, Available from <tt>ftp.mcc.ac.uk (130.88.200.7)</tt>.
+<P>
+<DT><A NAME=kolb><B>4</B></A><DD>
+Craig Kolb.
+Rayshade 4.0.
+Available from <tt>princeton.edu (128.112.128.1)</tt>.
+<P>
+<DT><A NAME=ward><B>5</B></A><DD>
+Greg Ward.
+Radiance.
+Available from <tt>wuarchive.wustl.edu (128.252.135.4)</tt>.
+</DL>
+<P>
+
+</td></tr></table></center>
+</body>
+</html>

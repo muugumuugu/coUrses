@@ -1,0 +1,384 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>How to Write an IRIS Inventor File Translator</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<H1>How to Write an IRIS Inventor File Translator</H1>
+Release 1.0<P>
+</center>
+<p>
+<bR>
+<B>Section 5	File Format Syntax</B><P>
+
+This section outlines details of the syntax for the Inventor ASCII file format.
+Inventor's file format ignores extra white space created by spaces, tabs, and
+new lines (except within quoted strings). Comments begin with a number sign (#)
+anywhere on a line and continue to the end of the line:<P>
+
+<CODE># this is a comment in the Inventor file format</CODE><P>
+
+See the <I>IRIS Inventor Nodes Quick Reference</I> for individual descriptions
+of the file format for each Inventor class.<P>
+
+<bR>
+<DL>
+<DT><B>5.1  File Header</B>
+
+<DD>Every Inventor data file must have a standard header to identify it. This header has the
+following form:<P>
+
+<CODE>#Inventor V1.0 ascii</CODE><P>
+
+or<P>
+
+<CODE>#Inventor V1.0 binary</CODE><P>
+
+To determine whether a file is an Inventor file or not, use the
+<CODE>SoDB::isValidHeader()</CODE> method and pass in the first line of the file
+in question.  Although the header may change from version to version, it is
+guaranteed that it will begin with a <CODE>#</CODE> sign, will be no more than
+80 characters, and will end at a newline.  Therefore, the C
+<CODE>fgets()</CODE> routine can be used. The <CODE>isValidHeader()</CODE>
+method returns <CODE>TRUE</CODE> if the file contains an Inventor header.<P>
+
+An example of using <CODE>fgets()</CODE> to check the header is
+
+<PRE>
+FILE *fp = fopen ( filename, "r" );
+char headerString [80];
+fgets( headerString, 80, fp );
+
+if( SoDB::isValidHeader( headerString ))
+   printf( "File has valid Inventor header\n");
+else
+   printf( "Invalid Inventor header\n");
+</PRE>
+
+<DT><B>5.2  Writing a Node</B>
+
+<DD>A node is written as:<P>
+
+<PRE>
+<I>nodename</I> {
+      <I>field1name</I>   <I>value</I>
+      <I>field2name</I>    <I>value</I>
+      .
+      .
+      .
+      [<I>child nodes</I>]
+      [ . . . ]
+}
+</PRE><P>
+
+For example:<P>
+
+<PRE>
+DrawStyle {
+	style		LINES
+	lineWidth	3
+	linePattern	0x00ff
+}
+</PRE><P>
+
+<DT><B>5.3  Writing Values within a Field</B>
+
+<DD>Fields within a node are written as the name of the field, followed by the
+value or values contained in the field. If the field value has not been changed
+from its default value, that field is not written out. Fields within a node can
+be written in any order. An example of writing field values is<P>
+
+<PRE>
+Transform {
+	translation	0 -4 0.2
+}
+
+LightModel {
+	model		BASE_COLOR
+}
+</PRE><P>
+
+Use brackets to surround multiple-value elds, with commas separating the
+values, as shown below for the <CODE>diffuseColor</CODE> field. It's all right
+to have a comma after the last value as well:<P>
+
+<CODE>	[ value1, value2, value3, ]</CODE><P>
+
+For example:<P>
+
+<PRE>
+Material {
+	ambientColor	.3 .1 .1
+	diffuseColor   [.8 .7 .2,
+			 1 .2 .2,
+			.2  1 .2,
+			.2 .2  1]
+	specularColor	.4 .3 .1
+	emissiveColor	.1  0 .1
+}
+</PRE><P>
+
+Single-value fields (SF) do not contain any brackets or commas. Multiple-value
+fields (MF) usually have brackets, but they are not necessary if only one value
+is present:<P>
+
+<CODE>	specularColor	.4 .3 .1</CODE><P>
+
+or<P>
+
+<CODE>	specularColor	[.4 .3 .1 ]</CODE><P>
+
+The value that is written depends on the type of the field, as follows:<P>
+
+<PRE>
+<I>Type of Field		Acceptable Formats</I>
+
+longs, shorts,		integers
+unsigned shorts
+
+floats			integer or floating point number. For example:
+			13
+			13.0
+			13.123
+			1.3e-2
+
+names, strings		double quotation marks (" ") around the name if it is more than
+			one word, or just the name (with no white space) if it is a single
+			word. For example:
+
+			label	" front left leg "
+			label	car
+
+			You can have any character in the string, including newlines and
+			backslashes, except for double quotation marks. To include a double
+			quotation mark in the string, precede it with a backslash (\").
+
+enums			either the mnemonic form of the enum or the integer equivalent.
+			(The mnemonic form is recommended, both for portability and
+			readability of les.) For example:
+
+			MaterialBinding {
+				value	PER_FACE
+			}
+
+bit mask		one or more mnemonic ags, separated by a vertical bar (|) if there
+			are multiple ags. When more than one ag is used, parentheses are
+			required.
+
+			Cylinder {
+				parts	SIDES
+			}
+
+			Cylinder {
+				parts	(SIDES | TOP)
+			}
+
+vectors			<I>n</I> floats separated by white space:
+(SbVec<I>n</I>f, where <I>n</I> is
+the number of		PerspectiveCamera {
+components of the		position	0 0 9.5
+vector)			}
+
+colors			3 floats (RGB) separated by white space:
+
+			BaseColor {
+				rgb	0.3 0.2 0.6
+			}
+
+rotation		a 3-vector of oats for the axis, followed by a oat for the angle (in
+			radians), separated by white space:
+
+			Transform {
+				rotation	0 1 0       1.5708
+          					# y axis ... PI/2 radians
+				}
+
+matrix			16 floats, separated by white space (row major order)
+
+path			An <CODE>SoSFPath</CODE> has one value, a pointer to a path. To write this
+			value, write the path (see Section 12.3.5 of the <I>Inventor
+			Programming Guide</I>, Volume I). An <CODE>SoMFPath</CODE> has multiple
+			values, which are all pointers to paths. To write this value, enclose
+			the path list in brackets, and use commas to separate each path:
+
+			[ first_path, second_path, ... <I>n</I>th_path ]
+
+node			An <CODE>SoSFNode</CODE> has one value, a pointer to a node. To write this
+			value, write the node using the standard format for all nodes. An
+			<CODE>SoMFNode</CODE> has multiple values, which are all pointers to nodes. To
+			write this value, enclose the node list in brackets, and use commas to
+			separate each node:
+
+			[ node1, node2, ... node<I>n</I> ]
+</PRE><P>
+
+<DT><B>5.4  Ignore Flag</B>
+
+<DD>The ignore flag for a node (see Chapter 3 of the <I>Inventor Programming
+Guide</I>, Volume I) is written as a tilde ( ~ ), either after or in place of
+the field value or values. For example:<P>
+
+<CODE>transparency [ .9, .1 ] ~</CODE><P>
+
+or<P>
+
+<CODE>transparency ~</CODE><P>
+
+The first case preserves the values even though the field is ignored. The
+second case uses the default value but ignores the field.<P>
+
+<DT><B>5.5  Sample Scene Graph and Inventor File</B>
+
+<DD>Here is the file for a sample scene graph, which creates chartreuse, rust,
+and violet wireframe spheres. Figure 13 shows the scene graph for this file.<P>
+
+<PRE>
+Separator {
+	PerspectiveCamera {
+		position 0 0 9.53374
+		aspectRatio 1.09446
+		nearDistance 0.0953375
+		farDistance 19.0675
+		focalDistance 9.53374
+	}
+	DirectionalLight { }     # note:  default fields for this light
+	Transform {
+		rotation -0.189479 0.981839 -0.00950093 0.102051
+		center 0 0 0
+	}
+	DrawStyle {
+		style  LINES
+	}
+	Separator {
+		LightModel {
+			model BASE_COLOR
+		}
+		Separator {
+			Transform {
+				translation -2.2 0 0
+			}
+			BaseColor {
+				rgb .2 .6 .3	# chartreuse
+			}
+			Sphere { }
+		}
+		Separator {
+			BaseColor {
+				rgb .6 .3 .2	# rust
+			}
+			Sphere { }
+		}
+		Separator {
+			Transform {
+				translation 2.2 0 0
+			}
+			BaseColor {
+				rgb .3 .2 .6	# violet
+			}
+			Sphere { }
+		}
+	}
+}
+</PRE>
+
+<B>Figure 13</B> Scene graph for a scene with three spheres<P>
+<IMG SRC="http://paulbourke.net/dataformats/inventor/fig.13.gif"><P>
+
+<DT><B>5.6  Instancing</B>
+
+<DD>When a scene graph contains shared instances of a node, Inventor defines a
+temporary name for the node and uses that name when writing subsequent
+occurrences of that node in the scene graph. It inserts the letters
+<CODE>DEF</CODE> (for define), followed by the name for the first use of the
+node.  Thereafter, Inventor simply writes <CODE>USE</CODE> plus the name defined
+for that node.<P>
+
+For example, the scene graph shown in Figure 14 would be written as follows
+(without the comments):<P>
+
+<PRE>
+Group {				# group A
+	Group {			# group B
+		DEF d Cube { }	# define D and use it
+	}
+	Group {			# group C
+		USE  d		# use D again
+	}
+}
+</PRE><P>
+
+<B>Figure 14</B> Defining a node for multiple uses<P>
+<IMG SRC="http://paulbourke.net/dataformats/inventor/fig.14.gif"><P>
+
+Inventor uses this DEF/USE technique for paths as well as for nodes. For les to
+be read into Inventor, the name for a node or path can be any valid identifier.
+This name is thrown away after the file is read. (Identifiers start with an
+underscore or a letter and must consist entirely of letters, numbers, and
+underscores.) Names used <I>within</I> a file must be unique. A name can,
+however, be used in multiple les, since each file maintains its own list of
+names.<P>
+
+<DT><B>5.7  Including Other Files</B>
+
+<DD>To include a file within another le, use an <CODE>SoFile</CODE> node. This node is
+written as<P>
+
+<PRE>
+File {
+	name "myFile.iv"
+}
+</PRE><P>
+
+where the <CODE>name</CODE> field is the name of the file to be included. The contents of the file
+<CODE>myFile.iv</CODE> are added as children of <CODE>SoFile</CODE>.<P>
+
+The <CODE>SoFile</CODE> node has an associated <CODE>WriteBack</CODE> flag.  If
+this flag is <CODE>TRUE</CODE> (the default), then the children of
+<CODE>SoFile</CODE> are written back to their original file if anything below
+the <CODE>SoFile</CODE> node changed.  If this flag is <CODE>FALSE</CODE>, then
+the original file remains untouched, even if changes occurred to the sub-graph
+below the node. Use the <CODE>setWriteBack()</CODE> and
+<CODE>getWriteBack()</CODE> methods to change the value of this ag and to
+obtain its current value. If the file cannot be written, Inventor prints a
+warning.<P>
+
+<DT><B>5.8  ASCII and Binary Versions</B>
+
+<DD>The <CODE>SoOutput</CODE> object in an <CODE>SoWriteAction</CODE> has a
+<CODE>setBinary()</CODE> method, which sets whether the output should be in
+ASCII (default) or binary format. The <CODE>getOutput()</CODE> method returns a
+pointer to the <CODE>SoOutput</CODE>. When a file is written, Inventor inserts
+a header line that indicates whether the file is in ASCII or binary format, as
+well as the Inventor version number.<P>
+
+For example, to write in ASCII to a file:<P>
+
+<PRE>
+SoWriteAction w;
+
+w.getOutput()->setBinary( FALSE );
+if ( w.getOutput()->openFile( "myFile.iv" )) {
+	w.apply( root );
+	w.getOutput()->closeFile();
+}
+</PRE>
+</DL>
+
+</td></tr></table></center>
+</body>
+</html>
+

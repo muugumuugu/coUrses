@@ -1,0 +1,805 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Testing various fisheye capture options</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Testing various fisheye capture options</h1>
+Compiled and written by <a href="../index.html">Paul Bourke</a><br>
+2006-2011
+</center>
+<p><br><p>
+
+<h3>Conversion of images from OneShot camera</h3>
+May 2004
+<p>
+
+<p align="justify">
+Photographic 360 degree capture devices such as the "360 One VR" manufactured 
+by EyeSee360 and Kaidan are based upon conical mirrors mounted 
+in front of the lens of an ordinary still or video camera.
+They allow one to capture the whole 360 horizontal field of view
+and a limited vertical field of view, typically around 100
+degrees. The resulting image looks not unlike a panoramic
+image but with a different radial distortion. Obviously one
+wants to undistort these images to create more conventional
+views, in the discussion here that includes panoramic images,
+and cubic (perspective) maps.
+</p>
+
+<center>
+<img src="http://paulbourke.net/dome/cameras/mirror.gif" width=415 height=244><p>
+</center>
+
+<p align="justify">
+The suppliers of these capture devices typically provide stand alone software
+or plug-ins for other commercial image manipulation packages, eg: PhotoShop. They
+don't generally provide source code so that the undistortion can
+be integrated into a customers software. The goal of this exercise
+was to verify the geometric undistortion required was correctly
+understood and to demonstrate that with efficient and portable 
+algorithms written in C/C++.
+</p>
+
+<b>Conversion to a cylindrical panoramic</b><p>
+
+<p align="justify">
+Transformation to a panoramic image is relatively straightforward in theory,
+lines of longitude in the panoramic are concentric circles in the oneshot image.
+Lines of latitude in the panoramic are radial lines in the oneshot image.
+In practice the oneshot image is not necessary centered and the inner and
+outer ray rims need to be specified.
+</p>
+
+<center>
+<img src="http://paulbourke.net/dome/cameras/pandiagram.gif" width=501 height=581><p>
+</center>
+
+Example<p>
+
+<center><table><tr><td>
+<img src="http://paulbourke.net/dome/cameras/fish.jpg" border=1 width=640 height=480><br>
+Original image
+</td></tr></table></center><p>
+<br>
+
+<center><table><tr><td>
+<img src="http://paulbourke.net/dome/cameras/1.jpg" border=1 width=800 height=126><br>
+Supersampling antialiasing of 3<br>
+oneshot2pan -a 3
+</td></tr></table></center><p>
+<br>
+
+<center><table><tr><td>
+<img src="http://paulbourke.net/dome/cameras/2.jpg" border=1 width=800 height=126><br>
+Specify center of cone<br>
+oneshot2pan -a 3 -c 330 250
+</td></tr></table></center><p>
+<br>
+
+<center><table><tr><td>
+<img src="http://paulbourke.net/dome/cameras/3.jpg" border=1 width=800 height=126><br>
+Specify inner and outer radius<br>
+oneshot2pan -a 3 -c 330 250 -r1 70 -r2 224
+</td></tr></table></center><p>
+<br>
+
+<center><table><tr><td>
+<img src="http://paulbourke.net/dome/cameras/4.jpg" border=1 width=800 height=126><br>
+Change direction<bR>
+oneshot2pan -a 3 -c 330 250 -r1 70 -r2 224 -d
+</td></tr></table></center><p>
+<br>
+
+<center><table><tr><td>
+<img src="http://paulbourke.net/dome/cameras/5.jpg" border=1 width=800 height=200><br>
+Force the height of the panoramic<br>
+oneshot2pan -a 3 -c 330 250 -r1 70 -r2 224 -w 800 -h 200
+</td></tr></table></center><p>
+<br>
+
+<center><table><tr><td>
+<img src="http://paulbourke.net/dome/cameras/6.jpg" border=1 width=400 height=169><br>
+Subset of longitude<br>
+oneshot2pan -a 3 -c 330 250 -r1 70 -r2 224 -long1 -45 -long2 90
+</td></tr></table></center><p>
+<br>
+
+<p align="justify">
+Antialising is achieved using supersampling with a rectangular weighted window.
+The right horizontal axis of the panoramic is taken as 0 degrees longitude.
+Options are also provided to create a subset of the panoramic image, namely,
+the panoramic image between two lines of longitude.
+</p>
+
+Command line usage<p>
+<pre>oneshot2pan [options] tgafile
+Options:
+   -long1  n   start longitude value
+   -long2  n   start longitude value
+   -r1     n   inner radius
+   -r2     n   outer radius
+   -c    x y   center of cone
+   -a      n   set antialias level
+   -w      n   width of the output image
+   -h      n   height of the output image
+   -i          apply vertical flip
+   -d          change direction
+</pre>
+<br>
+
+Test pattern<p>
+<center>
+<img border=1 src="http://paulbourke.net/dome/cameras/testpatt_in.jpg" width=800 height=600><p>
+<img border=1 src="http://paulbourke.net/dome/cameras/testpatt_out.jpg" width=800 height=126><p>
+</center>
+<br>
+
+<b>Conversion to cubic map</b><p>
+
+<center>
+<img src="http://paulbourke.net/dome/cameras/cubediagram.gif" width=553 height=577><p>
+</center>
+
+<center><table><tr><td>
+<img src="http://paulbourke.net/dome/cameras/c1.jpg" border=1 width=800 height=173><br>
+oneshot2cube -a 3 -c 330 250 -r1 70 -r2 224 -lat1 -60 -lat2 0
+</td></tr></table></center><p>
+<br>
+
+Command line usage<p>
+<pre>oneshot2cube [options] tgafile
+Options:
+   -r1     n   inner radius
+   -r2     n   outer radius
+   -c    x y   center of cone
+   -a      n   set antialias level
+   -w      n   width of the output image
+   -h      n   height of the output image
+   -l1     n   latitude at r1
+   -l2     n   latitude at r2
+   -i          apply vertical flip
+</pre>
+<br>
+
+<b>Test pattern</b><p>
+<center>
+<img border=1 src="http://paulbourke.net/dome/cameras/testpatt_in.jpg" width=800 height=600><p>
+<img border=1 src="http://paulbourke.net/dome/cameras/testpatt2_out.jpg" width=800 height=238><p>
+</center>
+<br>
+
+<b>Conversion to cubic map with a range of longitudes</b><p>
+
+<p align="justify">
+Standard perspective projections can be considered to be longitude
+subsets (less than 90 degrees wide) taken from the cubic map. Ideally
+the cubic map would be aligned so that edges didn't not fall within
+the perspective frustum (not yet implemented). Of course one could
+derive the perspective views directly without using this cubic map
+approach.
+</p>
+
+<center><table><tr><td>
+<img src="http://paulbourke.net/dome/cameras/c2.jpg" width=200 height=173 border=1><br>
+oneshot2cube2 -a 3 -c 330 250 -r1 70 -r2 224 -lat1 -60 -lat2 0 -long1 270 -long2 360
+</td></tr></table></center><p>
+<br>
+
+<center><table><tr><td>
+<img src="http://paulbourke.net/dome/cameras/c3.jpg" width=400 height=173 border=1><br>
+oneshot2cube2 -a 3 -c 330 250 -r1 70 -r2 224 -lat1 -60 -lat2 0 -long1 180 -long2 360
+</td></tr></table></center><p>
+<br>
+
+<pre>
+oneshot2cube2 [options] tgafile
+Options:
+   -r1     n   inner radius
+   -r2     n   outer radius
+   -c    x y   center of cone
+   -a      n   set antialias level
+   -w      n   width of the output image
+   -h      n   height of the output image
+   -lat1   n   latitude at r1
+   -lat2   n   latitude at r2
+   -long1  n   start longitude
+   -long2  n   stop longitude
+   -i          apply vertical flip
+</pre>
+
+<b>References</b><p>
+
+A Catadioptric Sensor with Multiple Viewpoints<br>
+Libor Spacek<br>
+Department of Computer Science, University of Essex<p>
+
+Single viewpoint catadioptric cameras.<br>
+Baker, S., Nayar, S., 2001. <br>
+PV01.  pp. 39-71<p>
+
+Omnidirectional vision: Theory and algorithms.<br>
+Daniilidis, K., Geyer, C.,<br>
+In: ICPR00. Vol. 1. 2000<p>
+
+A unifying theory for central panoramic systems
+and practical applications.<br>
+Geyer, C., Daniilidis, K.,<br>
+ECCV00. 2000<p>
+
+Non-metric calibration of wide-angle lenses and polycameras.<br>
+Swaminathan, R., Nayar, S. K.,<br>
+IEEE Transactions on Pattern Analysis and Machine Intelligence<p>
+
+
+<p><br><br><br><p>
+
+
+<center>
+<h3>Evaluation of the lomography fisheye camera</h3>
+<h3>for capturing images for dome/planetarium applications</h3><p>
+April 2005
+</center>
+<p>
+
+<center><table width=100% cellpadding=0 cellspacing=0><tr><td valign="top">
+<p align="justify">
+<b>Introduction</b><br><br>
+The lomography fisheye camera claims to be the worlds cheapest
+fisheye (film) camera, the following discusses the suitability 
+of using it to
+create images for planetarium style domes. One shouldn't be expecting
+a professional level camera/optics, the question is what can be achieved
+with a US$40 camera.
+</p>
+</td><td width=20>
+&nbsp;
+</td><td align="right">
+<img src="http://paulbourke.net/dome/cameras/advert.jpg" width=350 height=346><br>
+<smalltext>Lomography fisheye camera</smalltext>
+</td></tr>
+
+<tr><td valign="top" colspan=3>
+<br>&nbsp;
+</td></tr>
+
+<tr><td valign="top">
+<b>Example</b><br>
+<p align="justify">
+The first thing one notices is the fisheye is truncated at the top and bottom
+of the frame. A real shame since it wouldn't seem like it is a requirement, one
+would imagine it might be just as easy to arrange the lens so it is inset with the
+35mm image frame which would greatly improve the product.
+</p>
+Aperture: 170 degrees.
+</td><td width=20>
+&nbsp;
+</td><td align="right">
+<a href="http://paulbourke.net/dome/cameras/wharf_orig.jpg">
+<img src="http://paulbourke.net/dome/cameras/wharf_orig_s.jpg" width=350 height=233></a>
+</td></tr>
+
+<tr><td valign="top" colspan=3>
+<br>&nbsp;
+</td></tr>
+
+<tr><td valign="top">
+<p align="justify">
+Most of the fisheye tools expect, at least will be easier to use, if the fisheye
+is centered in the image frame. Unfortunately due to variations in the film
+processing the fisheye wasn't always in the same place so this process can't
+readily be automated.
+</p>
+<p align="justify">
+The discussion here is targeted at planetarium style domes, for front facing
+domes (eg: VisionStation) the processing of the panorama will be different
+since these domes are often truncated at the bottom of the fisheye.
+</p>
+</td><td width=20>
+&nbsp;
+</td><td align="right">
+<a href="http://paulbourke.net/dome/cameras/wharf_square.jpg">
+<img src="http://paulbourke.net/dome/cameras/wharf_square_s.jpg" width=350 height=350></a>
+</td></tr>
+
+<tr><td valign="top" colspan=3>
+<br>&nbsp;
+</td></tr>
+
+<tr><td valign="top">
+<p align="justify">
+For a uni-direction planetarium (seating mostly pointing in the same direction) it
+isn't critical if the part of the fisheye at the back of the dome is missing. This
+means that one can virtually rotate the fisheye so as to create a correct view
+around the front horizon. 
+</p>
+<p align="justify">
+Notice that in the image on the right the bottom of the fisheye (camera upright)
+is truncated more than the top. For fisheye rotating it is
+better to use the camera upside-down which means less rotation is necessary.
+</p>
+<p align="justify">
+An alternative is to use the camera on its side which means the result will
+be clipped on the left and right of the dome, less desirable in my opinion.
+</p>
+</td><td width=20>
+&nbsp;
+</td><td align="right">
+<a href="http://paulbourke.net/dome/cameras/wharf_rotate.jpg">
+<img src="http://paulbourke.net/dome/cameras/wharf_rotate_s.jpg" width=350 height=350></a>
+</td></tr>
+
+<tr><td valign="top" colspan=3>
+<br>&nbsp;
+</td></tr>
+
+<tr><td valign="top">
+<p align="justify">
+Many fisheye projection systems truncate the back 1/4
+of the fisheye anyway, in those cases this fisheye rotating results in even less
+image loss.
+</p>
+<p align="justify">
+Unfortunately this camera is pretty much limited to daylight (or at least very
+well lit) spaces, the flash is located behind the lens so the lens casts a shadow into
+the scene. This is described on the lomography site, indeed they "try" to suggest
+it gives interesting results.
+</p>
+</td><td width=20>
+&nbsp;
+</td><td align="right">
+<a href="http://paulbourke.net/dome/cameras/wharf_trunc.jpg">
+<img src="http://paulbourke.net/dome/cameras/wharf_trunc_s.jpg" width=350 height=263></a>
+</td></tr>
+
+<tr><td valign="top" colspan=3>
+<br>&nbsp;
+</td></tr>
+
+<tr><td valign="top">
+<b>Panoramic images</b><br>
+<p align="justify">
+Using a fisheye camera, it is possible to form a 360 degree
+panoramic by just capturing 4 images (see below). 
+The aperture of this camera is just enough to get some overlap 
+between the 4 images with the camera in used on its side.
+The process involves converting the
+fisheye images into limited angle panoramic images and then stitching them together
+to form the full panoramic image (see below). The panoramic can then be used in applications
+such as QuickTime VR, see right. 
+</p>
+<p align="justify">
+It is easy to find the artefacts in the panoramic shown here, to create these
+successfully one really needs a good tripod in order to keep the camera level 
+(this camera doesn't have a tripod mount) and
+one needs good control over the lighting.
+</p>
+</td><td width=20>
+&nbsp;
+</td><td align="right">
+<a href="http://paulbourke.net/dome/cameras/museum.mov"><img src="http://paulbourke.net/dome/cameras/museum_s.jpg" width=350 height=346><br>
+<smalltext>QuickTime VR</smalltext></a>
+</td></tr>
+
+<tr><td valign="top" colspan=3>
+<br>&nbsp;
+</td></tr>
+
+<tr><td valign="top" colspan=3>
+<center>
+<a href="http://paulbourke.net/dome/cameras/pano_fish.jpg">
+<img src="http://paulbourke.net/dome/cameras/pano_fish_s.jpg" width=800 height=212></a><br>
+</center>
+</td></tr>
+<tr><td valign="top" colspan=3 align="center">
+<smalltext>The 4 individual fisheye images.</smalltext>
+</td></tr>
+
+<tr><td valign="top" colspan=3>
+<br>&nbsp;
+</td></tr>
+
+<tr><td valign="top" colspan=3>
+<center>
+<img src="http://paulbourke.net/dome/cameras/pano_s.jpg" width=800 height=124 border=1><br>
+</center>
+</td></tr>
+<tr><td valign="top" colspan=3 align="center">
+<smalltext>Stitched panoramic image (Melbourne Museum and Royal Exhibition Building).</smalltext>
+</td></tr>
+
+<tr><td valign="top" colspan=3>
+<br>&nbsp;
+</td></tr>
+
+<tr><td valign="top" colspan=3>
+<b>Further examples</b><br><br>
+</td></tr>
+
+<tr><td valign="top"> 
+<center>
+<a href="http://paulbourke.net/dome/cameras/library_fish.jpg">
+<img src="http://paulbourke.net/dome/cameras/library_fish_s.jpg" width=350 height=263></a><br>
+<smalltext>Melbourne Library</smalltext>
+</center>
+</td><td width=20>
+&nbsp;
+</td><td>
+<center>
+<a href="http://paulbourke.net/dome/cameras/melbcentral_fish.jpg">
+<img src="http://paulbourke.net/dome/cameras/melbcentral_fish_s.jpg" width=350 height=263></a><br>
+<smalltext>Melbourne Central</smalltext>
+</center>
+</td></tr>
+
+</table></center>
+
+
+<p><br><br><br><p>
+
+
+
+<center>
+<a name="canonhv20">
+<h3>Evaluation of the Canon HV20 and Nikon FC-E9 lens<br>for fisheye video capture</h3>
+</a>
+October 2007
+</center><p>
+
+<p align="justify">
+The following is a discussion of an evaluation of the suitability of the recently
+released Canon video camera coupled with a fisheye lens for filming footage for
+projection into a hemispherical dome, for example, a planetarium. While high resolution
+stills are readily achievable with a digital still camera and fisheye lens, it is more
+difficult to achieve a high quality result without resorting to film or high priced specialist
+camera rigs.
+</p>
+
+<p align="justify">
+Please note in what follows all examples
+are using the video mode of the Canon HV20 not the photographic mode. While the still image
+capture mode is more suited to fisheye capture since it uses a 4:3 aspect ratio, if stills
+are what one wants then a higher resolution still digital camera and fisheye lens can give
+higher quality results.
+</p>
+
+<b>The camera and lens</b><p>
+<p align="justify">
+The camera is the Canon HV20, a (true) 1080p digital video camera. That is, 1080 lines
+and progressive instead of interlaced. The lens is the Nikon FC-E9, a 185 degree circular
+fisheye lens. The two are matched together with a single 43mm to 46mm step-up ring.
+</p>
+<center><table><tr><td>
+	<a href="http://paulbourke.net/dome/cameras/camera1.jpg"><img src="http://paulbourke.net/dome/cameras/camera1_s.jpg" width=400 height=300></a>
+</td><td width=20>
+&nbsp;
+</td><td>
+	<a href="http://paulbourke.net/dome/cameras/camera2.jpg"><img src="http://paulbourke.net/dome/cameras/camera2_s.jpg" width=400 height=300></a>
+</td></tr></table></center><p>
+
+<p align="justify">
+The first thing one notices is that the circular fisheye, with the minimum zoom,
+does not fit within the sensor and it also isn't centered. The details (which may
+vary slightly with each camera) are shown below. While this may seem like a serious
+problem, for many applications it isn't. Many small planetarium systems employing a
+single projector and fisheye lens often only use 3/4 of the fisheye image, the portion
+at the "back" of the dome isn't used. Alternatively for upright domes it is common for the
+lower portion of the dome to be truncated (see examples later).
+<p>
+<center>
+<img src="http://paulbourke.net/dome/cameras/sample1.jpg" width=800 height=800>
+</center><p>
+
+<p align="justify">
+One solution to this is to digitally 
+<a href="../fishtilt/index.html">tilt the fisheye</a> so as to remove the truncation
+at the bottom of the fisheye image. This technique applied to the image above
+is shown below, the green line shows the truncated region employed by many fisheye
+projection systems. 
+Note that the image in the top half of the fisheye now does not fill the circular
+fisheye area, blue circle outline.
+This too can be corrected although unlike the tilting
+of the fisheye, this additional correction introduces distortion to the the upper half of
+the image which may or may not be objectionable, remembering that it is behind the viewer (at
+least in a directional dome).
+</p>
+
+<center>
+<img src="http://paulbourke.net/dome/cameras/sample1_tilted.jpg" width=800 height=800>
+</center><p>
+
+<b>Complete example</b><p>
+
+Original frame off the Canon HV20 (movie sequence)<br>
+<center><a href="http://paulbourke.net/dome/cameras/sample2a.jpg"><img src="http://paulbourke.net/dome/cameras/sample2as.jpg" border=1 width=800 height=450></a></center><br>
+
+Centered in a circular frame<br>
+fishtilt -cf 940 590 -r 724 724 -w 1280 -a 3 sample2.tga<br>
+<center><a href="http://paulbourke.net/dome/cameras/sample2b.jpg"><img src="http://paulbourke.net/dome/cameras/sample2bs.jpg" border=1 width=640 height=640></a></center><br>
+
+Tilted to remove the missing front part of the fisheye<br>
+fishtilt -cf 940 590 -r 724 724 -w 1280 -a 3 -t 17 sample2.tga<br>
+<center><a href="http://paulbourke.net/dome/cameras/sample2c.jpg"><img src="http://paulbourke.net/dome/cameras/sample2cs.jpg" border=1 width=640 height=640></a></center><br>
+
+Non circular correction for top half of image (cheat)<br>
+fishtilt -cf 940 590 -r 724 724 -w 1280 -a 3 -t 17 -b 20 sample2.tga<br>
+<center><a href="http://paulbourke.net/dome/cameras/sample2d.jpg"><img src="http://paulbourke.net/dome/cameras/sample2ds.jpg" border=1 width=640 height=640></a></center><br>
+
+Truncated for offset, truncated fisheye projection<br>
+fishtilt -cf 940 590 -r 724 724 -w 1280 -a 3 -t 17 -b 20 -bb sample2.tga<br>
+<center><a href="http://paulbourke.net/dome/cameras/sample2e.jpg"><img src="http://paulbourke.net/dome/cameras/sample2es.jpg" border=1 width=640 height=480></a></center><br>
+<p>
+
+<b>Further examples</b>
+
+<p align="justify">
+Two further examples are shown below, single frames extracted from a movie. These are rendered
+at XGA resolution (1024x768), 
+that is, the lowest resolution fulldome projection employing a fisheye lens. It is my
+estimation that the quality in this case 
+is limited by the the projection system as much as by the footage.
+By comparison, the quality on a HD projection system employing a spherical mirror is clearly
+limited by the quality of the footage. I suspect carefully captured, processed footage would
+be a good match for a SXGA+ based system.
+</p>
+
+<center><table><tr><td>
+   <a href="http://paulbourke.net/dome/cameras/trees.jpg"><img src="http://paulbourke.net/dome/cameras/trees_s.jpg" width=400 height=300></a>
+</td><td>
+   <a href="http://paulbourke.net/dome/cameras/crypt.jpg"><img src="http://paulbourke.net/dome/cameras/crypt_s.jpg" width=400 height=300></a>
+</td></tr></table></center><p>
+
+<b>Upright dome</b>
+<p align="justify">
+It turns out that the camera and fisheye position is more suited to truncated style upright
+domes. When the camera is operated upsidedown the larger part of the fisheye image missing
+isn't required anyway since it is below the hemisphere truncation. The smaller missing piece
+at the other end of the fisheye results in a small section of missing image at the very
+top of the dome, or it may be filled by using the same fisheye tilting procedure discussed
+above.
+</p>
+
+Original frame off the Canon HV20 (movie sequence)<br>
+<center><a href="http://paulbourke.net/dome/cameras/bus_raw.jpg">
+<img src="http://paulbourke.net/dome/cameras/bus_raw_s.jpg" border=1 width=800 height=450></a></center><br>
+
+Centered in a circular frame<br>
+<center><a href="http://paulbourke.net/dome/cameras/bus_fisheye.jpg">
+<img src="http://paulbourke.net/dome/cameras/bus_fisheye_s.jpg" border=1 width=800 height=800></a></center><br>
+
+Warped image for fulldome projection using a spherical mirror<br>
+<center><a href="http://paulbourke.net/dome/cameras/bus_warp.jpg">
+<img src="http://paulbourke.net/dome/cameras/bus_warp_s.jpg" border=1 width=800 height=450></a></center><br>
+
+<b>Examples in the upright dome</b><p>
+<center>
+<img src="http://paulbourke.net/dome/cameras/bus.jpg" width=800 height=600><p>
+<img src="http://paulbourke.net/dome/cameras/car.jpg" width=800 height=600><p>
+<img src="http://paulbourke.net/dome/cameras/couple.jpg" width=800 height=600><p>
+</center>
+
+
+<br><br><br>
+
+<h3>Other lenses on the same camera</h3><p>
+
+<p align="justify">
+<b>Nikon FC-E8</b>:<br>
+This gives a similar circle but doesn't focus towards the rim where
+the image fades to black. Also seems the field of view is somewhat less than 180 degrees.
+</p>
+
+<p align="justify">
+<b>Phoenix Super Fisheye Lens 0.25X</b>:<br>
+This gives a smaller circle than the
+Nikon FC-E9 and results in a field of view I suspect between 160 and 170 degrees.
+Sample image below.
+</p>
+<center>
+	<a href="http://paulbourke.net/dome/cameras/phoenixraw.jpg"><img src="http://paulbourke.net/dome/cameras/phoenixraw_s.jpg" width=800 height=450></a>
+</center>
+<p>
+
+
+<a name="sunex"><br><br><br></a>
+
+<center>
+<h3>Nikon D300 and Sunex 185 degree fisheye lens</h3>
+May 2008
+</center>
+<p>
+
+<p align="justify">
+This combination, Nikon D300 and Sunex 185 degree 
+(5.6mm) fisheye lens, gives a full 180
+degree fisheye image using more of the full frame than most other fisheye lens
+tested (notably Sigma lens). After cropping to 180 degree the resulting fisheye
+is in the order of 2580 pixels square.
+</p>
+
+<center><table><tr><td>
+	<a href="http://paulbourke.net/dome/cameras/camera_front.jpg"><img src="http://paulbourke.net/dome/cameras/camera_front_s.jpg" width=400 height=400 border=1></a>
+</td><td width=20>&nbsp;</td><td>
+   <a href="http://paulbourke.net/dome/cameras/camera_rear.jpg"><img src="http://paulbourke.net/dome/cameras/camera_rear_s.jpg" width=400 height=400 border=1></a>
+</td></tr></table></center><p>
+
+<p align="justify">
+The lens is certainly very solid. 
+Extremely good focus, no manual focus required since it is fixed.
+I experienced very few problems even when shooting into the sun.
+It is not a perfect f theta lens, but then what fisheye lens is.
+</p>
+
+<center>
+	<a href="http://paulbourke.net/dome/cameras/nikon_city.jpg"><img src="http://paulbourke.net/dome/cameras/nikon_city_s.jpg" width=800 height=800 border=1></a><br>
+	Perth city centre
+</center><p>
+
+<center>
+   <a href="http://paulbourke.net/dome/cameras/nikon_uwa.jpg"><img src="http://paulbourke.net/dome/cameras/nikon_uwa_s.jpg" width=800 height=800 border=1></a><br>
+	University of Western Australia
+</center><p>
+
+<center>
+   <a href="http://paulbourke.net/dome/cameras/nikon_night.jpg"><img src="http://paulbourke.net/dome/cameras/nikon_night_s.jpg" width=800 height=800 border=1></a><br>
+	20 second exposure
+</center><p>
+
+<b>Contribution by Alexander Mitchell</b>
+<p align="justify">
+A low cost option using a Lumix camera and fisheye lens results in a 1080 square fisheye
+at a very low price point. Of particular note is the high bit rate of 176mb/s by changing the
+camera firmware (by donation). Total cost is around $600 for the camera, $800 for the lens,
+and $20 for the Nikon m43 adaptor.
+</p>
+
+<center><img src="http://paulbourke.net/dome/cameras/lumix.jpg" width=640 height=426 border=1></center><p>
+
+
+
+
+<br><br><br>
+
+<center>
+<h3>Canon 5D MkII and Canon 8-15mm zoomable fisheye lens</h3>
+May 2012
+</center>
+<p>
+
+<center>
+<a href="http://paulbourke.net/dome/cameras/fisheye_canon5d.pdf"><img src="http://paulbourke.net/dome/cameras/fisheye_canon5d_s.png" width=800 height=1137 border=1></a><br>
+Example of the Canon 5D and Canon EF8-15mm fisheye lens</a><p>
+</center>
+
+<center><img src="http://paulbourke.net/dome/cameras/canonzoom2.jpg" width=800 height=600 border=1></center><p>
+<p align="justify">
+Results in almost a 3600 pixel square fisheye. On a full frame sensor the zoom 
+allows a full fisheye, a partial fisheye with 180 degrees horizontally, or
+zoomed all the way in approximately a 170 degree diagonal.
+</p>
+<center>
+	<a href="http://paulbourke.net/dome/cameras/canonzoom.jpg"><img src="http://paulbourke.net/dome/cameras/canonzoom_small.jpg" width=800 height=800 border=1></a>
+</center><p>
+
+<br><br><br>
+
+<center>
+<h3>Red Scarlet camera and Sigma 4.5mm fisheye lens</h3>
+June 2012
+</center>
+<p>
+
+<p align="justify">
+When recording at 4K there is a slight clipping of the fisheye at top and bottom.
+Resulting fisheye video is in a 2320 circle.
+</p>
+<center>
+	<img src="http://paulbourke.net/dome/cameras/scarlet1.jpg" width=800 height=600 border=1><p>
+   <img src="http://paulbourke.net/dome/cameras/scarlet2.jpg" width=800 height=600 border=1><p>
+</center>
+
+<p align="justify">
+Two sample frames from the video are shown below, each recorded at 4K at 30fps
+and 8:1 compression ratio.
+</p>
+<center>
+	<a href="http://paulbourke.net/dome/cameras/scarletframe1.png">
+   <img src="http://paulbourke.net/dome/cameras/scarletframe1_small.png" width=800 height=800 border=1></a><p>
+	<a href="http://paulbourke.net/dome/cameras/scarletframe2.png">
+   <img src="http://paulbourke.net/dome/cameras/scarletframe2_small.png" width=800 height=800 border=1></a><p>
+</center>
+
+<p><br><br><br><p>
+
+
+
+<center>
+<h1>Fisheye filming experiments</h1>
+<a href="../index.html">Paul Bourke</a><br>
+June 2012<p>
+</center>
+<p>
+
+<p align="justify">
+The following outlines some photography and filming options I have been experimenting with. They generally involve a camera (still or video) along with a fisheye lens. This is certainly not intended to be an exhaustive survey, only the combinations I have recently employed. The date above should be noted, as with most technology reviews they can become out of date as time progresses.
+</p>
+
+<p align="justify">
+The easiest is stills, there are a number of fisheye lens options for SLR cameras but many lenses are out of productions leaving one to troll through ebay. Sunex have a 185 degree fisheye for Nikon and Canon APS-C sensors, they are fairly "soft" and it seems the quality also varies on a per lens basis. My favourite lens at the moment is the (newish) Canon 8-15mm fisheye for a full frame sensor. It is unusual for a fisheye to be able to zoom, this lens goes from a full fisheye to about 170 degree diagonal (similar to the GoPro lens). Example from the Moodabidri temple near Manipal, fisheye diameter is about 3600 pixels.
+</p>
+<center>
+	<a href="http://paulbourke.net/dome/cameras/fish1.jpg"><img src="http://paulbourke.net/dome/cameras/fish1s.jpg" width=800 height=800 border=1></a>
+</center><p>
+
+<p align="justify">
+I use a Canon 5D MKII and in combination with this lens it is ideal for capturing 360 full spherical panoramas, some examples in a virtual environment related to rock art in the Pilbara can be found <a href="../../fun/westangeles/index.html">here</a>.
+</p>
+
+<p align="justify">
+The Canon 5D (and other) can record HD video but since they use only a portion of the sensor the image is truncated top and bottom, and of course the fisheye result is only around 1K diameter.
+</p>
+
+<p align="justify">
+Another option is the LadyBug-3 video camera. This was used in the production of "Dark", see example frame below. The result is about  2.4K fisheye but of course it (like most video cameras) uses a lossy video compression so the effective resolution is somewhat less. One of the nice things about the LadyBug-3 is that it captures 360 degrees horizontally by about 150 degrees vertically, this means the exact angle of the fisheye can be adjusted in post production.
+</p>
+<center>
+   <a href="http://paulbourke.net/dome/cameras/fish2.jpg"><img src="http://paulbourke.net/dome/cameras/fish2s.jpg" width=800 height=800 border=1></a>
+</center><p>
+
+<p align="justify">
+And finally there is the Red series of cameras, I am currently exploring the Red Scarlet and the Sigma 4.5mm fisheye. The Scarlet has an APS-C sensor as does the Sigma lens but the full sensor size is only available at 5K recording mode which is limited to 12fps. At 30fps the highest resolution is 4Kx2K pixels and since it uses a portion of the sensor there is a slight truncation top and bottom of the fisheye. There are of course ways around this, slightly rotating the fisheye in post or using the camera on the side, or cheating and just cropping to the largest inscribed fisheye. Camera and fisheye shown below.
+</p>
+<center>
+   <img src="http://paulbourke.net/dome/cameras/fish3.jpg" width=800 height=642 border=1>
+</center><p>
+
+<p align="justify">
+A sample frame from the video is given below to illustrate the degree of clipping, please note this is a single frame from a video, not a still shot. The fisheye circle is 2320 pixels in diameter.
+</p>
+<center>
+   <a href="http://paulbourke.net/dome/cameras/fish4.png"><img src="http://paulbourke.net/dome/cameras/fish4s.png" width=800 height=800 border=1></a>
+</center><p>
+
+<p align="justify">
+Hope some of this is of interest. Filming for fulldome is certainly still a challenge. In my case much of this is for the iDome so fisheye resolutions around the 2K range are adequate. The next test is with the Coastal Optics fisheye lens, but it priced such that purchasing for testing is a little tricky, doesn't anyone have one they would consider loaning?
+</p>
+
+<center>
+<table width=100%>
+<tr>
+<td align="center">
+	<a href="http://paulbourke.net/dome/cameras/red1.jpg"><img src="http://paulbourke.net/dome/cameras/red1_s.jpg" width=300 height=225 border=1></a>
+</td>
+<td align="center">
+   <a href="http://paulbourke.net/dome/cameras/red2.jpg"><img src="http://paulbourke.net/dome/cameras/red2_s.jpg" width=300 height=225 border=1></a>
+</td>
+</tr>
+<tr>
+<td align="center">
+   <a href="http://paulbourke.net/dome/cameras/red3.jpg"><img src="http://paulbourke.net/dome/cameras/red3_s.jpg" width=300 height=225 border=1></a>
+</td>
+<td align="center">
+   <a href="http://paulbourke.net/dome/cameras/red4.jpg"><img src="http://paulbourke.net/dome/cameras/red4_s.jpg" width=300 height=225 border=1></a>
+</td>
+</tr>
+</table></center>
+
+
+</td></tr></table></center><p>
+</body>
+</html>
+

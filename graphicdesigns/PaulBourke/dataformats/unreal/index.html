@@ -1,0 +1,270 @@
+<HTML>
+<HEAD>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Unreal File Format</title>
+</HEAD>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Unreal File Format</h1>
+<b>Written by PantherD of Team Panther.</b><p>
+Thanks to Tim Sweeney for the UnrealEd mesh code <br>
+used to put together this information. <br>
+Also thanks to Legend Entertainment for releasing the code to 3ds2unr.
+<p>
+Edited by <a href="../index.html">Paul Bourke</a>
+</center>
+<p><br><p>
+
+<h3>Introduction</h3>
+
+<p align="justify">
+Unreal models come in a combination of two files. Data files which you will 
+see as _d.3d and Aniv files which you'll 
+see as _a.3d. Both are binary files. 
+The data file contains a data header with number of polygons, number of 
+vertices, etc. A lot of the header data is actually throw away (you'll see 
+later in my document a typedef for the dataheader structure). You'll also 
+find each polygon with it's three vertex indices. The index is the order 
+of the vertex within the aniv file. All polygons are triangles.
+The Aniv file contains the a list of the vertices per each frame. 
+The first part of the aniv file describes the number of frames, then the 
+framesize (Number of vertices * bytesize of a vertex). Then all the vertices 
+for every frame. 
+</p>
+
+<h3>Data File</h3>
+
+<h3>Data File Header</h3>
+
+<p align="justify">
+The data file header should be written to the file first. The only thing 
+that you need to worry about is the number of polygons and the number of 
+vertices. The rest of the information is not currently read by UnrealEd.
+</p>
+
+<pre>
+typedef struct datahead_struct {
+   unsigned short  NumPolygons;
+   unsigned short  NumVertices;
+   unsigned short  BogusRot;
+   unsigned short  BogusFrame;
+   unsigned long   BogusNormX;
+   unsigned long   BogusNormY;
+   unsigned long   BogusNormZ;
+   unsigned long   FixScale;
+   unsigned long   Unused[3];
+   unsigned char   Unknown[12];
+} dataheader;
+</pre>
+
+<h3>Data File Polygons</h3>
+
+<p align="justify">
+The polygon structure includes references to the three vertices, the 
+type of polgyon, the color (which I honestly don't know what 
+that is good for), the texture UV coords and a texture number. The 
+flags are currently unused by UnrealEd. The texture number will correspond 
+with whatever is in the .uc class file for the object. The only texture 
+information stored for a polgyon is the UV coordinates. The actual 
+texture image file reference is done with the .uc class file.
+</p>
+
+<p align="justify">
+The mVertex[3] is an array of the 3 vertices. Each vertex (ex. 
+MVertex[0] = 2) stores the index of the vertex coordinate information 
+stored in the aniv file. The values will be [0 to (n - 1)], n being 
+the number of vertices in the mesh. My example points the first polgyon 
+of the triangle to whatever the 3<SUP>rd</SUP> vertices in the aniv 
+file coordinate are.
+</p>
+
+<p align="justify">
+The UV texture coordinates are stored as a value within a 256 x 256 grid. 
+Standard UV coordinates are [0 to 1] with values between. You can correspond 
+256 to 1 for Unreal. Typical Unreal texture map images are [128x128] or 
+[256x256] pixels. It's a two dimensional array the first dimension 
+being 0 or 1 indicating whether it's a U or V coord:
+</p>
+
+Thus:<P>
+[0][0] - U coordinate of the first vertex<br>
+[1][0] - V coordinate of the first vertex<br>
+[0][1] - U coordinate of the second vertex<br>
+[1][1] - V coordinate of the second vertex<br>
+[0][3] - U coordinate of the third vertex<br>
+[1][3] - V coordinate of the third vertex<br>
+
+<h3>James Mesh Types</h3>
+0 = Normal one-sided<br>
+1 = Normal two-sided<br>
+2 = Translucent two-sided<br>
+3 = Masked two-sided<br>
+4 = Modulation blended two-sided<br>
+8 = Placeholder triangle for weapon positioning (invisible)<br>
+
+<pre>
+typedef struct unreal_tri_struct {
+   unsigned short mVertex[3]; // Vertex indices
+   char mType;                // James' Mesh Type
+   char mColor;               // Color for flat and Gourand Shaded
+   unsigned char mTex[3][2];  // Texture UV coordinates
+   char mTextureNum;          // Source texture offset
+   char mFlags;               // Unreal Mesh Flags (unused)
+} unreal_tri;
+</pre>
+
+<p align="justify">
+This is my datafile output function that I used for my UnrealSaver 
+plugin (note this also output a UV text file I am messing with as well):
+</P>
+
+<pre>
+void CreateDataFile(MeshData *mesh) {
+   FILE *data_fp;
+   FILE *uv_fp;
+   dataheader dh;
+   unreal_tri *unrealpoly;
+   int i;
+   memset(&amp;dh, '\0', sizeof(dataheader));
+   dh.NumPolygons = mesh-&gt;NumPolygons;
+   dh.NumVertices = mesh-&gt;NumVertices;
+   data_fp = fopen(mesh-&gt;config-&gt;datafile, "wb");
+   uv_fp = fopen(mesh-&gt;config-&gt;uvfile, "w");
+   unrealpoly = malloc(sizeof(unreal_tri));
+   if (data_fp) {
+
+      //write the Header
+      fwrite(&amp;dh, sizeof(dataheader), 1, data_fp);
+      //write the polygon data
+      mesh-&gt;PolyList-&gt;curr_poly = mesh-&gt;PolyList-&gt;start_poly;
+      while (mesh-&gt;PolyList-&gt;curr_poly != NULL) {
+         // copy polygon data to the unrealpolygon for storage
+         for (i = 0; i &lt; 3; i++) {
+            unrealpoly-&gt;mVertex[i] = mesh-&gt;PolyList-&gt;curr_poly-&gt;mVertex[i];
+            unrealpoly-&gt;mTex[i][0] = mesh-&gt;PolyList-&gt;curr_poly-&gt;mTex[i][0];
+            unrealpoly-&gt;mTex[i][1] = mesh-&gt;PolyList-&gt;curr_poly-&gt;mTex[i][1];
+            //write the UV data out to uvd file - 8/29/98 
+            fprintf(uv_fp, "%d %d ", unrealpoly-&gt;mTex[i][0], unrealpoly-&gt;mTex[i][1]);
+         }
+
+         //write newline for next polygon
+         fprintf(uv_fp, "\n");
+         unrealpoly-&gt;mType = mesh-&gt;PolyList-&gt;curr_poly-&gt;mType;
+         unrealpoly-&gt;mColor = mesh-&gt;PolyList-&gt;curr_poly-&gt;mColor;
+         unrealpoly-&gt;mTextureNum = mesh-&gt;PolyList-&gt;curr_poly-&gt;mTextureNum;
+         unrealpoly-&gt;mFlags = mesh-&gt;PolyList-&gt;curr_poly-&gt;mFlags;
+         fwrite(unrealpoly, sizeof(unreal_tri), 1, data_fp);
+         mesh-&gt;PolyList-&gt;curr_poly = mesh-&gt;PolyList-&gt;curr_poly-&gt;next_poly;
+      }
+      
+   fclose(data_fp);
+   fclose(uv_fp);
+}
+</pre>
+
+<h3>Aniv File</h3>
+
+<p align="justify">
+The aniv file is actually pretty simple. Each vertices is stored in an 
+unsigned long (examine my code below for the formula). The first step is to 
+write the number of frames, then the framesize (number of vertices * 
+sizeof(unsigned long) ). 
+</p>
+
+<pre>
+int CreateAnimFile(MeshData *mesh) {
+   FILE *anim_fp;
+   unsigned long unreal_vertex;
+   int frames_written;
+   short FrameSize;
+   frame *curr_frame;
+   vertices *curr_vertices;
+   
+   frames_written = 0;
+   anim_fp = fopen(mesh-&gt;config-&gt;anivfile, "wb");
+   if (anim_fp) {
+      //write number of frames
+      fwrite(&amp;mesh-&gt;frame_header-&gt;number_of_frames, sizeof(short), 1, anim_fp);
+      //write framesize
+      FrameSize = mesh-&gt;NumVertices * sizeof(unsigned long);
+      fwrite(&amp;FrameSize, sizeof(FrameSize), 1, anim_fp);
+      //write the vertices (converted to unreal unsigned long storage)
+      curr_frame = mesh-&gt;frame_header-&gt;frame_list;
+      
+      while (curr_frame != NULL ) {
+         curr_vertices = curr_frame-&gt;VertexList-&gt;start_vertex;
+         
+         while (curr_vertices != NULL) {
+            unreal_vertex = ( (int)(curr_vertices-&gt;x * 8.0) &amp; 0x7ff ) | 
+               ( ( (int)(curr_vertices-&gt;y * 8.0) &amp; 0x7ff) &lt;&lt; 11 ) | 
+               ( ( (int)(curr_vertices-&gt;z * 4.0) &amp; 0x3ff) &lt;&lt; 22 );
+            fwrite(&amp;unreal_vertex, sizeof(unsigned long), 1, anim_fp);
+            curr_vertices = curr_vertices-&gt;next_vertex;
+         }
+         frames_written++;
+         curr_frame = curr_frame-&gt;next_frame;
+      }
+      fclose(anim_fp);
+   }
+   return frames_written;
+}
+</pre>
+<!--
+Unpacking
+x = n % 2048; /* Bits 0 to 10 */
+y = (n / 2048) % 2048; /* Bits 11 to 21 */
+z = (n / 2048) / 2048; /* Bits 22 to 31 */
+x /= 8;
+y /= 8;
+z /= 4;
+-->
+
+<h3>UC Class File</h3>
+
+<pre>
+void CreateUCFile(MeshData *mesh) {
+   FILE *fp;
+   int texture_loop;
+   fp = fopen(mesh-&gt;config-&gt;ucfile, "w");
+   if (fp) {
+      fprintf(fp, "#exec MESH IMPORT MESH=%s ANIVFILE=MODELS\\%s_a.3d DATAFILE=MODELS\\%s_d.3d X=0 Y=0 Z=0\n", 
+         mesh-&gt;config-&gt;classname, mesh-&gt;config-&gt;classname, mesh-&gt;config-&gt;classname);
+      fprintf(fp, "#exec MESH ORIGIN MESH=%s X=0 Y=0 Z=0\n", mesh-&gt;config-&gt;classname);
+      
+      //Print out the anmimation sequences, using the all, an intial still and one last sample
+      fprintf(fp, "#exec MESH SEQUENCE MESH=%s SEQ=All STARTFRAME=0 NUMFRAMES=%d\n", 
+         mesh-&gt;config-&gt;classname, mesh-&gt;NumFrames);
+      fprintf(fp, "#exec MESH SEQUENCE MESH=%s SEQ=Still STARTFRAME=0 NUMFRAMES=1\n", 
+         mesh-&gt;config-&gt;classname);
+      fprintf(fp, "#exec MESH SEQUENCE MESH=%s SEQ=YouNameIt STARTFRAME=0 NUMFRAMES=%d\n", 
+         mesh-&gt;config-&gt;classname, mesh-&gt;NumFrames);
+      //Print out textures
+      for (texture_loop = 0; texture_loop &lt;= mesh-&gt;NumTextures; texture_loop++)
+         fprintf(fp, "#exec TEXTURE IMPORT NAME=%s FILE=MODELS\\%s.PCX GROUP=\"Skins\"\n", 
+            mesh-&gt;texturename[texture_loop], mesh-&gt;texturename[texture_loop]);
+      fprintf(fp, "#exec MESHMAP SCALE MESHMAP=%s X=0.5 Y=0.5 Z=1.0\n", mesh-&gt;config-&gt;classname);
+      for (texture_loop = 0; texture_loop &lt;= mesh-&gt;NumTextures; texture_loop++)
+         fprintf(fp, "#exec MESHMAP SETTEXTURE MESHMAP=%s NUM=%d TEXTURE=%s\n", 
+            mesh-&gt;config-&gt;classname, texture_loop, mesh-&gt;texturename[texture_loop]);
+      
+      fclose(fp);
+   }
+}
+</pre>
+
+</td></tr></table></center>
+</body>
+</html>

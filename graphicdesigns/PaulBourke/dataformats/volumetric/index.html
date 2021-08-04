@@ -1,0 +1,158 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Volumetric data format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Volume data format</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+Original: March 1994, Updated: September 2000
+</center>
+<p><br><p>
+
+<p align="justify">
+The format discussed here for storing volumetric data is not a "standard"
+but rather the method I've used over the years for various volume
+rendering applications. I suggest it will meet the needs of most
+people who have volumetric data on a uniform 3 dimensional grid.
+</p>
+
+<p align="justify">
+A bit like the PPM file format for images, this format has an ASCII
+(human readable) header followed by binary data. Unlike PPM it explicitly
+specifies the "endian" of the file as well as having more header fields.
+The format has no explicit support for floating point data although the
+extension for this is pretty trivial.
+</p>
+
+<b>Header</b><p>
+<p align="justify">
+The header consists of a number of lines (5) separated by linefeed characters,
+ASCII Hex "0a". The header lines are described as follows:
+</p>
+<ul>
+<li><p align="justify">
+The first line consists of a comment, the comment can be as long as
+need be as long as it doesn't contain a linefeed.
+</p>
+<li><p align="justify">
+The second line consists of three integers giving the size
+of the volume grid in the three directions, from now on referred here
+as x, y, z. These dimensions must be positive, they may be 1 but not 0.
+</p>
+<li><p align="justify">
+The third line consists of three floating point numbers
+indicating the size of the cells in each direction. This gives support
+of non cubic cells, of course this is only interpreted by the display 
+or analysis software. The size of a cell must be greater than 0.
+</p>
+<li><p align="justify">
+The fourth line consists of three floating point numbers giving the
+real world coordinates of the lower corner of the volumetric dataset.
+The upper corner can be calculated given the number of cells and the
+cell size. Similarly the real world coordinates of any cell can be
+computed.
+</p>
+<li><p align="justify">
+The fifth and last header line contains two integers that indicate the
+type of binary data that follows immediately after the linefeed at the
+end of this line. The first number indicates the data type and the second
+number indicates the endian of the data.
+</p>
+The data type is indicated as follows<br>
+<ul>
+<li>1 - single bit per cell, two categories<br>
+<li>2 - two byes per cell, 4 discrete levels or categories<br>
+<li>4 - nibble per cell, 16 discrete levels<br>
+<li>8 - one byte per cell (unsigned), 256 levels<br>
+<li>16 - two bytes representing a signed "short" integer<br>
+<li>32 - four bytes representing a signed integer<br>
+</ul>
+<p>
+The endian is one of<br>
+<ul>
+<li>0 for big endian (most significant byte first). For example
+Motorola processors, Sun, SGI, some HP.<br>
+<li>1 for little endian (least significant byte first). For example
+Intel processors, Dec Alphas.<br>
+</ul>
+</ul>
+
+<p align="justify">
+One advantage of an ASCII header is that the standard UNIX command
+"head -5" can be used to quickly determine the details of a volumetric
+file. it is also particularly easy to parse in C/C++.
+</p>
+
+<b>Example</b><p>
+An example of a legal header is given below, it represents a grid
+500 x 500 x 100, with wider z axis cells. The grid is centered about
+the origin in the x and y axis, the z axis starts at the origin.
+The data consists of signed short integers in big endian format.
+<pre>
+This is a comment line, created by Paul Bourke
+500 500 100
+1.0 1.0 2.0
+-250.0 -250.0 0.0
+16 0
+</pre>
+
+<b>Data</b><p>
+<p align="justify">
+The data in binary form follows immediately after the linefeed at
+the end of the fifth line of the header. The data is not compressed
+so the total expected data is straightforward to calculate, the
+product of the three dimensions multiplied by the data type size divided
+by 8. If the image dimensions are nx, ny, nz, and the data type is one
+byte then the volumetric data will be<br>
+<center>nx * ny * nz bytes</center>
+</p>
+
+<p align="justify">
+The data is stored with the first coordinate varying fastest, then
+the second, then the third. For example, using the x, y, z convention in this
+document the writing of a byte grid might be
+</p>
+<pre>
+   #define Nx 500
+   #define Ny 500
+   #define Nz 100
+   :
+   :
+   unsigned char grid[Nx][Ny][Nz];
+   FILE *fptr;
+   int x,y,z;
+   :
+   :
+   /* Write the volumentic data file */
+   fprintf(fptr,"This is a comment line, created by Paul Bourke\n");
+   fprintf(fptr,"%d %d %d\n",Nx,Ny,Nz);
+   fprintf(fptr,"1.0 1.0 2.0\n");
+   fprintf(fptr,"-250.0 -250.0 0.0\n");
+   fprintf(fptr,"8 1\n");
+   for (z=0;z&lt;Nz;z++) {
+      for (y=0;y&lt;Ny;y++) {
+         for (x=0;x&lt;Nx;x++) {
+            fputc(grid[x][y][z],fptr);
+         }
+      }
+   }
+</pre>
+
+</td></tr></table></center>
+</body>
+</head>

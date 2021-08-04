@@ -1,0 +1,556 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Computer Generated Angular Fisheye Projections</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center><table width=100%><tr><td valign="top">
+<center>
+<h1>Computer Generated<br>Angular Fisheye Projections</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+May 2001
+</center>
+<p><br><p>
+
+<p align="justify">
+There are two main idealised fisheye projections common in
+computer graphics rendering, they are the hemispherical and
+angular fisheye. They are two from an
+infinite number of ways of mapping wide angle of view onto
+an image plane. 
+</p>
+
+<b>Hemispherical fisheye</b>
+<p align="justify">
+A hemispherical fisheye, see figure 1, is a parallel projection of a
+hemisphere onto a plane, the resulting image will be circular. 
+The widest view angle is 180 degrees (as shown) with extreme distortion
+at +/- 90 degrees. 
+Because of the distortion introduced radially it is used less often than
+the angular fisheye distortion.
+</p>
+
+<b>Angular fisheye</b>
+<p align="justify">
+An angular fisheye projection is defined so that distance from the 
+center of the image is proportional to the angle from the camera 
+view direction. In particular, in an angular fisheye (also called f-theta lens)
+image the resolution is approximately equal across the whole image.
+An angular fisheye projection can be used for angles
+all the way up to a full 360 degree. A cross section of a 360 degree
+angular fisheye is shown in figure 2 and a 180 degree angular fisheye
+in figure 3. The main point to note is that the distance from the
+center of the image (a circle on the image plane) maps directly onto
+the angle around the projection sphere.
+</a>
+
+<p align="justify">
+A 180 degree fisheye projects half the environment onto a circular
+image, a 360 degree fisheye projects the whole environment onto a 
+circular image. As an aside, while it is quite easy to get 180 degree
+fish eye lens and even up to 220 degrees, it is also feasible to photograph
+almost a 360 degree fisheye. This can be accomplished by photographing
+a silvered ball using a telephoto lens. Note that the images captured with
+real fisheye lens will have other distortions to the ideal lens described
+here.
+</p>
+
+<p align="justify">
+The image below is a 180 degree angular fish eye projection rendered
+using the PovRay raytracer.
+</p>
+
+<a href="../../miscellaneous/povexamples/index.html#beneventum">
+<center><img src="http://paulbourke.net/dome/fisheye/stadium.gif" width=300 height=300 border=0></center>
+</a>
+<p>
+
+<b>Creating an angular fisheye</b>
+<p align="justify">
+To create an angular fisheye projection one needs to determine the
+vector from the camera into the scene for every point in the image plane.
+Figures 4 through 7 outline the procedure, at least, one possible
+method. First the image coordinates are transformed from pixel
+coordinates (i,j) into normalised coordinates (x,y) ranging from -1 to 1,
+figure 5.
+Next the radius r and angle phi to the x axis is calculated, figure 6. Note
+that if atan2() is supported in your maths library then that can be
+used as a more direct way of calculating the angle phi. At this stage
+any pixels where r > 1 are ignored (drawn black or some other background
+colour). Finally, r is mapped onto theta, phi is used directly as
+the polar coordinates of the direction vector from the camera into the scene.
+The angle theta is just r multiplied by half the intended fisheye angle
+which may be anything up to 360 degrees.
+</p>
+
+<b>Inverse transform</b>
+<p align="justify">
+One way to use fisheye projections is as environment maps. In this case
+one generally uses a 180 degree angular fisheye image and maps it onto
+a hemisphere centered at the virtual camera. The general requirement
+is to create the correct u,v texture coordinates for each vertex making
+up the polygons on a unit radius hemisphere. Most texture mapping requires u,v
+coordinates between 0 and 1 in each direction, the formula based upon
+the conventions used here is as follows for a unit vector (x,y,z).
+</p>
+u = r cos(phi) + 0.5
+<br>
+v = r sin(phi) + 0.5
+<p>
+where
+<p>
+r = atan2(sqrt(x*x+y*y),p.z) / pi
+<br>
+phi = atan2(y,x)
+<p align="justify">
+There are many ways to create a polygonal representation of a unit
+hemisphere. Two examples are given below in pseudo C code. The first
+uses a grid in the x,y plane and calculates the z value using the
+equation of the sphere x<sup>2</sup> + y<sup>2</sup> + z<sup>2</sup> = 
+r<sup>2</sup>. The second creates a sphere using polar coordinates with
+one pole directly in front of the camera. In both cases the sphere is
+of unit radius and centered at the origin.
+</p>
+<b><a href="http://paulbourke.net/dome/fisheye/source1.c">Method 1 - grid</b></a>
+<p>
+<a href="http://paulbourke.net/dome/fisheye/source2.c"><b>Method 2 - polar</b></a>
+<p>
+
+<p align="justify">
+Note that for the above the normal at each point is the same
+as the point itself. The value of N above relates to the resolution of the
+sphere, the higher the more polygons created. In reality one might choose
+more efficient methods than the above since it computes the same point
+multiple times (for shared vertices). For example both methods can be
+easily modified to support quad or triangle strips for OpenGL.
+The texture coordinate for any point on the sphere
+might be calculated as follows.
+</p>
+<a href="http://paulbourke.net/dome/fisheye/source3.c"><b>Source Code</a></b>
+<p>
+
+<b>Paraboloid</b>
+<p align="justify">
+For completeness it should be mentioned that another way to record 
+wide angle views for environment maps is to use a paraboloid. The
+main advantage is that there are efficient numerical methods for
+unmapping the image for standard perspective views. Figure 8 shows
+the cross section, the formula is generally something of the form.
+</p>
+<center>
+z = 0.5 - 0.5 (x<sup>2</sup> + y<sup>2</sup>) 
+for x<sup>2</sup> + y<sup>2</sup> <= 1
+</center>
+<p>
+
+<b>References</b><p>
+Max, N.,<br>
+Computer Graphics Distortion for IMAX and OMNIMAX Projection.<br>
+Proc Nicograph 83, Dec 1983 pp 137.
+<p>
+
+Greene, N.,<br>
+Environment Mapping and Other Applications of World Projections<br>
+IEEE Computer Graphics and Applications, November 1986, vol 6, no 11, pp 21
+<p>
+
+Wyvill, G., McNaughton, C.,<br>
+Optical Models<br>
+Computer Graphics International, 1990, Springer p88
+<p>
+
+Fleck M.,<br>
+Perspective projection: The wrong imaging model<br>
+University of Iowa, Tech Report #95-01
+<p>
+
+Svoboda, T., Pajdla, T., Hlavac, V., <br>
+Central Panoramic Cameras: Geometry and Design<br>
+Czech Technical University, Tech Report K335/97/147.
+<p>
+
+
+</td><td valign="top" align="right">
+
+<b>Figure 1</b><br>
+<img src="http://paulbourke.net/dome/fisheye/hemi180.gif" width=261 height=320><p>
+<b>Figure 2</b><br>
+<img src="http://paulbourke.net/dome/fisheye/full360.gif" width=276 height=593><p>
+<b>Figure 3</b><br>
+<img src="http://paulbourke.net/dome/fisheye/angular180.gif" width=217 height=320><p>
+<b>Figure 4</b><br>
+<img src="http://paulbourke.net/dome/fisheye/fig1.gif" width=275 height=275><p>
+<b>Figure 5</b><br>
+<img src="http://paulbourke.net/dome/fisheye/fig2.gif" width=253 height=270><p>
+<b>Figure 6</b><br>
+<img src="http://paulbourke.net/dome/fisheye/fig3.gif" width=229 height=375><p>
+<b>Figure 7</b><br>
+<img src="http://paulbourke.net/dome/fisheye/fig4.gif" width=278 height=442><p>
+<b>Figure 8</b><br>
+<img src="http://paulbourke.net/dome/fisheye/fig5.gif" width=165 height=236><p>
+
+</td></tr></table>
+</center>
+
+<b>Non linearily</b>
+<p align="justify">
+Real fisheye lenses rarely follow the precise linear relationship between radius
+on the fisheye image plane and latitude. The most common form of deviation is a compression of the
+image towards the rim of the fisheye circle.
+Of course if this non-linearity is a problem it can be corrected for, at the
+expense of some loss of resolution at the rim.
+</p>
+<center><img src="http://paulbourke.net/dome/fisheye/nonlinear.png" width=400 height=786 border=0></center>
+<p>
+
+<b>Appendix: Approximations</b><p>
+<p align="justify">
+Some raytracing packages don't support a native fisheye camera, the question
+is often asked "can a spherical mirror be used to create a fisheye view?".
+The basic idea is to render the view of the scene by pointing the virtual
+camera at a perfectly reflective spherical surface. The answer is "the
+result is close but not exactly correct". Three rendering are shown below,
+the scene is simply a hemisphere represented as a regular grid of lines
+of latitude and longitude. 
+</p>
+
+<center><table><tr><td colspan=3>
+	<b>Equiangular fisheye</b><p>
+	<p align="justify">
+	This is the correct result rendered with a equiangular fisheye lens. Note
+	that the spacing of the lines of latitude is constant.
+	</p>
+</td></tr>
+<tr><td valign="top">
+	<br><a href="http://paulbourke.net/dome/fisheye/0.jpg"><img src="http://paulbourke.net/dome/fisheye/0_s.gif" width=400 height=400 border=1></a>
+</td><td valign="top" width=20>
+	&nbsp;
+</td><td valign="top">
+Aperture: 180 degrees<br>
+Camera at the origin<br>
+Unit polar grid at origin<br>
+Lines of longitude: 10 degree steps<br>
+Lines of latitude: 5 degree steps<br>
+<br>
+<center>
+<img src="http://paulbourke.net/dome/fisheye/0m.gif" width=300 height=275><br>
+<smalltext>3D polar frame hemisphere</smalltext>
+</center>
+</td></tr>
+
+<tr><td colspan=3>
+	<br><b>Mirror sphere, perspective projection</b><p>
+</td></tr>
+<tr><td valign="top">
+	<a href="http://paulbourke.net/dome/fisheye/1.jpg"><img src="http://paulbourke.net/dome/fisheye/1_s.gif" width=400 height=400 border=1></a>
+</td><td valign="top" width=20>
+	&nbsp;
+</td><td valign="top">
+Aperture: 60 degrees<br>
+Mirror radius: 0.001<br>
+Camera positioned for 180 degree reflection<br>
+<br>
+<center><img src="http://paulbourke.net/dome/fisheye/1m.gif" width=300 height=300></center>
+</td></tr>
+
+<tr><td colspan=3>
+<br>
+<b>Mirror sphere, orthographic projection</b><p>
+</td></tr>
+<tr><td valign="top">
+	<center>
+	<a href="http://paulbourke.net/dome/fisheye/2.jpg"><img src="http://paulbourke.net/dome/fisheye/2_s.gif" width=400 height=400 border=1></a>
+	</center>
+</td><td valign="top" width=20>
+	&nbsp;
+</td><td valign="top">
+Mirror radius: 0.001<br>
+Camera position very close to mirror radius<br>
+<br>
+<center><img src="http://paulbourke.net/dome/fisheye/2m.gif" width=300 height=300></center>
+</td></tr>
+</table>
+</center><p>
+
+<b>Overlap of fisheye and orthographic mirror</b><p>
+<p align="justify">
+The following is the perfect fisheye superimposed with the orthographic
+rendering. The biggest difference is around the mid latitudes, for example,
+if such a projection was used in a planetarium then objects that remain at the
+same distance from the camera but move from the pole to the horizon will
+appear to change size.
+</p>
+<center>
+	<img src="http://paulbourke.net/dome/fisheye/02.jpg" width=800 height=800 border=1>
+</center><p>
+<p align="justify">
+It should be noted that a mirror (not spherical) can be designed such
+the correct result is achieved. In the authors opinion it is vastly better
+to render cubic maps from which correct fisheye projections can be derived.
+</p>
+
+<p><br><br><br><p>
+
+
+<center>
+<h1>Offaxis fisheye projection</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+October 2001, modified January 2004<p>
+</center>
+
+<b>Introduction</b>
+<p align="justify">
+There exist a number of full dome environments that project angular fisheye
+or other radial functions. If the angular fisheye is created correctly then
+the resulting image after projection onto the dome surface appears
+undistorted. Unfortunately if the projector uses a single fisheye lens
+then the standard fisheye projection as described 
+<a href="index.html">here</a> requires that both the lens and the
+viewer are located at the center of the dome, obviously impossible.
+As the viewer moves away from the center the image appears increasingly
+distorted. This isn't normally a problem for large planetariums
+where the radius of the dome is very much larger than the seating area and
+in any case nothing can be done since there are multiple viewers.
+For smaller domes the effect is more marked and the viewer can easily
+move significant distances from the center. It is possible to create 
+a modified fisheye image so that if viewed from a particular position
+the projected image will appear undistorted, this is called an off axis
+fisheye image. This is the same principle employed when creating stereo
+pairs where one uses an off-axis (asymmetric) perspective frustum for
+each eye.
+<p>
+
+
+
+<br>
+<b>Algorithm</b>
+<p>
+
+<table width=100% cellpadding=0 cellspacing=0><tr><td valign="top">
+<p align="justify">
+Creating an off-axis fisheye is quite straightforward. First, create the
+fisheye projection world vector 
+p as described <a href="index.html">here</a>.
+The vector 
+p' is derived as shown in the diagram on the right.
+The new ray p' is the ray 
+p minus the vector to the
+view position.
+While the diagram on the right shows the view position 
+along the y axis, it is normally
+applied to any point in the x,y plane as the dome viewer 
+will most commonly move around on that plane.
+</p>
+
+<p align="justify">
+Note that as the viewer moves towards the rim the image gets increasingly
+stretched in that direction. This violates the usual characteristic of angular
+fisheye images where a pixel in image space is proportional to the angle in 
+fisheye space. Or put another way, all pixels in the fisheye image are
+the same dimensions in the projected image, this can be seen in the example
+below.
+</p>
+<table border=0 cellspacing=0 cellpadding=0>
+<tr>
+<td>
+Viewer at (0,0)<br>
+<a href="http://paulbourke.net/dome/fisheye/redentore_0_0.jpg">
+<img src="http://paulbourke.net/dome/fisheye/redentore_0_0.gif" width=200 height=200></a>
+</td>
+<td>
+Viewer at (0.5,0.5)<br>
+<a href="http://paulbourke.net/dome/fisheye/redentore_5_5.jpg">
+<img src="http://paulbourke.net/dome/fisheye/redentore_5_5.gif" width=200 height=200></a>
+</td>
+</tr>
+</table>
+</td><td width=10 valign="top">
+&nbsp;
+</td><td width=290>
+<img src="http://paulbourke.net/dome/fisheye/diagram.gif" width=280 height=360><br>
+<center>
+<smalltext>Figure 1</smalltext>
+</center>
+</td></tr></table>
+<p>
+
+<p align="justify">
+A common approach to creating content for dome environments is to
+render standard projections onto the faces of a cube. The off-axis
+fisheye can be computed from these at interactive rates and so a
+single viewer with a head tracking device can be presented with
+a corrected image as they walk around the base of the dome.
+</p>
+
+<br>
+<b>Test Pattern</b>
+<p align="justify">
+The following test pattern was used to test the correctness of the
+off-axis fisheye. It is a rendering of a 
+<a href="http://paulbourke.net/dome/fisheye/makescene.c">cubic room</a>, each wall is a 
+different colour and constructed with a regular grid of bars. If
+the fisheye generation is correct the curved lines in the fisheye
+image should appear straight when projected onto the dome.  The
+coordinate above each image is the position of the viewer.
+</p>
+
+<center>
+<table>
+<tr>
+<td>Offset = (0,0)<br><img src="http://paulbourke.net/dome/fisheye/0_0.gif" width=250 height=250></td>
+<td>Offset = (0,0.5)<br><img src="http://paulbourke.net/dome/fisheye/0_5.gif" width=250 height=250></td>
+<td>Offset = (0,0.75)<br><img src="http://paulbourke.net/dome/fisheye/0_75.gif" width=250 height=250></td>
+</tr>
+<tr>
+<td>Offset = (0,0.95)<br><img src="http://paulbourke.net/dome/fisheye/0_95.gif" width=250 height=250></td>
+<td>Offset = (0.5,0.5)<br><img src="http://paulbourke.net/dome/fisheye/5_5.gif" width=250 height=250></td>
+<td>Offset = (0.7,0.7)<br><img src="http://paulbourke.net/dome/fisheye/7_7.gif" width=250 height=250></td>
+</tr>
+</table>
+</center>
+</p>
+<p align="justify">
+This example is rendered in PovRay onto a 
+5 wall cubic environment map, the off-axis fisheye
+is created from these 5 images. 
+(<a href="http://paulbourke.net/dome/fisheye/5view.ini">5view.ini</a>, 
+<a href="http://paulbourke.net/dome/fisheye/5view.pov">5view.pov</a>,
+<a href="http://paulbourke.net/dome/fisheye/5viewcamera.pov">5viewcamera.pov</a>)
+This has the advantage of being
+able to create multiple offaxis fisheye images from one set of
+cubic environment maps, this would not be possible if the offaxis
+fisheye was rendered directly in PovRay (something that is easy to
+arrange by modifying the PovRay source code).
+</p>
+
+<center>
+<table border=0 cellpadding=0 cellspacing=0>
+<tr>
+<td>&nbsp;</td>
+<td><img src="http://paulbourke.net/dome/fisheye/t_grid_00000.gif" width=200 height=200></td>
+<td colspan=2>&nbsp;</td>
+</tr>
+<tr>
+<td><img src="http://paulbourke.net/dome/fisheye/l_grid_00000.gif" width=200 height=200></td>
+<td><img src="http://paulbourke.net/dome/fisheye/f_grid_00000.gif" width=200 height=200></td>
+<td><img src="http://paulbourke.net/dome/fisheye/r_grid_00000.gif" width=200 height=200></td>
+<td><img src="http://paulbourke.net/dome/fisheye/b_grid_00000.gif" width=200 height=200></td>
+</tr>
+</table></center><p>
+
+<b>Creating offaxis projections from existing fisheye images</b><p>
+<p align="justify">
+Given an existing fisheye image, an offaxis fisheye can be created
+for any offaxis position. There is a full mapping for 180 degree
+fisheye images, smaller angle images result in an incomplete
+mapping. 
+It reads a TGA image representing a fisheye image and creates
+an offaxis fisheye as another TGA file. Note that there are
+important resolution issues to consider, this works best when
+going from very high resolution fisheye images to lower 
+resolution ones. The code here is a simple command line
+based UNIX utility, it supports supersampling antialiasing
+and variable output image size.
+</p>
+<pre>
+offaxis tgafilename [options]
+Options:
+-a n   set antialias level (Default: 1)
+-w n   width of the output image (Default: 500)
+-h n   height of the output image (Default: width)
+-dx n  x component of the offaxis vector (Default: 0)
+-dy n  y component of the offaxis vector (Default: 0)
+-v     debug/verbose mode (Default: off)
+</pre>
+
+<center>
+<table><tr><td>
+Original fisheye image<br>
+<img src="http://paulbourke.net/dome/fisheye/02.gif" width=300 height=300>
+</td><td>
+X axis offset of 0.3<br>
+<img src="http://paulbourke.net/dome/fisheye/02x.gif" width=300 height=300>
+</td></tr>
+<tr><td>
+Y axis offset of 0.3<br>
+<img src="http://paulbourke.net/dome/fisheye/02y.gif" width=300 height=300>
+</td><td>
+X and Y axis offset of 0.3<br>
+<img src="http://paulbourke.net/dome/fisheye/02xy.gif" width=300 height=300>
+</td></tr>
+</table>
+</center>
+
+<br>
+<b>Photos of a Prototype Dome</b>
+<p>
+<center>
+<a href="http://paulbourke.net/dome/fisheye/dome1.jpg"><img src="http://paulbourke.net/dome/fisheye/dome1.gif" width=200 height=267></a>
+<a href="http://paulbourke.net/dome/fisheye/dome2.jpg"><img src="http://paulbourke.net/dome/fisheye/dome2.gif" width=200 height=267></a>
+<a href="http://paulbourke.net/dome/fisheye/dome4.jpg"><img src="http://paulbourke.net/dome/fisheye/dome4.gif" width=200 height=267></a>
+<br>
+<a href="http://paulbourke.net/dome/fisheye/dome3.jpg"><img src="http://paulbourke.net/dome/fisheye/dome3.gif" width=400 height=300></a> 
+</center>
+<p>
+
+
+
+
+<br>
+<b>Example Images used in the Prototype Dome</b>
+<p>
+<center>
+<a href="http://paulbourke.net/dome/fisheye/sample1.jpg"><img src="http://paulbourke.net/dome/fisheye/sample1.gif" width=200 height=150></a>
+<a href="http://paulbourke.net/dome/fisheye/sample3.jpg"><img src="http://paulbourke.net/dome/fisheye/sample3.gif" width=200 height=150></a>
+<br>
+<a href="http://paulbourke.net/dome/fisheye/sample4.jpg"><img src="http://paulbourke.net/dome/fisheye/sample4.gif" width=200 height=150></a>
+<a href="http://paulbourke.net/dome/fisheye/sample5.jpg"><img src="http://paulbourke.net/dome/fisheye/sample5.gif" width=200 height=150></a>
+</center>
+<p>
+<p align="justify">
+Note that for these tests an Elumens projector was used. This is a 
+standard projector with their fisheye lens and as such the projector
+projects a 4:3 width to height ratio while fisheye images are 1:1.
+This is addressed by clipping off 25% of the image, in the case of the
+Elumens dome this is normally the bottom 25%. In our case we chose to
+clip the top 25%, this conveniently gave the viewers a position behind
+the projector from which to view the images without being blinded.
+</p>
+
+<center><table><tr><td>
+<img src="http://paulbourke.net/dome/fisheye/dome.gif" width=350 height=492>
+</td><td>
+<img src="http://paulbourke.net/dome/fisheye/clip.gif" width=300 height=317><p>
+<center>
+<smalltext>Figure 2</smalltext>
+</center>
+</td></tr></table></center><p>
+
+<b>Addendum</b>
+<p align="justify">
+The offaxis correction as described above only applied to shifting the
+observer around on the rim plane of the hemisphere. A similar correction
+can be made to compensate for the observer being within the dome, or in
+the more likely case, away from the rim of the dome (along the negative z axis,
+see figure 1). This correction is
+applied in exactly the same way but note that it results in a reduced
+field of view unlike offset positions on the rim plane which result in
+stretching distortion but the same field of view. <br>
+</p>
+
+</td></tr></table></center>
+</body>
+</html>

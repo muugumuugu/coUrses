@@ -1,0 +1,157 @@
+<HTML>
+<HEAD>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<TITLE>AVS Field Data</TITLE>
+</HEAD>
+<BODY bgcolor="#ffffff">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>AVS Field Data</h1>
+</center>
+</p><br><p>
+
+This is an extremely general file format, with a wide variety of 
+techniques for data input. Here we shall only consider a subset, 
+please refer to the program documentation for further information.<P>
+
+Files of this format can be read using the read field module. 
+There are two variants: we shall consider first data-parsing mode, 
+which is more general, and then look briefly at native mode. <P>
+
+<b>Data-parsing input</b><p>
+<p align="justify">
+To input a dataset in this mode, you must first 
+create a description file. This is a text file whose name must 
+end in .fld, and which contains a description of the layout of the 
+accompanying file (or files) which contain the actual data.
+The dataset is an n-dimensional array, each element of which may 
+itself be an array; this data structure is known as a field. There are 
+three types of field.
+</P>
+
+<UL>
+<LI><B>Uniform</B><br>
+<p align="justify">
+The dataset contains a value for every element in the 
+array, supplied in order with the leftmost subscript varying most rapidly.
+</p>
+<LI><B>Irregular</B><br>
+<p align="justify">
+Each value supplied in the dataset it accompanied by a 
+full set of coordinates, indicating where it belongs in the array. There 
+does not have to be a value for each element.
+</p>
+<LI><B>Rectilinear</B><br>
+<p align="justify">
+On each axis, there are certain indexes for which 
+values are supplied. The values themselves are supplied in order, with the 
+leftmost subscript varying most rapidly. One sequence of coordinates for 
+each axis is supplied.
+</p>
+</UL>
+
+<B>Description file</B> <p>
+<p align="justify">
+Suppose that the dataset we have includes data for a 
+number of points scattered over a 100x100x50 3-dimensional space. For each 
+point, we have recorded two floating-point values, followed by three 
+coordinates. The data are held as ASCII floating-point values in a file 
+mydata.dat. The description file might look like this:
+</P>
+
+<PRE>
+# AVS 
+ndim=3
+dim1=100
+dim2=100
+dim3=50
+nspace=3
+veclen=2
+data=float
+field=irregular
+variable 1 file=mydata.dat filetype=ascii offset=0 stride=5
+variable 2 file=mydata.dat filetype=ascii offset=1 stride=5
+coord 1 file=mydata.dat filetype=ascii offset=2 stride=5
+coord 2 file=mydata.dat filetype=ascii offset=3 stride=5
+coord 3 file=mydata.dat filetype=ascii offset=4 stride=5
+</PRE>
+
+<p align="justify">
+The first five characters of the description file must be # AVS. A # 
+character can be used to introduce a comment on any line.<P>
+</p>
+
+<p align="justify">
+The ndim line specifies the number of dimensions in the array, and the 
+dim1, dim2 and dim3 lines specify the size of the dimensions. The nspace 
+line defines the number of coordinates for each point - often this will be 
+the same as ndim.
+</P>
+
+<p align="justify">
+veclen=2 indicates that there are 2 values for each data point, and 
+data=float specifies that these are binary values. The field=irregular 
+line specifies what kind of field this is (see the last section).
+</P>
+
+<p align="justify">
+The variable and coord lines have the same format, and explain how these 
+values are to be found. In our case, they are all in the same file, but 
+this is not compulsory. The filetype is given as ascii; it could also be 
+unformatted, corresponding to unformatted Fortran data, or binary for 
+pure binary data.<P>
+</p>
+
+<p align="justify">
+The offset specifies how many data items to skip before reading the first 
+value for that variable. Note how it varies for the two variables and 
+three coordinates. The stride specifies how far apart the values for this 
+variable are. So, to read the values for the second variable, AVS will 
+first skip one value (offset=1) and thereafter read every fifth 
+value (stride=5).
+</P>
+
+<p align="justify">
+Using these directives, you can describe a wide variety of file formats. 
+For example, the values for the two variables might be in separate 
+files; or we might have all the values for one variable, followed by all 
+the values for the other.
+</P>
+
+<b>Native-mode input</b><p> 
+<p align="justify">
+This time we have only one file, instead of separate 
+description and data files. The file starts with an text header, similar in 
+format to a description file, but omitting the variable and coord specifiers. 
+This header ends with two form-feed characters; the idea is that you 
+should be able to look at the file with more, for example.
+</P>
+
+<p align="justify">
+After the two form-feeds, the data follow in binary; first the avlues for the 
+elements, element by element (ie, with the values for each element together). 
+The coordinates (if any) follow the data; first all the x-coordinates, 
+then all the y-coordinates, and so on.
+</P>
+
+<p align="justify">
+Native-mode field files can also be read by read field. 
+Their names should end with .fld.
+</P>
+
+</td></tr></table></center>
+</BODY>
+</HTML>
+

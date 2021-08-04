@@ -1,0 +1,328 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Image panels on a fisheye image</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Image panels on a fisheye image</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+July 2005<p>
+Added support for <a href="../index.html">spherical mirror dome projection</a>.<br>
+March 2006<p>
+Update (May 2008): <a href="../faq/index.html#normalvideo">This can also be
+performed in realtime with a custom warpmesh for the warpplayer application.</a>
+</center>
+<p><br><p>
+
+<p align="justify">
+The following illustrates three ways (from an infinite set) by which a planar image
+can be projected onto a fisheye for projection into a planetarium. The very specific
+options shown here are chosen as suitable ways of displaying 2 dimensional slides
+for a planetarium presentation, for example slides from a package such as KeyNote
+or PowerPoint. The goal is to make the 2D slide look as though it is actually
+sitting on a plane rather than wrapped around in dome space. As such the three
+orientations for the plane are shown on the right. In the first one imagines an upright
+wall with the 2D image painted on it, while this is a nice effect it has the problem of
+reduced resolution near the top of the image which is likely to be exactly where
+slide titles and the important information resides. The second and third cases have
+the plane rotated at 45 and 30 degrees respectively, the height of the panel is set
+so that it just appears above the horizon (in the examples here the image proportions
+are assumed to be 4:3). In all these cases while the text appears curved in fisheye
+space, it should look straight in the dome as should the frames of the plane.
+</p>
+<center>
+<img src="http://paulbourke.net/dome/image2fish/diagram.gif" width=366 height=700>
+</center><p>
+
+<table width=100%><tr><td colspan=3>
+<b>Test pattern</b><p>
+<p align="justify">
+The image below was used as the initial test pattern, the results
+for each of the panel positions is shown below (click on images for the full
+size fisheye). 
+As expected there is quite
+a bit of compression involved so good antialiasing is mandatory, in the
+cases shown here a 3x3 adaptive antialias was employed.
+</p>
+<center>
+<img src="http://paulbourke.net/dome/image2fish/input.jpg" width=400 height=300 border=0>
+</center><p>
+
+<center>
+<table width=800>
+<tr><td>
+<a href="http://paulbourke.net/dome/image2fish/0.jpg">
+<img src="http://paulbourke.net/dome/image2fish/0s.jpg" width=250 height=250 border=1></a><br>
+Upright
+</td><td>
+<a href="http://paulbourke.net/dome/image2fish/1.jpg">
+<img src="http://paulbourke.net/dome/image2fish/1s.jpg" width=250 height=250 border=1></a><br>
+Rotate by 45 degrees
+</td><td>
+<a href="http://paulbourke.net/dome/image2fish/2.jpg">
+<img src="http://paulbourke.net/dome/image2fish/2s.jpg" width=250 height=250 border=1></a><br>
+Rotate by 30 degrees
+</td></tr></table><p>
+</center>
+
+<b>Another example</b> - A slide from a KeyNote presentation<p>
+
+<center>
+<table width=800><tr><td>
+<a href="http://paulbourke.net/dome/image2fish/a0.jpg">
+<img src="http://paulbourke.net/dome/image2fish/a0s.jpg" width=250 height=250 border=1></a>
+</td><td>
+<a href="http://paulbourke.net/dome/image2fish/a1.jpg">
+<img src="http://paulbourke.net/dome/image2fish/a1s.jpg" width=250 height=250 border=1></a>
+</td><td>
+<a href="http://paulbourke.net/dome/image2fish/a2.jpg">
+<img src="http://paulbourke.net/dome/image2fish/a2s.jpg" width=250 height=250 border=1></a>
+</td></tr>
+</table><p>
+</center>
+
+<b>Slides for spherical mirror full dome projection</b><p>
+
+<center>
+<table width=800><tr><td align="center">
+	<a href="http://paulbourke.net/dome/image2fish/plane_image.jpg"><img src="http://paulbourke.net/dome/image2fish/pl1.gif" width=400 height=300 border=1></a>
+</td><td align="center">
+   <a href="http://paulbourke.net/dome/image2fish/plane_diagram.jpg"><img src="http://paulbourke.net/dome/image2fish/pl2.gif" width=400 height=300 border=1></a>
+</td></tr>
+</table>
+</center><p>
+
+<center>
+<table width=800><tr><td align="center">
+   <a href="http://paulbourke.net/dome/image2fish/cylinder_image.jpg"><img src="http://paulbourke.net/dome/image2fish/cyl1.gif" width=400 height=300 border=1></a>
+</td><td align="center">
+   <a href="http://paulbourke.net/dome/image2fish/cylinder_diagram.jpg"><img src="http://paulbourke.net/dome/image2fish/cyl2.gif" width=400 height=300 border=1></a>
+</td></tr>
+</table></center><p>
+
+<br><br><br>
+
+<center>
+<h1>Slides to fisheye</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+An alternative, April 2006<p>
+</center>
+
+<p align="justify">
+This utility maps rectangular images into a fisheye.
+The rectangular image is placed on a plane that is centered on the north pole
+of the fisheye (center). It can be scaled by moving the plane closer or further away
+using the -d option. It is positioned on the fisheye by panning and/or tilting the
+plane. The plane is always tangential to the sphere, one of many possible geometries.
+The generated image contains an alpha channel to assist with compositing.
+</p>
+
+<b>Command line usage</b><br>
+<pre>
+slide2fish [options] tgafile
+Options:
+-a n  set antialias level, default: 2
+-w n  width (and height) of the fisheye image, default: 1024
+-s n  distance away of the plane, default: 1 unit
+-x n  tilt plane towards rim, default: 0
+-z n  rotate plane about north pole, default: 0
+-d    debug mode
+</pre>
+
+<b>Example</b><br>
+<table>
+<tr><td>
+	<img src="http://paulbourke.net/dome/image2fish/grid.jpg" width=400 height=300><br>
+	Input image
+</td><td>
+	<img src="http://paulbourke.net/dome/image2fish/grid_fish1.jpg" width=400 height=400><br>
+	Default mapping, centered on fisheye.
+</td></tr>
+<tr><td>
+   <img src="http://paulbourke.net/dome/image2fish/grid_fish2.jpg" width=400 height=400><br>
+	Tilted down 40 degrees.
+</td><td>
+   <img src="http://paulbourke.net/dome/image2fish/grid_fish3.jpg" width=400 height=400><br>
+	Panned by 90 degrees.
+</td></tr>
+<tr><td>
+   <img src="http://paulbourke.net/dome/image2fish/grid_fish4.jpg" width=400 height=400><br>
+	Tilted by 45 degrees, panned by 90 degrees
+</td><td>
+   <img src="http://paulbourke.net/dome/image2fish/grid_fish5.jpg" width=400 height=400><br>
+	Panned by -90 degrees, moved further away (scaled)
+</td></tr></table><p>
+
+<br><br><br>
+
+
+
+
+<center>
+<h1>Mapping images into fisheye space so they appear to be on an upright cylinder in a planetarium</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+April 2007<p>
+</center>
+
+Aim is to map rectangular images onto a fisheye image such that when viewed in a planetarium
+the images appear to be wrapped onto cylindrical sections.
+<p>
+Choose the width and position in longitude for the image, this is
+theta1 and theta2. Also choose the latitude of the base of the image,
+for example, it might be 0 if the image is to start at the horizon.
+The image width and height are dx and dy in pixels.
+We need to determine phi2 such that the image appears in proportion
+and upright in the dome.
+<p>
+
+<table width=100%><tr><td valign="bottom">
+<b>Figure 1</b>
+</td><td>
+<center><img src="http://paulbourke.net/dome/image2fish/image1.gif" width=501 height=266></center><p>
+</td></tr></table><p>
+
+
+
+
+
+
+The images are imagined to be wrapped around a cylinder.
+<p>
+<table width=100%><tr><td valign="bottom">
+	<b>Figure 2</b>
+</td><td>
+	<center><img src="http://paulbourke.net/dome/image2fish/image2.gif" width=560 height=414></center>
+</td></tr></table><p>
+Define "r" as the radius of the hemisphere in pixels = dx / (theta2 - theta1)<br>
+Define dy1 as the height of the base of the image in pixels = r tan(phi1)<br> 
+
+Then <br>
+<center><font color="#770000">
+tan(phi2) = (theta2 - theta1)(dy + dx tan(phi1)) / dx<br>
+</center></font>
+
+
+
+<p>
+For the final fisheye image the goal is to find r1 and r2, once they are
+known the x,y normalised coordinates of the four corners of the image
+rectangle in the fisheye can be determined, namely<br>
+<center> 
+r1(cos(theta1),sin(theta1)), r1(cos(theta2),sin(theta2)),
+r2(cos(theta2),sin(theta2)), r2(cos(theta1),sin(theta1))
+</center>
+<p>
+<table width=100%><tr><td valign="bottom">
+	<b>Figure 3</b>
+</td><td>
+	<center><img src="http://paulbourke.net/dome/image2fish/image3.gif" width=420 height=398></center>
+</td></tr></table><p>
+r1 = 2 (pi/2 - phi1) / pi<br>
+r2 = 2 (pi/2 - phi2) / pi<br>
+
+<p>
+<b>Notes</b>
+<ul>
+<li>
+phi1 and phi2 are measured in the normal latitude sense in figure 1 and 2, 
+that is, 0 at the horizon.
+It is traditional to measure angles in fisheye space from the pole (z axis)
+rather than from the horizon. See the equations for r which contain terms 
+pi/2-phi1 and pi/2-phi2.
+<p>
+<li>
+If the image is to start from the horizon (phi1 = 0) then the expression for phi2
+is phi2 = atan((theta2-theta1) dy / dx)
+<p>
+<li>
+When drawing the image as a texture using OpenGL say, one needs to compute smaller
+quads over subsections of the longitude range.<br>
+
+<center>
+	<img src="http://paulbourke.net/dome/image2fish/image4.gif" width=700 height=217>
+</center><p>
+</ul>
+
+<br><br><br>
+
+<center>
+<h1>PovRay, or any other 3D rendering engine</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+Update: June 2010 and February 2016
+</center><p>
+
+<p align="justify">
+Of course one can also accomplish this using your favourite 3D rendering/animation
+package as long as it supports fisheye rendering. Simply create the geometry you wish
+the image to be mapped onto in a 3D scene and render with a fisheye lens on a
+appropriately aligned camera. As example
+of this using PovRay is presented here:
+<a href="http://paulbourke.net/dome/image2fish/pov_billboard_4fisheye.zip">pov_billboard_4fisheye.zip</a>.
+This approach makes it easy to animate the texture panels, the same approach is
+often used for text within a fulldome render. The example provided here takes the image below
+on the left and renders the image on the right, in a dome this will appear as a vertical
+pane.
+</p>
+
+<center>
+<table><tr><td>
+	<img src="http://paulbourke.net/dome/image2fish/photosample.png" width=498 height=280>
+</td><td>
+	<img src="http://paulbourke.net/dome/image2fish/scene.png" width=280 height=280>
+</td></tr></table><p>
+</center>
+
+<p align="justify">
+Further examples below, the left shows the plane positioned, scaled, angled with respect
+to the dome, represented as a polar grid.
+The right shows the result rendered into a fisheye.
+</p>
+
+<center>
+<table width=800><tr><td>
+   <a href="http://paulbourke.net/dome/image2fish/polar0.png"><img src="http://paulbourke.net/dome/image2fish/polar0s.png" width=390 height=390 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/dome/image2fish/polar1.png"><img src="http://paulbourke.net/dome/image2fish/polar1s.png" width=390 height=390 border=1></a>
+</td></tr></table></p>
+</center><p>
+
+<p align="justify">
+Lowered in the dome, brought closer to the viewer.
+</p>
+
+<center>
+<table width=800><tr><td>
+   <a href="http://paulbourke.net/dome/image2fish/polar0b.png"><img src="http://paulbourke.net/dome/image2fish/polar0bs.png" width=390 height=390 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/dome/image2fish/polar1b.png"><img src="http://paulbourke.net/dome/image2fish/polar1bs.png" width=390 height=390 border=1></a>
+</td></tr></table></p>
+</center><p>
+
+<p align="justify">
+Rotated about a single angle.
+</p>
+
+<center>
+<table width=800><tr><td>
+   <a href="http://paulbourke.net/dome/image2fish/polar0c.png"><img src="http://paulbourke.net/dome/image2fish/polar0cs.png" width=390 height=390 border=1></a>
+</td><td>
+   <a href="http://paulbourke.net/dome/image2fish/polar1c.png"><img src="http://paulbourke.net/dome/image2fish/polar1cs.png" width=390 height=390 border=1></a>
+</td></tr></table></p>
+</center><p>
+
+</body>
+</html>

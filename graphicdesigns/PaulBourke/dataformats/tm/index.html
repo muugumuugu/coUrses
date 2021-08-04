@@ -1,0 +1,191 @@
+<html>
+<head><link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>TM geometry format</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>TM format</h1>
+Written by Brad Payne<p>
+Compiled and source code by <a href="../index.html">Paul Bourke</a><br>
+October 1996<br>
+</center>
+<p><br><p>
+
+<h3>Description</h3>
+<p>
+     Files with the tm extension are LONI triangle  model  files.
+     These  are  used  to  represent  surface  models in terms of
+     points and triangles.  Points are  shared  explicitly  among
+     triangles.   The  triangle  model  format is a stripped down
+     version of movie.byu files from a few years ago.  The format
+     for  numbers  within  the  file  is flexible; where floating
+     point or integer numbers are called for, anything that would
+     be recognized by the C scanf() functions with a "%f" or "%d"
+     format respectively is acceptable.  The tm file is an  ASCII
+     file  representing  integers and floating point numbers.  It
+     consists of three sections.
+<p>
+
+<b>Header line</b><p>
+     One line header specifying  the  number  of  points  in  the
+     model,  then  the  number  of  triangles.   The  numbers are
+     separated by a space.
+<p>
+<b>Point list</b><p>
+     The next section, starting on second line of the file,  con-
+     tains  a  list of the points contained in the model.  Points
+     are listed with one point per  line,  three  ASCII  floating
+     point numbers per point.  The three components, x, y, and z,
+     of each point are separated by spaces.
+<p>
+<b>Triangle list</b><p>
+     The triangle list consists of one line per  triangle.   Each
+     line contains three integers specifying the point numbers as
+     indices in the point list.  Indices are 1-indexed (apologies
+     to  C  loyalists, this <I>is</I> an old format), and the last index
+     on each line is negated.  So a triangle containing the first
+     three points from the point list could be specified as
+     1 2 -3.
+
+<p><hr><p>
+
+<h3>Discussion</h3>
+<b>Sharing Points</b><p>
+     The sharing of points within the model is  significant.   If
+     each  point  is  respecified  for  each triangle in which it
+     occurs, this will incur a significant  expense  in  storage;
+     there  will  be  three  points  stored for each triangle, as
+     opposed to a more nearly one  to  one  ratio  with  sharing.
+     This  extra  expense  can  be  very significant when surface
+     models may be upwards of  500000  triangles.   Perhaps  more
+     importantly,  failure  to  share  points where possible will
+     impair the effectiveness of many  renderers,  which  exploit
+     such information to produce smooth surface appearance.
+<p>
+<b>Ordering Triangles</b><p>
+     The order  of  points  within  a  triangle  is  significant,
+     although  some  formulations  are  equivalent.  The order of
+     traversal controls the direction of the surface  normal  for
+     that  triangle, so 1 2 -3 and 2 3 -1 are equivalent, but 1 3
+     -2 is the reverse of  either.   Continuous  surfaces  should
+     have a consistent orientation for all component triangles.
+
+<p><hr><p>
+
+<h3>Examples</h3><p>
+     A model consisting of a single triangle with vertices at the
+     origin and along the x and y axes would be
+<pre>
+     3 1
+     0.000 0.000 0.000
+     1.000 0.000 0.000
+     0.000 1.000 0.000
+     1 2 -3
+</pre>
+     a cube of dimension one has 8 vertices and 6  square  faces,
+     so 12 triangular faces, thus:
+<pre>
+     8 12
+     0.000000 0.000000 0.000000
+     0.000000 0.000000 1.000000
+     0.000000 1.000000 0.000000
+     0.000000 1.000000 1.000000
+     1.000000 0.000000 0.000000
+     1.000000 0.000000 1.000000
+     1.000000 1.000000 0.000000
+     1.000000 1.000000 1.000000
+     1 2 -4
+     4 3 -1
+     1 5 -6
+     6 2 -1
+     2 6 -8
+     8 4 -2
+     3 4 -8
+     8 7 -3
+     1 3 -7
+     7 5 -1
+     5 7 -8
+     8 6 -5
+</pre>
+
+<p><hr><p>
+
+<h3>C source to convert to DXF</h3>
+<pre>
+#include "stdio.h"
+#include "stdlib.h"
+#include "math.h"
+
+int main(argc,argv)
+int argc;
+char **argv;
+{
+   int i;
+   double x[30000],y[30000],z[30000];
+   int v1,v2,v3;
+   int nv,ne;
+   FILE *fptr;
+
+   if ((fptr = fopen(argv[1],"r")) == NULL) {
+      fprintf(stderr,"Couldn't open file \"%s\"\n",argv[1]);
+      exit(0);
+   }
+
+   printf("999\nDXF of UCLA model\n");
+   printf("0\nSECTION\n");
+   printf("0\nSECTION\n");
+   printf("2\nENTITIES\n");
+   printf("0\nSECTION\n");
+   printf("2\nENTITIES\n");
+
+   fscanf(fptr,"%d %d\n",&nv,&ne);
+   fprintf(stderr,"Vertices = %d, facets = %d\n",nv,ne);
+
+   for (i=0;i&ltnv;i++) {
+      if (fscanf(fptr,"%lf %lf %lf",&x[i],&y[i],&z[i]) != 3) {
+         fprintf(stderr,"Unexpected end of vertex list\n");
+         exit(0);
+      }
+   }
+   for (i=0;i&ltne;i++) {
+      if (fscanf(fptr,"%d %d %d",&v1,&v2,&v3) != 3) {
+         fprintf(stderr,"Unexpected end of facet list\n");
+         exit(0);
+      }
+      printf("0\n3DFACE\n");
+      printf("8\n1\n");
+      v1--;
+      v2--;
+      if (v3 &lt 0)
+         v3 = -v3;
+      if (v3 &lt 0)
+         v3 = -v3;
+      v3--;
+      printf("10\n%g\n20\n%g\n30\n%g\n",x[v1],y[v1],z[v1]);
+      printf("11\n%g\n21\n%g\n31\n%g\n",x[v2],y[v2],z[v2]);
+      printf("12\n%g\n22\n%g\n32\n%g\n",x[v3],y[v3],z[v3]);
+      printf("13\n%g\n23\n%g\n33\n%g\n",x[v3],y[v3],z[v3]);
+   }
+
+   printf("0\nENDSEC\n");
+   printf("0\nEOF\n");
+   fclose(fptr);
+}
+</pre>
+
+</td></tr></table></center>
+</body>
+</html>

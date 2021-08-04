@@ -1,0 +1,259 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Mesh format for image warping</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800"><tr><td>
+
+<center>
+<h3>Mesh format for image warping</h3>
+Written by <a href="../index.html">Paul Bourke</a><br>
+February 2006
+</center>
+<p><br><p>
+
+<p align="justify">
+Many projection environments require images that are not simple perspective projections
+that are the norm for flat screen displays. Examples include geometry correction for
+<a href="../../panorama/cylinder/index.html">cylindrical displays</a> and some new methods of
+projecting into <a href="../../papers/graphite2005/index.html">planetarium domes</a> or
+<a href="../../dome/iDome/index.html"> upright domes intended for VR</a>.
+The standard approach is to create the image in a format that contains all the
+required visual information and distort it (from now on referred to as "warping") 
+to compensate for the non planar nature of the projection device or surface. 
+For both realtime and offline warping the concept of a OpenGL texture is used, that is,
+the original image is considered to be a texture that is applied to a mesh defined
+by node positions and corresponding texture coordinates, see <a href="index.html#1">figure 1</a>.
+The following describes a file format for storing such warping meshes, it consists
+of both an ascii/human readable format and a <a href="index.html#binary">binary format</a>.
+</p>
+
+<a name="1">
+<center><img src="http://paulbourke.net/dataformats/meshwarp/diagram.gif" width=800 height=200></a><br>
+<smalltext>Figure 1. 
+Image applied as a texture to a mesh, each node is defined by
+a position (x,y) and texture coordinate (u,v).</smalltext></center>
+<p>
+
+<p align="justify">
+The warping can be performed in either the x,y coordinates (<a href="index.html#2">Figure 2</a>) 
+or in the u,v coordinates (<a href="index.html#4">Figure 4</a>) or in both. This flexibility allows
+the method used to be chosen that best matches the way the mesh is derived, sometimes
+it is easier to derive the u,v coordinates given the x,y coordinates, other times the
+reverse is so.
+</p>
+
+<a name="2">
+<center><table width=100% border=0 cellspacing=0 cellpadding=0><tr><td>
+<img src="http://paulbourke.net/dataformats/meshwarp/part1.jpg" width=350 height=175 border=1><br>
+<smalltext>Full panoramic image.</smalltext>
+</td><td width=6>
+&nbsp;
+</td><td>
+<img src="http://paulbourke.net/dataformats/meshwarp/part2.jpg" width=233 height=175 border=1><br>
+<smalltext>Warping mesh.</smalltext>
+</td><td width=6>
+&nbsp;
+</td><td>
+<img src="http://paulbourke.net/dataformats/meshwarp/part3.jpg" width=233 height=175 border=1><br>
+<smalltext>Resulting warped image.</smalltext>
+</td></tr></table></a>
+<smalltext>Figure 2. 
+Example warping a panoramic image for a cylindrical display.<br>
+The warping is encoded in the x,y node positions, the u,v coordinates are a regular grid.
+</smalltext>
+</center>
+<p>
+
+<b>File format</b><p>
+<ul>
+<li><p align="justify">
+First line contains the mesh type, currently rectangular (2) and polar (1)
+are supported, see <a href="index.html#3">figure 3</a>. 
+The only significant difference between these two is the
+mesh continuity that occurs for the polar mesh across the 0 and 360 degree boundary.
+</p>
+<li><p align="justify">
+Second line contains two integers indicating the mesh dimensions, nx and ny.
+</p>
+<li><p align="justify">
+The subsequent lines define the nodes, there should be nx times ny lines.
+These lines contain 5 values defined as follows.
+<ul>
+<li><p align="justify">
+Position x and y of the node in normalised coordinates. The mesh need not exactly
+match the projected image, in <a href="index.html#2">figure 2</a> it actually extends off
+the projected region while in <a href="index.html#4">figure 4</a> it matches the 4:3 aspect
+exactly. In the later case the horizontal range (x) will be +- the aspect ratio
+and the vertical range (y) will be +- 1 (ie: OpenGL style normalised coordinates).
+</p>
+<li><p align="justify">
+Texture coordinate u and v, these should each range from 0 to 1, they refer to the
+original input image. 
+Values outside the 0 to 1 range indicate that the node is not to be used, this usually
+means the mesh cells sharing that node are not used but sometimes it is appropriate
+to triangulate the mesh for such cells.
+</p>
+<li><p align="justify">
+A multiplicative intensity value applied to each r,g,b colour value. 
+The can be used for simple edge blending and to compensate for brightness
+variation due to different light path lengths from projector to projection surface.
+This intensity correction should range from 0 to 1, negative values indicate that
+the node should not be drawn.
+So 0 indicates none of the corresponding colour, 1 indicates fully saturated.
+Nodes with intensities outside this range should not be used.
+Note that <a href="../../miscellaneous/edgeblend/index.html">
+per colour, gamma corrected edge blending</a> requires three separate
+intensity scale factors, one for each r,g,b. While this is a simple extension to the
+format it is not included here and left to the reader to implement if required.
+</p>
+</ul>
+</p>
+</ul>
+<p align="justify"><a name="binary">
+The binary format</a> is a direct representation of the above information. The mesh type
+and dimensions are stored in the same order as 2 byte unsigned ints, the mesh type
+can be used to decide whether big or small endian is being used, translators should
+deal with byte swapping appropriately. The remaining information, 5 values for each
+node are stored as floating point (4 bytes) each.
+</p>
+
+<a name="3">
+<center><img src="http://paulbourke.net/dataformats/meshwarp/meshtype.gif" width=800 height=366></a><br>
+<smalltext>
+Figure 3. Rectangular and polar mesh topologies, 10x6.<br>
+Note that while the mesh appears regular in these examples this is not necessarily<br>
+the case, rectangular or polar only indicates the topology and node connectivity.
+</smalltext>
+</center>
+<p>
+
+<p align="justify">
+An example of a mesh file (ascii format) is given here 
+(<a href="http://paulbourke.net/dataformats/meshwarp/xyuv.txt">xyuv.txt</a>). 
+It is rectangular (type 2), the mesh dimensions are 40 x 30.
+This is the mesh used in <a href="index.html#4"">figure 4</a>. Note that in this case the
+warping information is contained within the u,v coordinates, the x,y coordinates
+form a regular grid over the intended 4:3 aspect ratio of the projector.
+</p>
+
+<a name="4">
+<center><table border=0 cellspacing=0 cellpadding=0><tr><td>
+<img src="http://paulbourke.net/dataformats/meshwarp/part4.jpg" width=225 height=225 border=1><br>
+<smalltext>Fisheye image.</smalltext>
+</td><td width=6>
+&nbsp;
+</td><td>
+<img src="http://paulbourke.net/dataformats/meshwarp/part5.jpg" width=300 height=225 border=1><br> 
+<smalltext>Warping mesh.</smalltext>
+</td><td width=6>
+&nbsp; 
+</td><td>
+<img src="http://paulbourke.net/dataformats/meshwarp/part6.jpg" width=300 height=225 border=1><br>
+<smalltext>Resulting warped image.</smalltext>
+</td></tr></table></a>
+<smalltext>Figure 4.  
+Image warping for dome projection using a 
+<a href="../../dome/index.html">spherical mirror</a>.<br>
+Image from full dome show called "Origins"</smalltext>
+</center> 
+<p>
+
+<b>Sample code to draw the mesh</b><p>
+<p align="justify">
+Note that triangle meshes can't be used (in a straightforward way at least) because of the
+possibility of missing mesh cells. This isn't a serious performance concern because the
+meshes are normally not that large and they would normally reside in a display list.
+Of course if there are no missing cells then the mesh can be draw as a triangle strip.
+In this example the camera (orthographic projection)
+is assumed to be one unit along the z axis looking at the origin.
+Note that in some case it may be desirable to find the midpoint of each mesh cell and
+draw triangles, this can be for performance reasons or to get smoother boundaries
+when there are unused nodes.
+</p>
+<pre>
+   glBegin(GL_QUADS);
+   for (i=0;i&lt;nx-1;i++) {
+      for (j=0;j&lt;ny-1;j++) {
+         if (mesh[i][j].i &lt; 0 || mesh[i+1][j].i &lt; 0 || mesh[i+1][j+1].i &lt; 0 || mesh[i][j+1].i &lt; 0)
+            continue;
+
+         glColor3f(mesh[i][j].i,mesh[i][j].i,mesh[i][j].i);
+         glTexCoord2f(mesh[i][j].u,mesh[i][j].v);
+         glVertex3f(mesh[i][j].x,mesh[i][j].y,0.0);
+
+         glColor3f(mesh[i+1][j].i,mesh[i+1][j].i,mesh[i+1][j].i);
+         glTexCoord2f(mesh[i+1][j].u,mesh[i+1][j].v);
+         glVertex3f(mesh[i+1][j].x,mesh[i+1][j].y,0.0);
+
+         glColor3f(mesh[i+1][j+1].i,mesh[i+1][j+1].i,mesh[i+1][j+1].i);
+         glTexCoord2f(mesh[i+1][j+1].u,mesh[i+1][j+1].v);
+         glVertex3f(mesh[i+1][j+1].x,mesh[i+1][j+1].y,0.0);
+
+         glColor3f(mesh[i][j+1].i,mesh[i][j+1].i,mesh[i][j+1].i);
+         glTexCoord2f(mesh[i][j+1].u,mesh[i][j+1].v);
+         glVertex3f(mesh[i][j+1].x,mesh[i][j+1].y,0.0);
+
+       }
+   }
+   glEnd();
+</pre>
+
+<p align="justify">
+The code to draw the polar mesh is similar and the same comments above apply.
+</p>
+
+<pre>
+   glBegin(GL_QUADS);
+   for (i=0;i&lt;nx;i++) {
+      for (j=0;j&lt;ny-1;j++) {
+         i2 = (i+1) % nx; // Wrap around, i = nx = 0
+
+         if (mesh[i][j].i &lt; 0 || mesh[i2][j].i &lt; 0 || mesh[i2][j+1].i &lt; 0 || mesh[i][j+1].i &lt; 0)
+            continue;
+
+         glColor3f(mesh[i][j].i,mesh[i][j].i,mesh[i][j].i);
+         glTexCoord2f(mesh[i][j].u,mesh[i][j].v);
+         glVertex3f(mesh[i][j].x,mesh[i][j].y,0.0);
+
+         glColor3f(mesh[i2][j].i,mesh[i2][j].i,mesh[i2][j].i);
+         glTexCoord2f(mesh[i2][j].u,mesh[i2][j].v);
+         glVertex3f(mesh[i2][j].x,mesh[i2][j].y,0.0);
+
+         glColor3f(mesh[i2][j+1].i,mesh[i2][j+1].i,mesh[i2][j+1].i);
+         glTexCoord2f(mesh[i2][j+1].u,mesh[i2][j+1].v);
+         glVertex3f(mesh[i2][j+1].x,mesh[i2][j+1].y,0.0);
+
+         glColor3f(mesh[i2][j+1].i,mesh[i2][j+1].i,mesh[i2][j+1].i);
+         glTexCoord2f(mesh[i2][j+1].u,mesh[i2][j+1].v);
+         glVertex3f(mesh[i2][j+1].x,mesh[i2][j+1].y,0.0);
+
+      }
+   }
+   glEnd();
+</pre>
+
+<p align="justify">
+For prewarping or off-line warping where images are permanently warped (eg: for movie playback)
+the usual approach is to find the mesh cell for each pixel (x,y) in the final image. The
+exact (u,v) coordinate is estimated by linear interpolation across the mesh cell, this (u,v)
+coordinate gives the desired pixel in the input image. In reality supersampling antialiasing
+also needs to be applied for the highest quality result.
+</p>
+
+</td></tr></table></center>
+</body>
+</html>
+

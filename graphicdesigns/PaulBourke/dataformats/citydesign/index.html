@@ -1,0 +1,246 @@
+<HTML><HEAD><link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<TITLE>Compressed Mesh Macro File: Design Guide</TITLE>
+<META NAME="Author" CONTENT="&copy; 1999, Chris Colefax">
+</HEAD>
+
+<BODY BGCOLOR=#C0C0C0>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<H1 ALIGN=CENTER>City Generator Include File: Design Guide</H1>
+<H3 ALIGN=CENTER>for Persistence of Vision 3.1</H3>
+
+<P><I>Created by Chris Colefax, 1 February 1999</I>
+
+<P><bR>
+
+<H2>Contents</H2>
+<MENU><B>
+<LI><A HREF="index.html#Overview">Overview</A>
+<LI><A HREF="index.html#ObjFiles">Designing City Object Files</A>
+   </B><MENU><I>
+   <LI><A HREF="index.html#ObjBasics">Basic City Object Files</A>
+   <LI><A HREF="index.html#ObjPavements">Pavement Objects</A>
+   <LI><A HREF="index.html#ObjVehicles">Vehicle Objects</A>
+   <LI><A HREF="index.html#ObjBuildings">Building Objects</A>
+   <LI><A HREF="index.html#ObjWindows">Building Window Options</A>
+   <LI><A HREF="index.html#ObjTips">City Object File Hints and Tips</A>
+   </I></MENU><B>
+<LI><A HREF="index.html#McrFiles">Designing City Macro Files</A>
+   </B><MENU><I>
+   <LI><A HREF="index.html#McrCoord">City Coordinates</A>
+   </I></MENU><B>
+<LI><A HREF="index.html#Copyright">Copyright Information</A>
+<LI><A HREF="index.html#Contact">Contacting the Author</A>
+</B></MENU>
+
+<P><bR>
+
+<A NAME="Overview"></A><H2>Overview</H2>
+<P>The documentation for the <A HREF="http://paulbourke.net/dataformats/citydesign/CITY.HTM"><I>City Generator Include File</I></A> explains the basic structure and usage of the include file package. This document details the guidelines to follow when you create your own custom city macro and object files. 
+<P>The type of file you create (macro or object) depends on the sort of city/town/village scene you want to produce. City object files can contain definitions of vehicles, pavement objects (such as street lamps), and building components (single storeys, roofs, etc.), that are copied and placed by <I>City.mcr</I> to assemble the city. Although some randomness can be added to textures for the buildings and building windows, all the objects remain basically static. 
+<P>City macro files, on the other hand, allow you to completely redefine not only the objects that the city is constructed from but also the way in which the objects are assembled. For example, you could design city macros that construct buildings directly (rather than simply copying a predefined object), ensuring that no two buildings (or vehicles, or streets, etc.) in the city are alike. Or, you could design macros that animate some or all of the city in various ways. 
+
+<P><bR>
+
+<A NAME="ObjFiles"></A><H2>Designing City Object Files</H2>
+<P>City object files can be designed in two basic ways: they can contain all the objects required to build a city, or they can contain a selection of objects (say, a set of vehicles, or a single building). The second type of file can then be used in conjunction with other similar object files, so you (or people you distribute your object files to) can build a library of object files and combine them in different ways. 
+<P>Each of the components that make up a full set of city objects will be explained separately, so you can concentrate on one section at a time. For example's sake, simple textures and objects will be used where necessary - of course, you can make your object files as complex and detailed as you like. If you are designing objects in an external modeller or importing meshes from another program, you should keep in mind that the City Generator uses a left-handed coordinate system with the +y axis pointing skywards (and the object bases sitting at y=0). 
+<P>Also, while the scaling of objects and textures is up to you (depending on the options you use with <I>City.inc</I> and <I>City.mcr</I> such as <I>building_width, pavement_height,</I> etc.) you may find it best to use the default scale of approximately 1 unit = 1 metre. This will ensure that you can easily share your object files with others. 
+
+<A NAME="ObjBasics"></A><H3>Basic City Object Files</H3>
+<P>The minimum requirements for a stand-alone object file are very simple: all you need to declare are a texture to be used for the streets and a texture for the pavements, plus a value telling <I>City.mcr</I> not to use the default objects, eg: 
+<P><CODE><PRE>#declare city_default_objects = false;
+#declare street_texture = texture {pigment {rgb 0.5}}
+#declare pavement_texture = texture {pigment {rgb 0.7}}</PRE></CODE>
+<P>If you save these three lines to a file (eg. <I>MyCity.obj</I>), you will have a working city object file ready to be used with <I>City.inc</I>, eg: 
+<P><CODE><PRE>camera {location &lt;50, 100, -150&gt; look_at &lt;0, 0, 0&gt;}
+light_source {&lt;-1000, 3000, -4000&gt; rgb 1} 
+
+#include &quot;MyCity.obj&quot; // Replaces DEFAULT.OBJ 
+#include &quot;CITY.INC&quot;</PRE></CODE>
+<P>Rendering the above scene will show the default city layout, with dark grey streets and lighter grey pavements. Of course, you can declare the textures in any way you want, including image, bump, and material maps, layered textures, etc. 
+<P>The third, optional city texture is that used to place markings on the streets. This texture should generally be semi-transparent, so the underlying street texture can still be seen. One unit of the texture will correspond to one traffic lane, travelling along the x-axis, eg: to create lined streets: 
+<P><CODE>#declare street_overlay = texture {pigment {gradient z color_map {[.1 rgb 1] [.1 rgbt 1]}}}</CODE>
+<P>At intersections, two copies of the texture will be layered on top of each other at 90 degree angles. 
+
+<A NAME="ObjPavements"></A><H3>Pavement Objects</H3>
+<P>The next (optional) step is to place objects on the city pavements, which might include things like street lamps, traffic lights, bus stops, fire hydrants, and pedestrians. To define the objects, you need to declare arrays containing the object definitions themselves, the offsets of the objects from the edge of the pavement, the spacing between adjacent objects, and the randomness of this spacing. These arrays will be used to place objects on all four sides of each pavement, with the objects rotated accordingly. 
+<P>To declare the objects themselves you should imagine a street running along the z-axis, with the edge of the pavement at the origin. Moving the object along the -x axis will move it further away from the street, while extending the object over the +x axis will cause it to extend out over the streets. Let's say you want to create street lamps, pedestrians, and phone boxes (represented here by simple primitives of appropriate sizes): 
+<P><CODE><PRE>#declare pavement_object = array[3] 
+#declare pavement_object_offset = array[3] 
+#declare pavement_object_spacing = array[3] 
+#declare pavement_object_turb = array[3] 
+
+// STREET LAMP 
+#declare pavement_object[0] = cylinder {0, y*3, 0.05 pigment {rgb 0} translate -x*0.25} 
+#declare pavement_object_offset[0] = 3; 
+#declare pavement_object_spacing[0] = 15; 
+#declare pavement_object_turb[0] = 0; 
+
+// PEDESTRIAN 
+#declare pavement_object[1] = cylinder {0, y*1.7, 0.15 pigment {rgb 1} translate -x*1.5} 
+#declare pavement_object_offset[1] = 0.5; 
+#declare pavement_object_spacing[1] = 2; 
+#declare pavement_object_turb[1] = 3; 
+
+// PHONE BOX 
+#declare pavement_object[2] = box {&lt;-1, 0, -1&gt;, &lt;1, 1, 1&gt; scale &lt;0.75, 2.5, 0.75&gt; pigment {rgbf 0.7} translate -x*.8} 
+#declare pavement_object_offset[2] = 5; 
+#declare pavement_object_spacing[2] = 0; 
+#declare pavement_object_turb[2] = 100;</PRE></CODE>
+<P>In this case, the street lamps are 3 metres high, and the bases of the lamps are one-quarter of a unit from the street. The first street lamp along each side of the pavement will be 3 metres from the street corner, with lamps exactly every 15 metres after that (no turbulence is added to the spacing). 
+<P>The pedestrian, on the other hand, is 1.7 units tall, and 1.5 units from the pavement's edge. The first pedestrian is half a metre from the street corner, with a minimum distance between pedestrians of 2 metres. The turbulence value of 3, however, means that these values may be increased by up to 3 metres, eg. the first pedestrian may be between 0.5 and 3.5 metres from the street corner, and the spacing between pedestrians may be between 2 and 5 metres. 
+<P>The phone box measures 1.5 x 2.5 metres, and is 1 metre from the street. The spacing value of zero means that only one phone box will be created along each side of the pavement. Also, the turbulence value of 100 means that the box may be between 5 and 105 metres from the street corner. If the offset distance calculated for a particular box is greater than the length of the pavement, no box will be placed along that side of the pavement (a useful feature when you don't necessarily want a particular object on every pavement). 
+
+<A NAME="ObjVehicles"></A><H3>Vehicle Objects</H3>
+<P>City vehicle objects are created similar to the pavement objects, with arrays defining the objects and the minimum space required for each vehicle. To create the vehicles you should again imagine a street running along the z-axis. The vehicles should be centred on the origin, with the necessary parts of the object touching the ground at y = 0. If the front of the vehicles point in the +z direction, the vehicles will be placed on the left-hand side of the streets; vehicles pointing in the -z direction will be placed on the right-hand side of the streets. To make your object file support both arrangements, you can include an option similar to that used in the default VEHICLES.OBJ file, eg: 
+<P><CODE><PRE>#ifndef (city_left_hand_drive) #declare city_left_hand_drive = false; #end 
+
+#declare city_vehicle = array[2] 
+#declare city_vehicle_spacing = array[2] 
+
+#declare city_vehicle[0] = cone {&lt;0, 1, 1&gt;, 1, &lt;0, 0, -1&gt;, 0 pigment {rgb &lt;1, 1, 0&gt;}rotate y*(city_left_hand_drive ? 180 : 0)} 
+#declare city_vehicle_spacing[0] = 2.5; 
+
+#declare city_vehicle[1] = cone {&lt;0, 1, 1.5&gt;, 1, &lt;0, 0, -1.5&gt;, 0 pigment {rgb &lt;1, 0, 0&gt;}rotate y*(city_left_hand_drive ? 180 : 0)} 
+#declare city_vehicle_spacing[1] = 3.5;</PRE></CODE>
+<P>Setting the <I>city_vehicle_spacing</I> values to the length of each vehicle along the z-axis ensures that vehicles don't overlap incorrectly, even when spaced closely together using the <I>traffic_spacing</I> option. 
+
+<A NAME="ObjBuildings"></A><H3>Building Objects</H3>
+<P>The building objects are the most complicated of the city objects, with up to ten arrays of objects, textures, and values possible for a single building. In addition, a stand-alone object file must also declare a set of values that tell <I>City.mcr</I> which arrays to use for which buildings. The good news is that the DEFAULT.OBJ file can be used to initialise the arrays and the values for a custom building objects file, by placing this line at the beginning of the file: 
+<P><CODE>#ifndef (building_size) #include &quot;DEFAULT.OBJ&quot; #end</CODE>
+<P>Having done that, the file must now declare values for some or all of the arrays defining the building. To make your file work in conjunction with other building files, you should use the <I>building_types</I> value to specify the current index of the arrays (ie. use <CODE>[building_types]</CODE> at the end of each array identifier, rather than a number such as <CODE>[0]</CODE>). At the end of the file you then increment the <I>building_types</I> value by one so that the objects you have just defined are not overwritten by the next set of building definitions, eg: 
+<P><CODE>#declare building_types = building_types + 1;</CODE>
+<P>In between these two lines you can define the building with the options you want. Like the vehicle objects, you need to define the building objects centred on the origin, with their bases at y = 0. Also, the building objects should be orientated so the front of the building points in the -z direction and the back to the +z direction. The building will be rotated so the front always faces out onto the streets surrounding the city blocks. For buildings on the corners of blocks (with two sides exposed), the side of the building facing in the -x direction will also be visible from the streets. The other side (facing in the +x direction) and the back of the building will usually not be visible, except where one building is taller than the building next to it. 
+<DL>
+<DT><B>building_size 
+</B><DD>Unlike the pavement and vehicle objects, the building objects will be scaled to fit the city. The <I>building_size</I> sets the bounding box of the building objects you declare (see below), with the x and z-components setting the width and depth, and the y-component setting the height of a single storey of the building, eg: 
+<P><CODE>#declare building_size[building_types] = &lt;100, 20, 100&gt;;</CODE>
+<P>This means you can design buildings at any scale (eg. 1 unit = 1 inch, or 1 unit = 100 metres), and be sure the buildings will still fit correctly in the city. Keep in mind, however, that the default building is 25 metres wide and deep. If you design a building that is 100 metres wide and appropriately high, and the <I>building_width</I> option is set to 25, the building will look a quarter as large as it should do (compared to the other objects in the city). Of course, this won't be a problem if you set the <I>building_width</I> option of your city accordingly. 
+
+<DT><B>building_options 
+</B><DD>This value sets which array entries have been defined for the current building, and should be the sum of a selection of those values defined in DEFAULT.OBJ (ie. <I>build_texture, build_fit_texture, build_profile, build_details, build_window_levels, build_window_profile, build_base</I>, and <I>build_roof</I>), eg: 
+<P><CODE>#declare building_options[building_types] = build_profile + build_fit_texture + build_roof;</CODE>
+<P>This will define a building using a profile object, a fitted texture, and a roof object. Each of the possible options will be explained in more detail below. 
+
+<DT><B>build_profile 
+</B><DD>Basically, each building is constructed by stacking individual levels on top of each other, and then scaling, rotating, and translating the entire building to fit correctly into the city. For some buildings, however, the basic shape of the building is the same from the base to the roof. In this case you can add the <I>build_profile</I> value to the building options, and declare a <I>building_profile</I> object, eg: 
+<P><CODE>#declare building_profile[building_types] = box {&lt;-48, 0, -48&gt;, &lt;48, 20, 48&gt;}</CODE>
+<P>When the building is constructed, this object is scaled from the single-storey height to fit the full height of the building, saving memory and parsing time because only one copy is required no matter how many storeys high the building is. For this reason, you will normally also declare a <I>building_texture</I> (if the texture were included in the profile object, it would be vertically stretched). 
+
+<DT><B>build_details 
+</B><DD>If you add the <I>build_details</I> value to the building options, you can declare the <I>building_details</I> object, eg: 
+<P><CODE>#declare building_details[building_types] = box {&lt;-50, 0, -50&gt;, &lt;50, 1, 50&gt; pigment {rgb 0.3}}</CODE>
+<P>This object is duplicated for each storey of the building, translated to the correct height (so the box above would start at the base of each storey). 
+
+<DT><B>build_base 
+</B><DD>Adding the <I>build_base</I> value to the building options lets you declare a <I>building_base</I> object to be created only at the base (ground storey) of the building. If you use the <I>building_base</I> object, note that any <I>building_details</I> object you may have declared will not be created at the base. If you wish to use the same detail objects at the base, make sure you declare the detail objects first, and then union them with the base objects, eg: 
+<P><CODE><PRE>#declare building_base[building_types] = union { 
+box {&lt;-10, 0, -49&gt;, &lt;10, 17, -48&gt; pigment {rgb 0.1}} 
+object {building_details[building_types]}}</PRE></CODE>
+<P>Note that if the <I>build_details</I> option is used without the <I>build_base</I> option, the <I>building_details</I> object will be created at the base of the building as well. 
+
+<DT><B>build_roof 
+</B><DD>Adding the <I>build_roof</I> value to the building options lets you declare a <I>building_roof</I> object that will be placed on the top of the building, eg: 
+<P><CODE>#declare building_roof[building_types] = box {&lt;-52, 0, -52&gt;, &lt;52, 2, 52&gt; pigment {rgb 0.2}}</CODE>
+<P>Note that the roof object sits at y = 0, and will be translated vertically to sit on top of the highest storey of the building. 
+
+<DT><B>build_texture</B> and <B>build_fit_texture 
+</B><DD>Adding the <I>build_texture</I> value to the building options allows you to declare a <I>building_texture</I> that will be applied to any of the building objects that are not otherwise textured, eg: 
+<P><CODE>#declare building_texture[building_types] = texture {pigment {rgb 0.4}}</CODE>
+<P>The texture is applied after the building has been rotated and translated into place, so the texture patterns on any two of the same type of buildings in different parts of the city will be different. In some cases, though, this may mean the texture is applied to the building incorrectly (eg. if you are using carefully aligned image/texture maps). For these sorts of textures, you should add the <I>build_fit_texture</I> value to the building options instead of the <I>build_texture</I> option. The declared <I>building_texture</I> will then be scaled, rotated, and translated with the building, so the alignment remains correct.
+</DL>
+
+<A NAME="ObjWindows"></A><H3>Building Window Options</H3>
+<P>Although the above options are enough to design highly complex buildings, you are likely to be faced with problems if you want to create night scenes containing buildings with lit and unlit windows. Making the windows part of the <I>building_details</I> object would mean that every storey would have exactly the same arrangement of windows, while including the windows in the texture would probably require large image maps for a decent result, and every copy of the same building would have the same window arrangement. 
+<P>You can solve this problem by using the <I>building_windows</I> object, along with the window texturing macros that are included in DEFAULT.OBJ. These macros will create a three-dimensional texture consisting of regular, rectangular blocks of a specified size. The macros accept two textures: one for lit windows, eg. with a high ambient value, and one for unlit windows. Each block of the texture will then contain one or either of these base textures, with the proportions of each controlled by the <I>windows_lit</I> and <I>windows_blend</I> options. The syntax for the first of these is: 
+<P><CODE>#declare building_window_texture[building_types] = window_texture (Unlit Texture, Lit Texture, Window Size)</CODE>
+The second macro performs this declaration automatically, and also declares the <I>building_window_size</I> (see below) value for the current building type: 
+<P><CODE>set_window_texture (Unlit Texture, Lit Texture, Window Size)</CODE>
+<P>This is usually the easiest method, but in some cases you will want to set the <I>building_window_size</I> option manually, or use the block window texture as part of a texture map (in which case you can use the first macro). 
+<P>There are various ways of creating the windows for a building: the first is to declare the <I>building_windows</I> object as a union of the actual window panes you want to create on each storey of the building. In this case, you should add the <I>build_window_levels</I> value to the building options, and declare a <I>building_window_texture</I> that maps one block to each pane, eg: 
+<P><CODE><PRE>#declare building_windows[building_types] = union {box {&lt;-40, 8, -49&gt;, &lt;-20, 17, 49&gt;}box {&lt;20, 8, -49&gt;, &lt;40, 17, 49&gt; }} 
+set_window_texture (texture {pigment {rgb 0.2}}, texture {pigment {rgb 1} finish {ambient 0.8}}, &lt;25, 0, 0&gt;)</PRE></CODE>
+<P>Here we have created two windows (note how the window objects themselves extend from the front wall of the building to the back). Using &lt;25, 0, 0&gt; for the window size option indicates that each block of the window texture should be 25 units wide, but no blocks should be created in the y or z directions. To understand why this value is used, we need to understand what the <I>building_window_size</I> option actually does. Apart from setting the block size of the texture created by the macro, each time a copy of the <I>building_window</I> object is created the texture is shifted by a whole-number multiple of this vector, eg: one copy might have the texture shifted by &lt;50, 0, 0&gt;, another by &lt;-225, 0, 0&gt; . In this way we avoid any two stories from having the same arrangement of lit and unlit windows. 
+<P>One problem with the above method is that creating more windows requires more objects, and many-storey buildings will require more and more memory. You can avoid this by using a <I>building_windows</I> object that wraps around the entire building, and then using the <I>window_texture ()</I> macro as part of a suitable texture map (eg. brick or gradient). You can see an example of this method in the red-brick apartment building defined in FLATS.OBJ. 
+<P>However, both of the above methods create windows on the outside of the building. To create windows that are inset from the building walls you can add the <I>build_window_profile</I> value to the building options instead, and then define the <I>building_windows</I> object in the same way as the <I>building_profile</I> object (ie. it will be scaled to full height). In this case the <I>building_window_size</I> should also contain a y-component equal to the height of a single building level, so that each storey has a different window arrangement. You can then wrap the outside of the building around the window profile object, either by using a <I>building_details</I> object containing the necessary &quot;cutouts&quot; to view the window profile inside, or a fitted <I>building_texture</I> that contains transparent areas. You can see examples of both methods in the various default building object files that come with the <I>City Generator Include File</I> package. 
+
+<A NAME="ObjTips"></A><H3>City Object File Hints and Tips</H3>
+<P>Hopefully the information above, along with the default city object files, should be enough to have you well on your way to creating entirely new cities of your own. Here a few things to bear in mind: 
+<UL>
+<LI><B>Detail Levels:</B> While working on a particular component of a city object file it's easy to lose track of how the objects will actually appear in a complete city. This is particularly true of vehicles and pavement objects, which may end up little more than a blob of anti-aliased pixels in your final renderings! In many cases, simple objects with more detailed textures will use less memory and still give excellent results.
+<LI><B>Image Maps:</B> If you want to render large cityscapes, it may be a good idea to look at using image-maps to create your buildings. This way, you can design buildings that require only a window profile object, a building profile object, and a partially-transparent image or material map building texture that takes care of all the details. Remember, though, to make the window profile object a fraction shorter than the profile object, or your windows might end up sticking out of the roof! 
+<LI><B>Grouping Objects:</B> This is particularly useful for pavement objects - eg. you can create a single object that contains a union of varied pedestrians, and set the object spacing to the length of the entire group. This way you can create armies of urban dwellers without having to create every pedestrian as a separate pavement object. This technique works even better if your object group is created from a triangle mesh (rather than a union). 
+<LI><B>Local Variables:</B> If you want to use some values or objects repeatedly in a single object file, you can use the <CODE>#local</CODE> switch to keep them in memory only the first time the object file is loaded. 
+<LI><B>Light Sources:</B> Like the detail level, it's easy to get carried away adding lights to vehicles, street lamps, etc. This can greatly increase the memory needed to render the scene, so maybe a reasonable compromise could be to use spotlight cones (like the default object files). These use very little memory, and you don't need to add a slow-rendering atmosphere to view the results. 
+<LI><B>Extended Sizes:</B> You will probably notice in the default building object files that some of the building objects are actually larger than their <I>building_size</I> values (such as the hotel with the entrance awning). This allows you to create buildings with objects that extend out onto the pavement (if the extensions are in the -z direction), or into the alley ways between buildings (in the +x and +z directions). 
+<LI><B>Parameterising:</B> If you want to use a single city object file in various ways, perhaps you should consider adding options (like the <I>city_left_hand_drive</I> option shown above). Simply check the options at the beginning of the file (using <CODE>#ifndef</CODE>) and assign defaults if no value has been declared. Then use these values to determine various characteristics of the city objects (like rotations, colours, whether or not to create light sources, etc.) 
+<LI><B>Document and Distribute:</B> If you want other people to enjoy your city object files, you might want to make them easier to use by including a little documentation, or a few sample scenes that use your objects. 
+</UL>
+
+<P><bR>
+
+<A NAME="McrFiles"></A><H2>Designing City Macro Files</H2>
+<P>Redefining the macros that <I>City.inc</I> uses to construct the city allows you to extend the <I>City Generator Include File</I> in all sorts of ways. This documentation will only attempt to outline the required macro definitions and parameters. 
+
+<A NAME="McrCoord"></A><H3>City Coordinates</H3>
+<P>As mentioned earlier, the <I>City Generator Include File</I> uses a left-hand coordinate system. All the coordinates passed to the following macros lie in the x-z plane, and no height data is determined by the include file or passed to the macros. Note that you only have to declare those macros which you want for a particular city construction. 
+<P>Also, because the macros are called from <I>City.inc</I> any variables local to that file can be used in the macros (eg. <I>street_width, building_width, city_corner1 & city_corner2, BlockSize</I>, etc). You may also declare and use your own global variables (such as random-number seeds and height data) to allow the macros to support other parameters. 
+<P>Note that the TEMPLATE.MCR file included with the City Generator includes all of the following macro definitions, along with simple object creation examples. 
+<DL>
+<DT><B>city_base 
+</B><DD>Macro Definition: <CODE>city_base (Corner1, Corner2)</CODE>
+<P>This macro is generally used to create the base on which the city is built. Usually this will lie at y = 0, although the macro file may include its own options for height information, eg. you could use a custom version of POV-Ray to determine the height values at various points of a height field. The macro file may support something like a <I>city_height_field</I> option, and this macro would then position the height field correctly (before constructing the streets, pavements, and buildings on it). 
+
+<DT><B>city_street
+</B><DD>Macro Definition: <CODE>city_street (From, To, Direction)</CODE>
+<P>The From and To values trace a line through the centre of the street, the width being determined by the <I>street_width</I> option. The Direction value indicates which axis the street is travelling along, where 0 indicates streets travelling along the x-axis and 1 indicates streets travelling along the z-axis. This is useful when you are placing objects like traffic, so you know which way they should be orientated. 
+
+<DT><B>city_pavement
+</B><DD>Macro Definition: <CODE>city_pavement (Corner1, Corner2)</CODE>
+<P>The two corner values for each pavement include the <I>pavement_width</I> and <I>building_gap</I> values. As with the <I>city_base</I> macro, no height data is defined by <I>City.inc</I>.
+
+<DT><B>city_building
+</B><DD>Macro Definition: <CODE>city_building (Corner1, Corner2, Direction)</CODE>
+<P>The two corner values define the x-z boundaries of the building to be created. A Direction value of 0 indicates a building that faces in the -z direction, a value of 1 indicates a building facing in the +x direction, 2 indicates the +z direction, and 3 indicates the -x direction. In general, this means a rotation of y*-90*Direction will orientate the building correctly (although you may of course choose to ignore this value altogether). 
+
+<DT><B>city_finish
+</B><DD>Macro Definition: <CODE>city_finish ()</CODE>
+<P>If defined, this parameterless macro is called after all the other city macros have been called, but before the city is transformed by any <I>city_transform</I> option that may be declared, and before the closing bracket of the union of city objects is parsed. This macro can contain city-wide transformations of its own, or add other objects to the city, eg. the <I>city_building</I> macro may create objects of random heights, storing the height of the highest building it creates in a declared variable. The <I>city_finish</I> macro could then alter the city with respect to this height. 
+</DL>
+
+<P><bR>
+
+<A NAME="Copyright"></A><H2>Copyright Information</H2>
+<P>The <A HREF="http://paulbourke.net/dataformats/citydesign/CITY.HTM#Copyright">copyright statements</A> covering the <I>City Generator Include File</I> package can be found in the user documentation. 
+<P>Further to those statements, any object or macro files created for use with the <I>City Generator Include File</I> remain entirely the property of the user or users who have created them. Responsibility for such files also remains with the authors of the files. 
+
+<P><bR>
+<!--
+<A NAME="Contact"></A><H2>Contacting the Author</H2>
+<P>If you wish to contact me with bug reports, bug fixes, custom city macro and/or object files, criticisms, comments, suggested improvements, questions, etc. you can reach me by email at: 
+<P><A HREF="mailto:ccolefax@geocities.com">ccolefax@geocities.com</A>
+<P>or by regular mail at: 
+
+<P><ADDRESS>Chris Colefax 
+<BR>PO Box 110 
+<BR>Kuranda, Queensland
+<BR>Australia 4872</ADDRESS>
+
+<P><bR>
+-->
+<P ALIGN=RIGHT><FONT SIZE=-2>POV-Ray<FONT SIZE=-2><SUP>TM</SUP> and Persistence of Vision<FONT SIZE=-2><SUP>TM</SUP> are registered trademarks of the POV-Ray Team<FONT SIZE=-2><SUP>TM</SUP>
+
+</td></tr></table></center>
+</BODY></HTML>

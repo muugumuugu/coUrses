@@ -1,0 +1,436 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Delta coding for audio compression</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Delta coding</h1>
+A simple compression scheme for audio, eeg, and general time series data files.<br>
+Written by <a href="../index.html">Paul Bourke</a><br>
+May 1998
+</center>
+<p>
+
+There exist many compression schemes, the right one to use in a particular
+situation depends largely on the type of data being compressed. The greater
+the compression ratios the more dependent the method tends to be to 
+characteristics of the data. So for example, greater compression ratios
+can be achieved if run length encoding is applied to black and white
+drawings than if it is applied to colour photographs. JPEG gives better
+compression ratios for photographs than a general compression method
+such as GZIP.
+<p>
+Many compression algorithms achieve very large compression ratios by
+"changing" the data. The changes are often cleverly made so that they
+aren't noticeable, for example, JPEG degrades the image in ways that
+the human visual system is not sensitive to. Some audio compression
+methods approximate the original signal with considerations of the 
+limitations in the target playback system.
+<p>
+A requirement with many recordings for scientific analysis is the
+data must not be degraded in any way, this is often referred to as a
+lossless compression method. In many time series derived from sampling
+continuous signals, the transition between samples is often much less
+than the total range available for the samples. For example, an
+acquisition system might store each sample in 16 bits, however since
+each subsequent sample usually changes slowly the difference between
+two samples can be stored in fewer bits. This is the essence of delta coding,
+store the changes instead of the absolute values. Of course the first
+sample needs to be stored in full resolution and occasionally there
+might be a larger transition. To cope with this a flag is normally used
+to indicate whether or not the next sample is a delta or absolute value.
+One disadvantage of delta coding is that to know the value of the signal at any
+point in time one has the read (know) all the previous values.
+
+<h3>Example</h3>
+A particular example will be used below for the
+purpose of illustrating delta coding. A 64 electrode eeg recording 
+system is used with each channel being digitised at 500 Hz. The recording
+length is just over 400 seconds and each sample consists of 2 bytes (+-32768). 
+The recording software saves these samples directly one for each channel 
+at each time step and so the file size is totally predictable. 
+In this example it would be approximately
+<br><center>64 (channels) * 500 Hz * 400 seconds * 2 bytes = 25600000 bytes<p>
+</center>
+A 4 second sample of this signal is shown below<p>
+<center><img src="http://paulbourke.net/dataformats/compress/compress2.gif"></center><p>
+
+If one looks at the distribution of differences between samples,
+the graph looks as follows<p>
+<center><img src="http://paulbourke.net/dataformats/compress/compress1.gif"></center><p>
+
+From this one might guess that 1 nibble (4 bits) should be used to
+represent differences between -7 and 7, 1 byte for differences between
+-127 and 127, and 2 bytes for the first sample and any larger differences.
+In each case the remaining sample in each range is used to flag a longer
+length for the next sample, for example negative 0 (1000) can be used as the 
+flag for nibbles.
+<p>For this example the number of differences stored as nibbles turned out
+to be 11739824, the number of items stored as bytes was 1098506, and finally
+there were only 6 differences that need 2 bytes. The file size from this
+simple minded delta coding is<p>
+<center>11739824 / 2 + 1098506 + 6 * 2 = 6968430 bytes</center><p>
+This is a factor of 3.6 times smaller, the maximum saving if all the
+differences could be saved as nibbles would be 4.<p>
+
+There are lots of improvements that can be made to this, for example
+Huffman coding. The simplicity of this approach given the possible
+gains for many types of data from digitising signals in time makes it
+attractive for at least the initial data format.
+<p>
+It is possible to measure the lowest number of bits needed theoretically
+to save a signal from Shannons information entropy measure. This is given
+by<p>
+<center><img src="http://paulbourke.net/dataformats/compress/compress3.gif"></center><p>
+where p<sub>i</sub> is the probability of a particular symbol S<sub>i</sub> 
+(number in this case) will occur in the sequence S.
+<p>
+
+<p><br><br><br><p>
+
+<center>
+<h1>RLE - Run Length Encoding</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+August 1995
+</center>
+<p>
+
+<b>Introduction</b><br>
+
+<p align="justify">
+Run length encoding is a straightforward way of encoding data so that
+it takes up less space. It is relies on the string being encoded 
+containing runs of the same character. Consider storing the following 
+short string.
+</p>
+<pre>
+   abcddddddcbbbbabcdef
+</pre>
+
+<p align="justify">
+There are 20 letters above, if each is stored as a single byte that is
+20 bytes in all. However, the runs of "d" and "b' above can be stored as
+two bytes each, the first indicating how many letters in the run.
+For example, the following run length encoded string takes only 14 bytes.
+</p>
+<pre>
+   abc6dc4babcdef
+</pre>
+
+<p align="justify">
+In general of course it needs to be a bit more sophisticated than the above.
+For example, there is no way in the above encoding to encode strings with
+numbers, that is, how would one know whether the number was the length
+of the run or part of the string content. Also, one would not want to 
+encode runs of length 1 so how does one tell when
+a run starts and when a literal sequence starts.
+</p>
+
+<p align="justify">
+The common approach is to use only 7 of the 8 bits to indicate the run
+length, this is normally interpreted as a signed byte. If the length byte 
+is positive it
+indicates a replicated run (run of the following byte). If the number
+is negative then it indicates a literal run, that is, that number
+of following bytes is copied as is.
+To illustrate this the following sequence of bytes would encode the
+example string given above, it requires 17 bytes. 
+</p>
+<pre>
+   -3 a b c 6 d -1 c 4 b 6 a b c d e f 
+</pre>
+
+<p align="justify">
+While 17 bytes to encode what would take 20 without RLE may not sound
+like much, but as the frequency and length of the repeating 
+characters increases the compression ratio gets better.
+</p>
+
+<b>Worst case</b><br>
+<p align="justify">
+Of course RLE will not always result in a compression, consider a string
+where the next character is different from the current character. Every
+127 bytes will require a extra byte to indicate a new literal run length.
+</p>
+
+<b>Best case</b><br>
+<p align="justify">
+The best case is when 128 identical characters follow each other, this
+is compressed into 2 bytes instead of 128 giving a compression ratio
+of 64.
+</p>
+
+<b>Example</b><br>
+<p align="justify">
+For this reason RLE is most often used to compress black and white or
+8 bit indexed colour images where long runs are likely. RLE compression
+is therefore what was used for the original low colour images expected
+for the Macintosh PICT file format. RLE is not generally used for high colour
+images such as photographs where in general each pixel will vary from the
+last.
+</p>
+
+<p align="justify">
+The following 3 images illustrate the different extremes, the first image
+contains runs along each row and will compress well. The second image
+is the same as the first but rotated 90 degrees so there are no runs
+giving worse case and a larger file. This suggests a natural extension
+to RLE for images, that is, one compresses vertically and horizontally
+and uses the best, the flag indicating which one is used is stored in
+the image header.
+The last case is the best scenario
+where the whole image is a constant value.
+</p>
+
+<center>
+<table width=100%><tr><td width=33%>
+<center>
+<a href="http://paulbourke.net/dataformats/compress/sample1.raw"><img src="http://paulbourke.net/dataformats/compress/sample1.gif" width=100 height=100></a><br>
+Original size: 10000 bytes<br>
+Compressed size: 5713 bytes<br>
+Ratio: 1.75
+</center>
+</td><td width=33%>
+<center>
+<a href="http://paulbourke.net/dataformats/compress/sample2.raw"><img src="http://paulbourke.net/dataformats/compress/sample2.gif" width=100 height=100></a><br>
+Original size: 10000 bytes<br>
+Compressed size: 10100<br>
+Ratio: 0.99
+</center>
+</td><td width=34%>
+<center>
+<a href="http://paulbourke.net/dataformats/compress/sample2.raw"><img src="http://paulbourke.net/dataformats/compress/sample3.gif" width=100 height=100></a><br>
+Original size: 10000 bytes<br>
+Compressed size: 200<br>
+Ratio: 50
+</center>
+</td></tr></table>
+<p></center>
+
+<p><b>Image comparison</b><p>
+<p align="justify">
+Run length encoding is used within a number of image formats, for
+example PNG, TIFF, and TGA. While RLE is normally used as a lossless
+compression, it can be assisted (to create small files) by quantising
+the rgb values thus increasing the chances of runs of the same colour.
+There are two ways one can run length encode the pixels, the first
+as used in the TGA format is to look for runs of all three components,
+the other is to compress each colour plane separately. The second
+approach normally gives smaller files. Below is a table for two different
+images along with the file size for the image quantised to different
+levels and saved in rgb order or planar order.
+</p>
+
+<table border=0 width=100% cellpadding=0 cellspacing=2>
+<tr>
+<td>Image details and<br>quantisation level</td>
+<td>Image example</td>
+<td>RLE on RGB<br>(KBytes)</td> 
+<td>RLE on Planes<br>(KBytes)</td>
+</tr>
+
+<tr>
+<td>Uncompressed</td>
+<td><img src="http://paulbourke.net/dataformats/compress/a000.jpg" width=256 height=256></td>
+<td>197</td>
+<td>197</td>
+</tr>
+
+<tr>
+<td>1 (none)</td>
+<td><img src="http://paulbourke.net/dataformats/compress/a001.jpg" width=256 height=256></td>
+<td>151</td>
+<td>141</td>
+</tr>
+
+<tr>
+<td>2</td>
+<td><img src="http://paulbourke.net/dataformats/compress/a002.jpg" width=256 height=256></td>
+<td>135</td>
+<td>110</td>
+</tr>
+
+<tr>
+<td>4</td>
+<td><img src="http://paulbourke.net/dataformats/compress/a004.jpg" width=256 height=256></td>
+<td>101</td>
+<td>70</td>
+</tr>
+
+<tr>
+<td>6</td>
+<td><img src="http://paulbourke.net/dataformats/compress/a006.jpg" width=256 height=256></td>
+<td>81</td>
+<td>49</td>
+</tr>
+
+<tr>
+<td>8</td>
+<td><img src="http://paulbourke.net/dataformats/compress/a008.jpg" width=256 height=256></td>
+<td>64</td>
+<td>36</td>
+</tr>
+
+<tr>
+<td>12</td>
+<td><img src="http://paulbourke.net/dataformats/compress/a012.jpg" width=256 height=256></td>
+<td>46</td>
+<td>24.5</td>
+</tr>
+
+<tr>
+<td>16</td>
+<td><img src="http://paulbourke.net/dataformats/compress/a016.jpg" width=256 height=256></td>
+<td>35</td>
+<td>18.5</td>
+</tr>
+
+<tr>
+<td>20</td>
+<td><img src="http://paulbourke.net/dataformats/compress/a020.jpg" width=256 height=256></td>
+<td>28</td>
+<td>14.5</td>
+</tr>
+
+<tr>
+<td>26</td>
+<td><img src="http://paulbourke.net/dataformats/compress/a026.jpg" width=256 height=256></td>
+<td>22</td>
+<td>11.5</td>
+</tr>
+
+<tr>
+<td>32</td>
+<td><img src="http://paulbourke.net/dataformats/compress/a032.jpg" width=256 height=256></td>
+<td>17.5</td>
+<td>9.5</td>
+</tr>
+</table>
+
+<p align="justify">
+The above example was chosen because it doesn't have long runs of equal
+colour and because any banding due to quantisation should be obvious
+to spot. This occurs somewhere between 4 and 8 depending on how
+fussy one is. Note the planar compression works much better than
+the rgb based compression.
+</p>
+
+
+<table border=0 width=100% cellpadding=0 cellspacing=2>
+<tr>
+<td>Image details and<br>quantisation level</td>
+<td>Image example</td>
+<td>RLE on RGB<br>(KBytes)</td>
+<td>RLE on Planes<br>(KBytes)</td>
+</tr>
+
+<tr>
+<td>Uncompressed</td>
+<td><img src="http://paulbourke.net/dataformats/compress/b000.jpg" width=256 height=256></td>
+<td>197</td>
+<td>197</td>
+</tr>
+
+<tr>
+<td>1 (none)</td>
+<td><img src="http://paulbourke.net/dataformats/compress/b001.jpg" width=256 height=256></td>
+<td>195</td>
+<td>190</td>
+</tr>
+
+<tr>
+<td>2</td>
+<td><img src="http://paulbourke.net/dataformats/compress/b002.jpg" width=256 height=256></td>
+<td>188</td>
+<td>173</td>
+</tr>
+
+<tr>
+<td>4</td>
+<td><img src="http://paulbourke.net/dataformats/compress/b004.jpg" width=256 height=256></td>
+<td>163</td>
+<td>140</td>
+</tr>
+
+<tr>
+<td>6</td>
+<td><img src="http://paulbourke.net/dataformats/compress/b006.jpg" width=256 height=256></td>
+<td>142</td>
+<td>119</td>
+</tr>
+
+<tr>
+<td>8</td>
+<td><img src="http://paulbourke.net/dataformats/compress/b008.jpg" width=256 height=256></td>
+<td>127</td>
+<td>106</td>
+</tr>
+
+<tr>
+<td>12</td>
+<td><img src="http://paulbourke.net/dataformats/compress/b012.jpg" width=256 height=256></td>
+<td>105</td>
+<td>88</td>
+</tr>
+
+<tr>
+<td>16</td>
+<td><img src="http://paulbourke.net/dataformats/compress/b016.jpg" width=256 height=256></td>
+<td>86.5</td>
+<td>74</td>
+</tr>
+
+<tr>
+<td>20</td>
+<td><img src="http://paulbourke.net/dataformats/compress/b020.jpg" width=256 height=256></td>
+<td>92</td>
+<td>73.5</td>
+</tr>
+
+<tr>
+<td>26</td>
+<td><img src="http://paulbourke.net/dataformats/compress/b026.jpg" width=256 height=256></td>
+<td>74</td>
+<td>60.5</td>
+</tr>
+
+<tr>
+<td>32</td>
+<td><img src="http://paulbourke.net/dataformats/compress/b032.jpg" width=256 height=256></td>
+<td>60</td>
+<td>50.5</td>
+</tr>
+</table>
+<p align="justify">
+Unlike the first example, because each of the colour layers in this
+images are "busy" the difference between rgb and planar RLE compression
+is not so marked. Note that the visual artefacts that occur to so on
+the wall where there is a smooth and subtle shade variation, even at
+the highest quantisation level the artefacts on the vase are hard to
+pick.
+</p>
+<p>
+
+<b>Source code</b><p>
+Standard compression C source: <a href="http://paulbourke.net/dataformats/compress/rle.c">rle.c</a><br>
+Example code based upon the above:
+<a href="http://paulbourke.net/dataformats/compress/rletest.c">rletest.c</a><br>
+
+</td></tr></table></center>
+</body>
+</html>

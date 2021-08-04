@@ -1,0 +1,165 @@
+<html>
+<head>
+<link rel=StyleSheet href="../../pdbstyle.css" type="text/css" media=all>
+<title>Image slicing for fulldome (and other applications)</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script language="JavaScript">
+<!--
+   if (self.location.href != top.location.href) {
+      top.location.href = self.location.href;
+   }
+-->
+</script>
+
+
+<center><table width=800><tr><td>
+
+<center>
+<h1>Image slicing for fulldome (and other applications)</h1>
+Written by <a href="../index.html">Paul Bourke</a><br>
+June 2015
+</center>
+<p><br><p>
+
+<p align="justify">
+Multiple projector systems, in this case for fulldome projection, typically slice
+up high resolution movie content into smaller segments. These segments contain that
+portion of the image required plus extra for alignment adjustment and edge blending.
+There is no one slicing, it depends on the projector arrangement, field of view and
+the other intrinsic optical attributes. The supplier of the projection system will
+provide the details of how the images should be sliced, this is generally in the
+form of a 4 sided polygon defined by the 4 corner vertices.
+The transformation, as illustrated below, requires a warping (image transformation)
+between the 4 sided polygon
+to the rectangular image that will be sent to the projector.
+</p>
+
+<center>
+<img src="http://paulbourke.net/dome/slicer/diagram1.png" width=600 height=555 border=0>
+</center><p>
+
+<p align="justify">
+The mathematics for this mapping is straightforward and is outlined below, the symbols
+refer to the figure on the right in the above illustration. As with all such mapping one
+needs to find the input pixel for every output pixel, that is, a reverse mapping rather than
+a forward mapping. 
+If "p" is a pixel in the output
+image, it can defined in normalized coordinates as shown. In the input image one finds
+P<sub>1</sub> and P<sub>2</sub> based upon the value of u<sub>x</sub>. Then the point
+Q is found using the value of u<sub>y</sub> to interpolate between 
+P<sub>1</sub> and P<sub>2</sub>. One can imagine this is a stretching of
+the polygon space in the input image to the rectangular output image.
+</p>
+
+p<sub>1x</sub> = cx0 + u<sub>x</sub> (cx2 - cx0)<br>
+p<sub>1y</sub> = cx1 + u<sub>x</sub> (cx3 - cx1)<p>
+p<sub>2x</sub> = cx6 + u<sub>x</sub> (cx4 - cx6)<br>
+p<sub>2y</sub> = cx7 + u<sub>x</sub> (cx5 - cx7)<p>
+q<sub>x</sub> = p<sub>1x</sub> + u<sub>y</sub> (p<sub>2x</sub> - p<sub>1x</sub>)<br>
+q<sub>y</sub> = p<sub>1y</sub> + u<sub>y</sub> (p<sub>2y</sub> - p<sub>1y</sub>)<p>
+
+<p align="justify">
+In practice one needs to perform antialiasing, generally supersampling is the easiest. This
+means one samples multiple times around the output pixel to be estimated, each time finding
+the corresponding pixel value in the input image, averaging those values to determine
+the final output image pixel value. This reinforces the need to work in continuous normalized
+coordinates rather than integer pixel coordinates.
+</p>
+
+<p align="justify">
+The implementation here as a proof of concept is a C/C++ utility initially intended for
+UNIX systems, for example flavours of Linux and Mac OSX. The "mapfile" just lists the
+values of cx0, cx1, cx2, cx3, cx4, cx5, cx6, cx7. The input image is read only once and
+all the output slices generated from that based upon the map files.
+</p>
+
+<pre>
+slicer [options] imagefilename numberofmapfiles
+Map files are assumed to be called 0.map, 1.map ....
+Options:
+   -a n     set antialias level, 1 upwards, 2 or 3 typical (Default: 2)
+   -w n n   width and height of the output image (Default: 100x100)
+   -m s     output file mask, directory and frame number (Default: %d/%05d.tga)
+   -f n     output frame number (Default: 0)
+   -d       debug mode (Default: false)
+   -h       this text
+</pre>
+
+<b>Notes</b><p>
+<ul>
+<li><p align="justify">
+While the output images
+dimensions don't change the algorithm, it is usually the native resolution of the data
+projectors being used.
+</p>
+<li><p align="justify">
+The dimensions of the input image don't affect the 
+specification of the cx0 ... cx7 values since they are also in normalized image coordinates
+ranging from 0 to 1.
+</p>
+<li><p align="justify">
+Some of the values of cx0 ... cx7 may be negative or greater than 1, this simply indicates the
+the polygon extends past the image area. The warping software needs to take this into account.
+</p>
+</ul>
+
+<b>Example</b><p>
+<p align="justify">
+The following polygons are intended for an eight channel fulldome projection system.
+</p>
+<pre>
+0.8070 1.0617 0.0179 0.9514 0.0908 0.4301 0.8799 0.5404
+1.1355 0.3859 0.7723 1.0956 0.3033 0.8555 0.6665 0.1458
+0.5817 -0.1349 1.1553 0.4180 0.7901 0.7969 0.2165 0.2440
+-0.0791 0.2156 0.6336 -0.1415 0.8713 0.3330 0.1586 0.6901
+0.0661 0.9604 -0.0840 0.1879 0.4243 0.0892 0.5744 0.8617
+0.6872 0.8771 0.0728 0.6824 0.2336 0.1751 0.8480 0.3698
+0.6927 0.1318 0.9060 0.7380 0.4055 0.9142 0.1922 0.3080
+0.0770 0.4648 0.5648 0.0431 0.9146 0.4478 0.4268 0.8695
+</pre>
+<p align="justify">
+The following is one frame from the <a href="../Dark/index.html">Dark</a> fulldome movie.
+Note the original is a 4K fulldome production.
+</p>
+<center>
+<a href="http://paulbourke.net/dome/slicer/dark1.png"><img src="http://paulbourke.net/dome/slicer/dark1s.png" width=800 height=800 border=1></a>
+</center><p>
+<p align="justify">
+The eight resulting output images are below. The grey regions are those where the polygon
+extended outside the image bounds, normally this would be shaded black but left grey
+here of illustrative purposes.
+</p>
+<center><table width=100%>
+<tr>
+	<td><img src="http://paulbourke.net/dome/slicer/0.png" width=392 height=245 border=1></td>
+   <td><img src="http://paulbourke.net/dome/slicer/1.png" width=392 height=245 border=1></td>
+</tr>
+<tr>
+   <td><img src="http://paulbourke.net/dome/slicer/2.png" width=392 height=245 border=1></td>
+   <td><img src="http://paulbourke.net/dome/slicer/3.png" width=392 height=245 border=1></td>
+</tr>
+<tr>
+   <td><img src="http://paulbourke.net/dome/slicer/4.png" width=392 height=245 border=1></td>
+   <td><img src="http://paulbourke.net/dome/slicer/5.png" width=392 height=245 border=1></td>
+</tr>
+<tr>
+   <td><img src="http://paulbourke.net/dome/slicer/6.png" width=392 height=245 border=1></td>
+   <td><img src="http://paulbourke.net/dome/slicer/7.png" width=392 height=245 border=1></td>
+</tr>
+</table></center><p>
+
+<p align="justify">
+The example presented here is performed solely on the CPU and as implemented is only single core.
+As it happens the process of applying this is real life to movie sequences is highly parallel,
+simply by splitting the frames up into sections or applying N conversions to frames modulo N.
+An alternative would be to perform this on the GPU. Another is to use OpenGL (or DirectX) and
+treat each frame as a texture on an appropriate mesh.
+</p>
+
+<td></tr></table></center>
+</body>
+</html>
+
