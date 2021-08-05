@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Regular Expressions in JavaScript | Daniel Shiffman</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    
+    
+    <script src="js/jquery.js"></script>
+    <script src="js/main.js"></script>
+    
+</head>
+
+
+  <body>
+
+    
+
+
+      <link rel="stylesheet" type="text/css" href="css/prism.css">
+<link rel="stylesheet" type="text/css" href="css/highlight.css">
+<link rel="stylesheet" type="text/css" href="css/a2z.css">
+<script src="js/blog.js"></script>
+<script src="js/prism.js"></script>
+
+<section class="left-container out a2z">
+  <h1>Programming from A to Z</h1>
+  <p><br/>
+
+    <a href="index.html" class="body-link primary">about</a> 
+    <a href="../A2Z-F16/README.md" class="body-link primary">syllabus</a>
+    <a href="../A2Z-F16" class="body-link primary">All example source code</a>
+
+  </p>
+  <span class="line-charm first"></span>
+  <div class="content-wrapper article a2z">
+    <head>
+<script language="javascript" type="text/javascript" src="js/p5.js"></script>
+<script language="javascript" type="text/javascript" src="js/p5.dom.js"></script>
+<script language="javascript" type="text/javascript" src="js/regex.js"></script>
+</head>
+
+<h2 id="regular-expressions">Regular Expressions</h2>
+
+<iframe width="525" height="300" src="https://www.youtube.com/embed/7DG3kCDx53c?list=PLRqwX-V7Uu6Zy51Q-x9tMWIv9cueOFTFA" frameborder="0" allowfullscreen=""></iframe>
+
+<h3 id="all-examples">All examples</h3>
+
+<ul>
+  <li><a href="../A2Z-F17/week2-regex/00_all_together_improved">Loading file now loads into textarea</a> — <a href="../A2Z-F17/week2-regex/00_all_together_improved">source code</a></li>
+  <li><a href="../A2Z-F17/week2-regex/01_regexbasics">Regex basics with live ACE editor</a> — <a href="../A2Z-F17/week2-regex/01_regexbasics">source code</a></li>
+  <li><a href="../A2Z-F17/week2-regex/02_doublewords">Finding double words</a> — <a href="../A2Z-F17/week2-regex/02_doublewords">source code</a></li>
+  <li><a href="../A2Z-F17/week2-regex/03_voweldoubler">Doubling the vowels using replace</a> — <a href="../A2Z-F17/week2-regex/03_voweldoubler">source code</a></li>
+  <li><a href="../A2Z-F17/week2-regex/04_regex_tester">Regex from user</a> — <a href="../A2Z-F17/week2-regex/04_regex_tester">source code</a></li>
+  <li><a href="../A2Z-F17/week2-regex/05_linkfinder">Finding links</a> — <a href="../A2Z-F17/week2-regex/05_linkfinder">source code</a></li>
+  <li><a href="../A2Z-F17/week2-regex/06_reverse_regex_generator">Random Expression Generator</a> — <a href="../A2Z-F17/week2-regex/06_reverse_regex_generator">source code</a>, thanks to <a href="http://fent.github.io/randexp.js/">randexp.js</a>.</li>
+  <li><a href="../A2Z-F17/week2-regex/07_split_and_rebuild_text">Split and rebuild text</a> — <a href="../A2Z-F17/week2-regex/07_split_and_rebuild_text">source code</a></li>
+  <li><a href="../A2Z-F17/week2-regex/08_replace_with_callback">Replace with a callback</a> — <a href="../A2Z-F17/week2-regex/08_replace_with_callback">source code</a></li>
+</ul>
+
+<h3 id="related-references">Related references</h3>
+<ul>
+  <li><a href="https://www.safaribooksonline.com/library/view/mastering-regular-expressions/0596528124/">Chapter 1, Mastering Regular Expressions</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions">Guide to regex in JavaScript</a></li>
+  <li><a href="http://eloquentjavascript.net/09_regexp.html">Eloquent JavaScript Regular Expressions</a></li>
+  <li><a href="http://www.regexplained.co.uk/">regexplained - a tool to visualize a regular expression</a></li>
+  <li><a href="http://regexcrossword.com/">Play the regex crossword!</a></li>
+  <li><a href="http://regexr.com/">RegExr – a regular expressions playground</a></li>
+</ul>
+
+<h3 id="exercise-ideas">Exercise ideas</h3>
+<ul>
+  <li>Write a regular expression that matches any e-mail address.</li>
+  <li>Take that regular expression and do a search and replace so that any e-mail address is made into a “mailto:” link.</li>
+  <li>Create an example that reads an HTML page and removes any markup and leaves only the raw content.</li>
+  <li>Adapt the <a href="../A2Z-F17/week2-regex/04_regex_tester">regex tester</a> to be a search/replace tester.</li>
+  <li>Create a regex that matches only code comments in code.</li>
+</ul>
+
+<h3 id="regular-expressions-1">Regular Expressions</h3>
+
+<p><div style="background: #DDDDDD; padding: 18px"><em>WARNING: This is a woefully incomplete overview of regular expressions.  It would be absurd to try to fully cover the topic in a short handout like this.  Hopefully, this will provide some of the basics to get you started, but to really understand regular expressions, I suggest you to read as much of <a href="https://www.safaribooksonline.com/library/view/mastering-regular-expressions/0596528124/">Mastering Regular Expressions</a> by Jeffrey E.F. Friedl as you have time for.  In addition, the <a href="http://eloquentjavascript.net/09_regexp.html">regular expressions chapter in Eloquent JavaScript</a> is more comprehensive than below.</em></div></p>
+
+<p>A <strong><a href="http://en.wikipedia.org/wiki/Regular_expression">regular expression</a></strong> is a sequence of characters that describes or matches a given amount of text.  For example, the sequence <code class="../A2Zregex">bob</code>, considered as a regular expression, would match any occurance of the word “bob” inside of another text. The following is a rather rudimentary introduction to the basics of regular expressions.  We could spend the entire semester studying regular expressions if we put our mind to it. Nevertheless, we’ll just have a basic introduction to them this week and learn more advanced technique as we explore different text processing applications over the course of the semester.</p>
+
+<p>A truly wonderful book written on the subject is: <a href="http://regex.info/">Mastering Regular Expressions</a> by Jeffrey Friedl.  I might recommend at least reading <a href="http://safari.oreilly.com/0596002890/mastregex2-CHP-1">Chapter 1</a>.</p>
+
+<p>Regular expressions (referred to as “regex” for short) have both literal characters and meta characters.  In <code class="../A2Zregex">bob</code>, all three characters are literal, i.e. the “b” wants to match a “b”, the “o” an “o”, etc.    We might also have the regular expression:</p>
+
+<p><code class="../A2Zregex">^bob</code></p>
+
+<p>In this case, the <code class="../A2Zregex">^</code> is a meta character, i.e. it does not want to match the character “^”, but instead indicates the “beginning of a line.” In other words the regex above would find a match in:</p>
+
+<p><strong>bob goes to the park.</strong></p>
+
+<p>but would not find a match in:</p>
+
+<p><strong>jill and bob go to the park.</strong></p>
+
+<p>Here are a few common meta-characters (I’m listing them below as they would appear in a JavaScript regular expression, which may differ slightly from other languages or environments) used to get us started:</p>
+
+<h3 id="single-character-metacharacters">Single Character Metacharacters:</h3>
+
+<iframe width="525" height="300" src="https://www.youtube.com/embed/YTocEnDsMNw?list=PLRqwX-V7Uu6Zy51Q-x9tMWIv9cueOFTFA" frameborder="0" allowfullscreen=""></iframe>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">.     any one character
+\d    any digit from 0 to 9
+\w    any word character (a-z,A-Z,0-9)
+\W    any non-word character
+\s    any whitespace character
+      (tab, new line, form feed, end of line, carriage return)
+\S    any non whitespace character</code></pre></figure>
+
+<h4 id="position-metacharacters">Position Metacharacters:</h4>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">^     beginning of line
+$     end of line
+\b    word boundary
+\B    a non word boundary</code></pre></figure>
+
+<h4 id="quantifiers-refer-to-the-character-that-precedes-it">Quantifiers (refer to the character that precedes it):</h4>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">?         appearing once or not at all
+*         appearing zero or more times
++         appearing one or more times
+{min,max} appearing within the specified range</code></pre></figure>
+
+<p>Using the above, we could come up with some quick examples:</p>
+
+<ul>
+  <li><code class="../A2Zregex">^$</code> — matches beginning of line followed by end of line, i.e. match any blank line!</li>
+  <li><code class="../A2Zregex">ing\b</code> — matches “ing” followed by a word boundary, i.e. any time “ing” appears at the end of a word!</li>
+</ul>
+
+<iframe width="525" height="300" src="https://www.youtube.com/embed/EfJU0Y9WAZ4?list=PLRqwX-V7Uu6Zy51Q-x9tMWIv9cueOFTFA" frameborder="0" allowfullscreen=""></iframe>
+
+<p><strong>Character Classes</strong> serve as a kind of <em>or</em> statement amongst individual characters and are denoted by characters enclosed in brackets, i.e. <code class="../A2Zregex">[aeiou]</code> means match any vowel.  Using a <code class="../A2Zregex">^</code> negates the character class, i.e. <code class="../A2Zregex">[^aeiou]</code> means match any character not a vowel (note this isn’t just limited to letters, it really means <i>anything at all</i> that is not an a, e, i, o, or u.)  A hyphen indicates a range of characters, such as <code class="../A2Zregex">[0-9]</code> or <code class="../A2Zregex">[a-z]</code>.</p>
+
+<p>Another key metacharacter is <code class="../A2Zregex">|</code>, meaning or.  This is known as the concept of <strong>alternation</strong>.</p>
+
+<p><code class="../A2Zregex">John | Jon</code> means match “John” or Jon”</p>
+
+<p>Note: this regex could also be written as <code class="../A2Zregex">Joh?n</code>, meaning match “Jon” with an optional “h” between the “o” and “n.”</p>
+
+<iframe width="312" height="175" src="https://www.youtube.com/embed/c9HbsUSWilw?list=PLRqwX-V7Uu6Zy51Q-x9tMWIv9cueOFTFA" frameborder="0" allowfullscreen=""></iframe>
+<iframe width="312" height="175" src="https://www.youtube.com/embed/Z66TeSTcP-Q?list=PLRqwX-V7Uu6Zy51Q-x9tMWIv9cueOFTFA" frameborder="0" allowfullscreen=""></iframe>
+
+<p>Parentheses can also be used to constrain the alternation.  For example, <code class="../A2Zregex"> (212|646|917)\d*</code> matches any sequence of zero or more digits preceded by 212, 646, or 917 (presumably to retrieve phone numbers with NYC area codes).  Note this regular expression would need to be improved to take into consideration white spaces and/or punctuation.</p>
+
+<p>Parentheses also serve the purpose of capturing groups for back-references.  For example, examine the following regular expression: <code class="../A2Zregex">\b([0-9A-Za-z]+)s+\1\b</code>.</p>
+
+<p>The first part of the expression in parentheses reads: <code class="../A2Zregex">\b([0-9A-Za-z]+)</code> meaning match any “word” containing at least one or more letters/digits.  The next part <code class="../A2Zregex">\s+</code> means any sequence of at least one white space.  The third part <code class="../A2Zregex">\1</code> says match whatever you matched that was enclosed inside the first set of parentheses, i.e. <code class="../A2Zregex">([0-9A-Za-z]+)</code>.   So, thinking this over, what will this regular expression match in the following line?</p>
+
+<p><strong>This is really really super super duper duper fun.  Fun!</strong></p>
+
+<h3 id="testing-regex-with-atom-editor">Testing regex with Atom Editor</h3>
+
+<p>One quick way you can test regular expressions is with Atom text’s “find”.  Simply enable the regex option (indicated by the <code class="../A2Zregex">.*</code> button) after hitting ⌘F.</p>
+
+<p><img src="images/atom_regex1.png" alt="atom1" /></p>
+
+<p>The <code class="language-plaintext highlighter-rouge">Aa</code> option makes the regular expression case-insensitive.   Let’s look at some other examples (special thanks to <a href="http://regex.info">Friedl”s Mastering Regular Expressions</a>).</p>
+
+<p>Matching urls: <code class="../A2Zregex">http://[^\s&lt;&gt;"']+</code></p>
+
+<p>Checking this regex against <a href="../index.html">shiffman.net/index.html</a> yields the following results:</p>
+
+<p><img src="images/atom_regex2.png" alt="atom2" /></p>
+
+<p>Here’s another regular expression example that uses a back reference to matches any repeated words <code class="../A2Zregex">\b(\w+)\s+\1\b</code>.</p>
+
+<p><img src="images/atom_regex3.png" alt="atom3" /></p>
+
+<p>(Note, in the above example, the metacharacter <code class="../A2Zregex">\b</code> means “word boundary”, i.e. the beginning <em>or</em> end of a word.)  Without checking for a word boundary the regex <code class="../A2Zregex">(\w+)\s+\1</code> would match “This is” for example.</p>
+
+<p>Find/replace with regex in Sublime Text is also incredibly useful.  For example, here’s how you might change all markdown urls of the format <code>[name](link)</code> to html <code>&lt;a href="link"&gt;name&lt;/a&gt;.</code></p>
+
+<p><img src="images/atom_regex_replace.png" alt="atom replace" /></p>
+
+<h3 id="regular-expressions-in-javascript">Regular Expressions in JavaScript</h3>
+
+<iframe width="312" height="175" src="https://www.youtube.com/embed/W7S_Vmq0GSs?list=PLRqwX-V7Uu6Zy51Q-x9tMWIv9cueOFTFA" frameborder="0" allowfullscreen=""></iframe>
+<iframe width="312" height="175" src="https://www.youtube.com/embed/t029QcVHtas?list=PLRqwX-V7Uu6Zy51Q-x9tMWIv9cueOFTFA" frameborder="0" allowfullscreen=""></iframe>
+
+<p>In JavaScript, regular expressions like Strings are objects.  For example, a regex object can be created like so:</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">regex</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">RegExp</span><span class="p">(</span><span class="dl">'</span><span class="s1">aregex</span><span class="dl">'</span><span class="p">);</span></code></pre></figure>
+
+<p>While the above is technically correct (and sometimes necessary, we’ll get to this later), a more common way to create a regex in JavaScript is with forward slashes.  Whereas a String is an array of characters between quotes, a regex is an array of characters between forward slashes.  For example:</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">regex</span> <span class="o">=</span> <span class="sr">/aregex/</span><span class="p">;</span></code></pre></figure>
+
+<p>The <code class="language-plaintext highlighter-rouge">RegExp</code> object has several methods.  The first thing you might try is the <code class="language-plaintext highlighter-rouge">test()</code> function which returns <code class="language-plaintext highlighter-rouge">true</code> or <code class="language-plaintext highlighter-rouge">false</code> depending on if the string passed in matches the regex.  This can be used to validate an e-mail address for example.</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">email</span> <span class="o">=</span> <span class="sr">/</span><span class="se">\w</span><span class="sr">+@</span><span class="se">\w</span><span class="sr">+</span><span class="se">\.(</span><span class="sr">net|com|edu|org</span><span class="se">)</span><span class="sr">/</span><span class="p">;</span>
+<span class="k">if</span> <span class="p">(</span><span class="nx">email</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="dl">"</span><span class="s2">daniel@shiffman.net</span><span class="dl">"</span><span class="p">))</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="dl">"</span><span class="s2">That's a valid e-mail!</span><span class="dl">"</span><span class="p">);</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>The JavaScript <code class="language-plaintext highlighter-rouge">String</code> object also has several methods which accept regular expressions as input.  For example <code class="language-plaintext highlighter-rouge">search()</code> is a function that works similarly to <code class="language-plaintext highlighter-rouge">indexOf()</code>.  It looks for a regular expression match and returns the index of that match.</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">zipcode</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">My zip code is 90210</span><span class="dl">"</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">index</span> <span class="o">=</span> <span class="nx">zipcode</span><span class="p">.</span><span class="nx">search</span><span class="p">(</span><span class="sr">/</span><span class="se">\d{5}</span><span class="sr">/</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="dl">"</span><span class="s2">The zip code is at index: </span><span class="dl">"</span> <span class="o">+</span> <span class="nx">index</span><span class="p">);</span></code></pre></figure>
+
+<p>Probably the most useful regular expression method is <code class="language-plaintext highlighter-rouge">match()</code>.  <code class="language-plaintext highlighter-rouge">match()</code> is a method of the <code class="language-plaintext highlighter-rouge">String</code> object that returns the matches of a regular expression.</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">txt</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">This is a test.</span><span class="dl">"</span><span class="p">;</span>    <span class="c1">// The String the search in</span>
+<span class="kd">var</span> <span class="nx">regex</span> <span class="o">=</span> <span class="sr">/test/</span><span class="p">;</span>             <span class="c1">// The regex  </span>
+<span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="nx">txt</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">regex</span><span class="p">);</span> <span class="c1">// Execute the search</span></code></pre></figure>
+
+<p><code class="language-plaintext highlighter-rouge">results</code> now contains the following array:</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">[</span> <span class="dl">'</span><span class="s1">test</span><span class="dl">'</span> <span class="p">]</span></code></pre></figure>
+
+<p>If the regular expression includes capturing parenthese, the groups would also appear in the array.  For example, let’s say you needed a regex to match a phone number a string.</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">txt</span> <span class="o">=</span> <span class="dl">'</span><span class="s1">Phone numbers: 212-555-1234 and 917-555-4321 and 646.555.9876.</span><span class="dl">'</span><span class="p">;</span>  
+<span class="kd">var</span> <span class="nx">regex</span> <span class="o">=</span> <span class="sr">/</span><span class="se">(\d</span><span class="sr">+</span><span class="se">)[</span><span class="sr">-.</span><span class="se">]\d</span><span class="sr">+</span><span class="se">[</span><span class="sr">-.</span><span class="se">]\d</span><span class="sr">+/</span><span class="p">;</span>               
+<span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="nx">txt</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">regex</span><span class="p">);</span></code></pre></figure>
+
+<p>The above isn’t necessarily the greatest phone number matching regex, but it’ll do for this example.  One or more numbers followed by a dash or period followed by one or more numbers, a dash or period again, and one or more numbers.  Let’s look at the resulting array.</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">[</span> <span class="dl">'</span><span class="s1">212-555-1234</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">212</span><span class="dl">'</span> <span class="p">]</span></code></pre></figure>
+
+<p>Notice how the full phone number match appears as the first (index 0) element and the captured group (the area code) follows.  You might notice, however, that there are three phone numbers in the original input String and yet <code class="language-plaintext highlighter-rouge">match()</code> only matched the first one.  In order to find all the matches, we’ll need to add several other steps.</p>
+
+<h4 id="step-1-add-the-global-flag-g">Step 1. Add the global flag: <code class="language-plaintext highlighter-rouge">g</code>.</h4>
+
+<p>Regular expressions can include flags that modify how the search operates.  For example the flag <code class="language-plaintext highlighter-rouge">i</code> is for case-insensitivity so that the regular expression <code class="../A2Zregex">hello</code> with the flag <code class="language-plaintext highlighter-rouge">i</code> would match “hello”, “Hello”, “HELLO”, and “hElLO” (and other permutations).  A flag is added after the second forward slash like so: <code class="../A2Zregex">/hello/i</code>.  The global flag <code class="language-plaintext highlighter-rouge">g</code> tells the regular expression that we want to search for <strong>all</strong> of the matches and not just the first one.</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Now includes the global flag</span>
+<span class="kd">var</span> <span class="nx">regex</span> <span class="o">=</span> <span class="sr">/</span><span class="se">(\d</span><span class="sr">+</span><span class="se">)[</span><span class="sr">-.</span><span class="se">]\d</span><span class="sr">+</span><span class="se">[</span><span class="sr">-.</span><span class="se">]\d</span><span class="sr">+/g</span><span class="p">;</span>  </code></pre></figure>
+
+<p>Let’s look at what happens when you run the same code now.</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">txt</span> <span class="o">=</span> <span class="dl">'</span><span class="s1">Phone numbers: 212-555-1234 and 917-555-4321 and 646.555.9876.</span><span class="dl">'</span><span class="p">;</span>  
+<span class="kd">var</span> <span class="nx">regex</span> <span class="o">=</span> <span class="sr">/</span><span class="se">(\d</span><span class="sr">+</span><span class="se">)[</span><span class="sr">-.</span><span class="se">]\d</span><span class="sr">+</span><span class="se">[</span><span class="sr">-.</span><span class="se">]\d</span><span class="sr">+/g</span><span class="p">;</span>               
+<span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="nx">txt</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">regex</span><span class="p">);</span></code></pre></figure>
+
+<p>The results:</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">[</span><span class="dl">"</span><span class="s2">212-555-1234</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">917-555-4321</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">646.555.9876</span><span class="dl">"</span><span class="p">]</span></code></pre></figure>
+
+<p>Notice how <code class="language-plaintext highlighter-rouge">match()</code> now returns all of the matches in original string as elements of the array.  However, the captured group for the area codes is now lost.  If there are multiple matches <strong>and</strong> you want to have captured groups, you have to instead use the <code class="language-plaintext highlighter-rouge">exec()</code> method which is part of the <code class="language-plaintext highlighter-rouge">RegExp</code> object.</p>
+
+<p>In the case of a single match, the <code class="language-plaintext highlighter-rouge">exec()</code> function works identically to <code class="language-plaintext highlighter-rouge">match()</code>.  The <code class="language-plaintext highlighter-rouge">exec()</code> function, even with the global flag, will still return only the first match.  However, if you call <code class="language-plaintext highlighter-rouge">exec()</code> a second time with the same regex and input string, it will move on and return the results for the second match (or <code class="language-plaintext highlighter-rouge">null</code> if there is no match.)  You can therefore write a <code class="language-plaintext highlighter-rouge">while</code> loop to keep checking until the result is null.</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="dl">'</span><span class="s1">Phone numbers: 212-555-1234 and 917-555-4321 and 646.555.9876.</span><span class="dl">'</span><span class="p">;</span>  
+<span class="kd">var</span> <span class="nx">regex</span> <span class="o">=</span> <span class="sr">/</span><span class="se">(\d</span><span class="sr">+</span><span class="se">)[</span><span class="sr">-.</span><span class="se">]\d</span><span class="sr">+</span><span class="se">[</span><span class="sr">-.</span><span class="se">]\d</span><span class="sr">+/g</span><span class="p">;</span>               
+<span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="nx">regex</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>
+
+<span class="k">while</span> <span class="p">(</span><span class="nx">results</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// do something with the matched results and then</span>
+
+  <span class="c1">// Check again</span>
+  <span class="nx">results</span> <span class="o">=</span> <span class="nx">regex</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>This could also be written with the following shorthand (The examples linked from here, however, use the longer-winded code for clarity.)</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">while</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="nx">regex</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="nx">text</span><span class="p">))</span> <span class="p">{</span>
+  <span class="c1">// do something with the matched results</span>
+<span class="p">}</span></code></pre></figure>
+
+<h3 id="splitting-with-regular-expressions">Splitting with Regular Expressions</h3>
+
+<iframe width="525" height="300" src="https://www.youtube.com/embed/fdyqutmcI2Q?list=PLRqwX-V7Uu6Zy51Q-x9tMWIv9cueOFTFA" frameborder="0" allowfullscreen=""></iframe>
+
+<p>I can now revisit the <a href="http://shiffman.github.io/A2Z-F15/week2/notes.html">week 2 discussion</a> of p5’s <code class="language-plaintext highlighter-rouge">split()</code> and <code class="language-plaintext highlighter-rouge">splitTokens()</code> functions and look at how regular expressions work as a delimiter with the native <code class="language-plaintext highlighter-rouge">String</code> <code class="language-plaintext highlighter-rouge">split()</code> method.  In this case, a string is split into an array of substrings beginning at each match of that regular expression. Here’s a simple example that quickyl counts the # of words (not perfect by any means).</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">This text has characters, spaces, and some punctuation.</span><span class="dl">"</span><span class="p">;</span>
+<span class="c1">// one or more non-word chars (anything not a-z0-9)</span>
+<span class="kd">var</span> <span class="nx">regex</span> <span class="o">=</span> <span class="sr">/</span><span class="se">\W</span><span class="sr">+/</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">words</span> <span class="o">=</span> <span class="nx">text</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="nx">regex</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="dl">'</span><span class="s1">Total words: </span><span class="dl">'</span> <span class="o">+</span> <span class="nx">words</span><span class="p">.</span><span class="nx">length</span><span class="p">);</span></code></pre></figure>
+
+<p>The <code class="language-plaintext highlighter-rouge">words</code> array now contains:</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">[</span> <span class="dl">'</span><span class="s1">This</span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1">text</span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1">has</span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1">characters</span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1">spaces</span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1">and</span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1">some</span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1">punctuation</span><span class="dl">'</span>
+<span class="p">]</span></code></pre></figure>
+
+<p>What if you, however, would like to include all the delimiters?  To accomplish this, simply enclose your delimiters in capturing parentheses.  With <code class="language-plaintext highlighter-rouge">var regex = /(\W+)/;</code> therefore you’ll get the following result.</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">[</span> <span class="dl">'</span><span class="s1">This</span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1"> </span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1">text</span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1"> </span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1">has</span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1"> </span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1">characters</span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1">, </span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1">spaces</span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1">, </span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1">and</span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1"> </span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1">some</span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1"> </span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1">punctuation</span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1">.</span><span class="dl">'</span><span class="p">,</span>
+  <span class="dl">''</span> <span class="p">]</span></code></pre></figure>
+
+<h3 id="search-and-replace">Search and Replace</h3>
+
+<iframe width="525" height="300" src="https://www.youtube.com/embed/7a-a6lKoyIQ?list=PLRqwX-V7Uu6Zy51Q-x9tMWIv9cueOFTFA" frameborder="0" allowfullscreen=""></iframe>
+
+<p>Running a search and replace is one of the more powerful things one can do with regular expressions.  This can be accomplished with the String’s <code class="language-plaintext highlighter-rouge">replace()</code> method.  The method receives two arguments, a regex and a replacement string.  Wherever there is a regex match, it is replaced with the string provided.</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="dl">'</span><span class="s1">Replace every time the word "the" appears with the word ze.</span><span class="dl">'</span><span class="p">;</span>
+
+<span class="c1">// \b is a word boundary</span>
+<span class="c1">// You can think of this as an invisible boundary</span>
+<span class="c1">// between a non-word character and a word character.</span>
+<span class="kd">var</span> <span class="nx">regex</span> <span class="o">=</span> <span class="sr">/</span><span class="se">\b</span><span class="sr">the</span><span class="se">\b</span><span class="sr">/g</span><span class="p">;</span>  
+
+<span class="kd">var</span> <span class="nx">replaced</span> <span class="o">=</span> <span class="nx">text</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="nx">regex</span><span class="p">,</span><span class="dl">'</span><span class="s1">ze</span><span class="dl">'</span><span class="p">);</span></code></pre></figure>
+
+<p>The result is:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Replace every time ze word "ze" appears with ze word ze.
+</code></pre></div></div>
+
+<p>We can also reference the matched text using a backreference to a captured group in the substitution string.  A backreference to the first group is indicated as <code class="../A2Zregex">$1</code>, <code class="../A2Zregex">$2</code> is the second, and so on and so forth.</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">Double the vowels.</span><span class="dl">"</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">regex</span> <span class="o">=</span> <span class="sr">/</span><span class="se">([</span><span class="sr">aeiou</span><span class="se">]</span><span class="sr">+</span><span class="se">)</span><span class="sr">/g</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">replaced</span> <span class="o">=</span> <span class="nx">text</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="nx">regex</span><span class="p">,</span> <span class="dl">'</span><span class="s1">$1$1</span><span class="dl">'</span><span class="p">);</span></code></pre></figure>
+
+<p>The result is:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Dououblee thee vooweels
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">replace()</code> function also allows you to pass a callback where you can write your own code and <code class="language-plaintext highlighter-rouge">return</code> the text that replaces any given match of the regex.  This allows enormous flexibility and power because the logic of how you replace text can be written with code rather than simply encoded into a string.  Let’s say you have some text:</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">txt</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">This is some text with words of variable length.</span><span class="dl">"</span></code></pre></figure>
+
+<p>You can then call <code class="language-plaintext highlighter-rouge">replace()</code> to search with a regular expression (the following matches any words 3-5 characters long), and pass in a function call as the second argument.</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">output</span> <span class="o">=</span> <span class="nx">txt</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/</span><span class="se">\b[</span><span class="sr">a-z</span><span class="se">]{4,6}\b</span><span class="sr">/gi</span><span class="p">,</span> <span class="nx">replacer</span><span class="p">);</span></code></pre></figure>
+
+<p>The callback will be executed multiple times, as many times as the regex matches.  The callback will receive the matched text as an argument and replace it with whatever you <code class="language-plaintext highlighter-rouge">return</code>.</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">replacer</span><span class="p">(</span><span class="nx">match</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">len</span> <span class="o">=</span> <span class="nx">match</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
+  <span class="c1">// Four letter words become uppercase</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">len</span> <span class="o">==</span> <span class="mi">4</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">match</span><span class="p">.</span><span class="nx">toUpperCase</span><span class="p">();</span>
+  <span class="c1">// Five letter words become "five"</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">len</span> <span class="o">==</span> <span class="mi">5</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="dl">"</span><span class="s2">five</span><span class="dl">"</span><span class="p">;</span>
+  <span class="c1">// Six letter words turn into today's date</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">len</span> <span class="o">==</span> <span class="mi">6</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nb">Date</span><span class="p">();</span>
+  <span class="p">}</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>The original text now reads:</p>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">THIS is SOME TEXT WITH five of variable Mon Sep 19 2016 13:59:22 GMT-0400 (EDT).</code></pre></figure>
+
+<p>The above result is silly and nonsensical, but it shows the beginnings of what is possible when you can execute any logic and call any other functions (query an API?) inside a <code class="language-plaintext highlighter-rouge">replace()</code> callback.</p>
+
+<h3 id="try-it">Try it</h3>
+
+<p>You can try out some regex below as well as <a href="../A2Z-F17/week2-regex/04_regex_tester">take a look at the code for making this regex tester</a>.  While this works here, if you really want to just mess around with regex in the browser I recommend <a href="http://regexr.com/">RegExr: Learn, Build&lt; Test Regex</a>.</p>
+
+<p>
+  <textarea rows="10" cols="75" id="input">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</textarea>
+</p>
+
+<p>
+  <input type="text" id="regex" value="\w+" /><input type="checkbox" id="global" />global<input type="checkbox" id="case" />case insensitive
+</p>
+<p><button id="button">Run the regex</button></p>
+
+<pre id="output"></pre>
+
+<p>You can also explore this <a href="../A2Z-F17/week2-regex/01_regexbasics">walk-through of JS regex functionality</a>.</p>
+
+<h3 id="assignment">Assignment</h3>
+
+<iframe width="312" height="175" src="https://www.youtube.com/embed/AKuW48WeNMA?list=PLRqwX-V7Uu6Zy51Q-x9tMWIv9cueOFTFA" frameborder="0" allowfullscreen=""></iframe>
+<iframe width="312" height="175" src="https://www.youtube.com/embed/pMn44yFxGWk?list=PLRqwX-V7Uu6Zy51Q-x9tMWIv9cueOFTFA" frameborder="0" allowfullscreen=""></iframe>
+
+  </div>
+</section>
+<button class="mobile-quick-links" aria-controls="quicklinks-section" aria-haspopup="true" id="quicklinks-btn">VIEW QUICK LINKS</button>
+<aside class="right-container quick-links out" id="quicklinks-section">
+  <div class="quick-link">
+    <a href="index.html" class="secondary">About the course</a>
+  </div>
+  <h3>Tutorials</h3>
+  <div class="quick-link">
+    <a href="intro.html" class="secondary">Introduction - p5.js, JavaScript, and Strings</a>
+  </div>
+  <div class="quick-link">
+    <a href="regex.html" class="secondary">Regular Expressions</a>
+  </div>
+  <div class="quick-link">
+    <a href="closures.html" class="secondary">Closures</a>
+  </div>
+  <div class="quick-link">
+    <a href="data-apis.html" class="secondary">Libraries, Data, and APIs</a>
+  </div>
+  <div class="quick-link">
+    <a href="server-node.html" class="secondary">Server-side programming with node.js</a>
+  </div>
+  <div class="quick-link">
+    <a href="twitter-bots.html" class="secondary">Twitter API and bots with node.js</a>
+  </div>
+  <div class="quick-link">
+    <a href="bot-ec2.html" class="secondary">Deploy Bot to Amazon EC2</a>
+  </div>
+  <div class="quick-link">
+    <a href="bot-heroku.html" class="secondary">Deploy Bot to Heroku</a>
+  </div>
+  <div class="quick-link">
+    <a href="text-analysis.html" class="secondary">Text Analysis</a>
+  </div>
+  <div class="quick-link">
+    <a href="markov.html" class="secondary">N-Grams and Markov Chains</a>
+  </div>
+  <div class="quick-link">
+    <a href="cfg.html" class="secondary">Context-Free Grammar</a>
+  </div>
+  <div class="quick-link">
+    <a href="node-api.html" class="secondary">Creating an API in Node</a>
+  </div>
+  <div class="quick-link">
+    <a href="firebase.html" class="secondary">Database as Service: Firebase</a>
+  </div>
+  <div class="quick-link">
+    <a href="chrome-ext.html" class="secondary">Chrome Extensions</a>
+  </div>
+</aside>
+
+
+    <footer class="left-container about out">
+    <div class="content-wrapper article">
+        <p>Source code for this website can be found on <a href="https://github.com/shiffman/shiffman.net/" target="_blank">Github</a>.</p>
+    </div>
+</footer>
+
+
+<script>
+
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-94163-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </body>
+
+</html>
