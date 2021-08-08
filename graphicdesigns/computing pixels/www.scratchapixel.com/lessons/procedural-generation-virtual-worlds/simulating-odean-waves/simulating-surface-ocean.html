@@ -1,0 +1,202 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/simulating-odean-waves/simulating-surface-ocean by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 18:38:56 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Simulating Ocean Waves (Simulating the Surface of the Ocean)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='simulating ocean waves, simulating ocean surfaces, Jerry Tessendorf, DFT, discrete Fourier transform, simulation, water simulation'>
+<meta name='date' content='2017-01-23 05:43:08'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+	<!-- Open Graph data -->
+	<meta property='fb:app_id' content='1535346446701691'/>
+	<meta property='og:title' content='Simulating Ocean Waves'/>
+	<meta property='og:type' content='article'/>
+	<meta property='og:url' content='https://www.scratchapixel.com//lessons/procedural-generation-virtual-worlds/simulating-odean-waves'/>
+	<meta property='og:image' content='https://www.scratchapixel.com/images/design/logo_scratchapixel2015.png'/>
+	<meta property='og:description' content='Lesson summary: https://github.com/deiss/fftocean/blob/master/src/fft/FFT.cpp
+
+https://arm-software.github.io/opengl-es-sdk-for-android/ocean_f_f_t.html
+http://embeddedsystemengineering.blogspot.com/2016/06/complex-dft-and-fft-algorithm.html
+https://gist.github.com/komasaru/7cbb88f543c05c5f1e0f1e918b2146b0
+https://arachnoid.com/signal_processing/dft.html
+https://www.programming-techniques.com/2013/05/calculation-of-discrete-fourier-transformdft-in-c-c-using-naive-and-fast-fourier-transform-fft-method.html
+http://developer.download.nvidia.com/assets/gameworks/downloads/regular/events/cgdc15/CGDC2015_ocean_simulation_en.pdf
+// Nvidia
+http://ecee.colorado.edu/~siewerts/extra/code/example_code_archive/a490dmis_code/CUDA/cuda_work/samples/5_Simulations/oceanFFT/oceanFFT_kernel.cu'/> 
+	<meta property='og:site_name' content='Scratchapixel'/>
+	<meta property='fb:admins' content='1260067275'/>
+	
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Simulating Ocean Waves</div><div style='width: 100%; margin: 0px; display: table; vertical-align: middle; border: 1px none red;'>
+			<div style='display: table-row; height: 30px;'>
+			<div style='margin: 0px; padding: 0px; border: 1px none blue ; display: table-cell; vertical-align: middle;'>
+				<a href='https://twitter.com/share' class='twitter-share-button' data-lang='en'>Tweet</a>
+			</div></div>
+			<div style='display: table-row; height: 30px;'>
+			<div style='padding: 0px; border: 1px none blue ; display: table-cell; vertical-align: middle;'>
+				<div style='margin-top: 5px;' class='fb-like' data-share='true' data-width='450' data-show-faces='true'></div>
+			</div></div></div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="simulating-surface-ocean.html"><b>Simulating the Surface of the Ocean</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction-discrete-fourier-transform.html">Introduction to Discrete Fourier transform</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="simulating-ocean-water.html">Simulating Ocean Water</a></div></div></div><span style='display: inline-block; width: 100%; margin: 0px 0px 10px 0px;'><i>Keywords: simulating ocean waves, simulating ocean surfaces, Jerry Tessendorf, DFT, discrete Fourier transform, simulation, water simulation.</i></span><p>Simulating ocean waves is probably with simulating color of the sky, one of the most fascinating things you can do in computer graphics (along side with things such as cloth, hair and more generally fluid simulation). It is of course an intricately hard problem because if simulating a small volume of water is hard, simulating a whole ocean should be if not impossible, near impossible. In fact the trick (but even the trick involves heavy computation as we shall see) is not so much to simulate the surface of the ocean as the result of simulating the whole body of water beneath the surface itself, but rather to directly compute the shape and the motion of the ocean’s surface as a result of direct observations and measurements oceanographers have made. Indeed, it turns out that the way waves appear and move on the surface of the ocean have a kind of regular pattern. Watching the waves moving up and down is rather relaxing because the motion is cyclic. Furthermore, waves are made up of a sum of waves whose size and height vary. You have big waves with a large amplitude on one side of the spectrum, and tiny waves with a small amplitude on the other, with a variety of waves in the middle going from one side of the spectrum to the other. If you read the chapter on the noise pattern from which fractal patterns can be made, the construction of the surface of the ocean is indeed somehow similar to that of the construction of a fractal made up of various levels of noise whose frequency and amplitude vary.</p>
+
+<p>As we mentioned, oceanographers have measured the frequency properties of ocean surfaces for quite some time now an in the 1990s a researcher who played an important role in the CG community back then named Jerry Tessendorf developed a technique based on this data. His work was later used in the Titanic movie (1997) to simulate and render probably what happens to be the first photorealistic believable computer generated ocean surface ever displayed on a big screen. We can pay tribute to his work and contribution to the CGI community.</p>
+
+<img class="left" style="width: 670px; margin-bottom: 12px;" src="../../../images/upload/ocean-simulation/Titanic.jpg">
+
+<p>Before we present Jerry’s technique, we need to speak about a mathematical technique related to signal processing. It doesn’t matter if you are not familiar with that concept. The way we will speak about it in this lesson should be simple and self-contained enough for you to understand it, regardless of your background. The idea is simple. To make it short, any signal such as sound wave which can be seen as a fonction of time, can be decomposed into a series of frequencies. We say that the original signal is expressed in the time domain (in the case of a sound wave but we would speak of a spacial domain if we were to take the example of an image for example which we will get to in this lesson) and that the transformed signal is expressed in frequency domain. The inverse mathematical operation can be done: that is, we can go from frequency domain back to time or spatial domain and the resulting wave function will be the exactly the same as the function we started from. In other words, we can deconstruct a wave signal into frequencies and perfectly reconstruct it back from these frequencies (under certain conditions).</p>
+
+<p>The mathematical method that allows us to do this is called a <b>Fourier transform</b> (by the name who invented it) and the reverse operation is naturally called an inverse Fourier transform. The Fourier transform involves a few mathematical concepts which are well advanced and hard to grasp at first. Namely we will speak and use the exponential function and complex numbers. These two notions are somehow interconnected. In this lesson we will just tell you how to map these mathematical concepts into code to keep the demonstration simple (and the lesson reasonably short). Please refer to the lesson the Fourier analysis which you can find in the mathematical section for the details on this method.</p>
+
+<p>Before we get into the maths, let’s speak about Jerry’s method. As mentioned, we now know that we can decompose a signal into a series of frequencies and that if we know these frequencies, we can reconstruct the signal back. Regarding the motion and the appearance of ocean waves, the data regarding the waves’ frequency composition has been measured by oceanographers. Jerry’s thus suggested that if this frequency composition is known, it is thus possible to reconstruct an ocean surface from that data using, as you guessed it, an inverse Fourier transform. Simple and elegant.</p>
+
+<p>In a glance, the method will thus consist of generating the frequency data (which can be done procedurally rather than from measurements because oceanographers also observed that the experimental data could be fit to mathematical functions) and from there use an inverse Fourier transform to generate a patch of ocean surface.</p>
+
+<p>Before we get into a fast track course on Fourier transform, let’s just add that our method will have two constraints which we are not too problematic in our particular case. First, the number of frequencies we will be using and thus more generally the size of the patch of ocean water we will build (as the two numbers are related to each other), will need to be a power of 2 (64, 128, 256, 512, etc.). Second, in order for the kind of Fourier transform method we will be using in this lesson to work, the signal needs to be periodic. In other words, our patch of simulated ocean surfacer will be periodic in every direction. In a way this is convenient because by “gluing” a few patches together we can create a larger surface of water, but the problem with this method is that a pattern emerges as we look at these patches from the distance as shown below.</p>
+
+<img class="left" style="width: 670px; margin-bottom: 12px;" src="../../../images/upload/ocean-simulation/wave-repeat.png">
+</article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 1 of  3</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='introduction-discrete-fourier-transform.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/simulating-odean-waves/simulating-surface-ocean by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 18:39:11 GMT -->
+</html>

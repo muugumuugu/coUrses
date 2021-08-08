@@ -1,0 +1,374 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:13:52 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>A Minimal Ray-Tracer: Rendering Simple Shapes (Sphere, Cube, Disk, Plane, etc.) (Ray-Box Intersection)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='ray-tracing, geometry, sphere, plane, disk, cube, parametric surface, implicit surface, ray-geometry intersection'>
+<meta name='date' content='2014-08-15 10:34:46'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>A Minimal Ray-Tracer: Rendering Simple Shapes (Sphere, Cube, Disk, Plane, etc.)</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="parametric-and-implicit-surfaces.html">Parametric and Implicit Surfaces</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="ray-sphere-intersection.html">Ray-Sphere Intersection</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="minimal-ray-tracer-rendering-spheres.html">A Minimal Ray-Tracer: Rendering Spheres</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="ray-plane-and-ray-disk-intersection.html">Ray-Plane and Ray-Disk Intersection</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="ray-box-intersection.html"><b>Ray-Box Intersection</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../coded4cf.html?id=10&amp;origin=/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes">Source Code</a></div></div></div><h2>Ray-Box Intersection</h2>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left" src="../../../images/upload/ray-simple-shapes/line.png" />
+<p class="caption left">Figure 1: equation of a line. The equation of a line can be written as y=mx+b. For the oblique line which equation is y=x-1 we have m=1 and b=-1.</p>
+</div>
+
+<p>In the following example we will assume that the box is aligned with the axis of our coordinate system. Such a box is called an axis-aligned box and since it will often be a bounding box (or bounding volume) which we also designate by the acronym <b>AABB</b> (axis-aligned bounding box). Boxes which are not oriented along the axis of a cartesian coordinate system, are called <b>OBB</b> (oriented bounding box).</p>
+
+<p>Computing the intersection of a ray with a AABB is quite simple. All we need is to remember that a straight line can be defined using the following analytical equation:</p>
+
+<div name="code" class="code">y = mx + b</div>
+
+<p>In mathematics, the \(m\) term is called the slope (or gradient) and is actually responsible for the orientation of the line and \(b\) corresponds to the point where the line intersects the y-axis. If this 1D line is parallel to the x-axis as shown in figure 1 (with the line whose equation is y=2), then \(m\) is equal to 0.</p>
+<p>The ray can also be expressed with the following equation:</p>
+
+$$O + D * t$$
+
+<p>where \(O\) corresponds to the origin of the ray, \(D\) its direction and the parameter \(t\) can be any real value (negative, positive or zero). By changing \(t\) in this equation, we can define any point on the line defined by the ray's position and direction. This ray equation is very similar to the line equation. In fact they are the same if you replace \(O\) with \(b\) and \(D\) with \(m\). To represent an axis-aligned bounding volume, all we need are two points representing the minimum and maximum extent of the box (called bounds in the code).</p>
+
+<div name="code" class="code">class Box3
+{
+public:
+    Box3(cont Vec3f &vmin, const Vec3f &vmax)
+    {
+        bounds[0] = vmin;
+        bounds[1] = vmax;
+    }
+    Vec3f bounds[2];
+};</div>
+
+<p>The bounds of the volume define a set of lines parallel to each axis of the coordinate system which we can also expressed using the line equation. For instance the line equation for the x component of the bounding volume's minimum extent can be written as:</p>
+
+<div name="code" class="code">y = B0x</div>
+
+<p>\(B0x\) in this example, corresponds to <span class="code-inline">bounds[0].x</span> in the code above. To find where the ray intersects this line we can write:</p>
+
+<div name="code" class="code">Ox + tDx = B0x (eq1)</div>
+
+<p>Which can solved by reordering the terms:</p>
+
+<div name="code" class="code">t0x = (B0x - Ox) / Dx (eq2)</div>
+
+<p>The x component of the bounding volume's maximum extent can be used in a similar way to compute \(t1x\). Note than when the values for \(t\) are negative, the box is behind the ray.</p>
+
+<p>Finally if we apply the same technique to the y and z components we will have at the end of this process a set of six values indicating where the ray intersects the box planes parallel to the x, y and z axis.</p>
+
+<div name="code" class="code">t0x = (B0x - Ox) / Dx
+t1x = (B1x - Ox) / Dx
+t0y = (B0y - Oy) / Dy
+t1y = (B1y - Oy) / Dy
+t0z = (B0z - Oz) / Dz
+t1z = (B1z - Oz) / Dz</div>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left" src="../../../images/upload/ray-simple-shapes/2dfig.png" />
+<p class="caption left">Figure 2: a ray intersecting a 2D box.</p>
+</div>
+
+<p>Note that if the ray is parallel to an axis it won't intersect with the bounding volume plane for this axis (in this case, the line equation for the ray is reduced to the constant \(b\) and there's no solution to equation 1). The problem at this stage is to find which of these six values correspond to an intersection of the ray with the box (if the ray intersects the box at all. So far, we have just found where the ray intersects the planes defined by each face of the cube). This can be easily found by operating a simple test on each of the computed \(t\) values. By looking at figure 2, the logic behind this test will become obvious (we will just be considering the 2D case for this example). The ray first intersects the planes defined by the minimum extent of the box in two places: \(t0x\) and \(t0y\). However intersecting these planes doesn't necessarily mean that these intersecting points lie on the cube (if they don't lie on the cube, obviously the ray doesn't intersect the box). Mathematically we can find which one of these two points lie on the cube by comparing their values: we simply need to chose the point which value for \(t\) is the greatest. In pseudo-code we can write:</p>
+
+<div name="code" class="code">t0x = (B0x - Ox) / Dx
+t0y = (B0y - Oy) / Dy
+tmin = (t0x &gt; t0y) ? t0x : t0y</div>
+
+<p>The process to find the second point where the ray intersects the box is similar however in that case, we will use the \(t\) values computed using the planes defined by the maximum extent of the box and select the point which \(t\) value is the smallest:</p>
+
+<div name="code" class="code">t1x = (B1x - Ox) / Dx
+t1y = (B1y - Oy) / Dy
+tmax = (t1x &lt; t1y) ? t1x : t1y</div>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left" src="../../../images/upload/ray-simple-shapes/2dfigmiss.png" />
+<p class="caption left">Figure 3: a ray intersecting a 2D box.</p>
+</div>
+
+<p>The ray doesn't alway intersect the box. In figure 3, we are showing a couple of cases where the ray misses the cube. These cases can also be easily identified using simple comparisons between the \(t\) values. As you can see on the figure, the ray misses the box when \(t0x\) is greater than \(t1y\) and when \(t0y\) is greater than \(t1x\).</p>
+
+<p>Let's add this test to our code:</p>
+
+<div name="code" class="code box" style="width: 350px;">if (t0x &gt; t1y || t0y &gt; t1x)
+    return false</div>
+
+<p>Finally we can extend the technique to the 3D case by computing \(t\) values for the z component and compare them to the \(t\) values we have computed so far for the x and y components:</p>
+
+<div name="code" class="code">t0z = (B0z - Oz) / Dz
+t1z = (B1z - Oz) / Dz
+if (tmin &gt; t1z || t0z &gt; tmax) return false
+if (t0z &gt; tmin) tmin = t0z
+if (t1z &lt; tmax) tmax = t1z</div>
+
+<p>Here is a full implementation of the method in C++ (min and max are the minimum and maximum extent of the bounding box):</p>
+
+<div name="code" class="code">bool intersect(const Ray &r)
+{
+    float tmin = (min.x - r.orig.x) / r.dir.x;
+    float tmax = (max.x - r.orig.x) / r.dir.x;
+
+    if (tmin > tmax) swap(tmin, tmax);
+
+    float tymin = (min.y - r.orig.y) / r.dir.y;
+    float tymax = (max.y - r.orig.y) / r.dir.y;
+
+    if (tymin > tymax) swap(tymin, tymax);
+
+    if ((tmin > tymax) || (tymin > tmax))
+        return false;
+
+    if (tymin > tmin)
+        tmin = tymin;
+
+    if (tymax < tmax)
+        tmax = tymax;
+
+    float tzmin = (min.z - r.orig.z) / r.dir.z;
+    float tzmax = (max.z - r.orig.z) / r.dir.z;
+
+    if (tzmin > tzmax) swap(tzmin, tzmax);
+
+    if ((tmin > tzmax) || (tzmin > tmax))
+        return false;
+
+    if (tzmin > tmin)
+        tmin = tzmin;
+
+    if (tzmax < tmax)
+        tmax = tzmax;
+
+    return true;
+}</div>
+
+<p>Note that depending on the ray direction tmin might be greater than tmax. Considering that all the logic behind the tests we are doing later on relies on \(t0\) being always smaller than \(t1\) we need to swap the values if \(t1\) is smaller than \(t0\).</p>
+
+<h2>Optimising the Code</h2>
+
+<p>There is a couple of improvement we can make to the previous code to not only make it faster but also more robust. First we can replace the swap operation with the following code:</p>
+
+<div name="code" class="code">if (ray.dir.x >= 0) {
+    tmin = (min.x - r.orig.x) / ray.dir.x;
+    tmax = (max.x - r.orig.x) / ray.dir.x;
+}
+else {
+    tmin = (max.x - r.orig.x) / ray.dir.x;
+    tmax = (min.x - r.orig.x) / ray.dir.x;
+}</div>
+
+<p>However there is a problem with this code. When the direction of ray is 0 it causes a division by zero. This though should be handled properly by the compiler which shall return +&infin;. The problem happens when the value for the ray direction is -0. When the ray direction is negative, we expect the second block of the if statement to be executed, but in the case where the ray direction is -0, the first block will be executed instead because in IEEE float point, the test -0 = 0 returns true. The values tmin/tmax will be set to +&infin; and -&infin; (instead of -&infin;/+&infin;) and the code will fail to detect an intersection. We can easily fix this problem by replacing the ray direction by the inverse of the ray direction:</p>
+
+<div name="code" class="code">Vec3f invdir = 1 / ray.dir;
+if (invdir.x >= 0) {
+    tmin = (min.x - r.orig.x) * invdir.x;
+    tmax = (max.x - r.orig.x) * invdir.x;
+}
+else {
+    tmin = (max.x - r.orig.x) * invdir.x;
+    tmax = (min.x - r.orig.x) * invdir.x;
+}</div>
+
+<p>When the ray direction is -0 the inverse direction should be -&infin; and the test on line 2 shall return false which is what we want. In the eventuality of testing the intersection of the ray against many boxes, we can save some time by pre-computing the inverse direction of the ray in the Ray's constructor and re-using it later in intersect. We can also pre-compute the sign of the ray direction which we can use to write the method in a much more compact form. Here is the final version of the ray-box intersection method:</p>
+
+<div name="code" class="code">class Ray
+{
+public:
+    Ray(const Vec3f &orig, const Vec3f &dir) : orig(orig), dir(dir)
+    {
+        invdir = 1 / dir;
+        sign[0] = (invdir.x < 0);
+        sign[1] = (invdir.y < 0);
+        sign[2] = (invdir.z < 0);
+    }
+    Vec3<T> orig, dir;       // ray orig and dir
+    Vec3<T> invdir;
+    int sign[3];
+};
+ 
+bool intersect(const Ray &r) const
+{
+    float tmin, tmax, tymin, tymax, tzmin, tzmax;
+    
+    tmin = (bounds[r.sign[0]].x - r.orig.x) * r.invdir.x;
+    tmax = (bounds[1-r.sign[0]].x - r.orig.x) * r.invdir.x;
+    tymin = (bounds[r.sign[1]].y - r.orig.y) * r.invdir.y;
+    tymax = (bounds[1-r.sign[1]].y - r.orig.y) * r.invdir.y;
+    
+    if ((tmin > tymax) || (tymin > tmax))
+        return false;
+    if (tymin > tmin)
+        tmin = tymin;
+    if (tymax < tmax)
+        tmax = tymax;
+    
+    tzmin = (bounds[r.sign[2]].z - r.orig.z) * r.invdir.z;
+    tzmax = (bounds[1-r.sign[2]].z - r.orig.z) * r.invdir.z;
+    
+    if ((tmin > tzmax) || (tzmin > tmax))
+        return false;
+    if (tzmin > tmin)
+        tmin = tzmin;
+    if (tzmax < tmax)
+        tmax = tzmax;
+
+    return true;
+}</div>
+
+<p>The optimised version runs on our machine approximately 1.5 faster than the first version (the speedup might depend on the compiler).</p>
+
+<div class="question"><img class="right" src="../../../images/upload/ray-simple-shapes/rayboxisect2d41d.png?" />
+<p>The code from this lesson returns intersections with the box which are in front or behind the origin of the ray. For instance, if the ray's origin is inside the box (like in the image below), there will be two intersections: one in front of the ray and one behind. We know that an intersection is "behind" the origin of the ray when the value for \(t\) is negative. When \(t\) is positive, the intersection is in front of the origin of the ray. If your algorithm is not interested in intersections for values of \(t\) lower than 0, then you will have to deal with these values when you return from the ray-box intersection function.</p>
+</div>
+
+<p>Check the file <span class="code-inline"><a href="../../../code6ec6.html?id=10&amp;origin=/lessons/3d-basic-rendering/ray-tracing-rendering-simple-shapes">raybox.cpp</a></span> (which you can find in the last chapter of this lesson) for a complete example.</p>
+
+<img class="left" src="../../../images/upload/ray-simple-shapes/impsurf-proj-cubed41d.png?" />
+
+<h2>Reference</h2>
+
+<p>An Efficient and Robust Ray&ndash;Box Intersection Algorithm. Amy Williams et al. 2004.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='ray-plane-and-ray-disk-intersection.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 5 of  6</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='../../../coded4cf.html?id=10&amp;origin=/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:14:01 GMT -->
+</html>

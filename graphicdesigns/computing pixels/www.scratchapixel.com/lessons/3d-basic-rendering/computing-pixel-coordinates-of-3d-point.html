@@ -1,0 +1,220 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/computing-pixel-coordinates-of-3d-point by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 16:43:43 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Computing the Pixel Coordinates of a 3D Point (Perspective Projection)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='rasterisation, perspective projection, wireframe, perspective projection matrix, camera coordinate system, projective transformation, world space, world origin, world coordinate system, coordinate system, transformation, matrix, matrices,  inverse matrix, camera coordinate system, camera space, image plane, perspective divide, screen space, raster space, screen coordinate system, NDC, normalized device coordinate, viewport'>
+<meta name='date' content='2014-11-22 16:05:01'>
+
+<link rel="stylesheet" type="text/css" href="../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../css/page.css"/>
+
+<link href='../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../indexf17c.html","../../indexf17c.html","../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../indexf17c.html","../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+	<!-- Open Graph data -->
+	<meta property='fb:app_id' content='1535346446701691'/>
+	<meta property='og:title' content='Computing the Pixel Coordinates of a 3D Point'/>
+	<meta property='og:type' content='article'/>
+	<meta property='og:url' content='https://www.scratchapixel.com//lessons/3d-basic-rendering/computing-pixel-coordinates-of-3d-point'/>
+	<meta property='og:image' content='https://www.scratchapixel.com/images/design/logo_scratchapixel2015.png'/>
+	<meta property='og:description' content='Lesson summary: In this lesson, we will learn how to compute the pixel coordinates of a 3D point. This is generally one of the first question people who discover 3D rendering ask on the web. For this reason, we devoted a complete lesson to this really fundamental process.'/> 
+	<meta property='og:site_name' content='Scratchapixel'/>
+	<meta property='fb:admins' content='1260067275'/>
+	
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Computing the Pixel Coordinates of a 3D Point</div><div style='width: 100%; margin: 0px; display: table; vertical-align: middle; border: 1px none red;'>
+			<div style='display: table-row; height: 30px;'>
+			<div style='margin: 0px; padding: 0px; border: 1px none blue ; display: table-cell; vertical-align: middle;'>
+				<a href='https://twitter.com/share' class='twitter-share-button' data-lang='en'>Tweet</a>
+			</div></div>
+			<div style='display: table-row; height: 30px;'>
+			<div style='padding: 0px; border: 1px none blue ; display: table-cell; vertical-align: middle;'>
+				<div style='margin-top: 5px;' class='fb-like' data-share='true' data-width='450' data-show-faces='true'></div>
+			</div></div></div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="computing-pixel-coordinates-of-3d-point/perspective-projection.html"><b>Perspective Projection</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="computing-pixel-coordinates-of-3d-point/mathematics-computing-2d-coordinates-of-3d-points.html">Mathematics of Computing the 2D Coordinates of a 3D Point</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../code9328.html?id=23&amp;origin=/lessons/3d-basic-rendering/computing-pixel-coordinates-of-3d-point">Source Code</a></div></div></div><span style='display: inline-block; width: 100%; margin: 0px 0px 10px 0px;'><i>Keywords: rasterisation, perspective projection, wireframe, perspective projection matrix, camera coordinate system, projective transformation, world space, world origin, world coordinate system, coordinate system, transformation, matrix, matrices,  inverse matrix, camera coordinate system, camera space, image plane, perspective divide, screen space, raster space, screen coordinate system, NDC, normalized device coordinate, viewport.</i></span><h2>One of the Most Common Questions about 3D Rendering on the Web</h2>
+
+<p>"<b>How do I find the 2D pixel coordinates of a 3D point?</b>" is one of the most common questions (related to 3D rendering) on the Web. It is an important question indeed because it is the really fundamental method by which an image of a 3D scene is formed. In the context of this lesson, we will use the term <b>rasterisation</b> to describe the process of finding 2D pixel coordinates of 3D points. Rasterisation in its broader sense, refers to the process of converting 3D shapes into a raster image. A raster image, as explained in the <a href="http://localhost/lessons/3d-basic-rendering/rendering-3d-scene-overview">previous lesson</a>, is the technical term given to a digital image; it designates a two-dimensional array (or rectangular grid if you prefer) of pixels.</p>
+
+<p>Don't be mistaken: different rendering techniques exist for producing images of 3D scenes. Rasterisation is only one of them. Ray-tracing is another. Note though that all these techniques rely on the same concept to produce that image: the concept of <b>perspective projection</b>. Therefore, for a given camera and a given 3D scene, all rendering techniques produce the same visual result; they just use a different approach to produce that result.</p>
+
+<p>Note also that computing the 2D pixel coordinates of 3D points, is only one of the two steps in the process of creating a photo-realistic image. The other step is the process of shading, in which the color of these points will be computed to simulate the appearance of objects. You need more than just converting 3D points to pixel coordinates to produce a "complete" image.</p>
+
+<img class="right" style="display: inline-block; margin: 0px;" src="../../images/upload/perspective-matrix/xtreed41d.png?"/>
+
+<p>To understand rasterisation, you first need to be familiar with a series of very important techniques which we will also introduce in this chapter (such as the concept of local vs. global coordinate system, learning how to interpret 4x4 matrices as coordinate systems, converting points from one coordinate system to another, etc.). Read this lesson carefully, as it will provide you with the very basic tools almost all rendering techniques are built upon.</p>
+
+<p>We will use matrices in this lesson a lot so read the Geometry lesson first if you are not comfortable with coordinate systems and matrices yet.</p>
+
+<p>We will apply the technique studied in this lesson to render a <b>wireframe</b> image of a 3D object (adjacent image). The files of this program can be found in the source code chapter of the lesson as usual.</p>
+
+<h2>A Quick Refresher on the Perspective Projection Process</h2>
+
+<div style="width: 530px;" class="captionImage right">
+<img class="left" src="../../images/upload/rendering-3d-scene-overview/perspective4d41d.png?"/><p class="caption left">Figure 1: to create an image of a cube, we just need to extend lines from the objects corners towards the eye and find the intersection of these lines with a flat surface (the canvas) perpendicular to the line of sight.</p>
+</div>
+
+<p>We talked about the perspective projection process in quite a few lessons already. Check out for instance the chapter <a href="rendering-3d-scene-overview/visibility-problem.html">"The Visibility Problem"</a> in the lesson "Rendering an Image of a 3D Scene: an Overview". However, let's quickly recall here what the perspective projection is. In short, this technique can be used to create a 2D image of a 3D scene, by projecting points or vertices making up the objects of that scene, onto the surface of a canvas. Why are we doing that? Because this is more or less the way the human eye works, and since we are used to see the world through our eyes, it's quite natural to think that images created that way, will also look natural to us (images created using this method do look "real" to us). You can see the human eye as just a "point" in space (figure 2). What we see of the world is the result of light rays (reflected by objects), travelling to this point and entering the eye (the eye is obviously not exactly a point; it is an optical system converging rays onto a small surface - the retina). So again, one way of making an image of a 3D scene in CG is to do the same thing, which you can get by projecting vertices onto the surface of the canvas (or the surface of the screen) as if they were sliding along straight lines connecting the vertices themselves to the eye.</p>
+
+<p>It is important to understand that the perspective projection is just an arbitrary way of representing 3D geometry onto a two-dimensional surface. It is the most commonly used way because it simulates foreshortening which is one of the most important properties of human vision: objects in the distance appear smaller than objects close by. Nonetheless, as mentioned in the Wikipedia article on <a href="https://en.wikipedia.org/wiki/Perspective_(graphical)">perspective</a>, it is important to understand that while creating realistic images, perspective stays an "<b>approximate representation</b>, on a flat surface (such as paper), of an image as it is seen by the eye". The important word here is "approximate".</p>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left" src="../../images/upload/perspective-matrix/raystoeyed41d.png?"/><p class="caption left">Figure 2: among all light rays reflected by an object, some of these rays enter the eye, and the image we have of this object, is the result of these rays.</p>
+</div>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left" src="../../images/upload/rendering-3d-scene-overview/projection3d41d.png?"/><p class="caption left">Figure 3: the projection process can be seen as if the point we want to project was moved down along a line connecting the point or the vertex itself to the eye. We can stop moving the point along that line when it lies on the plane of the canvas. Obviously we don't "slide" the point along this line explicitly, but this how the projection process can be interpreted.</p>
+</div>
+
+<p>In the aforementioned lesson, we also explained how the world coordinates of a point located in front of the camera (and enclosed within the viewing frustum of the camera, thus visible to the camera), can be computed using a simple geometric construction based on one of the properties of similar triangles (figure 3). We will review this technique one more time in this lesson. It turns out that the equations to compute the coordinates of a projected points can actually somehow be expressed in the form of a 4x4 matrix. If you don't use the matrix form, computing the projected point's coordinates is of course possible. It is in itself not very complex but requires nonetheless a series of operations on the original point's coordinates: this is what you will learn in this lesson. However, expressed in the form a matrix, you can reduce this series of operations to a single point-matrix multiplication. Being able to represent this critical operation in such a compact and easy to use form is the main advantage of this approach. It turns out, that the perspective projection process, and its associated equations, can be expressed in the form of a 4x4 matrix indeed, as we will demonstrate in <a href="perspective-and-orthographic-projection-matrix.html">lesson 5</a>. This is what we call the <b>perspective projection matrix</b>. Multiplying any point whose coordinates are expressed with respect to the <b>camera coordinate system</b> (see below), by this perspective projection matrix, will give you the position (or coordinates) of that point onto the canvas.</p>
+
+<div class="question">In CG, transformations are almost always linear. But it is important to know that the perspective projection which belongs to the more generic family of <b>projective transformation</b>, is a non-linear transformation.</div>
+
+<p>Again, in this lesson, we will learn about computing the 2D pixel coordinates of a 3D point without using the perspective projection matrix. To do so, we will need to learn how we can "project" a 3D point onto the surface of a 2D drawable surface (which we will call in this lesson, a canvas) using some simple geometry rules. Once we understand the mathematics of this process (and all the other steps involved in computing these 2D coordinates, as the projection process is just one among many), we will then be ready to study the construction and use of the perspective projection matrix, a matrix used to simplify the projection step (and the projection step only). This will be the topic of the next lesson.</p>
+
+<h2>Some History</h2>
+
+<img class="right" width="400" src="../../images/upload/perspective-matrix/duererd41d.png?"/></p>
+
+<p>The mathematics behind perspective projection started to be understood and mastered by artists towards the end of the fourteenth and beginning of the fifteenth century. Artists greatly contributed to the education of others in the mathematical basis of perspective drawing through books that they would write and illustrate themselves. A notable example is "The Painter's Manual" published by Albrecht D&uuml;rer in 1538 (the illustration above comes from this book). Perspective drawing is largely characterized by two concepts: that objects appear smaller as their distances to the viewer increases and that of <b>foreshortening</b>. Foreshortening describes the impression, or optical illusion, that an object or a distance is smaller than it really is, due to being angled towards the viewer. Another rule related to foreshortening states that vertical lines are parallel, while nonvertical lines converge to a perspective point, thereby appearing shorter than they really are. These effects give a sense of depth, which is useful in evaluating the distance of objects from the viewer. Today the same mathematical principles are used in computer graphics to create a perspective view of a 3D scene.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 1 of  3</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='computing-pixel-coordinates-of-3d-point/mathematics-computing-2d-coordinates-of-3d-points.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/computing-pixel-coordinates-of-3d-point by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 16:44:53 GMT -->
+</html>

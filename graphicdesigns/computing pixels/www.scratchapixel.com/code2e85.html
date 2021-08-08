@@ -1,0 +1,626 @@
+<!--
+<html>
+<head>
+<title>Scratchapixel</title>
+
+<link rel="stylesheet" type="text/css" href="/css/scratchapixel2.css"/>
+<link rel="stylesheet" type="text/css" href="/css/page.css"/>
+<link rel="stylesheet" type="text/css" href="/css/code.css"/>
+<link href='http://fonts.googleapis.com/css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='http://fonts.googleapis.com/css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<script type="text/javascript"
+	src="/scratchapixelSDK.js">
+</script>
+
+</head>
+<html>
+<body onload="onload();">
+<div class="code-column">
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/code.php?id=59&origin=/lessons/advanced-rendering/rendering-distance-fields by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:20:26 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Rendering Implicit Surfaces and Distance Fields: Sphere Tracing (source code)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='Rendering Implicit Surfaces and Distance Fields: Sphere Tracing, source code'>
+<meta name='date' content=''>
+
+<link rel="stylesheet" type="text/css" href="css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="css/page.css"/>
+
+<link href='../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","mml2jax.html","asciimath2jax.html","MathMenu.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","AMSsymbols.html","noErrors.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+<link rel='stylesheet' type='text/css' href='css/responsive.css'/>
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='index-2.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div class='lesson-title' style='padding: 0px; margin: 20px 0px 10px 0px;'><a href='lessons/advanced-rendering/rendering-distance-fields.html'>Rendering Implicit Surfaces and Distance Fields: Sphere Tracing</a></div><div style='box-sizing: border-box; padding: 20px 0px 0px 0px; display: inline-block; border-top: 1px none grey; width: 100%;'><div>This project contains the following files (right-click files you'd like to download):</div><a oncontextmenu='onMouseDownCodeCtxt(this, "code/upload/distance-fields/distfields.cpp")' style='display: inline-block; margin: 10px 10px 10px 0px; color: rgb(50, 100, 200);' href='code2415.html?id=59&amp;origin=/lessons/advanced-rendering/rendering-distance-fields&amp;src=0'>distfields.cpp</a><a oncontextmenu='onMouseDownCodeCtxt(this, "code/upload/distance-fields/geometry.h")' style='display: inline-block; margin: 10px 10px 10px 0px; color: rgb(50, 100, 200);' href='code63fb.html?id=59&amp;origin=/lessons/advanced-rendering/rendering-distance-fields&amp;src=1'>geometry.h</a></div><div name='code' class='code'>
+//[header]
+// This program generate and render the Utah teapot
+//[/header]
+//[compile]
+// Download the distfields.cpp and geometry.h files to a folder.
+// Open a shell/terminal, and run the following command where the files are saved:
+//
+// clang++ -o distfields distfields.cpp -std=c++14 -O3
+//
+// Run with: ./distfileds. Open the file ./spheretrace.ppm in Photoshop or any
+// program reading PPM files.
+//[/compile]
+//[ignore]
+// Copyright (C) 2012  www.scratchapixel.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+//[/ignore]
+
+#include &lt;cstdlib&gt;
+#include &lt;cstdio&gt;
+#include &lt;fstream&gt;
+#include &quot;geometry.h&quot;
+#include &lt;cmath&gt;
+#include &lt;vector&gt;
+#include &lt;limits&gt;
+#include &lt;memory&gt;
+
+constexpr float kInfinity = std::numeric_limits&lt;float&gt;::max();
+
+Matrix44f lookAt(const Vec3f&amp; from, const Vec3f&amp; to, Vec3f tmp = Vec3f(0, 1, 0))
+{
+    // because the forward axis in a right hand coordinate system points backward we compute -(to - from)
+    Vec3f z = from - to; 
+    z.normalize();
+    Vec3f x = tmp.normalize().crossProduct(z);
+    x.normalize(); // this is just in case Up is not normalized
+    Vec3f y = z.crossProduct(x);
+
+    Matrix44f camToWorld;
+
+    // set x-axis
+    camToWorld[0][0] = x[0];
+    camToWorld[0][1] = x[1];
+    camToWorld[0][2] = x[2];
+    // set y-axis
+    camToWorld[1][0] = y[0];
+    camToWorld[1][1] = y[1];
+    camToWorld[1][2] = y[2];
+    // set z-axis
+    camToWorld[2][0] = z[0];
+    camToWorld[2][1] = z[1];
+    camToWorld[2][2] = z[2];
+    // set position
+    camToWorld[3][0] = from[0];
+    camToWorld[3][1] = from[1];
+    camToWorld[3][2] = from[2];
+    
+    return camToWorld;
+}
+
+float degToRad(const float&amp; angle)
+{ return angle / 180.f * M_PI; }
+
+// [comment]
+// ImplicitShape base class
+// [/comment]
+class ImplicitShape
+{
+public:
+    virtual float getDistance(const Vec3f&amp; from) const = 0; 
+    virtual ~ImplicitShape() {}
+};
+
+// [comment]
+// Implicit sphere surface
+// [/comment]
+class Sphere : public ImplicitShape
+{
+public:
+    Sphere(const Vec3f&amp; c, const float&amp; r) : center(c), radius(r) {}
+    float getDistance(const Vec3f&amp; from) const
+    { return (from - center).length() - radius; }
+    float radius;
+    Vec3f center;
+};
+
+// [comment]
+// Implicit plane surface
+// [/comment]
+class Plane : public ImplicitShape
+{
+public:
+    Plane(const Vec3f&amp; nn = Vec3f(0, 1, 0), const Vec3f&amp; pp = Vec3f(0)) : n(nn), pointOnPlane(pp) {}
+    float getDistance(const Vec3f&amp; from) const 
+    { return n.dotProduct(from - pointOnPlane); }
+    Vec3f n, pointOnPlane;
+};
+
+// [comment]
+// Implicit torus surface
+// [/comment]
+class Torus : public ImplicitShape
+{
+public:
+    Torus(const float&amp; _r0, const float&amp; _r1) : r0(_r0), r1(_r1) {}
+    float getDistance(const Vec3f&amp; from) const 
+    {
+        // reduce 3D point to 2D point
+        float tmpx = sqrtf(from.x * from.x + from.z * from.z) - r0;
+        float tmpy = from.y;
+        
+        // distance to cicle
+        return sqrtf(tmpx * tmpx + tmpy * tmpy) - r1;
+    }
+    float r0, r1;
+};
+
+// [comment]
+// Implicit cube surface
+// [/comment]
+class Cube : public ImplicitShape
+{
+public:
+    Cube(const Vec3f &amp;_corner) : corner(_corner) {}
+    float getDistance(const Vec3f&amp; from) const 
+    {
+#if 0
+        // first transform the input point into the object's &quot;object-space&quot;.
+        float scale = 2.f;
+        
+        // this matrix doesn't scale the object
+        Matrix44f objectToWorld(0.542903, -0.545887, 0.638172, 0, 0.778733, 0.611711, -0.139228, 0, -0.314374, 0.572553, 0.7572, 0, 0, 1.459974, 0, 1);
+        Matrix44f worldToObject = objectToWorld.inverse();
+        
+        Vec3f fromObjectSpace = from;
+        worldToObject.multVecMatrix(from, fromObjectSpace);
+#else
+        Vec3f fromObjectSpace = from;
+        float scale = 1;
+#endif
+        fromObjectSpace *= 1.f / scale;
+        fromObjectSpace.x = std::fabs(fromObjectSpace.x);
+        fromObjectSpace.y = std::fabs(fromObjectSpace.y);
+        fromObjectSpace.z = std::fabs(fromObjectSpace.z);
+        
+        // now compute the distance from the point to the neares point on the surface of the object
+        Vec3f d = fromObjectSpace - corner;
+        
+        Vec3f dmax = d;
+        dmax.x = std::max(dmax.x, 0.f);
+        dmax.y = std::max(dmax.y, 0.f);
+        dmax.z = std::max(dmax.z, 0.f);
+        
+        // don't forget to apply the scale back
+        return scale * (std::min(std::max(d.x, std::max(d.y, d.z)), 0.f) + dmax.length());
+    }
+    Vec3f corner{0.25, 0.25, 0.25};
+};
+
+struct unionFunc
+{
+    float operator() (float a, float b) const { return std::min(a, b); }
+};
+
+struct subtractFunc
+{
+    float operator() (float a, float b) const { return std::max(-a, b); }
+};
+
+struct intersectionFunc
+{
+    float operator() (float a, float b) const { return std::max(a, b); }
+};
+
+struct blendFunc
+{
+    blendFunc(const float &amp;_k) : k(_k) {}
+    float operator() (float a, float b) const
+    {
+        float res = exp(-k * a) + exp(-k * b);
+        return -log(std::max(0.0001f, res)) / k;
+    }
+    float k;
+};
+
+struct mixFunc
+{
+    mixFunc(const float &amp;_t) : t(_t) {}
+    float operator() (float a, float b) const
+    {
+        return a * (1 -t) + b * t;
+    }
+    float t;
+};
+
+// [comment]
+// Combining implict shapes using CSG
+// [/comment]
+template&lt;typename Op, typename ... Args&gt;
+class CSG : public ImplicitShape
+{
+public:
+    CSG(
+        const std::shared_ptr&lt;ImplicitShape&gt; s1,
+        const std::shared_ptr&lt;ImplicitShape&gt; s2,
+        Args&amp;&amp; ... args) : op(std::forward&lt;Args&gt;(args) ...), shape1(s1), shape2(s2)
+    {}
+    float getDistance(const Vec3f&amp; from) const
+    {
+        return op(shape1-&gt;getDistance(from), shape2-&gt;getDistance(from));
+    }
+    Op op;
+    const std::shared_ptr&lt;ImplicitShape&gt; shape1, shape2;
+};
+
+// [comment]
+// Blobbies
+// [/comment]
+class SoftObject : public ImplicitShape
+{
+    struct Blob
+    {
+        float R; // radius
+        Vec3f c; // blob center
+    };
+public:
+    SoftObject()
+    {
+#if 1
+        blobbies.push_back({2.0, Vec3f(-1, 0, 0)});
+        blobbies.push_back({1.5, Vec3f( 1, 0, 0)});
+#else
+        for (size_t i = 0; i &lt; 20; ++i) {
+            float radius = (0.3 + drand48() * 1.3);
+            Vec3f c((0.5 - drand48()) * 3, (0.5 - drand48()) * 3, (0.5 - drand48()) * 3);
+            blobbies.push_back({radius, c});
+        }
+#endif
+    }
+    float getDistance(const Vec3f&amp; from) const
+    {
+        float sumDensity = 0;
+        float sumRi = 0;
+        float minDistance = kInfinity;
+        for (const auto&amp; blob: blobbies) {
+            float r = (blob.c - from).length();
+            if (r &lt;=  blob.R) {
+                // this can be factored for speed if you want
+                sumDensity += 2 * (r * r * r) / (blob.R * blob.R * blob.R) -
+                    3 * (r * r) / (blob.R * blob.R) + 1;
+            }
+            minDistance = std::min(minDistance, r - blob.R);
+            sumRi += blob.R;
+        }
+
+        return std::max(minDistance, (magic - sumDensity) / ( 3 / 2.f * sumRi));
+    }
+    float magic{ 0.2 };
+    std::vector&lt;Blob&gt; blobbies;
+};
+
+using Union = CSG&lt;unionFunc&gt;;
+using Subtract = CSG&lt;subtractFunc&gt;;
+using Intersect = CSG&lt;intersectionFunc&gt;;
+using Blend = CSG&lt;blendFunc, float&gt;;
+using Mix = CSG&lt;mixFunc, float&gt;;
+
+class PointLight
+{
+public:
+    PointLight(const Vec3f&amp; p, const Vec3f&amp; c, const float&amp; i) : pos(p), col(c), intensity(i) {}
+    Vec3f pos;
+    Vec3f col;
+    float intensity;
+};
+
+std::vector&lt;std::shared_ptr&lt;ImplicitShape&gt;&gt; makeScene()
+{
+    std::vector&lt;std::shared_ptr&lt;ImplicitShape&gt;&gt; shapes;
+
+#if 0
+    shapes.push_back(std::make_shared&lt;Plane&gt;(Vec3f(0, 1, 0), Vec3f(0, -2, 0)));
+    shapes.push_back(std::make_shared&lt;Cube&gt;());
+    shapes.push_back(std::make_shared&lt;Torus&gt;(2, 0.65));
+#elif 0
+    shapes.push_back(std::make_shared&lt;Plane&gt;(Vec3f(0, 1, 0), Vec3f(0, -2, 0)));
+    shapes.push_back(std::make_shared&lt;Blend&gt;(
+        std::make_shared&lt;Cube&gt;(Vec3f(1.5)),
+        std::make_shared&lt;Torus&gt;(2, 0.65), 5));
+#elif 0
+    shapes.push_back(std::make_shared&lt;Blend&gt;(
+        std::make_shared&lt;Plane&gt;(Vec3f(0, 1, 0), Vec3f(0, 0, 0)),
+        std::make_shared&lt;Torus&gt;(2, 0.65), 5));
+#elif 0
+    shapes.push_back(std::make_shared&lt;Plane&gt;(Vec3f(0, 1, 0), Vec3f(0, -2, 0)));
+    shapes.push_back(std::make_shared&lt;Mix&gt;(
+        std::make_shared&lt;Cube&gt;(Vec3f(1)),
+        std::make_shared&lt;Sphere&gt;(Vec3f(0), 1), 0.5));
+#else
+    shapes.push_back(std::make_shared&lt;Plane&gt;(Vec3f(0, 1, 0), Vec3f(0, -2, 0)));
+    shapes.push_back(std::make_shared&lt;SoftObject&gt;());
+#endif
+    return shapes; 
+}
+
+bool sphereTraceShadow( 
+    const Vec3f&amp; rayOrigin, 
+    const Vec3f&amp; rayDirection, 
+    const float&amp; maxDistance, 
+    const std::vector&lt;std::shared_ptr&lt;ImplicitShape&gt;&gt; scene)
+{ 
+    constexpr float threshold = 10e-5; 
+    float t = 0; 
+ 
+    while (t &lt; maxDistance) { 
+        float minDistance = kInfinity; 
+        Vec3f from = rayOrigin + t * rayDirection; 
+        for (auto shape : scene) { 
+            float d = shape-&gt;getDistance(from); 
+            if (d &lt; minDistance) 
+                minDistance = d; 
+                // did we find an intersection?
+                if (minDistance &lt;= threshold * t) 
+                    return true; 
+        } 
+ 
+        // no intersection, move along the ray by minDistance
+        t += minDistance; 
+    } 
+ 
+    return false; 
+}
+
+Vec3f shade(
+    const Vec3f&amp; rayOrigin,
+    const Vec3f&amp; rayDirection,
+    const float&amp; t,
+    const ImplicitShape *shape,
+    const std::vector&lt;std::shared_ptr&lt;ImplicitShape&gt;&gt; scene,
+    const std::vector&lt;std::unique_ptr&lt;PointLight&gt;&gt; &amp;lights)
+{
+   constexpr float delta = 10e-5; 
+    Vec3f p = rayOrigin + t * rayDirection; 
+    Vec3f n = Vec3f( 
+        shape-&gt;getDistance(p + Vec3f(delta, 0, 0)) - shape-&gt;getDistance(p + Vec3f(-delta, 0, 0)), 
+        shape-&gt;getDistance(p + Vec3f(0, delta, 0)) - shape-&gt;getDistance(p + Vec3f(0, -delta, 0)), 
+        shape-&gt;getDistance(p + Vec3f(0, 0, delta)) - shape-&gt;getDistance(p + Vec3f(0, 0, -delta))); 
+    n.normalize(); 
+ 
+    Vec3f R = 0; 
+ 
+    // loop over all lights in the scene and add their contribution to P's brightness
+    for (const auto&amp; light: lights) {
+        Vec3f lightDir = light-&gt;pos - p; 
+        if (lightDir.dotProduct(n) &gt; 0) { 
+            float dist2 = lightDir.norm(); 
+            lightDir.normalize(); 
+            bool shadow = 1 - sphereTraceShadow(p, lightDir, sqrtf(dist2), scene); 
+            R += shadow * lightDir.dotProduct(n) * light-&gt;col * light-&gt;intensity / (4 * M_PI * dist2); 
+        } 
+    } 
+ 
+    return R; 
+}
+
+Vec3f sphereTrace(
+    const Vec3f&amp; rayOrigin, 
+    const Vec3f&amp; rayDirection, 
+    const std::vector&lt;std::shared_ptr&lt;ImplicitShape&gt;&gt;&amp; scene,
+    const std::vector&lt;std::unique_ptr&lt;PointLight&gt;&gt;&amp; lights)
+{
+    constexpr float maxDistance = 100;
+    float t = 0;
+    uint32_t numSteps = 0;
+    const ImplicitShape *isectShape = nullptr;
+
+    constexpr float threshold = 10e-6;
+
+    while (t &lt; maxDistance) {
+        float minDistance = kInfinity;
+        Vec3f from = rayOrigin + t * rayDirection;
+        for (const auto&amp; shape : scene) {
+            float d = shape-&gt;getDistance(from);
+            if (d &lt; minDistance) {
+                minDistance = d;
+                isectShape = shape.get();
+            }
+        }
+
+        if (minDistance &lt;= threshold * t) {
+            return shade(rayOrigin, rayDirection, t, isectShape, scene, lights);
+        }
+        t += minDistance; 
+        numSteps++;
+    }
+
+    return 0; 
+}
+
+int main(int argc, char **argv)
+{
+    srand48(13);
+
+    Matrix44f camToWorld = lookAt(Vec3f(0, 1, 9), 0);
+
+    std::vector&lt;std::shared_ptr&lt;ImplicitShape&gt;&gt; scene = makeScene();
+    std::vector&lt;std::unique_ptr&lt;PointLight&gt;&gt; lights;
+    lights.push_back(std::make_unique&lt;PointLight&gt;(Vec3f( 20, 30,  20), Vec3f(1.0, 0.9, 0.7), 4000));
+    lights.push_back(std::make_unique&lt;PointLight&gt;(Vec3f(-20, 30, -20), Vec3f(0.8, 0.9, 1.0), 4000));
+    lights.push_back(std::make_unique&lt;PointLight&gt;(Vec3f( -5, 10,  20), Vec3f(1.0, 1.0, 1.0), 3000));
+
+    constexpr uint32_t width = 640, height = 480;
+    constexpr float ratio = width / static_cast&lt;float&gt;(height);
+    constexpr float fov = 60;
+    float angle = tan(degToRad(fov * 0.5));
+
+    Vec3f *buffer = new Vec3f[width * height];
+
+    Vec3f rayOrigin;
+    camToWorld.multVecMatrix(Vec3f(0), rayOrigin);
+    for (uint32_t j = 0; j &lt; height; ++j) {
+        for (uint32_t i = 0; i &lt; width; ++i) {
+            float x = (2 * i / static_cast&lt;float&gt;(width) - 1) * ratio * angle;
+            float y = (1 - j / static_cast&lt;float&gt;(height) * 2) * angle;
+            Vec3f rayDirection; 
+            camToWorld.multDirMatrix(Vec3f(x, y, -1).normalize(), rayDirection);
+            ImplicitShape *tmp;
+            Vec3f pixelColor = sphereTrace(rayOrigin, rayDirection, scene, lights);
+            buffer[width * j + i] = pixelColor;
+        }
+    }
+
+    std::ofstream ofs;
+    ofs.open(&quot;./spheretrace.ppm&quot;);
+    ofs &lt;&lt; &quot;P6\n&quot; &lt;&lt; width &lt;&lt; &quot; &quot; &lt;&lt; height &lt;&lt; &quot;\n255\n&quot;;
+    for (uint32_t i = 0; i &lt; width * height; ++i) {
+        unsigned char r = static_cast&lt;unsigned char&gt;(std::min(1.0f, buffer[i][0]) * 255);
+        unsigned char g = static_cast&lt;unsigned char&gt;(std::min(1.0f, buffer[i][1]) * 255);
+        unsigned char b = static_cast&lt;unsigned char&gt;(std::min(1.0f, buffer[i][2]) * 255);
+        ofs &lt;&lt; r &lt;&lt; g &lt;&lt; b;
+    }
+    ofs.close();
+
+    delete [] buffer;
+
+    return 0;
+}
+</div><!-- end of code --></div><!-- end of code-column -->
+</article>
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/code.php?id=59&origin=/lessons/advanced-rendering/rendering-distance-fields by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:20:26 GMT -->
+</html>

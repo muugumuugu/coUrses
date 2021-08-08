@@ -1,0 +1,408 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/perlin-noise-part-2/improved-perlin-noise by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:22:22 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Perlin Noise: Part 2 (Improved Perlin Noise)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='Perlin noise, gradient noise, permutation, hashing function, derivatives, interpolant, height map, displacement'>
+<meta name='date' content='2016-05-28 15:53:04'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Perlin Noise: Part 2</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="perlin-noise.html">Perlin Noise</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="perlin-noise-terrain-mesh.html">Using Perlin Noise to Create a Terrain Mesh</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="perlin-noise-computing-derivatives.html">Computing Derivatives</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="improved-perlin-noise.html"><b>Improved Perlin Noise</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code333a.html?id=57&amp;origin=/lessons/procedural-generation-virtual-worlds/perlin-noise-part-2">Source Code</a></div></div></div><p>A few years later (in fact in 2002, so 17 years after Perlin published his first paper on noise), Perlin proposed a new improved version of his noise function. The original noise function has two problems.
+
+<h2>The smoothstep function is not ideal and here is why...</h2>
+
+<p>First, remember that the interpolant we used to interpolate the result of the dot product between the gradients and the vectors pointing toward the point within the cell, is the smoothstep function. This function has the form \(3t^2 - 2t^3\). Remember as well that we used the derivative of this function (\(6t - 6t^2\)) to compute the Noise function partial derivatives. As explained in the previous chapter, these derivatives are useful to compute the "true" normal (true as in mathematically correct) of vertices displaced by a noise function. Now the problem with this is that the derivative of the smoothstep function derivative (what we call in mathematics the second order derivative or \(f''(x)\)) is not continuous when \(t=0\) or \(t=1\). The second order derivative of the smoothstep function is \(6 - 12t\). So when \(t=0\) \(f''(x)=6\) and when \(t=1\), \(f''(x)=-6\). This is a problem because if the derivative of the function used to compute the normal of the displaced mesh is not continuous then it will introduce a discontinuity in these normals wherever \(t=0\) and \(t=1\). That happens when the vertices of the displaced mesh are aligned with the edges of the noise grid cells (i.e. when the vertices coordinates have integer values). These visual artefacts are clearly visible in the image below (left).</p>
+
+<p>It is important to understand that while the analytical solution to compute the noise function derivative is correct mathematically, this doesn't mean that the result is necessarily visually what we look for. This is nothing else than a mathematical construct and this construct may have properties we don't like. So while the results are mathematically correct, they create visual artefacts we would rather prefer to avoid.</p> 
+
+<img class="left" style="width: 670px; margin-bottom: 12px;" src="../../../images/upload/noise-part-2/noise-discontinuity2d41d.png?" />
+
+<p>Furthermore most documents mentioning the problem of this function don't really explain why we have this problem and provide a way of visualising it. To better understand why the problem is there in the first place, you need to remember a detail about functions and function derivatives. In physics, a common function is the function that allows you to compute the <b>position</b> of a moving object as a function of a time. Let's call this function \(p(t)\). If you recall your lessons on physics, you can compute the <b>speed</b> of this object as the derivative of this function with respect to time, in other words \(p'(t)=p(t)/\partial t\). And finally you can compute the object <b>acceleration</b> as the derivative of the speed function with respect to time again or \(p''(t)=p'(t)/\partial t\). So in essence you can see a function \(f(x)\) and its derivatives \(f'(x)\) and \(f''(x)\) as respectively the position, the speed and the acceleration of an object. In our example the smoothstep function is by analogy, the position, the first order derivative of the smoothstep function that we used to compute the tangent is the speed and finally the second order derivative of the smoothstep function is the acceleration. Of course these are just analogies. But the point is, if the acceleration has discontinuities, then we can expect the speed to change abruptly from time to time. In our particular case, this means that if the smoothstep function second order derivative has discontinuities, then we can expect the tangent to vary abruptly from time to time. And that's precisely what causes the visual artefacts at the cell boundaries. The normals in these regions change abruptly.</p>
+
+<div class="question">In computer graphics and mathematics, when the original function is continuous we speak of geometry continuity and we say the function is C0 (or G0 when we deal with geometry). If the function derivative is continuous we speak of tangent continuity (C1 or G1). And when the function second order derivative is also continuous we speak of curvature continuity, in other word, the curvature where two curves or two surfaces join is the same for the curves or two surfaces at the point of contact).</div>
+
+<p>The image below shows a slice of the noise function and its analytically computed normals. It is pretty clear that the orientation of the normals and the direction of these normals is not the same on each side of the cell boundary.</p>
+
+<img class="left" style="width: 670px; margin-bottom: 12px;" src="../../../images/upload/noise-part-2/noise-discontinuityd41d.png?" />
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" style="width: 300px;" src="../../../images/upload/noise-part-2/noise-curvesd41d.png?" />
+<p class="caption left">Figure 1: bicubic (smoothstep) and quintic interpolant.</p>
+</div>
+
+<p>Hopefully there is a solution. Well, if the only problem is that the second order derivative of the smoothstep function is discontinuous then all we need to do to fix the problem, is to choose a function for the interpolant that has a second order derivative that is, obviously, continuous. There are quite a few of them that have a similar shape to the smoothstep function but Perlin choose this quintic function (figure 1):</p>
+
+$$6t^5-15t^4+10t^3.$$
+
+<p>Its first order derivative is:</p>
+
+$$30t^4-60t^3+30t^2.$$
+
+<p>And its second order derivative is:</p>
+
+$$120t^3-180t^2+60t.$$
+
+<p>As you can see this function is continuous (when t=0 and t=1 the function is equal to 0).</p>
+
+<img class="left" style="width: 670px; margin-bottom: 12px;" src="../../../images/upload/noise-part-2/noise-discontinuity1d41d.png?" />
+
+<h2>Choosing random gradients is not ideal and here is why...</h2>
+
+<p>The next problem is that because the gradients are chosen randomly, sometimes the gradient directions are aligned along the same axis or along the diagonal of the cell as showed in figure 2 [missing]. The noise function tends to take on very high values in these regions (close to 1) causing in parts the "splotchy appearance" of the original Noise implementation.</p>
+
+<p>Hopefully this problem can be solved easily by replacing the 256 random directions by a set of 12 directions that are different from each other (and excluding situations in which these gradients would point along the same direction). The permutation table provides plenty of randomness so in practice it doesn't matter if these 12 vectors are predefined. Perlin in his 2002 paper decided to choose the following vectors:</p>
+
+$$
+\begin{array}{l}
+(1,1,0),(-1,1,0),(1,-1,0),(-1,-1,0),\\
+(1,0,1),(-1,0,1),(1,0,-1),(-1,0,-1),\\
+(0,1,1),(0,-1,1),(0,1,-1),(0,-1,-1)
+\end{array}
+$$
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" style="width: 300px;" src="../../../images/upload/noise-part-2/noise-12directionsd41d.png?" />
+<p class="caption left">Figure 3: the 12 directions chosen by Perlin as gradients.</p>
+</div>
+
+<p>Though keep in mind that our permutation table returns integers in the range [0,255], so in order to choose one of these vectors randomly we would need to do something like <span class="code-inline">P[Hash(x,y,z)] % 12</span> though as you know we don't like to use the modulo operator too much because it's slower than bitwise operators and it requires to handle negative values differently than positive values (bitwise operators fix this problem). To replace the modulo operator with a bitwise operator, Perlin proposes to extend the array of 12 vectors to 16 vectors, adding to the first 12 the following 4 directions:</p>
+
+$$
+\begin{array}{l}
+(1,1,0),(-1,1,0),(0,-1,1), (0,-1,-1).
+\end{array}
+$$ 
+
+<p>We already used these directions but Perlin claims that because the first 12 directions form a regular tetrahedron, adding some of these directions redundantly doesn't introduce any bias in the texture.</p>
+
+<div class="scratchquote">The final result has the same non-directional appearance as the original distribution but less clumping."</div>
+
+<p>The splotchy like appearance is not as visible anymore (check out the comparaison image below). Implementing this change is actually quite simple. Our hash function returns numbers in the range [0,255] so we need to use another bitwise operator to set this number to the range [0,15].</p>
+
+<div name="code" class="code">uint8_t p = hash(xi, yi, zi) & 15;</div>
+
+Then note that because all directions are defined with 0 and 1, the dot product simplified into a sum of the coordinates of the right-hand vector.</p>
+
+<div name="code" class="code">// float a = dot(c000, p000);
+// float a = c000.x * p000.x + c000.y * p000.y + c000.z * p000.z;
+// for the gradient (1, 1, 0) for instance, this simplifies to:
+float a = 1 * p000.x + 1 * p000.y + 0 * p000.z = p000.x + p000.y;</div>
+
+<p>We can move this code into its own function:</p>
+
+<div name="code" class="code">float gradientDotV(
+    // a value between 0 and 255 
+    uint8_t perm,
+    // vector from one of the corners of the cell to the point where the noise function is computed
+    float x, float y, float z)
+{
+    switch(perm & 15) {
+        case  0: return  x + y; // (1,1,0)
+        case  1: return -x + y; // (-1,1,0)
+        case  2: return  x - y; // (1,-1,0)
+        case  3: return -x - y; // (-1,-1,0)
+        case  4: return  x + z; // (1,0,1)
+        case  5: return -x + z; // (-1,0,1)
+        case  6: return  x - z; // (1,0,-1)
+        case  7: return -x - z; // (-1,0,-1)
+        case  8: return  y + z; // (0,1,1),
+        case  9: return -y + z; // (0,-1,1),
+        case 10: return  y - z; // (0,1,-1),
+        case 11: return -y - z; // (0,-1,-1)
+        case 12: return  y + x; // (1,1,0)
+        case 13: return -x + y; // (-1,1,0)
+        case 14: return -y + z; // (0,-1,1)
+        case 15: return -y - z; // (0,-1,-1)
+    }
+}
+
+float eval(...)
+{
+    ...
+    float a = gradientDotV(hash(xi0, yi0, zi0), x0, y0, z0);
+    float b = gradientDotV(hash(xi1, yi0, zi0), x1, y0, z0);
+    float c = gradientDotV(hash(xi0, yi1, zi0), x0, y1, z0);
+    float d = gradientDotV(hash(xi1, yi1, zi0), x1, y1, z0);
+    float e = gradientDotV(hash(xi0, yi0, zi1), x0, y0, z1);
+    float f = gradientDotV(hash(xi1, yi0, zi1), x1, y0, z1);
+    float g = gradientDotV(hash(xi0, yi1, zi1), x0, y1, z1);
+    float h = gradientDotV(hash(xi1, yi1, zi1), x1, y1, z1);
+    ...
+}</div>
+
+<p>The image below shows a comparison between the original Perlin noise implementation (left) and the improved version (right):</p>
+
+<img class="left" style="width: 670px; margin-bottom: 12px;" src="../../../images/upload/noise-part-2/noise-compared41d.png?" />
+
+<p>While not being significantly different the two implementations give distinct results. The improved version creates vertical and horizontal lines though that you don't see in the orignal version. This due to the fact that in the improved version, the gradients are  aligned along the xy, xz and yz planes. While the choice of a quintic function as interpolant definitely reduces the visual artefacts and can be called an improvement, we don't think using the predefined gradients over random gradients is necessarily a good thing. You can find the complete implementation of the improved version in the last chapter of this lesson.</p>
+
+<div name="code" class="code">inline
+float quintic(const float &t)
+{
+    return t * t * t * (t * (t * 6 - 15) + 10);
+}
+
+inline
+float quinticDeriv(const float &t)
+{
+    return 30 * t * t * (t * (t - 2) + 1);
+}
+
+class PerlinNoise
+{
+    ...
+    /* inline */
+    uint8_t hash(const int &x, const int &y, const int &z) const
+    { return permutationTable[permutationTable[permutationTable[x] + y] + z]; }
+
+    float gradientDotV(
+        // a value between 0 and 255
+        uint8_t perm,
+        // vector from one of the corners of the cell to the point where the noise function is computed
+        float x, float y, float z) const
+    {
+        switch (perm & 15) {
+            case  0: return  x + y; // (1,1,0)
+            case  1: return -x + y; // (-1,1,0)
+            case  2: return  x - y; // (1,-1,0)
+            case  3: return -x - y; // (-1,-1,0)
+            case  4: return  x + z; // (1,0,1)
+            case  5: return -x + z; // (-1,0,1)
+            case  6: return  x - z; // (1,0,-1)
+            case  7: return -x - z; // (-1,0,-1)
+            case  8: return  y + z; // (0,1,1),
+            case  9: return -y + z; // (0,-1,1),
+            case 10: return  y - z; // (0,1,-1),
+            case 11: return -y - z; // (0,-1,-1)
+            case 12: return  y + x; // (1,1,0)
+            case 13: return -x + y; // (-1,1,0)
+            case 14: return -y + z; // (0,-1,1)
+            case 15: return -y - z; // (0,-1,-1)
+        }
+    }
+
+    float eval(const Vec3f &p, Vec3f& derivs) const 
+    {
+        int xi0 = ((int)std::floor(p.x)) & tableSizeMask;
+        int yi0 = ((int)std::floor(p.y)) & tableSizeMask;
+        int zi0 = ((int)std::floor(p.z)) & tableSizeMask;
+
+        int xi1 = (xi0 + 1) & tableSizeMask;
+        int yi1 = (yi0 + 1) & tableSizeMask;
+        int zi1 = (zi0 + 1) & tableSizeMask;
+
+        float tx = p.x - ((int)std::floor(p.x));
+        float ty = p.y - ((int)std::floor(p.y));
+        float tz = p.z - ((int)std::floor(p.z));
+
+        float u = quintic(tx);
+        float v = quintic(ty);
+        float w = quintic(tz);
+
+        // generate vectors going from the grid points to p
+        float x0 = tx, x1 = tx - 1;
+        float y0 = ty, y1 = ty - 1;
+        float z0 = tz, z1 = tz - 1;
+
+        float a = gradientDotV(hash(xi0, yi0, zi0), x0, y0, z0);
+        float b = gradientDotV(hash(xi1, yi0, zi0), x1, y0, z0);
+        float c = gradientDotV(hash(xi0, yi1, zi0), x0, y1, z0);
+        float d = gradientDotV(hash(xi1, yi1, zi0), x1, y1, z0);
+        float e = gradientDotV(hash(xi0, yi0, zi1), x0, y0, z1);
+        float f = gradientDotV(hash(xi1, yi0, zi1), x1, y0, z1);
+        float g = gradientDotV(hash(xi0, yi1, zi1), x0, y1, z1);
+        float h = gradientDotV(hash(xi1, yi1, zi1), x1, y1, z1);
+
+        float du = quinticDeriv(tx);
+        float dv = quinticDeriv(ty);
+        float dw = quinticDeriv(tz);
+
+        float k0 = a;
+        float k1 = (b - a);
+        float k2 = (c - a);
+        float k3 = (e - a);
+        float k4 = (a + d - b - c);
+        float k5 = (a + f - b - e);
+        float k6 = (a + g - c - e);
+        float k7 = (b + c + e + h - a - d - f - g);
+
+        derivs.x = du *(k1 + k4 * v + k5 * w + k7 * v * w);
+        derivs.y = dv *(k2 + k4 * u + k6 * w + k7 * v * w);
+        derivs.z = dw *(k3 + k5 * u + k6 * v + k7 * v * w);
+
+        return k0 + k1 * u + k2 * v + k3 * w + k4 * u * v + k5 * u * w + k6 * v * w + k7 * u * v * w;
+    }
+    ...
+};</div>
+
+<h2>What's Next?</h2>
+
+<p>This concludes our lesson on Perlin noise. The lesson is quite extensive already but there is certainly a lot more to say about noise functions in general. First, there exists quite a few more ways of generating a procedural noise. Some other common methods are the <b>wavelet noise</b> (developed by Pixar) the <b>Gabor noise</b> and the <b>simplex noise</b> which is also a kind of noise developed by Ken Perlin. We will write lessons on each one of these techniques in the future.</p>
+
+<p>Finally it is important to be able to judge the quality of noise implementation against others. How do we that? We already mentioned the qualities that a noise function should have although. Among these qualities the noise should have a distribution of frequencies as uniform as possible and yet still appear random and smooth. One way of finding out whether a given noise function fits this criteria is to analyse its output in frequency domain. We will also learn about this technique in a future lesson.</p>
+
+<h2>How to Use the Noise Function?</h2>
+
+<p>A procedural noise function in general can be used for many things:</p>
+
+<ul>
+<li>Terrain: in this lesson, we just studied the implementation of the function itself, though <a href="../../procedural-generation-vritual-worlds/perlin-noise-part-2/perlin-noise-terrain-mesh">we also showed how to use it to create something like a terrain</a>. We haven't shown yet how to create terrains with really complex and realistic surface details using the noise function. We will show this technique in a separate lesson yet to be published.</li>
+<li>Water surfaces: it can also be used to simulate a water surface. By offsetting the the y coordinative of the input point, it is possible to animate the displaced surface like waves. This is simple technique that works well though there are better methods to simulate water surfaces.</li>
+<li>Cloud: it can also be used to add surface details to volumes such as cloud. We use the noise function in the lesson on volume rendering to simulate the appearance of various cloudy shapes.</li>
+<li>Texturing: finally it can be used of couse to add texture details to surfaces. It can be used to modulate any input of the shader such as the color, the specular, or add some bump to the surface of an object.</li>
+<li>Animation: the noise function can also be used to add some noise to animations. A typical use case for example is to add some noise to a camera animation to simulate some camera shakes.</li>
+</ul>
+
+<h2>References</h2>
+
+<p><i>Improving Noise</i>. Ken Perlin (2002)</p>
+
+<p><i>State of the Art in Procedural Noise Functions</i>. A. Lagae and al. (2010)</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='perlin-noise-computing-derivatives.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 4 of  5</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='../../../code333a.html?id=57&amp;origin=/lessons/procedural-generation-virtual-worlds/perlin-noise-part-2'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/perlin-noise-part-2/improved-perlin-noise by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:22:27 GMT -->
+</html>

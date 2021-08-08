@@ -1,0 +1,322 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/advanced-rendering/bezier-curve-rendering-utah-teapot/bezier-patch-normal by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:19:09 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>B&eacute;zier Curves and Surfaces: the Utah Teapot (Calculating Normals of B&eacute;zier Surfaces)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='B&eacute;zier curve, B&eacute;zier surface, parametric surface, Utah teapot, Newell, Bernstein polynomials, quadratic, cubic, B&eacute;zier basis matrix, De Casteljau algorithm, tesselation, Taylor series, forward difference, B&eacute;zier  patch normal'>
+<meta name='date' content='2015-10-08 15:06:53'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>B&eacute;zier Curves and Surfaces: the Utah Teapot</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="bezier-curve.html">B&eacute;zier Curve</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="bezier-surface.html">B&eacute;zier Surfaces</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="fast-forward-differencing.html">Fast Forward Differencing</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="bezier-patch-normal.html"><b>Calculating Normals of B&eacute;zier Surfaces</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="curves-as-geometry.html">Rendering Curves as Geometry: Hair Rendering</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code76b5.html?id=35&amp;origin=/lessons/advanced-rendering/bezier-curve-rendering-utah-teapot">Source Code</a></div></div></div><div style="width: 300px;" class="captionImage right">
+<img class="left"  src="../../../images/upload/bezier/bez-facenormald41d.png?" />
+<p class="caption left">Figure 1:  a face normal can be computed from the cross product between two edges of a face.</p>
+</div>
+
+<p>Now that we studied a couple of techniques to create a B&eacute;zier patch, a problem remains. We need to shade this patch. Generating the position of the points is something we can already do but for shading, but we also need a normal. How can we generate a normal at the position of each vertex of the grid? We can easily generate a face normal using  a technique similar to the one we have been using in the <span class="code-inline">getSurfaceProperties</span> method of the <span class="code-inline">TriangleMesh</span> class. We can compute the cross product between two edges making up a face. But this technique only produces a face normal.</p>
+
+<div name="code" class="code">// face normal
+const Vec3f &v0 = P[k]; 
+const Vec3f &v1 = P[k+1]; 
+const Vec3f &v2 = P[k+3]; 
+faceNormal = (v1 - v0).crossProduct(v2 - v0);</div>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left"  src="../../../images/upload/bezier/bez-normald41d.png?" />
+<p class="caption left">Figure 2:  a normal at any point on the patch can be computed from a cross product between the tangent on the surface at that point along the \(u\) and the \(v\) direction.</p>
+</div>
+
+<p>What we want is a vertex normal, a normal at each point making up the grid that is perpendicular to the B&eacute;zier surface. Hopefully, because the grid itself is computed from equations, we can also use maths to compute an accurate normal at any point on the surface of the B&eacute;zier patch. What we want to do is compute two tangents at the point of interest (whose coordinates on the patch are specified in terms of \(u\) and \(v\)), one along the \(u\) direction and one along the \(v\) direction. By taking the cross product of these two tangents we then get the normal we are looking for. The question now is, how do we compute these tangents? As suggested, we can express the problem in mathematical terms. In mathematics the tangent of a curve computed from a function, can be defined as the function derivative with respect to a parameter, for example:</p>
+
+$$\dfrac{\partial}{\partial x}f(x),$$
+
+<p>would represent the derivative of the function \(f(x)\) with respect to the parameter \(x\). We can do the exact same thing with the equation to compute points on a B&eacute;zier patch. We can for example compute the derivative of that function or equation with respect to the parameter \(u\) or \(v\):</p>
+
+$$\dfrac{\partial}{\partial u}B(u,v), \dfrac{\partial}{\partial v}B(u,v).$$
+
+<p>The first equation would give us a tangent along the \(u\) direction and the second, the tangent a long the \(v\) direction. Now we know that the function \(B(u,v)\) itself can be written as:</p>
+
+$$B(u,v) = \sum_i\sum_j b_i(u) b_j(v) p_{ij}.$$
+
+<p>Where \(b_i(u)\) and \(b_j(v)\) are the Bernstein polynomials and \(p_{ij}\) the control points. We also now how to compute the Bernstein polynomials:</p>
+
+$$
+\begin{array}{l}
+k_1(t) = (1 - t)^3\\
+k_2(t) = 3t(1 - t)^2\\
+k_3(t) = t^23(1 - t)\\
+k_4(t) = t^3
+\end{array}
+$$
+
+<p>So all we need to do is compute the derivative of these functions, which are:</p>
+
+$$
+\begin{array}{l}
+k'_1(t) = -3(1-t)^2\\
+k'_2(t) = 3(1-t)^2-6t(1-t)\\
+k'_3(t) = 6t(1-t)-3t^2\\
+k'_4(t) = 3t^2
+\end{array}
+$$
+
+<div class="question">The derivative of a function of a function such as \((x^2+3)^3\) can be computed using what we call the <b>chain rule</b>.
+
+$$\dfrac{d}{dx}y = \dfrac{d}{du}y \dfrac{d}{dx}u.$$
+
+You need to:
+
+<ul style="font-size: 14px;">
+<li>Recognise \(u\) (always choose the inner-most expression, usually the part inside brackets, or under the square root sign)</li>
+<li>Then we need to re-express \(y\) in terms of \(u\)</li>
+<li>Then we differentiate \(y\) with respect to \(u\), then we re-express everything in terms of \(x\)</li>
+<li>The next step is to find \(\dfrac{d}{dx}u\)</li>
+<li>Then we multiply \(\dfrac{d}{du}y\) and \(\dfrac{d}{dx}u\).</li>
+</ul>
+
+In our example, we let \(u = x^2 + 3\) and then \(y = u^3\). We see that \(u\) is a function of \(x\) and \(y\) is a function of \(u\). For the chain rule, we firstly need to find \(\dfrac{d}{du}y\) and \(\dfrac{d}{dx}u\).
+$$\dfrac{d}{du}y = 3u^2 = 3(x^2 + 3)^2,$$
+and:
+$$\dfrac{d}{dx}u = 2x.$$
+So:
+$$\dfrac{d}{dx}y=\dfrac{d}{du}y \dfrac{d}{dx}u=3(x^2 + 3)^2(2x)=6x(x^2+3).$$
+If follow these steps, you will easily find the derivatives of our equations.
+</div>
+
+<p>If we derive the equation \(B(u,v) = \sum_i\sum_j b_i(u) b_j(v) p_{ij}\) with respect to \(u\), you would get (this would give us the tangent on the patch for the pair of parameter \((u,v)\) along the \(u\) direction):</p>
+
+$$
+\begin{array}{l}
+\dfrac{\partial}{\partial u}B(u,v) =&-3(1-u)^2 \sum_j b_j(v) p_{0j}\\
+&3(1-u)^2-6u(1-u) \sum_j b_j(v) p_{1j}\\
+&6u(1-u)-3u^2 \sum_j b_j(v) p_{1j}\\
+&3u^2 \sum_j b_j(v) p_{3j}
+\end{array}
+$$
+
+<p>What we actually do there is to compute a B&eacute;zier parallel to the \(u\) direction and then once we have this curve, compute the derivative along this curve using \(k'_1(u)\), \(k'_2(u)\), \(k'_3(u)\) and \(k'_4(u)\). The same thing can be done to find the tangent along the \(v\) direction:</p>
+
+$$
+\begin{array}{l}
+\dfrac{\partial}{\partial v}B(u,v) =&-3(1-v)^2 \sum_i b_i(u) p_{i0}\\
+&3(1-v)^2-6v(1-v) \sum_i b_i(u) p_{i1}\\
+&6v(1-v)-3v^2 \sum_i b_i(u) p_{i2}\\
+&3v^2 \sum_i b_i(u) p_{i3}
+\end{array}
+$$
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left"  src="../../../images/upload/bezier/bez-shadingd41d.png?" />
+<p class="caption left">Figure 3:  a shaded Utah teapot.</p>
+</div>
+
+<p>Et voila! All there is left to do is compute these two equations to obtain the two tangents at the parametric coordinates \((u,v)\) and then compute the cross-product between these two tangents to get the normal at this point. The implementation of this technique is shown below. We have two functions, <span class="code-inline">dUBezier</span> to compute the tangent along the \(u\) direction and <span class="code-inline">dVBezier</span> to compute the other tangent along the \(v\) direction. The result is surprising. As you can see in the adjacent image, not only the result is very smooth but note also that the transition at the patches boundaries is also invisible. Mathematics once again work remarkably well and give us a perfect result including at the edge or at the corners of the patches.<p>
+
+<div name="code" class="code">Vec3f dUBezier(const Vec3f *controlPoints, const float &u, const float &v)
+{
+   Vec3f P[4];
+   Vec3f vCurve[4];
+   for (int i = 0; i < 4; ++i) {
+       P[0] = controlPoints[i];
+       P[1] = controlPoints[4 + i];
+       P[2] = controlPoints[8 + i];
+       P[3] = controlPoints[12 + i];
+       vCurve[i] = evalBezierCurve(P, v);
+   }
+
+   return -3 * (1 - u) * (1 - u) * vCurve[0] +
+       (3 * (1 - u) * (1 - u) - 6 * u * (1 - u)) * vCurve[1] +
+       (6 * u * (1 - u) - 3 * u * u) * vCurve[2] +
+       3 * u * u * vCurve[3];
+}
+
+Vec3f dVBezier(const Vec3f *controlPoints, const float &u, const float &v)
+{
+   Vec3f uCurve[4];
+   for (int i = 0; i < 4; ++i) {
+       uCurve[i] = evalBezierCurve(controlPoints + 4 * i, u);
+   }
+
+   return -3 * (1 - v) * (1 - v) * uCurve[0] +
+       (3 * (1 - v) * (1 - v) - 6 * v * (1 - v)) * uCurve[1] +
+       (6 * v * (1 - v) - 3 * v * v) * uCurve[2] +
+       3 * v * v * uCurve[3];
+}
+
+void generatePolyTeapot(const Matrix44f& o2w, std::vector<std::unique_ptr<Object>> &objects)
+{
+   uint32_t divs = 8;
+   ...
+   Vec3f controlPoints[16];
+   for (int np = 0; np < kTeapotNumPatches; ++np) { // kTeapotNumPatches
+       // set the control points for the current patch
+       for (uint32_t i = 0; i < 16; ++i)
+           controlPoints[i][0] = teapotVertices[teapotPatches[np][i] - 1][0],
+           controlPoints[i][1] = teapotVertices[teapotPatches[np][i] - 1][1],
+           controlPoints[i][2] = teapotVertices[teapotPatches[np][i] - 1][2];
+
+       // generate grid
+       for (uint16_t j = 0, k = 0; j <= divs; ++j) {
+           float v = j / (float)divs;
+           for (uint16_t i = 0; i <= divs; ++i, ++k) {
+               float u = i / (float)divs;
+               P[k] = evalBezierPatch(controlPoints, u, v);
+               Vec3f dU = dUBezier(controlPoints, u, v);
+               Vec3f dV = dVBezier(controlPoints, u, v);
+               N[k] = dU.crossProduct(dV).normalize();
+               st[k].x = u;
+               st[k].y = v;
+           }
+       }
+       ...
+    }
+}</div>
+
+<p>You can find the complete source code of the program in the last chapter of this lesson.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='fast-forward-differencing.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 4 of  6</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='curves-as-geometry.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/advanced-rendering/bezier-curve-rendering-utah-teapot/bezier-patch-normal by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:19:15 GMT -->
+</html>

@@ -1,0 +1,433 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1/simple-pattern-examples by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:21:58 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Value Noise and Procedural Patterns: Part 1 (Simple Pattern Examples)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='value noise, procedural pattern generation, deterministic, random number generator, RNG, periodic, continuity, differentiability, sampling, aliasing, white noise, solid textures, permutation, hash table'>
+<meta name='date' content='2016-05-15 11:39:24'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Value Noise and Procedural Patterns: Part 1</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction.html">Introduction</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="creating-simple-1D-noise.html">Creating a Simple 1D Noise</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="creating-simple-2D-noise.html">Creating a Simple 2D Noise</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="simple-pattern-examples.html"><b>Simple Pattern Examples</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code11bf.html?id=55&amp;origin=/lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1">Source Code</a></div></div></div><p>We will finish this lesson by providing you with some examples of patterns created using the noise function. When Ken Perlin originally developped his noise function, he also proposed a few simple algorithms to generate interesting solid textures using this function as a building block. Some of these functions such as the turbulence are still widely used. He described most of these patterns and a few more in a seminal paper entitled "<b>An Image Synthetiser</b>" which he presented at Siggraph in 1985. This paper can easily be found on the internet and we highly recommend you to read it.</p>
+
+<p>As we said earlier, our version of the noise function doesn't create the most interesting looking noise (our noise look quite blocky for now). The goal of this lesson isn't to develop a good looking noise but is to understand how the technique works and the function properties. Check the second Noise Part 2 for learning about a better looking version of the noise function (called <b>gradient noise</b> which is the original technique proposed by Ken Perlin in 1985). However that shouldn't stop us from showing you a few examples especially with the 2D noise which we can use to start creating some more complex images. We recommend that you change the parameters in the code to understand the effect they have on the result. In each of the following chapter you will find a description of the algorithm, the resulting pattern and the code used to generate this image.</p>
+
+<h2>1D Noise Examples</h2>
+
+<div class="captionImage right" style="width: 400px;">
+<img class="left" style="width: 400px;" src="../../../images/upload/noise-part-1/1dnoise-fractald41d.png?" />
+<p class="caption left">Figure 1: the fractal sum is a sum a noises which frequency and amplitude varies from layer to layer. In this example we have 5 layers. From layer to layer we double the frequency and halve the amplitude.</p>
+</div>
+
+<p>One of the fist examples we will describe works well in all dimensions. But we will start with the 1D case, and give an example later with 2D noise. For a 3D noise example of this technique have a look at the second lesson. The idea behind it is to sum up the contribution of several noises (each layer is often called an <b>octave</b> in the CG literature but avoid this term if possible). We could vary the parameters of these various noise <b>layers</b> (or octaves) - for example change their <b>frequency</b> and <b>amplitude</b> - in a coherent manner. In other words, we can establish a connection between the change in frequency and amplitude from layer to layer.</p>
+
+<ul>
+<li>We will start from a base frequency and unit amplitude (1) and compute a first layer of noise with these values.</li>
+<li>Then we will add a second layer of noise but we will multiply the frequency and the amplitude of this layer by 2 and 0.5 (which is the same as dividing the amplitude by 2) respectively.</li>
+<li>For the third layer, we will multiply the frequency by 4 and divide the amplitude by 4. Layer 4 and 5 will have their frequency and amplitude multiplied by 8 and 16 and divided by 8 and 16 respectively.</li>
+</ul>
+
+<p>If you haven't found the relation yet, each layer is twice the frequency and half the amplitude from the previous layer. If you build a series of noise that way and sum up together, you get the result from figure 1 (bottom image). As you can see this curve has a richer profile than a single noise. Visually it look like the profile of a mountain chain (you can see the concept of octaves or layers as adding up details of smaller frequency to the terrain - since the height of mountains is way greater than the height of rocks making up the fine detail of a landscape, it seems reasonable to decrease the amplitude of the noise layers as their frequency increases). And we are not mentioning this by mistake. As we will show later on with the 2D counterpart of this technique, we can use this result to displace a mesh and create something that looks like a mountain. Remember what we said about noise in the first chapter of this lesson. It can be used to simulate many natural shapes found in nature such as mountains or ocean waves. This is one example.</p>
+
+<p>Before we look a bit more at the terminology, let's just say that in this example, the frequency and the amplitude of a particular layer is driven by a <b>power of two</b>. If we formalize the idea we just described in pseudo code, we can write:</p>
+
+<div name="code" class="code">float noiseSum = 0;
+static const unsigned numLayers = 5; // octaves
+#if 0
+for (unsigned i = 0; i < numLayers; ++i) {
+    // change in frequency and amplitude
+    noiseSum += noise(P * pow(2, i)) / pow(2, i);
+}
+#else
+// alternatively
+float amplitude = 1;
+float frequency = 1;
+for (unsigned i = 0; i < numLayers; ++i) {
+    // change in frequency and amplitude
+    noiseSum += noise(P * frequency) * amplitude;
+    amplitude *= 0.5; // 1, 0.5, 0.25, 0.0625, ...
+    frequency *= 2; // 1, 2, 4, 8 ...
+}
+#endif</div>
+
+<p>One of the questions you might ask is how many layers shall I use to create this pattern. There is a technical answer that we will only briefly look into. When the frequency of the input value becomes really high, it is very likely that the result of the noise function will turn into white noise again (see the first chapter of this lesson, on noise properties). Which we want to avoid. You can sum up as many layers as you want until you reach the point where the frequency of the input value turns the result of the noise function into white noise. Which raises another question: do we know when that happens? In theory yes, we can find out when this happens. This is dictated by the rules of aliasing which is a complex and large topic. You will find an explanation about this in the lesson on aliasing and filtering (basic section) and a basic introduction to filtering noise in Noise Part 2.</p>
+
+<p>That's the theory. In practice (when we use this technique for making films) we rarely use more than 3 or 5 layers (sometimes up to 7). There's a couple of reasons for that. First computing noise is costly. So the more layers you use the more time it takes to compute. The other main reason is that, the layers might not significantly contribute to the result after we have added more than 5 of 7 layers, because the amplitude of these layers at that stage becomes really small. Why shall we use more than 5 layers if more layers do not make any significant difference while still expansive to compute (unless you actually really zoom in on the noise pattern)?</p>
+
+<p>Ideally you want to find a compromise between theory and practice. The perfect code would sum up layers and stop automatically when it finds that the frequency of the input value for the next layer will result in white noise (see lesson on aliasing for an example of function that cut off the number of layers before in turns into white noise). An automatic system could still lead to a very high number of layers though which can be costly. It would be good to let the user control the maximum number of layers being used with an input parameter which by default would be set with the value 3, 5 or 7.</p>
+
+<h2>Terminology</h2>
+
+<p>Some terminology now. The technique of summing up layers of noise which frequency and amplitude are related to each other, can be called a <b>fractal sum</b>. In fact the creation of fractal curves (or surfaces) using this technique is not limited to the field of computer graphics. You may have noticed that it looks very similar to a curve that shows the evolution of the stock market over a certain period of time. These curves and their mathematical representation were studied by <b>Benoit Mandelbrot</b>, a mathematician well known for his research on <b>fractal</b> patterns (applied to the field on finance in particular). We will limit ourselves here to the introduction of a few technical terms but readers interested by this topic can read the lesson on fractal (which is by itself a fairly large and fascinating topic). Many things from the real world, landscapes, seascapes, clouds, plants, including the evolution of the stock market, etc. have a fractal form.</p>
+
+<p>When successive layers of a fractal noise have an amplitude which is inversely proportional to their frequency, the term used to describe the result is <b>pink noise</b>. If we formalize this in a formula we could write:</p>
+
+<div name="code" class="code">float pinkNoise = 0;
+static const unsigned numlayer = 5;
+float rateOfChange = 2.0f;
+for (unsigned i = 0; i < numLayers; ++i)
+{
+    // change in frequency and amplitude
+    pinkNoise += noise(P * pow(rateOfChange, i)) / pow(rateOfChange, i);
+}</div>
+
+<p>To be a bit more specific, the change of frequency and amplitude between successive layers almost forms the signature of the result noise curve. It defines its spectral properties. We use the term <b>spectral densities</b> to define the various frequencies (layers) the resulting noise is made of. And each one of these layers has a specific amplitude which we call <b>power spectra</b>. Amplitude and frequency can either be related to each other like in the case of pink noise or not. You could also have a relation in the change of frequency between successive layers. These observations are key to the creation of many patterns in computer graphics and we recommend you understand this well before reading any other lessons on pattern creation.</p>
+
+<div class="question">
+We can create a complex noise function (fractal sum) from summing up a series of basic noises which frequencies are related to each other. The frequency of a layer and its amplitude are also connected. If we can do that, it means that the reverse process might be possible as well. Meaning we can take a signal that seems to be fractal and decompose it into simpler noise functions to find out what is the frequency ratio between two consecutive layers (what are the different frequencies the signal is made of and what is the relation between these frequencies if one exists) as well as the ratio frequency-amplitude for each layer. Doing so will make it possible to establish the spectral properties of that signal. This observation is key in the development of algorithms used for simulating ocean surfaces in particular. If we know the spectral densities of certain patterns in nature then we can very likely recreate them with a computer and obtain similar patterns (this process is similar to the concept of spectral modeling synthesis in acoustic). This is a very cool observation which has been widely used in CG since at least the mid 80's.
+</div>
+
+<p>The use of the word noise in the name (pink noise) might be a bit misleading as it refers to a sum of noise functions with correlated frequencies and amplitudes. The term <b>octave</b> is also sometimes (mis-)used in place of the word layer. The term layer is more generic than octave which is also used in music. An octave is a doubling or having of a frequency. If it is used in a program (or in literature) it should mean that each successive layer in the computation of a fractal sum is twice the frequency of the previous layer. It means that the term change of rate in our equation would take the value 2. If the frequency ratio between successive layers is different than 2, the use of this term is inaccurate and layer should be used instead. When we double the frequency between layers and that the amplitude of these layers is inversely proportional to their frequency, we obtain a special type of pink noise which we call <b>Brownian noise</b> (named after the mathematician Robert Brown).</p>
+
+<div name="code" class="code">float brownianNoise = 0;
+const unsigned numlayer = 5;
+float rateOfChange = 2.0f;
+for (unsigned i = 0; i < numLayers; ++i)
+{
+    // change in frequency and amplitude
+    brownianNoise += noise(P * pow(rateOfChange, i)) / pow(rateOfChange, i);
+}</div>
+
+<p>In computer graphics, you will often find that fractal functions are called <b>fBm</b> (which stands for fractional brownian motion). The CG community has borrowed most of these terms from the mathematics field, mainly as a convenient way of labelling functions which are using these techniques in a generally simplified/simpler form. In the generic form of the fBm function, the amplitude of a layer doesn't have to be inversionaly proportional to its frequency. You can use two different values to control how the frequency and the amplitude change between layers. The word <b>lacunarity</b> is used to control the rate by which the frequency changes from layer to layer. Lacunarity has a special meaning in in the field of fractal (check the lesson on fractals from more information). There is no special word for the rate of change in the amplitude from layer to layer. We will be using gain in the following pseudo-code of an fBm function:</p>
+
+<div name="code" class="code">float fBm(Vec3f P, float lacunarity = 2, float gain = 0.5, int numLayers = 5)
+{
+    float noiseSum = 0;
+    Vec3f Pnoise = P;
+    float amplitude = 1;
+    for (unsigned i = 0; i < numLayers; ++i)
+    {
+        // change in frequency and amplitude
+        noiseSum += noise(Pnoise) * amplitude;
+        Pnoise *= lacunarity;
+        amplitude *= gain;
+    }
+
+    return noiseSum;
+}</div>
+
+<p>Now that we have established these basic concepts for 1D noise, let's see what happens when we apply the same techniques to a 2D noise.</p>
+
+<h2>2D Noise Examples</h2>
+
+<p>To make our program easier to use we will first create a simple generic function that will will loop other all the pixels of an image and compute a 2D position from it. The pixel color is set with the result of our noise function for that point. This function is a template which takes a noise function as an argument. The noise function is where we will implement the code to compute various patterns (download the source code for a complete example).</p>
+
+<div name="code" class="code">template&ltNoiseFunc N&gt
+void createNoiseImage(const char *filename)
+{
+    unsigned imageWidth = 512, imageHeight = 512;
+    float invImageWidth = 1.f / imageWidth;
+    float invImageHeight = 1.f / imageHeight;
+    float noiseFrequency = 5;
+    float *imageBuffer = new float[imageWidth * imageHeight];
+    float *currPixel = imageBuffer;
+    for (unsigned j = 0; j < imageHeight; ++j) {
+        for (unsigned i = 0; i < imageWidth; ++i) {
+            Vec2f P(i * invImageWidth, j * imvImageHeight) * noiseFrequency;
+            *currPixel = (*N)(P);
+            currPixel++;
+        }
+    }
+    saveImage(filename, imageBuffer, imageWidth, imageHeight);
+    delete [] imageBuffer;
+}</div>
+
+<h2>Simple 2D Noise</h2>
+
+<p>Our first example is trivial. To demonstrate the use of our program and test our noise function we first output a simple noise image.</p>
+
+<img style="margin-left:-10px; padding-left: 0px; width: 690px; width: 690px;" src="../../../images/upload/noise-part-1/2dnoise-simple.png" />
+
+<div name="code" class="code">float noiseSum = 0;
+static const unsigned numlayer = 5;
+for (unsigned i = 0; i < numLayers; ++i) {
+    // change in frequency and amplitude
+    noiseSum += noise.eval(P * pow(2, i)) / pow(2, i);
+}</div>
+
+<h2>Fractal Sum</h2>
+
+<div class="captionImage right" style="width: 400px;">
+<img class="left" style="width: 400px;" src="../../../images/upload/noise-part-1/2dnoise-fractal-sumd41d.png?" />
+<p class="caption left">Figure 2: example of a fractal sum using 2D noise. The principle is the same as with the 1D example. Layer n + 1 has twice the frequency and half the amplitude of layer n.</p>
+</div>
+
+<p>Our second example is a demonstration of the fractal sum that we have already explained for the 1D case. We accumulate the contribution of five layers of noise. Between each successive layer we multiply the frequency of the point from the previous layer by two and divide the amplitude from the previous layer by two.</p>
+
+<p>Here is the resulting image and the code used to compute this result (the code is already slightly optimised. We could have used the function pow(2, k) to change the frequency and the amplitude of the noise function. But this function is quite slow and we can replace it with a recursive multiplication of the frequency (2) and amplitude (0.5) parameters:</p>
+
+<img style="margin-left:-10px; padding-left: 0px; width: 690px; width: 690px;" src="../../../images/upload/noise-part-1/2dnoise-fractal.png" />
+
+<div name="code" class="code">unsigned numLayers = 5;
+float maxNoiseVal = 0;
+for (unsigned j = 0; j < imageHeight; ++j) {
+    for (unsigned i = 0; i < imageWidth; ++i) {
+        Vec2f pNoise = Vec2f(i, j) * frequency;
+        float amplitude = 1;
+        for (unsigned l = 0; l < numLayers; ++l) {
+            noiseMap[j * imageWidth + i] += noise.eval(pNoise) * 2;
+            pNoise *= 2;
+            amplitude *= 0.5;
+        }
+        if (noiseMap[j * imageWidth + i] > maxNoiseVal) maxNoiseVal = noiseMap[j * imageWidth + i];
+    }
+}</div>
+
+<div class="captionImage right" style="width: 400px;">
+<img class="left" style="width: 400px;" src="../../../images/upload/noise-part-1/2dnoise-displacementd41d.png?" />
+<p class="caption left">Figure 3: fractal noise can be used to generate terrain by texture displacement. It can be used for generating terrain like in this example but also water surfaces or clouds. Check the lessons on displacement and terrain generation.</p>
+</div>
+
+<div class="captionImage right" style="width: 400px;">
+<img class="left" style="width: 400px;" src="../../../images/upload/noise-part-1/2dnoise-fractal-examplesd41d.png?" />
+<p class="caption left">Figure 4: many interesting patterns can be created by changing the values for the lacunarity and the gain.</p>
+</div>
+
+<p>Note that because we sum up several layers of noise, the result could be greater than 1 which will be a problem when we will convert this value to a pixel color. We can clamp the value when it is converted to a pixel color, but a better solution is to normalize the array of noise values by dividing all the values in the array by the maximum computed value. To do so, we store the maximum value as we compute all the entry in the noise map in the <span class="code-inline">maxNoiseVal</span> variable and then once all the values are computed we divide them all again by <span class="code-inline">maxNoiseVal</span> (line 12).</p>
+
+<p>As mentioned before, the fractal sum can be used to create convincing terrains and many other natural patterns (seascapes, landscapes, etc.). We can easily create a 2D texture and use it to displace a mesh (figure 3). More details can be found in the lessons on texture synthesis, terrain generation and modelling of ocean surfaces.</p>
+
+<p>In the code you can experiment by changing the multiplier for the frequency and the amplitude, turning your fractal noise function into a more generic fBm function which we have described earlier on.</p>
+
+<p>Many different looks can be achieved by varying the value for the lacunarity and the gain as showed in figure 4.</p>
+
+<div name="code" class="code">ValueNoise noise;
+float frequency = 0.02f;
+float frequencyMult = 1.8; // lacunarity
+float amplitudeMult = 0.35;
+unsigned numLayers = 5;
+float maxNoiseVal = 0;
+for (unsigned j = 0; j < imageHeight; ++j) {
+    for (unsigned i = 0; i < imageWidth; ++i) {
+        Vec2f pNoise = Vec2f(i, j) * frequency;
+        float amplitude = 1;
+        for (unsigned l = 0; l < numLayers; ++l) {
+            noiseMap[j * imageWidth + i] += noise.eval(pNoise) * amplitude;
+            pNoise *= frequencyMult;
+            amplitude *= amplitudeMult;
+        }
+        if (noiseMap[j * imageWidth + i] > maxNoiseVal) maxNoiseVal = noiseMap[j * imageWidth + i];
+    }
+}
+for (unsigned i = 0; i < imageWidth * imageHeight; ++i) noiseMap[i] /= maxNoiseVal;</div>
+
+<h2>Turbulence</h2>
+
+<div class="captionImage right" style="width: 400px;">
+<img class="left" style="width: 400px;" src="../../../images/upload/noise-part-1/1dnoise-turbd41d.png?" />
+<p class="caption left">Figure 5: turbulence works like the fractal sum but instead of using the noise function directly, we use the absolute value of a signed noise. In blue, the original signed noise for the first layer. Wherever the curve is negative we mirror its values about the x-axis. The resulting curves (in red, which overlaps the blue curve when the signed noise is positive) looks bumpy.</p>
+</div>
+
+<p>Turbulence is a function built on the same principle as the fractal sum. However instead of using the noise function directly for each layer, we will use the absolute value of the signed noise. We will first convert the result of the noise into a signed noise, and then take the absolute value of this result. As you can see in the following figure, processing the noise function that way, creates a profile that seems to be made of bumps. Wherever the curve is negative (black line) we will mirror the curve in these areas along the x axis. The red line curve is the result. Using this technique with a 2D noise can produce patterns suitable to simulate fire, smoke or clouds.</p>
+
+<img style="margin-left:-10px; padding-left: 0px; width: 690px; width: 690px;" src="../../../images/upload/noise-part-1/2dnoise-turbulence.png" />
+
+<div name="code" class="code">ValueNoise noise;
+float frequency = 0.02f;
+float frequencyMult = 1.8;
+float amplitudeMult = 0.35;
+unsigned numLayers = 5;
+float maxNoiseVal = 0;
+for (unsigned j = 0; j < imageHeight; ++j) {
+    for (unsigned i = 0; i < imageWidth; ++i) {
+        Vec2f pNoise = Vec2f(i, j) * frequency;
+        float amplitude = 1;
+        for (unsigned l = 0; l < numLayers; ++l) {
+            noiseMap[j * imageWidth + i] += std::fabs(2 * noise.eval(pNoise) - 1) * amplitude;
+            pNoise *= frequencyMult;
+            amplitude *= amplitudeMult;
+        }
+        if (noiseMap[j * imageWidth + i] > maxNoiseVal) maxNoiseVal = noiseMap[j * imageWidth + i];
+    }
+}
+for (unsigned i = 0; i < imageWidth * imageHeight; ++i) noiseMap[i] /= maxNoiseVal;</div>
+
+<h2>Marble Texture</h2>
+
+<p>A marble texture can created by modulating the phase of sine pattern with a noise function or a fractal sum. The idea here is not to use the noise function directly to create the pattern but to perturb the function we are using to create the pattern. In that case, we perturb or shift the phase of the sine function with a fractal sum. This idea can be use to introduce randomness in any periodic or regular function. Our example is quite simple and only draw a black and white marble texture. However by introducing some color in the mix, it might be possible to create more realistic patterns. The lesson on texture synthesis contains more sophisticated examples.</p>
+
+<img style="margin-left:-10px; padding-left: 0px; width: 690px; width: 690px;"  src="../../../images/upload/noise-part-1/2dnoise-marble.png" />
+
+<div name="code" class="code">float frequency = 0.02f;
+float frequencyMult = 1.8;
+float amplitudeMult = 0.35;
+unsigned numLayers = 5;
+
+Vec2f pNoise = Vec2f(i, j) * frequency;
+float amplitude = 1;
+float noiseValue = 0;
+// compute some fractal noise
+for (unsigned l = 0; l < numLayers; ++l) {
+    noiseValue += noise.eval(pNoise) * amplitude;
+    pNoise *= frequencyMult;
+    amplitude *= amplitudeMult;
+}
+noiseMap[j * imageWidth + i] = (sin((i + noiseValue * 100) * 2 * M_PI / 200.f) + 1) / 2.f;</div>
+
+<h2>Wood Texture</h2>
+
+<div class="captionImage right" style="width: 400px;">
+<img class="left" style="width: 400px;" src="../../../images/upload/noise-part-1/1dnoise-woodd41d.png?" />
+<p class="caption left">Figure 6: the blue curve is the result of the noise multiplied by 4. The red curve is the result of the wood texture function. We subtract the blue curve from its integer part.</p>
+</div>
+
+<p>Like the marble texture, the wood texture relies on a very simple trick. The idea is to multiply the noise function by a certain value greater than 1. Let's call the result of this multiplication g (historically it was called g in reference to wood grain). The texture is obtained by subtracting g from its integer part. Casting a positive float number to an integer will result in an integer necessarily smaller or equal to g. The result of that subtraction is therefore necessarily in the range [0:1) (1 exclusive). Figure 6 illustrates the process. In this example, we have multiplied the noise function by 4. The blue curve represents the value g, while the red curve represents the result of subtracting g from its integer part. Multiplying the noise function by a value greater than 4 would result in more breakups in the red curve. In 2D, these breakups mark the boundary between regions of lighter and darker color (see the image below).</p>
+
+<img style="margin-left:-10px; padding-left: 0px; width: 690px; width: 690px;"  src="../../../images/upload/noise-part-1/2dnoise-wood.png" />
+
+<div name="code" class="code">
+float g = noise.eval(Vec2f(i, j) * frequency) * 10;
+noiseMap[j * imageWidth + i] = g - (int)g;</div>
+
+<h2>References</h2>
+
+<p><i>An Image Synthesizer</i>. Ken Perlin (1985)</p>
+<p><i>Texturing and Modeling, Third Edition: A Procedural Approach</i>. David S. Ebert, F. Kenton Musgrave, Darwyn Peachey, Ken Perlin, Steve Worley (2002)</p>
+<p><i>The Science of Fractal Images</i>, Heinz-Otto Peitgen (1988)</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='creating-simple-2D-noise.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 4 of  5</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='../../../code11bf.html?id=55&amp;origin=/lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1/simple-pattern-examples by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:22:03 GMT -->
+</html>

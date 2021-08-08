@@ -1,0 +1,290 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 16:47:33 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>A Minimal Ray-Tracer: Rendering Simple Shapes (Sphere, Cube, Disk, Plane, etc.) (Parametric and Implicit Surfaces)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='ray-tracing, geometry, sphere, plane, disk, cube, parametric surface, implicit surface, ray-geometry intersection'>
+<meta name='date' content='2014-08-15 10:34:46'>
+
+<link rel="stylesheet" type="text/css" href="../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../css/page.css"/>
+
+<link href='../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../indexf17c.html","../../indexf17c.html","../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../indexf17c.html","../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+	<!-- Open Graph data -->
+	<meta property='fb:app_id' content='1535346446701691'/>
+	<meta property='og:title' content='A Minimal Ray-Tracer: Rendering Simple Shapes (Sphere, Cube, Disk, Plane, etc.)'/>
+	<meta property='og:type' content='article'/>
+	<meta property='og:url' content='https://www.scratchapixel.com//lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes'/>
+	<meta property='og:image' content='https://www.scratchapixel.com/images/design/logo_scratchapixel2015.png'/>
+	<meta property='og:description' content='Lesson summary: In the lesson, we will learn how to compute the intersection of a ray with simple shapes such as a sphere, a cube or a disk.'/> 
+	<meta property='og:site_name' content='Scratchapixel'/>
+	<meta property='fb:admins' content='1260067275'/>
+	
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>A Minimal Ray-Tracer: Rendering Simple Shapes (Sphere, Cube, Disk, Plane, etc.)</div><div style='width: 100%; margin: 0px; display: table; vertical-align: middle; border: 1px none red;'>
+			<div style='display: table-row; height: 30px;'>
+			<div style='margin: 0px; padding: 0px; border: 1px none blue ; display: table-cell; vertical-align: middle;'>
+				<a href='https://twitter.com/share' class='twitter-share-button' data-lang='en'>Tweet</a>
+			</div></div>
+			<div style='display: table-row; height: 30px;'>
+			<div style='padding: 0px; border: 1px none blue ; display: table-cell; vertical-align: middle;'>
+				<div style='margin-top: 5px;' class='fb-like' data-share='true' data-width='450' data-show-faces='true'></div>
+			</div></div></div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="minimal-ray-tracer-rendering-simple-shapes/parametric-and-implicit-surfaces.html"><b>Parametric and Implicit Surfaces</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection.html">Ray-Sphere Intersection</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="minimal-ray-tracer-rendering-simple-shapes/minimal-ray-tracer-rendering-spheres.html">A Minimal Ray-Tracer: Rendering Spheres</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="minimal-ray-tracer-rendering-simple-shapes/ray-plane-and-ray-disk-intersection.html">Ray-Plane and Ray-Disk Intersection</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection.html">Ray-Box Intersection</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../coded4cf.html?id=10&amp;origin=/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes">Source Code</a></div></div></div><span style='display: inline-block; width: 100%; margin: 0px 0px 10px 0px;'><i>Keywords: ray-tracing, geometry, sphere, plane, disk, cube, parametric surface, implicit surface, ray-geometry intersection.</i></span><h2>Introduction</h2>
+
+<p>In the previous lesson we learned how to generate primary rays, but we haven't been able to produce an image yet, because we haven't learned how to compute the intersection of these primary rays with any sort of geometry. In this lesson, we will learn about computing the ray-geometry intersection for simple shapes such as spheres. Spheres are easy to ray-trace which is the reason they are often used by people learning how to program a ray-tracer. This lesson will be a little bit of a mismatch of topics:</p>
+
+<ul>
+<li>In this chapter we will learn about parametric and implicit surfaces. These surfaces or shapes are special in the sense that they can be defined mathematically. This is the base of the technique we will study in the next chapter to compute their intersection against rays.</li>
+<li>In chapter 2, we will learn about a couple of techniques to compute the intersection of a ray with a sphere.</li>
+<li>In chapter 3, we will put together what we learned in the previous lesson about generating primary rays, as well as what we learned in chapter 2 of this lesson to compute whether primary rays intersect any of the spheres making up the scene. The program we will develop for this lesson, will form the base of a minimal but functional ray-tracer. We will learn about the <span class="code-inline">trace()</span> function. This is where we test each sphere against the primary ray and return the intersection distance as a well as a pointer to the closest intersect sphere (if the ray intersected a sphere at all). In the <span class="code-inline">castRay()</span> function we will also learn how to use the normal and texture coordinates at the intersection point to perform some simple shading.</li>
+<li>Finally in chapter 4 and 5, we will learn about various techniques to compute the interestion of a ray with other simple shapes such as planes, disks and axis aligned boxes.</li>
+<li>As usual, the last chapter of this lesson contains the complete source code of example programs.</li>
+</ul>
+
+<h2>Ray-Geometry Intersection</h2>
+
+<p>In the previous lesson we learned how to generate primary rays. To produce an image, we now need to learn about ray-geometry intersection. The idea is to use mathematics to find if a ray intersects an object. As often mentioned in the previous lessons, in CG, geometry or 3D objects can be described in many different ways. We already mentioned polygon meshes (which are made of faces), NURSBs surfaces, subdivisions surfaces, etc. though apart from triangular meshes which are a subset of polygon meshes, we haven't yet studied what NURBS and subdivision surfaces are.</p>
+
+<p>The reason these types of geometry are useful in computer graphics, is because they are good at describing the shape of complex objects. Though simple shapes such as spheres, planes, disks or boxes can be rendered directly using much simpler methods. These shapes can indeed be described mathematically, by equations, and we can use these equations to analytically compute whether they are intersected by a ray. This is what we will learn about in this lesson.</p>
+
+<p>How can a shape be defined mathematically? This can actually be done in generally two different ways: <b>parametrically</b> and <b>implicitly</b>.<p>
+
+<h2>Parametric Surfaces</h2>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../images/upload/ray-simple-shapes/impsurf-rayd41d.png?" />
+<p class="caption left">Figure 1: parametric definition of a ray.</p>
+</div>
+
+<p>If you remember what we said in the previous lesson, rays too can be defined using the following <b><a href="http://en.wikipedia.org/wiki/Parametric_equation">parametric equation</a></b>:</p>
+
+$$P = O + t D$$
+
+</p>Where \(P\) is a point on the ray half-line, \(O\) is the ray origin and \(D\) the ray direction. The term \(t\) is called a parameter. By changing the value of \(t\) we can describe as many points on the ray half-line as we want and the collection of these points form the half-line itself. In other words, it describes how to generate an ordered sequence of points along the ray. Spheres too can be defined using a parametric form. Here is the parametric equation of a sphere:</p>
+
+$$
+\begin{array}{l}
+P.x = \cos(\theta)\sin(\phi),\\
+P.y = \cos(\theta),\\
+P.z = \sin(\theta)\sin(\phi).\\
+\end{array}
+$$
+
+<div class="question">The equations to compute Cartesian coordinates from spherical coordinates may vary from source to source. It depends on the convention being used for the naming of the coordinate system axes as well as whether \(\theta\) defines the polar or azimuthal angle. In the example above, y is the up axis, x points to the right and z is in a plane perpendicular to y. \(\theta\) defines the polar angle as shown in figure 2.</div>   
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../images/upload/ray-simple-shapes/impsurf-sphered41d.png?" />
+<p class="caption left">Figure 2: parametric definition of a sphere.</p>
+</div>
+
+Or:
+
+$$
+\begin{array}{l}
+\vec r(\theta,\phi) = (\cos\theta \sin\phi, \cos\theta, \sin\theta \sin \phi), \\
+0 \leq \theta < 2\pi, 0 \leq \phi \leq \pi.
+\end{array}
+$$
+
+<p>Where \(\theta\) and \(\phi\) are the latitude and longitude coordinates of a point on a sphere defined in radians. The angle \(\theta\) (the Greek letter <i>theta</i>) is contained in the range [0, \(\pi\)], and than angle \(\phi\) (the greek letter <i>phi</i>) is contained in the range [0, \(2\pi\)]. We have already introduced these equations in the lesson on <a href="../mathematics-physics-for-computer-graphics/geometry/spherical-coordinates-and-trigonometric-functions.html">Geometry</a>. The coordinates \(\theta, \phi\) of a point on a sphere, are also known as <a href="http://en.wikipedia.org/wiki/Spherical_coordinate_system">spherical coordinates</a>. What's important here though, is that a sphere can be described using a set of three equations. In these parametric equations, \(\theta\) and \(\phi\) are the parameters. 3D objects that can be defined using such equations are called <b><a href="http://en.wikipedia.org/wiki/Parametric_surface">parametric surfaces</a></b>.</p>
+
+<p>In CG this representation is useful, because the two parameters \(\theta\) and \(\phi\) often denoted \(u\) and \(v\) or \(s\) and \(t\) in the generic case, can be used as the texture coordinates of a point on the 3D surface of the object. In the case of a sphere, we can easily remap the two parameters \(\theta\) and \(\phi\) to the range [0, 1] and use these coordinates to perform a lookup in a texture or generate a pattern using a procedural approach. An example of this technique will be provided in this lesson (<a href="minimal-ray-tracer-rendering-simple-shapes/minimal-ray-tracer-rendering-spheres.html">chapter 3</a>). In other words, the process can be seen as some sort of mapping from 2D space to 3D space (and we use the 2D coordinates for texturing, as our st coordinates).</p>
+
+<p>In general what you need to remember about parametric surfaces, is that it requires 1 parameter to describe a curve and two parameters to describe a 3D surface.</p>
+
+<h2>Implicit Surfaces</h2>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../images/upload/ray-simple-shapes/impsurf-circled41d.png?" />
+<p class="caption left">Figure 3: implicit form of a circle of radius \(r\).</p>
+</div>
+
+<p>Implicit surfaces in a way are very similar to parametric surfaces. To start with, we will be using the example of a circle which in its implicit form is defined by the following equation:</p>
+
+$$x^2 + y^2 = r^2.$$
+
+<p>Where \(x\) and \(y\) are the coordinates of a point in 2D space, and \(r\) is the radius of the circle (figure 1). All it says is that the equation above is true for any points lying a circle of radius \(r\). In other words, if you takes the coordinates of any points on the circle or radius \(r\), raise these coordinates to the power of 2 and sum them up, then you will get a number which is equal to the radius of the circle raised to the power of 2. Note that in this example the circle is assumed to be centred around the origin. Though you can generalize this equation to circles with arbitrary centre position:</p>
+
+$$(x^2 - O_x^2) + (y^2 - O_y^2) = r^2.$$
+
+<p>Where \(O\) is the circle centre position. All this equation does though is just "move" the center of the circle to the origin. The equation above is the implicit equation of a circle. The concept can easily be extended to 3D. The implicit equation of the sphere is a follows:</p>
+
+$$x^2 + y^2 + z^2 = r^2.$$
+
+<p>The concept is exactly the same. The equation will be true for all  point lying on the sphere of radius \(r\).</p>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../images/upload/ray-simple-shapes/impsurf-bounding-sphered41d.png?" />
+<p class="caption left">Figure 4: using a sphere as a bounding volume to test whether a ray may intersect the enclosed geometry. If the ray doesn't intersect the sphere, then we know for sure that it can't intersect the object.</p>
+</div>
+
+<p>In this lesson, we will learn how these equations can be used to test the intersection of a ray with an implicit surface.</p> 
+
+<p>Many shapes can be defined with such equations such as planes, sphere, cone, torus, etc. You might think that these shapes are not very useful to describe the shape of complex objects and this would be true. This is what we said in the introduction of this lesson. Rendering spheres might be useful for testing your program but are limited indeed. But they can be useful in other contexts. For example spheres can be used to represent the overall volume of an object, <b>as a bounding volume</b> (figure 4). If the enclosed object is very complex, testing if a ray intersects this object is likely to be computationally expensive. What we can do first is check if the ray intersects the bounding sphere. If it doesn't then we know for sure that the ray can't intersect the enclosed object, which saves us the time it would have taken to test the intersection with the object itself. This method is only advantageous if the time it takes to compute the ray-sphere intersection is far greater than the time it takes to compute the intersection of the ray with the enclosed object of course. The good news is the cost of an intersection test between a ray and an implicit surface is often less than a ray-triangle intersection test for example. If the scene contains many of such complex objects, this simple ray-geometry acceleration method can already save us a lot of computation time. In conclusion, learning about implicit surfaces and how they can be used to compute ray-geometry intersections is still very useful despite the simplicity of their shapes.</p>
+
+<div class="question"><img class="right" src="../../images/upload/ray-simple-shapes/blobbiesd41d.png?" />Implicit surfaces and Blobies: one class of implicit surface is very interesting. They are called by many names in the CG literature: blobies, metaballs, etc. You can see blobies as little sphere which influence each other. If you can get two blobies close to each other then their surface will start to blend in the middle to form a larger blob. Blobies were a very popular modelling technique in the 1980s-1990s. They are very good to model organic shapes. Blobies can't be ray-traced directly easily. They often require to be converted to a polygon mesh first. A lesson on blobies can be found in the modeling section.</div>
+
+<h2>Why Are these Surfaces Useful in Ray-Tracing</h2>
+
+<p>The topic of this lesson is to study how the property of being defined with an equation can be used to compute the ray-geometry intersection test. Parametric surfaces are less useful than implicit surfaces to compute this ray-geometry intersection test, but they are useful to compute the texture coordinates of a point lying on the surface of an implicit object (as explained in the next chapter). Thus knowing about both representation is still useful and needed. They are useful for the reason we already mentioned above:</p>
+
+<ul>
+<li>The solution to a ray-implicit surface is often simpler to compute than with other type of geometry.</li>
+<li>The intersection of a ray with an implicit surface is often faster to compute than with other geometry type.</li>
+<li>The shapes are too simple to represent the shape of complex objects, but they can be used as bounding volumes for instance which in turn can be used to accelerate ray-geometry intersection testing.</li>
+<li>The ray-implicit surface intersection test is an example of a practical use of mathematical concepts such as computing <a href="http://en.wikipedia.org/wiki/Quadratic_equation#Solving_the_quadratic_equation">the roots of a quadratic equation</a>.</p>
+</ul>
+
+<p>In this lesson we will learn about the ray-sphere, ray-plane, ray-disk (which is an exertion of the ray-plane case) and ray-box intersection test. The sphere belongs to a category of surfaces called <b>quadrics</b>. Any quadrics (cones, torus, etc.) can be tested against a ray using the same solution than the solution we will describe for the sphere.</p>
+
+<h2>Integrate and Differentiate: Derivatives, Tangents and Normal Vectors</h2>
+
+<p>Another advantage of using parametric or implicit surfaces, is that the equations that define the shape of these surfaces can be used to compute other useful values such as the derivatives, the tangent, bi-tangent and normal at any given point on the surface. We already know about normals and the role they play in shading. Derivatives at the surface of a point are also important for things such as texture filtering. Tangent and bi-tangent can also be used to form a local coordinate system at any given point on the surface of the object which is useful in shading. The mathematics involved in computing these values can be significantly more complex than the mathematics used in computing the intersection of a ray with an implicit surface and won't be studied in this lesson. If you are interested in this topic, you can search for differential geometry on the Web. A separate lesson will be devoted to this topic alone. We will use the normal in the next lessons, but for shapes such as spheres and triangles, they are simpler methods to compute the normal than using techniques from differential geometry.</p>
+
+<h2>About Ray-Tracing Spheres and Writing a Production Quality Ray-Tracer</h2>
+ 
+<p>The method we will learn about in this lesson to compute the intersection of a ray with a sphere is different than the method we will study in the next lesson to compute the ray-triangle intersection. As mentioned in a previous lesson, generally we want to avoid having to support several types of geometry in a renderer for lots of different reasons. First because it requires to write more code but more importantly because every feature supported by the program (motion blur, displacement, texture mapping, acceleration structure, etc.) needs to work with each supported geometry type which puts an additional constraint on the programmer. So, it is generally easier to support only one geometry type (triangle is the most common choice) and convert other geometry types to that that type instead. Most production renderers provide a way of rendering simple shapes such as spheres, tori, etc. though the way they handle it internally is by converting these shapes to polygon meshes (generally using these shapes parametric representation) rather than implementing a ray-geometry intersection routine specific to spheres and tori (we will learn how to convert a parametric surface to a polygon mesh in the lesson Ray-Tracing: Rendering a Mesh [link]). The reality is that, in production, you rarely render spheres anyway. Though this is not the approach we will use in this lesson. We will use the old-fashion or to say it differently the native way of ray-tracing these shapes. Of course, the advantage of the method we will learn about in this lesson is that it doesn't require a conversion to a polygon mesh and that rendering a sphere using equations is much faster than ray-tracing a sphere made of 100, 1.000 or 10.000 triangles. Learning how to ray-trace spheres or quadric surfaces is good as an exercise, but practically, this is generally not the way it is done in a production quality renderer.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 1 of  6</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 16:47:35 GMT -->
+</html>

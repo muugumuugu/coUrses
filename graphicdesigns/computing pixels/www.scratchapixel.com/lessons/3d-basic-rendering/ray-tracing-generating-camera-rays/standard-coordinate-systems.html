@@ -1,0 +1,259 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-generating-camera-rays/standard-coordinate-systems by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:13:21 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Ray-Tracing: Generating Camera Rays (Standard Coordinate Systems)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='camera ray, primary ray, camera, ray-tracing, ray'>
+<meta name='date' content='2014-08-15 10:34:46'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Ray-Tracing: Generating Camera Rays</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="definition-ray.html">Definition of a Ray</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="generating-camera-rays.html">Generating Camera Rays</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="standard-coordinate-systems.html"><b>Standard Coordinate Systems</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code2e5d.html?id=7&amp;origin=/lessons/3d-basic-rendering/ray-tracing-generating-camera-rays">Source Code</a></div></div></div><h2>Standard Coordinate Systems</h2>
+
+<p>When it comes to the vertex transformation pipeline, some differences exist in the terminology used to describe the coordinate systems vertices are transformed to, particularly between two of the most common rendering APIs, OpenGL and the RenderMan Interface (the definition of the coordinate systems we are using in the lesson follow the definitions from this interface). If you are familiar with the OpenGL rendering pipeline, you maybe thought that we used some of the terms in the previous chapter incorrectly. First, it is important to remember that this lesson is not about OpenGL and the classic vertex transformation pipeline used by z-buffer based renderers but about how primary or camera rays are generated by ray-tracers. The process for generating these rays is the opposite process than the one that is being used by rasterization-based renderers to project points on the image plane. Second, note that the meaning of the coordinate systems used to define the space in which the points are transformed doesn't depend on whether we are using a ray-tracer or a rasterizer but is more a matter of convention. Generally, world, camera, object and raster space have the same definition in all rendering APIs but the definition of clipping coordinates which is more specific to OpenGL, NDC and screen space can vary from system to system. To more clearly help you make the difference between at least the system we described in this lesson for building primary rays and the OpenGL vertex transformation pipeline (which we described in the <a href="../perspective-and-orthographic-projection-matrix/projection-matrix-GPU-rendering-pipeline-clipping.html">previous lesson</a>), we will briefly describe them again and compare them in this chapter. Hopefully this exercise will remove any possible confusion that the reading of this lesson may have introduced in the graphics APIs experts' mind.</p>
+
+<p>In ray tracing we start from a pixel position which we transform to a point on the image plane from which we can build a ray direction. The process involves to transform the original "points coordinates" which are originally expressed in terms of pixel coordinates or <b>raster space</b> to <b>NDC space</b> then <b>screen space</b> (a process we have described in the previous chapters). The raster to NDC conversion remaps the original pixel coordinates to the range of values [0,1]. The NDC-to-screen space conversion remaps values from [0,1] to [-1,1] if the image is square, and [-aspect ratio,aspect ratio] along the x-axis and [-1,1] along the y-axis if the width of the image is greater than its height. These coordinates are then scaled by the tangent of the camera's field-of-view divided by two. To summarize, we have been from raster, to NDC, then to screen space.</p>
+
+<p>The process for rasterization is different. The goal is to take a point in 3D space, project it on the image plane, and convert the resulting coordinates to pixel coordinates. We start from a point in 3D space which we need to somehow project on the image, a process for which a <a href="../perspective-and-orthographic-projection-matrix/projection-matrix-introduction.html">perspective (or orthographic) projection matrix</a> is generally used. First point are converted from 3D <b>world space</b> to <b>camera space</b>. The points coordinates are defined in regards to the camera's coordinate system. Once in camera space, the points are then projected onto the image plane using for instance a perspective projection matrix. At this stage of the OpenGL vertex transformation pipeline, the points are said to have <b>clipping coordinates</b>. The points haven't yet been divided by their z-coordinate but OpenGL can already test if they are visible or not. If they pass this visibility or clipping test, they are then converted from homogeneous to Cartesian coordinates (a process know an z or perspective divide). The points are said to have <b>normalized device coordinates</b> or to be in <b>NDC space</b>. Note that in this space, points' coordinates in OpenGL are contained in the range [-1,1]. In the RenderMan Interface, NDC space defines points whose coordinates are in the range [0,1]. Finally points in NDC space are converted to <b>raster coordinates</b> or <b>window coordinates</b> which are nothing else that the point final pixel coordinates.</p>
+
+<p>We have summarised the different steps of the two systems and their associated coordinate systems in the following table:</p>
+
+<table class='table-basic' style="text-align: left;">
+<tr>
+<th style="width: 50%;">Computing Ray Direction</br>from Pixel Coordinates</th>
+<th style="width: 50%;">OpenGL</br>(vertex transformation pipeline)</th>
+</tr>
+<tr>
+<td>Position of a pixel (pixel coordinates). <b>Raster space</b>.</td>
+<td>Point's coordinates are defined in <b>world space</b>.</td>
+</tr>
+
+<tr>
+<td>Transform points from pixel coordinates or raster space to <b>NDC space</b>. Points coordinates are remapped to the range [0:1].</td>
+<td>Transform point from world to <b>camera space</b>.</td>
+</tr>
+
+<tr>
+<td>Remap point's coordinates from NDC to <b>screen space</b>. Point's coordinates in screen space vary between [-aspect ratio, aspect ratio] along the x-axis, and [-1, 1] along the y-axis.</td>
+<td>Project point onto the near clipping plane (the image plane) using a projection matrix.</td>
+</tr>
+
+<tr>
+<td>Points in screen space are scaled by the tangent of the camera field of view divided by two.</td>
+<td><b>Clipping coordinates</b> (before the perspective divide). Point passes the clipping test: is it visible or not?</td>
+</tr>
+
+<tr>
+<td>Coordinates of the resulting point are used to build the ray direction vector.</td>
+<td>Perspective divide. The resulting point's coordinates are said to be in <b>NDC space</b>. They are now in the range [-1, 1] (including the z coordinate).</td>
+</tr>
+
+<tr>
+<td>The ray origin and direction are transformed by the camera-to-world matrix. The ray can now be tested for interesection against the geometry of the scene.</td>
+<td>Point is transformed from NDC space to <b>raster space</b> or <b>window coordinates</b> (pixel coordinates).</td>
+</tr>
+
+</table>
+
+<p>Point is transformed from NDC space to <b>screen space</b> or <b>window coordinates</b> (pixel coordinates).</p>
+
+<table class='table-basic'>
+<tr>
+<th>Coordinate Space Name</th>
+<th>Description</th>
+</tr>
+
+<tr>
+<td>Object Space</td>
+<td style="text-align: left;">Space in which 3D models are, before they eventually get transformed. When you model an object in a 3D modeling application, the model is generally centred at the origin. However you may need to move this object (which includes rotation, translation and scaling) to another position in the rendered scene. Object space refers to the position of the object before it gets transformed to this final position in the scene.</td>
+</tr>
+
+<tr>
+<td>World Space</td>
+<td style="text-align: left;">The vertex coordinates are expressed in regards to the world cartesian coordinate system. Coordinates of the vertices after the object was transformed to its final position in the scene.</td>
+</tr>
+
+<tr>
+<td>Camera Space</td>
+<td style="text-align: left;">Objects are vertices in world space are transformed to be expressed in regards to the camera's cartesian coordinate system (the world and camera cartesian coordinate systems are aligned when the camera is in its default position).</td>
+</tr>
+
+<tr>
+<td>Screen Space</td>
+<td style="text-align: left;">In the RenderMan specifications, this space refers to the coordinates of a point on the image plane of the camera. In OpenGL, it refers to the position of a projected point expressed in pixel coordinates (the origin of this coordinate system is the top-left corner of the frame).</td>
+</tr>
+
+<tr>
+<td>NDC Space</td>
+<td style="text-align: left;">Normalized Device Coordinates - In the RenderMan specifications, points expressed in this space have their x and y coordinates contained within the range [0, 1] (same as raster space but rather than being in the range [0:width] along the x axis and [0:height] along the y axis, the coordinates both run from 0 to 1). In OpenGL, points expressed in this coordinates have their x and y coordinates contained within the range [-aspect ratio:aspect ratio] along the x axis, and [-1, 1] along the y axis (a summing the width of the image is greater than its height).</td>
+</tr>
+
+<tr>
+<td>Raster Space</td>
+<td style="text-align: left;">In the RenderMan specifications, it refers to the position of a point expressed in pixel coordinates (same as the screen space or window coordinates in OpenGL). In this space, 1 unit corresponds to 1 pixel (see NDC space).</td>
+</tr>
+
+<tr>
+<td>Clipping Coordinates</td>
+<td style="text-align: left;">Coordinates of the projected points before the z divide (OpenGL only)</td>
+</tr>
+
+<tr>
+<td>Window Coordinates</td>
+<td style="text-align: left;">Coordinates of the projected points in pixel coordinates (OpenGL only). Similar to raster space in RenderMan.</td>
+</tr>
+
+</table>
+
+<p>In conclusion, we have showed the two systems described are not doing the same thing and should not be confused. The system we have described in the previous chapters converts points defined in pixel coordinates to points on the image plane which are used to compute ray directions. The second system, the OpenGL vertex transformation pipeline, projects points from the 3D scene onto the image plane, and converts these projected points to pixel coordinates.</p>
+
+<h2>A Word of Warning</h2>
+
+<p>Coordinate systems with standard names such as the screen space and NDC space both appear in the OpenGL vertex transformation pipeline as well as in the RenderMan Interface however they have in each one of these rendering APIs, different usage and definition. If you are familiar with the OpenGL rendering pipeline we recommend that you read the next chapter in which we explain the difference between the two rendering interfaces.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='generating-camera-rays.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 3 of  4</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='../../../code2e5d.html?id=7&amp;origin=/lessons/3d-basic-rendering/ray-tracing-generating-camera-rays'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-generating-camera-rays/standard-coordinate-systems by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:13:27 GMT -->
+</html>

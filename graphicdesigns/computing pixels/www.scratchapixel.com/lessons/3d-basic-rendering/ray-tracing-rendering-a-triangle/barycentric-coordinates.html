@@ -1,0 +1,571 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/barycentric-coordinates by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:15:27 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Ray Tracing: Rendering a Triangle (Barycentric Coordinates)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='ray-triangle intersection test, ray-tracing, barycentric coordinates, back-face culling, scalar triple product, determinant, M&ouml;ller-Trumbore algorithm'>
+<meta name='date' content='2014-08-15 10:34:46'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Ray Tracing: Rendering a Triangle</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="why-are-triangles-useful.html">Why Are Triangles Useful?</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="geometry-of-a-triangle.html">Geometry of a Triangle</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="ray-triangle-intersection-geometric-solution.html">Ray-Triangle Intersection: Geometric Solution</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="single-vs-double-sided-triangle-backface-culling.html">Single vs Double Sided Triangle and Backface Culling</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="barycentric-coordinates.html"><b>Barycentric Coordinates</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="moller-trumbore-ray-triangle-intersection.html">M&ouml;ller-Trumbore algorithm</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code83cd.html?id=9&amp;origin=/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle">Source Code</a></div></div></div><h2>Barycentric Coordinates</h2>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../../images/upload/ray-triangle/barycentricd41d.png?" />
+<p class="caption left">Figure 1: barycentric coordinates can be seen as the area of sub-triangles CAP (for u), ABP (for v) and BCP (for w) over the area of the triangle ABC which is why the are also called areal coordinates.</p>
+</div>
+
+<p>Barycentric coordinates are particularly important in CG. They have a few functions and are the key to the next ray-triangle intersection algorithm proposed by M&ouml;ller-Trumbore that will be studied in the next chapter. How barycentric coordinates can be used in CG will be discussed at the end of this chapter.</p>
+
+<p>Barycentric coordinates can be used to express the position of any point located on the triangle with three scalars. The location of this point includes any position inside the triangle, any position on any of the three edges of the triangles, or any one of the three triangle's vertices themselves. To compute the position of this point using barycentric coordinates we use the following equation (1):</p>
+
+$$P=uA+vB+wC.$$
+
+<p>where A B and C are the vertices of a triangle and \(u\), \(v\), and \(w\) (the barycentric coordinates), three real numbers (scalars) such that \(u + v + w = 1\) (barycentric coordinates are normalized). Note that from two of the coordinates we can find the third one: \(w = 1 - u - v\) from which we can establish that \(u + v \le 1\) (we will use this simple but important property later on). Equation 1 defines the position of a point P on the plane of the triangle formed by the vertices A, B and C. The point is within the triangle (A, B, C) if \(0 \le u, v, w \le 1\). If any one of the coordinates is less than zero or greater than one, the point is outside the triangle. If any of them is zero, P is on one of the lines joining the vertices of the triangle.</p>
+
+<div class="question">
+<p>You can also simply use two coordinates (let's say u and v) to express the coordinates of P in a two dimensional coordinate system defined by its origin (A) and the edge AB and AC (pretty much like expressing 2D points in the orthogonal two-dimensional coordinate system defined by an x- and y-axis. The only difference in our case is that AB and AC are not necessarily orthogonal and that the origin of this coordinate system is A). Anyway, just to say that you can define a position inside the triangle with the equation \(P = A + u*AB + v*AC\) (where \(u \ge 0\) and \(v \ge 0\) and \(u + v \le 1\)). This equation can read as, "starts from A, move a little bit in the direction of AB, then a little bit in the direction of AC and you will find P". Now if you develop this equation you can write:</p>
+
+$$
+\begin{array}{l}
+P = A + u(B - A) + v(C - A) = \\
+A + uB - uA + vC - vA = (1 - u - v) * A + u * B + v * C 
+\end{array}
+$$
+
+<p>This equation is similar to equation 1 except that if \(w = 1 - u - v\) you have the following formula:</p>
+
+$$P = w * A + u * B + v * C$$ instead of $$P = u * A + v * B + w * C.$$
+
+<p>These two equations are perfectly similar but it's hard to understand why we usually write \((1 - u - v) * A + u * B + v * C\) instead of \(u * A + v * B + (1 - u - v) * C\) without the above explanation.</p>
+</div>
+
+<p>Barycentric coordinates are also known as <b>areal coordinates</b>. Although not very commonly used, this term indicates that the coordinates u, v and w are proportional to the area of the three sub-triangles defined by P, the point located on the triangle, and the triangle's vertices (A, B, C). These three sub-triangles are denoted ABP, BCP, CAP (see figure 1).</p>
+<p>Which leads us to the formulas used to compute the barycentric coordinates:</p>
+
+$$
+\begin{array}{l}
+u = {\dfrac{TriangleCAP_{Area}}{TriangleABC_{Area}}}\\
+v = {\dfrac{TriangleABP_{Area}}{TriangleABC_{Area}}}\\
+w ={\dfrac{TriangleBCP_{Area}}{TriangleABC_{Area}}}\\
+\end{array}
+$$
+
+<p>In the rest of the lesson we will assume that u makes us move along the edge AB (if u=1 then P=B) and v along the edge AC (if v=1 then P=C). Which is the reason why we will use the area of the sub-triangle CAP to compute u and the area of the sub-triangle ABP to compute v. This is a convention that most people follow in the CG programming community (when we will learn how to use barycentric coordinates to interpolate vertex data you will have a visual example (figure 3) to better understand this).</p>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../../images/upload/ray-triangle/parallelogramd41d.png?" />
+<p class="caption left">Figure 2: to compute the area of a triangle we start from the formula used to compute a parallelogram (its base multiplied by its height H). To compute H, we multiply sin(\(\theta\)) by the length of the vector AC.</p>
+</div>
+
+<p>Now computing the area of a triangle is trivial. If you duplicate the triangle and mirror it along its longest edge, you get a parallelogram. To compute the area of a parallelogram, simply compute its base, its side and multiply these two numbers together scaled by sin(\(\theta\)), where \(\theta\) is the angle subtended by the vectors AB and AC (figure 2). To create the parallelogram we used two triangles, therefore the area of one triangle is half the area of the parallelogram.</p>
+
+<p>With this in hands, it becomes easy to compute u and v (w is computed out of u and v as explained before). </p>
+
+$$Triangle_{area} = {{||(B-A)|| * ||(C - A)|| sin(\theta)} \over {2}}$$
+
+<p>To make things easier, we can take advantage of the fact that the area of the sub-triangles ABP, BCP and CAP are proportional to the lengths of the cross product that we computed in the previous chapter to find P, the intersection point. This is one of the cross product properties: <b>the magnitude of the cross product can be interpreted as the  area of the parallelogram</b>. Therefore we don't need to explicitly compute the previous formula (which includes an "expansive" sin(\( \theta\)). We can simply use instead:</p>
+
+$$
+\begin{array}{l}
+Parallelogram_{area} = ||(B-A) \times (C - A)||\\
+Triangle_{area}=\dfrac{Parallelogram_{area}}{2}
+\end{array}
+$$
+
+<p>Note than in mathematical terms, the double bars notation (|| ||) means "length of" (lesson 4). In other words we need to compute the length of the vector resulting of the cross product (C-B)x(P-B). We know how to compute the cross product of two vectors and the length of a vector so we have now all we need to compute the barycentric coordinates of the intersection point:</p>
+
+<div name="code" class="code">bool rayTriangleIntersect(
+    const Vec3f &orig, const Vec3f &dir,
+    const Vec3f &v0, const Vec3f &v1, const Vec3f &v2,
+    float &t, float &u, float &v)
+{
+    // compute plane's normal
+    Vec3f v0v1 = v1 - v0;
+    Vec3f v0v2 = v2 - v0;
+    // no need to normalize
+    Vec3f N = v0v1.crossProduct(v0v2); // N
+    float area = N.length() / 2; // area of the triangle
+
+    ...
+ 
+    // Step 2: inside-outside test
+    Vec3f C; // vector perpendicular to triangle's plane
+ 
+    // edge 0
+    ...
+ 
+    // edge 1
+    Vec3f edge1 = v2 - v1; 
+    Vec3f vp1 = P - v1; 
+    C = edge1.crossProduct(vp1);
+    u = (C.length() / 2) / area;
+    if (N.dotProduct(C) < 0)  return false; // P is on the right side
+ 
+    // edge 2
+    Vec3f edge2 = v0 - v2; 
+    Vec3f vp2 = P - v2; 
+    C = edge2.crossProduct(vp2);
+    v = (C.length() / 2) / area;
+    if (N.dotProduct(C) < 0) return false; // P is on the right side;
+
+    return true; // this ray hits the triangle
+}</div>
+
+<p>The plane normal should not be normalized because we use the length of the vector to compute the triangle area.</p>
+
+<h2>Using Barycentric Coordinates</h2>
+
+<p>Barycentric coordinates are most useful in shading. A triangle is a flat surface and we can associate any additional information or data (points, color, vectors, etc.) to each one of its vertices. This information is usually called <b>vertex data</b>. Let's imaging for example that you want vertex A to be red,  vertex B to be green and vertex C to be blue. </p>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../../images/upload/ray-triangle/barycentriccolord41d.png?" />
+<p class="caption left">Figure 3: barycentric coordinates can be used to interpolate vertex data at the hit point. In this example for example we compute the color at P using vertex color.</p>
+</div>
+
+<p>If the intersection point coincides with one of the triangle's vertices, then the color of the object at the intersection point is simply the color associated with that vertex. Simple enough. The question is what happens when the ray intersects the triangle anywhere else (either on an edge or inside the triangle)? If the barycentric coordinates are used to compute the position of a point located on the triangle using the triangle vertices, we can interpolate any other data defined at the triangle's vertices (like for example the color) in the exact same way. In other words, barycentric coordinates are used to interpolate vertex data across the triangle's surface (the technique can be applied to any data type, float, color, etc.). This technique is very useful for shading for example to interpolate the normal at the intersection point. Normals of an object can be defined on per face or per vertex basis (we speak of face normal or vertex normal). If they are defined per vertex, we can use this interpolation technique to simulate a smooth shading across the triangle's surface even though, the triangle is "mathematically" flat (the normal at the hit point is a combination of the vertex normals therefore if the vertex normals are different from each other, the result of this interpolation is not constant across the surface of the triangle).</p>
+
+<div name="code" class="code">// vertex position
+Vec3f triVertex[3] = {{-3,-3,5}, {0,3,5}, {3,-3,5}};
+// vertex data
+Vec3f triColor[3] = {{1,0,0}, {0,1,0}, {0,0,1}};
+if (rayTriangleIntersect(...)) {
+    // compute pixel color
+    // col = w*col0 + u*col1 + v*col2 where w = 1-u-v
+    Vec3f PhitColor = u * triColor[0] + v * triColor[1] + (1 - u - v) * triColor[2];
+}</div>
+
+<p>Barycentric coordinates are also used to compute texture coordinates (we will study this in the lesson on texturing).</p>
+
+<h2>Optimizing The Computation Of Barycentric Coordinates</h2>
+
+<p>You will notice that in the version of the algorithm we have been describing so far, we use the cross product of AB and AP, and the cross product of CA and CP to compute u and v. But if you look at the code again you will also notice that we have already computed these cross products for the inside-outside test. They have been used to compute the result of whether P is on the right or left side of edge0 (ABxAP) and edge2 (CAxCP). Naturally the first optimisation consists of reusing the result of these values. Also notice that (equation 2):</p>
+
+$$
+\begin{array}{l}
+v & = &{\dfrac{triangleABP_{area}}{triangleABC_{area}}}\\
+& =  & {\dfrac{parellogramABP_{area} / 2}{parellogramABC_{area} / 2}}={\dfrac{parellogramABP_{area}}{parellogramABC_{area}}}={\dfrac{||AB \times AP||}{||AB \times AC||}}
+\end{array}
+$$
+
+<p>There is not need to compute the triangle area since the ratio between the triangle ABP and the triangle ABC is the same as the ratio between the parallelogram ABP (which is twice the area of the triangle ABP) and the paralleogram ABC (which is twice the area of the triangle ABC). Therefore we can also avoid the division by 2. The code becomes:</p>
+
+<div name="code" class="code">bool rayTriangleIntersect(
+    const Vec3f &orig, const Vec3f &dir,
+    const Vec3f &v0, const Vec3f &v1, const Vec3f &v2,
+    float &t, float &u, float &v)
+{
+    // compute plane's normal
+    Vec3f v0v1 = v1 - v0;
+    Vec3f v0v2 = v2 - v0;
+    // no need to normalize
+    Vec3f N = v0v1.crossProduct(v0v2); // N
+    float area2 = N.length();
+ 
+    // Step 1: finding P
+    
+    // check if ray and plane are parallel ?
+    float NdotRayDirection = N.dotProduct(dir);
+    if (fabs(NdotRayDirection) < kEpsilon) // almost 0
+        return false; // they are parallel so they don't intersect ! 
+
+    // compute d parameter using equation 2
+    float d = N.dotProduct(v0);
+    
+    // compute t (equation 3)
+    t = (N.dotProduct(orig) + d) / NdotRayDirection;
+    // check if the triangle is in behind the ray
+    if (t < 0) return false; // the triangle is behind
+ 
+    // compute the intersection point using equation 1
+    Vec3f P = orig + t * dir;
+ 
+    // Step 2: inside-outside test
+    Vec3f C; // vector perpendicular to triangle's plane
+ 
+    // edge 0
+    Vec3f edge0 = v1 - v0; 
+    Vec3f vp0 = P - v0;
+    C = edge0.crossProduct(vp0);
+    if (N.dotProduct(C) < 0) return false; // P is on the right side
+ 
+    // edge 1
+    Vec3f edge1 = v2 - v1; 
+    Vec3f vp1 = P - v1;
+    C = edge1.crossProduct(vp1);
+    u = C.length() / area2;
+    if (N.dotProduct(C) < 0)  return false; // P is on the right side
+ 
+    // edge 2
+    Vec3f edge2 = v0 - v2; 
+    Vec3f vp2 = P - v2;
+    C = edge2.crossProduct(vp2);
+    v = C.length() / area2;
+    if (N.dotProduct(C) < 0) return false; // P is on the right side;
+
+    return true; // this ray hits the triangle
+}</div>
+
+<p>Finally we can prove that (equation 3):</p>
+
+$$
+\begin{array}{l}v = {\dfrac{triangleABP_{area}} {triangleABC_{area}}} = {\dfrac{(AB \times AP) \cdot  N}{(AB \times AC) \cdot N}}
+\end{array}
+$$
+
+<p>First remember that \(N=AB \times AC\). Therefore we can rewrite the above above formula as:</p>
+
+$$
+\begin{array}{l}
+v = {\dfrac{triangleABP_{area}}{triangleABC_{area}}} = {\dfrac{(AB \times AP) \cdot  N}{N \cdot N}}
+\end{array}
+$$
+
+<p>We now need to prove that this equation is true. Remember from the lesson on Geometry, that the dot product vector of two vectors can be interpreted as:</p>
+
+$$||A|| \cdot ||B|| = \cos(\theta)||A||*||B||$$
+
+<p>where the angle \(\theta\) is the angle subtended by the two vectors A and B and where ||A|| and ||B|| are the length of vector A and B respectively. We also know that when the two vectors A and B are collinear (they point in the exact same direction), the subtended angle is 0 therefore \(\cos(0) = 1\). The result of \(N \cdot N\) is therefore (the dot product of a vector with itself) \(\cos(0)||N||||N||=||N||||N||\), the square of the vector N's length. Now let's look at the numerator in equation 3. We know from construction (because the points A, B, C and P are coplanar) that the triangles ABP and ABC are coplanar. Therefore the vectors resulting from the cross product of \(AB \times AP\) and \(AB \times AC\) are also collinear (they point in the same direction). We can rewrite the numerator as:</p>
+
+$$(AB \times AP) \cdot N= (AB \times AP) \cdot (AB \times AC)$$
+
+<p>Let's write that \(AB \times AP=A\) and \(AB \times AC=N=B\), then:</p>
+
+$$(AB \times AP) \cdot N = \cos(0)||A|| ||B||=||A|| ||B||$$
+
+<p>A and B are also collinear in that case because they are constructed from vectors which are coplanar. Finally, we can replace our results for the numerator and the denominator in equations 3:</p>
+
+$$v = {{triangleABP_{area}} \over {triangleABC_{area}}} = {\dfrac{||AB \times AP|| \cdot N}{N \cdot N}} = {\dfrac{||A|| ||B||} {||B|| || B||}}$$
+
+<p>We can eliminate one of the ||B||'s which leaves us with:</p>
+
+$$v = {\dfrac{triangleABP_{area}}{triangleABC_{area}}} = \dfrac{||A||}{|| B||}$$
+
+<p>If we replace A back with \(AB \times AP\) and B with \(AB \times AC\) we get:</p>
+
+$$\dfrac{||A||}{||B||}={\dfrac{||AB \times AP||}{||AB \times AC||}}$$
+
+<p>This equation is similar to the equation we used in the first place to compute \(v\) (equation 2). Therefore equation 3 is also a valid equation to compute \(v\). We already compute the numerator\((AB \times AP) \cdot N\) when we do the inside-outside test, therefore we can reuse this result in the computation of the barycentric coordinates (a similar technique can be used for \(u\)). </p>
+
+<div class="question"><p>In mathematics the formula \((A \times B) \cdot C\) is called a <b>scalar triple product</b> (because it is the product of three vectors). It can be see as computing the volume of a parallelepiped which sides are defined by the vectors A B and C. It can also be understood as the determinant of a 3x3 matrix having the three vectors as its rows, a property we will be using in the next chapter.</p>
+</div>
+
+<p>Here is the final version of our intersection routine which includes the optimized method to compute the barycentric coordinates:</p>
+
+<div name="code" class="code">bool rayTriangleIntersect(
+    const Vec3f &orig, const Vec3f &dir,
+    const Vec3f &v0, const Vec3f &v1, const Vec3f &v2,
+    float &t, float &u, float &v)
+{
+    // compute plane's normal
+    Vec3f v0v1 = v1 - v0;
+    Vec3f v0v2 = v2 - v0;
+    // no need to normalize
+    Vec3f N = v0v1.crossProduct(v0v2); // N
+    float denom = N.dotProduct(N);
+    
+    // Step 1: finding P
+    
+    // check if ray and plane are parallel ?
+    float NdotRayDirection = N.dotProduct(dir);
+    if (fabs(NdotRayDirection) < kEpsilon) // almost 0
+        return false; // they are parallel so they don't intersect ! 
+
+    // compute d parameter using equation 2
+    float d = N.dotProduct(v0);
+    
+    // compute t (equation 3)
+    t = (N.dotProduct(orig) + d) / NdotRayDirection;
+    // check if the triangle is in behind the ray
+    if (t < 0) return false; // the triangle is behind
+ 
+    // compute the intersection point using equation 1
+    Vec3f P = orig + t * dir;
+ 
+    // Step 2: inside-outside test
+    Vec3f C; // vector perpendicular to triangle's plane
+ 
+    // edge 0
+    Vec3f edge0 = v1 - v0; 
+    Vec3f vp0 = P - v0;
+    C = edge0.crossProduct(vp0);
+    if (N.dotProduct(C) < 0) return false; // P is on the right side
+ 
+    // edge 1
+    Vec3f edge1 = v2 - v1; 
+    Vec3f vp1 = P - v1;
+    C = edge1.crossProduct(vp1);
+    if ((u = N.dotProduct(C)) < 0)  return false; // P is on the right side
+ 
+    // edge 2
+    Vec3f edge2 = v0 - v2; 
+    Vec3f vp2 = P - v2;
+    C = edge2.crossProduct(vp2);
+    if ((v = N.dotProduct(C)) < 0) return false; // P is on the right side;
+
+    u /= denom;
+    v /= denom;
+
+    return true; // this ray hits the triangle
+}</div>
+
+<h2>Source Code</h2>
+
+<p>In this version of the ray-triangle intersection method we have implemented the technique described in chapter 3 to compute the hit point coordinates and the method described in this chapter to compute the barycentric coordinates of the intersected point. When a ray hits the triangle, you can choose between interpolating three colors using the barycentric coordinates or visualising the raw coordinates directly (lines 94/95).</p>
+
+<div name="code" class="code">...
+constexpr float kEpsilon = 1e-8;
+
+inline
+float deg2rad(const float &deg)
+{ return deg * M_PI / 180; }
+
+inline
+float clamp(const float &lo, const float &hi, const float &v)
+{ return std::max(lo, std::min(hi, v)); }
+
+bool rayTriangleIntersect(
+    const Vec3f &orig, const Vec3f &dir,
+    const Vec3f &v0, const Vec3f &v1, const Vec3f &v2,
+    float &t, float &u, float &v)
+{
+    // compute plane's normal
+    Vec3f v0v1 = v1 - v0;
+    Vec3f v0v2 = v2 - v0;
+    // no need to normalize
+    Vec3f N = v0v1.crossProduct(v0v2); // N
+    float denom = N.dotProduct(N);
+    
+    // Step 1: finding P
+    
+    // check if ray and plane are parallel ?
+    float NdotRayDirection = N.dotProduct(dir);
+    if (fabs(NdotRayDirection) < kEpsilon) // almost 0
+        return false; // they are parallel so they don't intersect ! 
+
+    // compute d parameter using equation 2
+    float d = N.dotProduct(v0);
+    
+    // compute t (equation 3)
+    t = (N.dotProduct(orig) + d) / NdotRayDirection;
+    // check if the triangle is in behind the ray
+    if (t < 0) return false; // the triangle is behind
+ 
+    // compute the intersection point using equation 1
+    Vec3f P = orig + t * dir;
+ 
+    // Step 2: inside-outside test
+    Vec3f C; // vector perpendicular to triangle's plane
+ 
+    // edge 0
+    Vec3f edge0 = v1 - v0; 
+    Vec3f vp0 = P - v0;
+    C = edge0.crossProduct(vp0);
+    if (N.dotProduct(C) < 0) return false; // P is on the right side
+ 
+    // edge 1
+    Vec3f edge1 = v2 - v1; 
+    Vec3f vp1 = P - v1;
+    C = edge1.crossProduct(vp1);
+    if ((u = N.dotProduct(C)) < 0)  return false; // P is on the right side
+ 
+    // edge 2
+    Vec3f edge2 = v0 - v2; 
+    Vec3f vp2 = P - v2;
+    C = edge2.crossProduct(vp2);
+    if ((v = N.dotProduct(C)) < 0) return false; // P is on the right side;
+
+    u /= denom;
+    v /= denom;
+
+    return true; // this ray hits the triangle
+}
+
+int main(int argc, char **argv)
+{
+    Vec3f v0(-1, -1, -5);
+    Vec3f v1( 1, -1, -5);
+    Vec3f v2( 0,  1, -5);
+    
+    const uint32_t width = 640;
+    const uint32_t height = 480;
+    Vec3f cols[3] = {{0.6, 0.4, 0.1}, {0.1, 0.5, 0.3}, {0.1, 0.3, 0.7}};
+    Vec3f *framebuffer = new Vec3f[width * height];
+    Vec3f *pix = framebuffer;
+    float fov = 51.52;
+    float scale = tan(deg2rad(fov * 0.5));
+    float imageAspectRatio = width / (float)height;
+    Vec3f orig(0);
+    for (uint32_t j = 0; j < height; ++j) {
+        for (uint32_t i = 0; i < width; ++i) {
+            // compute primary ray
+            float x = (2 * (i + 0.5) / (float)width - 1) * imageAspectRatio * scale;
+            float y = (1 - 2 * (j + 0.5) / (float)height) * scale;
+            Vec3f dir(x, y, -1);
+            //cameraToWorld.multDirMatrix(Vec3f(x, y, -1), dir);
+            dir.normalize();
+            float t, u, v;
+            if (rayTriangleIntersect(orig, dir, v0, v1, v2, t, u, v)) {
+                *pix = u * cols[0] + v * cols[1] + (1 - u - v) * cols[2];
+                //*pix = Vec3f(u, v, 1 - u - v);
+            }
+            pix++;
+        }
+    }
+    
+    // Save result to a PPM image (keep these flags if you compile under Windows)
+    ...
+
+    return 0;
+}</div>
+
+<p>The image below shows the outputs of the program (you can find the source code in the last chapter of this lesson).</p>
+
+<img class="left" style="margin-bottom: 12px;" src="../../../images/upload/ray-triangle/ray-tri-resultsd41d.png?" /></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='single-vs-double-sided-triangle-backface-culling.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 5 of  7</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='moller-trumbore-ray-triangle-intersection.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/barycentric-coordinates by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:15:32 GMT -->
+</html>

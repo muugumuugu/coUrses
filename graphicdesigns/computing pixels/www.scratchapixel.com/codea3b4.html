@@ -1,0 +1,698 @@
+<!--
+<html>
+<head>
+<title>Scratchapixel</title>
+
+<link rel="stylesheet" type="text/css" href="/css/scratchapixel2.css"/>
+<link rel="stylesheet" type="text/css" href="/css/page.css"/>
+<link rel="stylesheet" type="text/css" href="/css/code.css"/>
+<link href='http://fonts.googleapis.com/css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='http://fonts.googleapis.com/css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<script type="text/javascript"
+	src="/scratchapixelSDK.js">
+</script>
+
+</head>
+<html>
+<body onload="onload();">
+<div class="code-column">
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/code.php?id=10&origin=/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes&src=2 by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 19:00:38 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>A Minimal Ray-Tracer: Rendering Simple Shapes (Sphere, Cube, Disk, Plane, etc.) (source code)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='A Minimal Ray-Tracer: Rendering Simple Shapes (Sphere, Cube, Disk, Plane, etc.), source code'>
+<meta name='date' content=''>
+
+<link rel="stylesheet" type="text/css" href="css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="css/page.css"/>
+
+<link href='../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","mml2jax.html","asciimath2jax.html","MathMenu.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","AMSsymbols.html","noErrors.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+<link rel='stylesheet' type='text/css' href='css/responsive.css'/>
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='index-2.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div class='lesson-title' style='padding: 0px; margin: 20px 0px 10px 0px;'><a href='lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes.html'>A Minimal Ray-Tracer: Rendering Simple Shapes (Sphere, Cube, Disk, Plane, etc.)</a></div><div style='box-sizing: border-box; padding: 20px 0px 0px 0px; display: inline-block; border-top: 1px none grey; width: 100%;'><div>This project contains the following files (right-click files you'd like to download):</div><a oncontextmenu='onMouseDownCodeCtxt(this, "code/upload/ray-tracing-simple-shapes/simpleshapes.cpp")' style='display: inline-block; margin: 10px 10px 10px 0px; color: rgb(50, 100, 200);' href='code2812.html?id=10&amp;origin=/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes&amp;src=0'>simpleshapes.cpp</a><a oncontextmenu='onMouseDownCodeCtxt(this, "code/upload/ray-tracing-simple-shapes/raybox.cpp")' style='display: inline-block; margin: 10px 10px 10px 0px; color: rgb(50, 100, 200);' href='code46f1.html?id=10&amp;origin=/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes&amp;src=1'>raybox.cpp</a><a oncontextmenu='onMouseDownCodeCtxt(this, "code/upload/ray-tracing-simple-shapes/geometry.h")' style='display: inline-block; margin: 10px 10px 10px 0px; color: rgb(50, 100, 200);' href='codea3b4.html?id=10&amp;origin=/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes&amp;src=2'>geometry.h</a></div><div name='code' class='code'>//[header]
+// This program illustrates how the concept of vector and matrix can be implemented
+// in C++. This is a light version of the implementation. It contains the most
+// essential methods to manipulate vectors and matrices. It should be enough
+// for most projects. Vectors and matrices are really the alphabet as we said
+// in the lesson of any graphics application. It's really important you feel
+// confortable with these techniques especially with the concepts of
+// normalizing vectors, computing their length, computing the dot and cross products
+// of two vectors, and the point- and vector-matrix multiplication (and knowing
+// the difference between the two).
+//[/header]
+//[compile]
+// c++ geometry.cpp  -o geometry -std=c++11
+//[/compile]
+//[ignore]
+// Copyright (C) 2012  www.scratchapixel.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+//[/ignore]
+#include &lt;cstdlib&gt;
+#include &lt;cstdio&gt;
+#include &lt;iostream&gt;
+#include &lt;iomanip&gt;
+#include &lt;cmath&gt;
+
+template&lt;typename T&gt;
+class Vec2
+{
+public:
+    Vec2() : x(0), y(0) {}
+    Vec2(T xx) : x(xx), y(xx) {}
+    Vec2(T xx, T yy) : x(xx), y(yy) {}
+    Vec2 operator + (const Vec2 &amp;v) const
+    { return Vec2(x + v.x, y + v.y); }
+    Vec2 operator / (const T &amp;r) const
+    { return Vec2(x / r, y / r); }
+    Vec2 operator * (const T &amp;r) const
+    { return Vec2(x * r, y * r); }
+    Vec2&amp; operator /= (const T &amp;r)
+    { x /= r, y /= r; return *this; }
+    Vec2&amp; operator *= (const T &amp;r)
+    { x *= r, y *= r; return *this; }
+    friend std::ostream&amp; operator &lt;&lt; (std::ostream &amp;s, const Vec2&lt;T&gt; &amp;v)
+    {
+        return s &lt;&lt; '[' &lt;&lt; v.x &lt;&lt; ' ' &lt;&lt; v.y &lt;&lt; ']';
+    }
+    friend Vec2 operator * (const T &amp;r, const Vec2&lt;T&gt; &amp;v)
+    { return Vec2(v.x * r, v.y * r); }
+    T x, y;
+};
+
+typedef Vec2&lt;float&gt; Vec2f;
+typedef Vec2&lt;int&gt; Vec2i;
+
+//[comment]
+// Implementation of a generic vector class - it will be used to deal with 3D points, vectors and normals.
+// The class is implemented as a template. While it may complicate the code a bit, it gives us
+// the flexibility later, to specialize the type of the coordinates into anything we want.
+// For example: Vec3f if we want the coordinates to be floats or Vec3i if we want the coordinates to be integers.
+//
+// Vec3 is a standard/common way of naming vectors, points, etc. The OpenEXR and Autodesk libraries
+// use this convention for instance.
+//[/comment]
+template&lt;typename T&gt;
+class Vec3
+{
+public:
+    Vec3() : x(T(0)), y(T(0)), z(T(0)) {}
+    Vec3(T xx) : x(xx), y(xx), z(xx) {}
+    Vec3(T xx, T yy, T zz) : x(xx), y(yy), z(zz) {}
+    Vec3 operator + (const Vec3 &amp;v) const
+    { return Vec3(x + v.x, y + v.y, z + v.z); }
+    Vec3 operator - (const Vec3 &amp;v) const
+    { return Vec3(x - v.x, y - v.y, z - v.z); }
+    Vec3 operator - () const
+    { return Vec3(-x, -y, -z); }
+    Vec3 operator * (const T &amp;r) const
+    { return Vec3(x * r, y * r, z * r); }
+    Vec3 operator * (const Vec3 &amp;v) const
+    { return Vec3(x * v.x, y * v.y, z * v.z); }
+    T dotProduct(const Vec3&lt;T&gt; &amp;v) const
+    { return x * v.x + y * v.y + z * v.z; }
+    Vec3&amp; operator /= (const T &amp;r)
+    { x /= r, y /= r, z /= r; return *this; }
+    Vec3&amp; operator *= (const T &amp;r)
+    { x *= r, y *= r, z *= r; return *this; }
+    Vec3 crossProduct(const Vec3&lt;T&gt; &amp;v) const
+    { return Vec3&lt;T&gt;(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x); }
+    T norm() const
+    { return x * x + y * y + z * z; }
+    T length() const
+    { return sqrt(norm()); }
+    //[comment]
+    // The next two operators are sometimes called access operators or
+    // accessors. The Vec coordinates can be accessed that way v[0], v[1], v[2],
+    // rather than using the more traditional form v.x, v.y, v.z. This useful
+    // when vectors are used in loops: the coordinates can be accessed with the
+    // loop index (e.g. v[i]).
+    //[/comment]
+    const T&amp; operator [] (uint8_t i) const { return (&amp;x)[i]; }
+    T&amp; operator [] (uint8_t i) { return (&amp;x)[i]; }
+    Vec3&amp; normalize()
+    {
+        T n = norm();
+        if (n &gt; 0) {
+            T factor = 1 / sqrt(n);
+            x *= factor, y *= factor, z *= factor;
+        }
+        
+        return *this;
+    }
+
+    friend Vec3 operator * (const T &amp;r, const Vec3 &amp;v)
+    { return Vec3&lt;T&gt;(v.x * r, v.y * r, v.z * r); }
+    friend Vec3 operator / (const T &amp;r, const Vec3 &amp;v)
+    { return Vec3&lt;T&gt;(r / v.x, r / v.y, r / v.z); }
+
+    friend std::ostream&amp; operator &lt;&lt; (std::ostream &amp;s, const Vec3&lt;T&gt; &amp;v)
+    {
+        return s &lt;&lt; '[' &lt;&lt; v.x &lt;&lt; ' ' &lt;&lt; v.y &lt;&lt; ' ' &lt;&lt; v.z &lt;&lt; ']';
+    }
+    
+    T x, y, z;
+};
+
+//[comment]
+// Now you can specialize the class. We are just showing two examples here. In your code
+// you can declare a vector either that way: Vec3&lt;float&gt; a, or that way: Vec3f a
+//[/comment]
+typedef Vec3&lt;float&gt; Vec3f;
+typedef Vec3&lt;int&gt; Vec3i;
+
+//[comment]
+// Implementation of a generic 4x4 Matrix class - Same thing here than with the Vec3 class. It uses
+// a template which is maybe less useful than with vectors but it can be used to
+// define the coefficients of the matrix to be either floats (the most case) or doubles depending
+// on our needs.
+//
+// To use you can either write: Matrix44&lt;float&gt; m; or: Matrix44f m;
+//[/comment]
+template&lt;typename T&gt;
+class Matrix44
+{
+public:
+
+    T x[4][4] = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
+
+    Matrix44() {}
+
+    Matrix44 (T a, T b, T c, T d, T e, T f, T g, T h,
+              T i, T j, T k, T l, T m, T n, T o, T p)
+    {
+        x[0][0] = a;
+        x[0][1] = b;
+        x[0][2] = c;
+        x[0][3] = d;
+        x[1][0] = e;
+        x[1][1] = f;
+        x[1][2] = g;
+        x[1][3] = h;
+        x[2][0] = i;
+        x[2][1] = j;
+        x[2][2] = k;
+        x[2][3] = l;
+        x[3][0] = m;
+        x[3][1] = n;
+        x[3][2] = o;
+        x[3][3] = p;
+    }
+    
+    const T* operator [] (uint8_t i) const { return x[i]; }
+    T* operator [] (uint8_t i) { return x[i]; }
+
+    // Multiply the current matrix with another matrix (rhs)
+    Matrix44 operator * (const Matrix44&amp; v) const
+    {
+        Matrix44 tmp;
+        multiply (*this, v, tmp);
+
+        return tmp;
+    }
+
+    //[comment]
+    // To make it easier to understand how a matrix multiplication works, the fragment of code
+    // included within the #if-#else statement, show how this works if you were to iterate
+    // over the coefficients of the resulting matrix (a). However you will often see this
+    // multiplication being done using the code contained within the #else-#end statement.
+    // It is exactly the same as the first fragment only we have litteraly written down
+    // as a series of operations what would actually result from executing the two for() loops
+    // contained in the first fragment. It is supposed to be faster, however considering
+    // matrix multiplicatin is not necessarily that common, this is probably not super
+    // useful nor really necessary (but nice to have -- and it gives you an example of how
+    // it can be done, as this how you will this operation implemented in most libraries).
+    //[/comment]
+    static void multiply(const Matrix44&lt;T&gt; &amp;a, const Matrix44&amp; b, Matrix44 &amp;c)
+    {
+#if 0
+        for (uint8_t i = 0; i &lt; 4; ++i) {
+            for (uint8_t j = 0; j &lt; 4; ++j) {
+                c[i][j] = a[i][0] * b[0][j] + a[i][1] * b[1][j] +
+                    a[i][2] * b[2][j] + a[i][3] * b[3][j];
+            }
+        }
+#else
+        // A restric qualified pointer (or reference) is basically a promise
+        // to the compiler that for the scope of the pointer, the target of the
+        // pointer will only be accessed through that pointer (and pointers
+        // copied from it.
+        const T * __restrict ap = &amp;a.x[0][0];
+        const T * __restrict bp = &amp;b.x[0][0];
+              T * __restrict cp = &amp;c.x[0][0];
+        
+        T a0, a1, a2, a3;
+        
+        a0 = ap[0];
+        a1 = ap[1];
+        a2 = ap[2];
+        a3 = ap[3];
+        
+        cp[0]  = a0 * bp[0]  + a1 * bp[4]  + a2 * bp[8]  + a3 * bp[12];
+        cp[1]  = a0 * bp[1]  + a1 * bp[5]  + a2 * bp[9]  + a3 * bp[13];
+        cp[2]  = a0 * bp[2]  + a1 * bp[6]  + a2 * bp[10] + a3 * bp[14];
+        cp[3]  = a0 * bp[3]  + a1 * bp[7]  + a2 * bp[11] + a3 * bp[15];
+        
+        a0 = ap[4];
+        a1 = ap[5];
+        a2 = ap[6];
+        a3 = ap[7];
+        
+        cp[4]  = a0 * bp[0]  + a1 * bp[4]  + a2 * bp[8]  + a3 * bp[12];
+        cp[5]  = a0 * bp[1]  + a1 * bp[5]  + a2 * bp[9]  + a3 * bp[13];
+        cp[6]  = a0 * bp[2]  + a1 * bp[6]  + a2 * bp[10] + a3 * bp[14];
+        cp[7]  = a0 * bp[3]  + a1 * bp[7]  + a2 * bp[11] + a3 * bp[15];
+        
+        a0 = ap[8];
+        a1 = ap[9];
+        a2 = ap[10];
+        a3 = ap[11];
+        
+        cp[8]  = a0 * bp[0]  + a1 * bp[4]  + a2 * bp[8]  + a3 * bp[12];
+        cp[9]  = a0 * bp[1]  + a1 * bp[5]  + a2 * bp[9]  + a3 * bp[13];
+        cp[10] = a0 * bp[2]  + a1 * bp[6]  + a2 * bp[10] + a3 * bp[14];
+        cp[11] = a0 * bp[3]  + a1 * bp[7]  + a2 * bp[11] + a3 * bp[15];
+        
+        a0 = ap[12];
+        a1 = ap[13];
+        a2 = ap[14];
+        a3 = ap[15];
+        
+        cp[12] = a0 * bp[0]  + a1 * bp[4]  + a2 * bp[8]  + a3 * bp[12];
+        cp[13] = a0 * bp[1]  + a1 * bp[5]  + a2 * bp[9]  + a3 * bp[13];
+        cp[14] = a0 * bp[2]  + a1 * bp[6]  + a2 * bp[10] + a3 * bp[14];
+        cp[15] = a0 * bp[3]  + a1 * bp[7]  + a2 * bp[11] + a3 * bp[15];
+#endif
+    }
+    
+    // \brief return a transposed copy of the current matrix as a new matrix
+    Matrix44 transposed() const
+    {
+#if 0
+        Matrix44 t;
+        for (uint8_t i = 0; i &lt; 4; ++i) {
+            for (uint8_t j = 0; j &lt; 4; ++j) {
+                t[i][j] = x[j][i];
+            }
+        }
+
+        return t;
+#else
+        return Matrix44 (x[0][0],
+                         x[1][0],
+                         x[2][0],
+                         x[3][0],
+                         x[0][1],
+                         x[1][1],
+                         x[2][1],
+                         x[3][1],
+                         x[0][2],
+                         x[1][2],
+                         x[2][2],
+                         x[3][2],
+                         x[0][3],
+                         x[1][3],
+                         x[2][3],
+                         x[3][3]);
+#endif
+    }
+
+    // \brief transpose itself
+    Matrix44&amp; transpose ()
+    {
+        Matrix44 tmp (x[0][0],
+                      x[1][0],
+                      x[2][0],
+                      x[3][0],
+                      x[0][1],
+                      x[1][1],
+                      x[2][1],
+                      x[3][1],
+                      x[0][2],
+                      x[1][2],
+                      x[2][2],
+                      x[3][2],
+                      x[0][3],
+                      x[1][3],
+                      x[2][3],
+                      x[3][3]);
+        *this = tmp;
+
+        return *this;
+    }
+
+    //[comment]
+    // This method needs to be used for point-matrix multiplication. Keep in mind
+    // we don't make the distinction between points and vectors at least from
+    // a programming point of view, as both (as well as normals) are declared as Vec3.
+    // However, mathematically they need to be treated differently. Points can be translated
+    // when translation for vectors is meaningless. Furthermore, points are implicitly
+    // be considered as having homogeneous coordinates. Thus the w coordinates needs
+    // to be computed and to convert the coordinates from homogeneous back to Cartesian
+    // coordinates, we need to divided x, y z by w.
+    //
+    // The coordinate w is more often than not equals to 1, but it can be different than
+    // 1 especially when the matrix is projective matrix (perspective projection matrix).
+    //[/comment]
+    template&lt;typename S&gt;
+    void multVecMatrix(const Vec3&lt;S&gt; &amp;src, Vec3&lt;S&gt; &amp;dst) const
+    {
+        S a, b, c, w;
+        
+        a = src[0] * x[0][0] + src[1] * x[1][0] + src[2] * x[2][0] + x[3][0];
+        b = src[0] * x[0][1] + src[1] * x[1][1] + src[2] * x[2][1] + x[3][1];
+        c = src[0] * x[0][2] + src[1] * x[1][2] + src[2] * x[2][2] + x[3][2];
+        w = src[0] * x[0][3] + src[1] * x[1][3] + src[2] * x[2][3] + x[3][3];
+        
+        dst.x = a / w;
+        dst.y = b / w;
+        dst.z = c / w;
+    }
+
+    //[comment]
+    // This method needs to be used for vector-matrix multiplication. Look at the differences
+    // with the previous method (to compute a point-matrix multiplication). We don't use
+    // the coefficients in the matrix that account for translation (x[3][0], x[3][1], x[3][2])
+    // and we don't compute w.
+    //[/comment]
+    template&lt;typename S&gt;
+    void multDirMatrix(const Vec3&lt;S&gt; &amp;src, Vec3&lt;S&gt; &amp;dst) const
+    {
+        S a, b, c;
+        
+        a = src[0] * x[0][0] + src[1] * x[1][0] + src[2] * x[2][0];
+        b = src[0] * x[0][1] + src[1] * x[1][1] + src[2] * x[2][1];
+        c = src[0] * x[0][2] + src[1] * x[1][2] + src[2] * x[2][2];
+        
+        dst.x = a;
+        dst.y = b;
+        dst.z = c;
+    }
+
+    //[comment]
+    // Compute the inverse of the matrix using the Gauss-Jordan (or reduced row) elimination method.
+    // We didn't explain in the lesson on Geometry how the inverse of matrix can be found. Don't
+    // worry at this point if you don't understand how this works. But we will need to be able to
+    // compute the inverse of matrices in the first lessons of the &quot;Foundation of 3D Rendering&quot; section,
+    // which is why we've added this code. For now, you can just use it and rely on it
+    // for doing what it's supposed to do. If you want to learn how this works though, check the lesson
+    // on called Matrix Inverse in the &quot;Mathematics and Physics of Computer Graphics&quot; section.
+    //[/comment]
+    Matrix44 inverse() const
+    {
+        int i, j, k;
+        Matrix44 s;
+        Matrix44 t (*this);
+        
+        // Forward elimination
+        for (i = 0; i &lt; 3 ; i++) {
+            int pivot = i;
+            
+            T pivotsize = t[i][i];
+            
+            if (pivotsize &lt; 0)
+                pivotsize = -pivotsize;
+                
+                for (j = i + 1; j &lt; 4; j++) {
+                    T tmp = t[j][i];
+                    
+                    if (tmp &lt; 0)
+                        tmp = -tmp;
+                        
+                        if (tmp &gt; pivotsize) {
+                            pivot = j;
+                            pivotsize = tmp;
+                        }
+                }
+            
+            if (pivotsize == 0) {
+                // Cannot invert singular matrix
+                return Matrix44();
+            }
+            
+            if (pivot != i) {
+                for (j = 0; j &lt; 4; j++) {
+                    T tmp;
+                    
+                    tmp = t[i][j];
+                    t[i][j] = t[pivot][j];
+                    t[pivot][j] = tmp;
+                    
+                    tmp = s[i][j];
+                    s[i][j] = s[pivot][j];
+                    s[pivot][j] = tmp;
+                }
+            }
+            
+            for (j = i + 1; j &lt; 4; j++) {
+                T f = t[j][i] / t[i][i];
+                
+                for (k = 0; k &lt; 4; k++) {
+                    t[j][k] -= f * t[i][k];
+                    s[j][k] -= f * s[i][k];
+                }
+            }
+        }
+        
+        // Backward substitution
+        for (i = 3; i &gt;= 0; --i) {
+            T f;
+            
+            if ((f = t[i][i]) == 0) {
+                // Cannot invert singular matrix
+                return Matrix44();
+            }
+            
+            for (j = 0; j &lt; 4; j++) {
+                t[i][j] /= f;
+                s[i][j] /= f;
+            }
+            
+            for (j = 0; j &lt; i; j++) {
+                f = t[j][i];
+                
+                for (k = 0; k &lt; 4; k++) {
+                    t[j][k] -= f * t[i][k];
+                    s[j][k] -= f * s[i][k];
+                }
+            }
+        }
+        
+        return s;
+    }
+
+    // \brief set current matrix to its inverse
+    const Matrix44&lt;T&gt;&amp; invert()
+    {
+        *this = inverse();
+        return *this;
+    }
+
+    friend std::ostream&amp; operator &lt;&lt; (std::ostream &amp;s, const Matrix44 &amp;m)
+    {
+        std::ios_base::fmtflags oldFlags = s.flags();
+        int width = 12; // total with of the displayed number
+        s.precision(5); // control the number of displayed decimals
+        s.setf (std::ios_base::fixed);
+        
+        s &lt;&lt; &quot;[&quot; &lt;&lt; std::setw (width) &lt;&lt; m[0][0] &lt;&lt;
+             &quot; &quot; &lt;&lt; std::setw (width) &lt;&lt; m[0][1] &lt;&lt;
+             &quot; &quot; &lt;&lt; std::setw (width) &lt;&lt; m[0][2] &lt;&lt;
+             &quot; &quot; &lt;&lt; std::setw (width) &lt;&lt; m[0][3] &lt;&lt; &quot;\n&quot; &lt;&lt;
+            
+             &quot; &quot; &lt;&lt; std::setw (width) &lt;&lt; m[1][0] &lt;&lt;
+             &quot; &quot; &lt;&lt; std::setw (width) &lt;&lt; m[1][1] &lt;&lt;
+             &quot; &quot; &lt;&lt; std::setw (width) &lt;&lt; m[1][2] &lt;&lt;
+             &quot; &quot; &lt;&lt; std::setw (width) &lt;&lt; m[1][3] &lt;&lt; &quot;\n&quot; &lt;&lt;
+            
+             &quot; &quot; &lt;&lt; std::setw (width) &lt;&lt; m[2][0] &lt;&lt;
+             &quot; &quot; &lt;&lt; std::setw (width) &lt;&lt; m[2][1] &lt;&lt;
+             &quot; &quot; &lt;&lt; std::setw (width) &lt;&lt; m[2][2] &lt;&lt;
+             &quot; &quot; &lt;&lt; std::setw (width) &lt;&lt; m[2][3] &lt;&lt; &quot;\n&quot; &lt;&lt;
+            
+             &quot; &quot; &lt;&lt; std::setw (width) &lt;&lt; m[3][0] &lt;&lt;
+             &quot; &quot; &lt;&lt; std::setw (width) &lt;&lt; m[3][1] &lt;&lt;
+             &quot; &quot; &lt;&lt; std::setw (width) &lt;&lt; m[3][2] &lt;&lt;
+             &quot; &quot; &lt;&lt; std::setw (width) &lt;&lt; m[3][3] &lt;&lt; &quot;]&quot;;
+        
+        s.flags (oldFlags);
+        return s;
+    }
+};
+
+typedef Matrix44&lt;float&gt; Matrix44f;
+
+//[comment]
+// Testing our code. To test the matrix inversion code, we used Maya to output
+// the values of a matrix and its inverse (check the video at the top of this page). Of course this implies
+// that Maya actually does the right thing, but we can probably agree, that is actually does;).
+// These are the values for the input matrix:
+//
+// 0.707107 0 -0.707107 0 -0.331295 0.883452 -0.331295 0 0.624695 0.468521 0.624695 0 4.000574 3.00043 4.000574 1
+//
+// Given the input matrix, the inverse matrix computed by our code should match the following values:
+//
+// 0.707107 -0.331295 0.624695 0 0 0.883452 0.468521 0 -0.707107 -0.331295 0.624695 0 0 0 -6.404043 1
+//[/comment]
+#if 0
+int main(int argc, char **argv)
+{
+    Vec3f v(0, 1, 2);
+    std::cerr &lt;&lt; v &lt;&lt; std::endl;
+    Matrix44f a, b, c;
+    c = a * b;
+
+    Matrix44f d(0.707107, 0, -0.707107, 0, -0.331295, 0.883452, -0.331295, 0, 0.624695, 0.468521, 0.624695, 0, 4.000574, 3.00043, 4.000574, 1);
+    std::cerr &lt;&lt; d &lt;&lt; std::endl;
+    d.invert();
+    std::cerr &lt;&lt; d &lt;&lt; std::endl;
+
+    return 0;
+}
+#endif</div><!-- end of code --></div><!-- end of code-column -->
+</article>
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/code.php?id=10&origin=/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes&src=2 by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 19:00:38 GMT -->
+</html>

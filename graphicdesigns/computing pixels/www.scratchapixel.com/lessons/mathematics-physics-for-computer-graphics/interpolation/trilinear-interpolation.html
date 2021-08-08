@@ -1,0 +1,235 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/mathematics-physics-for-computer-graphics/interpolation/trilinear-interpolation by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:07:49 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Interpolation (Trilinear Interpolation)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='interpolation, lerp, linear interpolation, bilinear interpolation, trilinear interpolation, smoothstep'>
+<meta name='date' content='2016-05-27 16:33:47'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Interpolation</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction.html">Introduction</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="bilinear-filtering.html">Bilinear Filtering</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="trilinear-interpolation.html"><b>Trilinear Interpolation</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../codedcd8.html?id=56&amp;origin=/lessons/mathematics-physics-for-computer-graphics/interpolation">Source Code</a></div></div></div><div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../../images/upload/interpolation/trilinearfig.png" width="300" height="300" />
+<p class="caption left">Figure 1: trilinear interpolation. We perform four linear interpolations to compute a, b, c and d using tx, then we compute e and f by interpolating a, b, c, d using ty and finally we find our sample point by interpolating e and f using tz.</p>
+</div>
+
+<p>Trilinear is a straight extension of the bilinear interpolation technique. It can be seen as the linear interpolation of two bilinear interpolations (one for the front face of the cell and one for the back face). To compute e and f we use two bilinear interpolations using the techniques described in the previous chapter. To compute g we linearly interpolate e and f along the z axis (using tz which is the z coordinate of the sample point g).</p>
+
+<p>Trilinear interpolation has the same strengths and weaknesses than its 2D counterpart. It's a fast and easy to implement algorithm but it doesn't produce very smooth results. However for volume rendering or fluid simulation where a very large numbers of lookups in 3D grids are performed, it is still a very good choice.</p>
+<p>Here is a simple example of trilinear interpolation on a grid. Note that like with bilinear interpolation, the results can be computed as a series of operations (lines xx to xx) or a sum of the 8 corners of cells weighed by some coefficients (line xx to xx).</p>
+
+<div name="code" class="code">template&lttypename T&gt
+class Grid
+{
+public:
+    unsigned nvoxels; // number of voxels (cube)
+    unsigned nx, ny, nz; // number of vertices
+    Vec3&ltT&gt *data;
+    Grid(unsigned nv = 10) : nvoxels(nv), data(NULL)
+    {
+        nx = ny = nz = nvoxels + 1;
+        data = new Vec3<T>[nx * ny * nz];
+        for (int z = 0; z < nz + 1; ++z) {
+            for (int y = 0; y < ny + 1; ++y) {
+                for (int x = 0; x < nx + 1; ++x) {
+                    data[IX(x, y, z)] = Vec3<T>(drand48(), drand48(), drand48());
+                }
+            }    
+        }
+    }
+    ~Grid() { if (data) delete [] data; }
+    unsigned IX(unsigned x, unsigned y, unsigned z)
+    {
+        if (!(x < nx)) x -= 1; if (!(y < ny)) y -= 1; if (!(z < nz)) z -= 1;
+        return x * nx * ny + y * nx + z;
+    }
+    Vec3&ltT&gt interpolate(const Vec3&ltT&gt& location)
+    {
+        T gx, gy, gz, tx, ty, tz;
+        unsigned gxi, gyi, gzi;
+        // remap point coordinates to grid coordinates
+        gx = location.x * nvoxels; gxi = int(gx); tx = gx - gxi;
+        gy = location.y * nvoxels; gyi = int(gy); ty = gy - gyi;
+        gz = location.z * nvoxels; gzi = int(gz); tz = gz - gzi;
+        const Vec3&ltT&gt & c000 = data[IX(gei, gyi, gzi)];
+        const Vec3&ltT&gt & c100 = data[IX(gxi + 1, gyi, gzi)];
+        const Vec3&ltT&gt & c010 = data[IX(gxi, gyi + 1, gzi)];
+        const Vec3&ltT&gt & c110 = data[IX(gxi + 1, gyi + 1, gzi)];
+        const Vec3&ltT&gt & c001 = data[IX(gxi, gyi, gzi + 1)];
+        const Vec3&ltT&gt & c101 = data[IX(gxi + 1, gyi, gzi + 1)];
+        const Vec3&ltT&gt & c011 = data[IX(gxi, gyi + 1, gzi + 1)];
+        const Vec3&ltT&gt & c111 = data[IX(gxi + 1, gyi + 1, gzi + 1)];
+#if 1        
+        Vec3&ltT&gt e = bilinear&ltVec3&ltT&gt &gt(tx, ty, c000, c100, c010, c110);
+        Vec3&ltT&gt f = bilinear&ltVec3&ltT&gt &gt(tx, ty, c001, c101, c011, c111);
+        return e * ( 1 - tz) + f * tz;
+#else
+        return
+            (T(1) - tx) * (T(1) - ty) * (T(1) - tz) * c000 +
+            tx * (T(1) - ty) * (T(1) - tz) * c100 +
+            (T(1) - tx) * ty * (T(1) - tz) * c010 +
+            tx * ty * (T(1) - tz) * c110 +
+            (T(1) - tx) * (T(1) - ty) * tz * c001 +
+            tx * (T(1) - ty) * tz * c101 +
+            (T(1) - tx) * ty * tz * c011 +
+            tx * ty * tz * c111;
+#endif
+    }
+};
+ 
+template&lttypename T&gt
+void testTrilinearInterpolation()
+{
+    Grid&ltT&gt grid;
+    for (unsigned i = 0; i < 1000; ++i) {
+        // create a random location
+        Vec3&ltT&gt result = grid.interpolate(Vec3<T>(drand48(), drand48(), drand48()));
+    }
+}</div></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='bilinear-filtering.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 3 of  4</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='../../../codedcd8.html?id=56&amp;origin=/lessons/mathematics-physics-for-computer-graphics/interpolation'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/mathematics-physics-for-computer-graphics/interpolation/trilinear-interpolation by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:07:55 GMT -->
+</html>

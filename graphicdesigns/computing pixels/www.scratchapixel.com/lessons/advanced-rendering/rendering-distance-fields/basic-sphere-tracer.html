@@ -1,0 +1,624 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/advanced-rendering/rendering-distance-fields/basic-sphere-tracer by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:20:10 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Rendering Implicit Surfaces and Distance Fields: Sphere Tracing (A Simple Sphere-Tracer)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='distance field, implicit function, sphere tracing, CSG, Constructive Solid Geometry, ray marching, implicit surfaces, gradient, level surface, level set, blobbies, soft objects, meatballs'>
+<meta name='date' content='2016-11-27 15:56:09'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Rendering Implicit Surfaces and Distance Fields: Sphere Tracing</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction.html">Introduction</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="maths-behind-sphere-tracing.html">Maths Behind Sphere-Tracing</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="basic-sphere-tracer.html"><b>A Simple Sphere-Tracer</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="constructive-solid-geometry-blends-deformers.html">Constructive Solid Geometry, Blends and Deformers</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="blobbies.html">Blobbies</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code2e85.html?id=59&amp;origin=/lessons/advanced-rendering/rendering-distance-fields">Source Code</a></div></div></div><h2>Implementing a Simple Sphere-Tracer</h2>
+
+<p>In this chapter, we will implement the sphere-tracing algorithm. We will learn:</p>
+<ul>
+<li>How to render simple shapes such as spheres and planes using sphere-tracing.</li>
+<li>How to shade these objects (including some lighting) using sphere-tracing, a topic we haven't talked about yet. As you know, shading objects requires normals and if we have learned in the previous chapter how to find the intersection point between a ray and an object using sphere-tracing, we haven't learned yet how to compute the normal of the object at that intersection point.</li>
+<li>How to transform these implicit shapes. If you remember what we said in the previous chapter, so far, we have only studied the distance estimators of "canonical" shapes centred about the origin. We will also lean how to scale, move, rotate these shapes to create more interesting compositions.</li>
+</ul>
+
+<p>Let the real fun begin.</p>
+
+<p>The section of the code that generates the primary rays is exactly the same than for ray-tracers. So there is no mystery there. We need to generate a ray origin and a ray direction. This process is explained in details in the lesson <a href="../../3d-basic-rendering/ray-tracing-generating-camera-rays.html">Ray-Tracing: Generating Camera Rays</a>.
+
+<div name="code" class="code">for (uint32_t j = 0; j < height; ++j) {
+    for (uint32_t i = 0; i < width; ++i) {
+        float x = (2 * i / static_cast<float>(width) - 1) * ratio * angle;
+        float y = (1 - j / static_cast<float>(height) * 2) * angle;
+        Vec3f rayDirection;
+        camToWorld.multDirMatrix(Vec3f(x, y, -1).normalize(), rayDirection);
+        Vec3f pixelColor = sphereTrace(rayOrigin, rayDirection, scene);
+        buffer[width * j + i] = pixelColor;
+    }
+}</div>
+
+<p>The magic happens in the function <span class="code-inline">sphereTrace()</span> as you may have guessed. Though before we look at this function, note that the parameter <span class="code-inline">scene</span> is a list of implicit objects. All implicit shapes that our program will support are derived from the base class <span class="code-inline">ImplicitShape</span>. The important method from this base class that all derived classes need to implement is the <span class="code-inline">getDistance(const Vec3f& from)</span>. This is the function that will return the distance of a point to the nearest point on the surface of the object (if the distance estimator is a DIF or the underestimated distance to the nearest point if we can only use a DUF). As you know the equation we used to compute that distance is specific to each supported shape (sphere, plane, cone, torus, etc.). In this chapter we will render planes and sphere, but we will show how to render more shapes in the next chapter. Here is the source code:</p>
+
+<div name="code" class="code">class ImplicitShape
+{
+public:
+    virtual float getDistance(const Vec3f& from) const = 0;
+    virtual ~ImplicitShape() {}
+};
+
+class Sphere : public ImplicitShape
+{
+public:
+    Sphere(const Vec3f& c, const float& r) : center(c), radius(r) {}
+    float getDistance(const Vec3f& from) const
+    { return (from - center).length() - radius; }
+    float radius;
+    Vec3f center;
+};
+
+class Plane : public ImplicitShape
+{
+public:
+    Plane(const Vec3f& nn = Vec3f(0, 1, 0), const Vec3f& pp = Vec3f(0)) : n(nn), pointOnPlane(pp) {}
+    float getDistance(const Vec3f& from) const
+    { return n.dotProduct(from - pointOnPlane); }
+    Vec3f n, pointOnPlane;
+};
+
+...
+
+std::vector&ltconst ImplicitShape *&gt makeScene()
+{
+    std::vector&ltconst ImplicitShape *&gt shapes;
+
+    shapes.push_back(new Plane(Vec3f(0, 1, 0), Vec3f(0, 0, 0)));
+    shapes.push_back(new Sphere(Vec3f(0), 1));
+    shapes.push_back(new Sphere(Vec3f(0, -0.5, 0.5), 1));
+    shapes.push_back(new Sphere(Vec3f(1, 0, -2), 1));
+
+    return shapes;
+}</div>
+
+<p>Let's now write the function <span class="code-inline">sphereTrace(...)</span> where we will compute whether a given ray intersects one of the implicit surfaces making up the scene (in our example, three spheres and a plane). This function takes as arguments the ray origin and direction and a list of implicit surfaces. It will return 0 if the ray doesn't intersect anything and the color of the intersected object otherwise. However because we haven't learned how to shade implicit surfaces yet and because returning a constant color won't produce a very interesting image, instead, we will let the returned color depend on the ray step count. This will allow us to observe how many steps were required for the visible part of the scene in the image and thus which part of the scene are the most expensive to compute.</p>
+
+<p>The while loop is where things happen. We will "step" along the ray, starting from the ray origin up to a maximum distance. If the ray doesn't intersect any shape, we have to stop the process at some point, so setting up a maximum distance seems like a reasonable thing to do. Some people prefer to limit then number of steps instead. At each step we then need to compute what the minimum distance between our position on the ray and all the shapes in the scene is. This is simple:</p>
+
+<ul>
+<li>First we need to compute our current position along the ray (line 14).</li>
+<li>We then loop over all the shapes in the scenes (lines 15-21) and compute the distance from our current position to the current shape, using the shape's <span class="code-inline">getDistance(...)</span> method.</p>
+</ul>
+
+<p>Once we get the minimum distance to all shapes in the scene, we can then test if this distance is lower that our threshold (line 24). If we pass this test successfully then we have an intersection (lines 24-26). If not, then we can safely move along the ray by a distance that is at least equal to <span class="code-inline">minDistance</span> (line 28) and increment <span class="code-inline">numSteps</span> (we use this number to render our image with a false color scheme).</p>
+
+<div name="code" class="code">Vec3f sphereTrace(
+    const Vec3f& rayOrigin,
+    const Vec3f& rayDirection,
+    const std::vector&ltconst ImplicitShape *&gt& scene)
+{
+    constexpr float maxDistance = 100;
+    constexpr float threshold = 10e-6;
+    float t = 0;
+    uint32_t numSteps = 0;
+    const ImplicitShape *isectShape = nullptr;
+
+    while (t < maxDistance) {
+        float minDistance = kInfinity;
+        Vec3f from = rayOrigin + t * rayDirection;
+        for (auto shape : scene) {
+            float d = shape->getDistance(from);
+            if (d < minDistance) {
+                minDistance = d;
+                isectShape = shape;
+            }
+        }
+
+        // did we intersect the shape?
+        if (minDistance <= threshold * t) {
+            return falseColor(numSteps);
+        }
+
+        t += minDistance;
+        numSteps++;
+    }
+
+    return 0;
+}</div>
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="width: 400px;" src="../../../images/upload/distance-fields/spheretrace-result4d41d.png?" />
+<p class="caption left">Figure 1: threshold \(\epsilon\) increases linearly with distance.</p>
+</div>
+
+<p>Note that when we test whether <span class="code-inline">minDistance</span> is lower than our threshold we actually multiply the threshold by <span class="code-inline">t</span>, the parametric distance along the ray (line 24). In world space, the threshold value increases linearly with distance as showed in figure 1. It is easy to see from the figure that at distance \(2a\) the height of the opposite side of the triangle is \(2b\) or that the segment \(c\) at distance \(a\) is length \(2c\) at distance \(2a\). This is the reason why we can multiply the threshold value by \(t\) when we do the comparaison test. This keeps the error consistent in screen space while hastening convergence. The following image is the output of our program:</p>
+
+<img class="left" style="margin-bottom:12px;" src="../../../images/upload/distance-fields/spheretrace-result3d41d.png?" />
+
+<p>By making the pixel color a function of the number of steps, we can more easily see which which parts of the scene are the most expensive to compute. If you refer to the scale on the left, you can see that the number of steps increases around the object's edges and of course as the distance to the intersected object increases. The next images shows the same scene without the plane and with shading (a simple facing ratio).</p>
+
+<img class="left" style="margin-bottom: 12px;" src="../../../images/upload/distance-fields/spheretrace-result1d41d.png?" />
+
+<p>Let's see the algorithm in action for the ray passing through the pixel marked in red in the image. We picked this ray because it gets really close to an object without intersecting it before intersecting another one further back.</p>
+
+<img class="left" style="margin-bottom:12px;" src="../../../images/upload/distance-fields/spheretrace-result2d41d.png?" />
+
+<p>As you can see, the steps get smaller as the ray approaches the first object, before getting larger again as we "move" away from it. This is why pixels close the edges of objects see their step count increase.</p>
+
+<h2>Shading</h2>
+
+<p>To shade the objects which is the next step in the rendering process we need at least the point \(P\) where the ray intersects the shape and the normal \(N\) at that point. If you need an introduction to shading please check the lessons from Volume 1 devoted to that topic (for example <a href="../../3d-basic-rendering/introduction-to-shading.html">Introduction to Shading</a>. Computing \(P\) is simple:</p>
+
+<div name="code" class="code">P = rayOrigin + t * rayDirection;</div>
+
+<p>Computing the normal at \(P\) is more complicated. it requires to compute what we call the <b>gradient</b> of the function at \(P\).</p>
+
+<p>Before we get into explaining what the gradient is, let's for now explain why we need it. In the first chapter of this lesson, we introduced the concept of isosurface of level surface. We said that a level surface in three-dimensional space is defined by an equation of the form \(f(x, y, z) = c\). In this lesson we always rendered the surface for which \(f(x,y,z)=0\), in other words for which \(c=0\).</p>
+
+<div class="important">To say it quickly, the gradient of \(f\) is then normal to the surface and in this lesson we will also give the proof of that statement. But what you need to remember for now is that, if you can compute the gradient of you implicit equation at \(P\) a point lying on the surface, then you have the normal at \(P\).</div>
+
+<p>So let's now explain what the gradient is. The concept of gradient is to 2D or 3D functions what the concept of derivative is to 1D function. This is a crude simplification but hopefully it will set your mind on the right track. Mathematically the concept of gradient is not limited to 2D or 3D functions but in computer graphics, these are the cases that are the most relevant. To be more specific, let's say that if you had a function \(f(x)\) you would speak of derivative, but if you had a function \(f(x,y)\) or \(f(x,y,z)\), you would speak of gradient. If the latter case, we say that that we have a function of several variables.</p>
+
+<p>Now remember that when we compute the derivative of a 1D function, what the derivative gives us is the function <b>rate-of-change</b> within at the point on the function where the derivate is calculated. If the function represents the speed of an object, then the derivate at a point on that function would represent the acceleration (or rate-of-change), of the object at that point. The gradient represents the same concept but applied to function of several variables. In other words it represents the rate-of- change of the function over space. They are two important things you need to know about the gradient:</p>
+
+<ul>
+<li>First the gradient is a vector. For 2D functions it is a 2D vector, and for 3D functions it is a 3D vector. And that vector points in the direction of the greatest rate of increase of the function.</li>
+<li>Second, the magnitude (or length) of that vector also indicates how "strongly" the function changes in that direction.</li>
+</ul>
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="width: 400px;" src="../../../images/upload/distance-fields/spheretrace-gradient-1d41d.png?" />
+<p class="caption left">Figure 2: gradient vectors.</p>
+</div>
+
+<p>You can see an illustration of these two concepts in figure 2. Imagine figure 2 as a vertical slice in the density fields whose values over space are given by an implicit function \(f(x,y,z) = c\). The isocontours from figure 2 show what the density fields looks like for five different values of \(c\). As can you see the gradients vectors are pointing out in the direction of greatest rate of change and their magnitude is also proportional to this rate (a larger gap between two adjacent lines indicates a greater rate of change). You can also visually check that these gradient vectors are perpendicular to the tangents to the curves.</p>
+
+<p>The gradient of a function \(f(x,y,z)\) is denoted \(\nabla f\). The name of the symbol \(\nabla\) is <i>nabla</i> and mathematician will refer to it as the <i>del</i> operator (or vector differential operator).</p>
+
+<p>The next question is: how do we compute it? In fact the answer to this question will help you to both understand why the gradient is somehow related to the concept of derivative and why it is a vector. Let's say we have an implicit equation \(f(x,y,z)=c\). Now we would like to compute the rate of change of that function at a given point \(P\) in space. How we do that? The solution is simple: you compute the gradient by essentially decomposing this problem into simpler ones. We are going to compute the rate of change of the function along the x-axis, then along the y-axis and finally along the z-axis. Why? Because we know how to do that easily. Let's for example show how it works for the x-axis:</p>
+
+$$\nabla f_x = \dfrac{f(x+\delta, y, z) - f(x-\delta, y, z)} {2\delta}$$
+
+<p>The term \(\delta\) here is just a very small number like 0.00001 for example. This should hopefully remind you of something we have already come across in previous lessons, in fact even in the previous chapter. The equation \(f(x+b) - f(x + a)\) in mathematics is called a <b>finite difference</b> and if you divide the result of this equation by \((b+a)\) then you get a <b>difference quotient</b> nothing less than the derivative of the function \(f\) as \(b+a\) approaches 0:</p>
+
+$$\lim_{h \to 0} = \dfrac{f(x+h) - f(x-h)}{2h}.$$ 
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="width: 400px;" src="../../../images/upload/distance-fields/spheretrace-gradient-2d41d.png?" />
+<p class="caption left">Figure 3: computing the derivative of \(f(x)\) using central differencing.</p>
+</div>
+
+<p>If you want to visualise the process, you can just look at figure 3. The idea is to take a small step towards the left of \(P\) and evaluate the function there, then do the same thing to the right, subtract the two numbers and normalize (which is done by dividing the finite difference by \(h = (a+b)\). The normalisation step is not necessary unless you need the result to be normalized of course. And that results, gives us the slope of that tangent at \(P\) along the x-axis. If we repeat the process for the other two axes, then we get three numbers which as you maybe guess, put together form a three-dimensional vectors. Gradients are computed by taking the derivative of the function (we call these derivative partial derivatives) of the function \(f(x, y, z)\) in each one of the directions \(\vec i = (1,0,0)\), \(\vec j = (0,1,1)\) and \(\vec k = (0,0,1)\) and then combine the results to form a three-dimensional vector. The x-, y- and z-coordinate of that vector indicates the rate-of-change of the function \(f\) along the x-, y- and z-axis respectively.</p>
+
+$$
+\begin{array}{l}
+\nabla f_x = \dfrac{f(x+h, y, z) - f(x-h, y, z)}{2h},\\
+\nabla f_y = \dfrac{f(x, y+h, z) - f(x, y-h, z)}{2h},\\
+\nabla f_z = \dfrac{f(x, y, z+h) - f(x, y, z-h)}{2h},\\
+\nabla f = \left< \nabla f_x, \nabla f_y, \nabla f_z \right>.
+\end{array}
+$$
+
+<p>Translating these equations into code is straightforward:</p>
+
+<div name="code" class="code">constexpr float delta = 10e-5;
+Vec3f p = rayOrigin + t * rayDirection;
+Vec3f n = Vec3f(
+    shape->getDistance(p + Vec3f(delta, 0, 0)) - shape->getDistance(p + Vec3f(-delta, 0, 0)),
+    shape->getDistance(p + Vec3f(0, delta, 0)) - shape->getDistance(p + Vec3f(0, -delta, 0)),
+    shape->getDistance(p + Vec3f(0, 0, delta)) - shape->getDistance(p + Vec3f(0, 0, -delta)));
+n.normalize();</div>
+
+<div class="question">Of course with simple equations such as in the case of a sphere, we could compute the derivative analytically. For example the derivative of \(x^2+y^2+z^2-r^2=0\) with respect to \(x\) is simply \(2x\). Though this works because as mentioned the equation is simple but for more complex equations this exercise might be more difficult or impossible. Thus it is best to rely on a numerical method such as the one we described before. The advantage of the numeric approach is that it works regardless of the implicit equation being considered (as we will see soon with lobbies).</div>
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="width: 400px;" src="../../../images/upload/distance-fields/normal-to-distance-fieldd41d.png?" />
+<p class="caption left">Figure 4: the normal of the implicit field at \(P\) is perpendicular to the tangent of curves passing through \(P\) and lying on the shape's isosurface.</p>
+</div>
+
+<p>It is possible to proof that the gradient is the normal we are looking for. Let's say that we have a point \(P = (x_0, y_0, z_0)\) on the surface of the object. Since this point is on the object isorsurface we have \(f(x_0, y_0, z_0) = c\). We wish to prove that \(\nabla f|_P\) (the gradient at \(P\)) is perpendicular to the surface. Naturally, if this is true, then this gradient is also perpendicular to any curve that lies on the surface and that passes through \(P\) (figure 4). The equation of this curve will be defined as:</p>
+
+$$ r(t) = \left< x(t), y(t), z(t) \right>. $$
+
+<p>In other words, each value of \(t\) defines a 3D point that we can plot. One way of looking at the above equation is to think of three parametric equations, one for each coordinate of the point. Now, let's define \(t_0\) such that  \( r(t_0) =  \left< x_0, y_0, z_0 \right> \). if you plug \(t_0\) in the curve parametric equation we get the coordinates of a point which is similar to \(P\). Since \(r(t)\) lies on the surface of the object we create a third function (let's call it \(g(t)\)) defined as:</p>
+
+$$g(t) = f(x(t),y(t),z(t)) = c,$$
+
+<p>In other words, we plug the coordinates of the point that we computed using the curve's equation \(r\) into \(f\). The next step in the demonstrations requires to compute the first-order derivative of this equation. Understanding how you do that -is- complicated and requires to dive deep into the world of differential geometry. If we explain every step of it in this lesson, it will be twice as long, so for now let's just get straight to the result (however if you are interested in the full proof you can fist read the note that comes right after the equation. The note is not complete but it can at least provide you with some pointers. Additionally, we promise to write a lesson on differential geometry in the future -- promise):</p>
+
+<span style="display: inline-block; margin: 0px 0px 12px 0px;">
+$\dfrac {dg} {dt} = \dfrac {\partial f} {\partial x} \bigg\rvert_{P_0} \dfrac {d x} {d t} \bigg\rvert_{t_0} + \dfrac {\partial f} {\partial y} \bigg\rvert_{P_0}\dfrac {d y} {d t} \bigg\rvert_{t_0} + \dfrac {\partial f} {\partial z} \bigg\rvert_{P_0}\dfrac {d z} {d t} \bigg\rvert_{t_0} = 0.$
+</span>
+
+<div class="question">To understand the above result you first need to consider that the function \(g(t)\)  is what call in mathematics a composition of two functions \(r\) and \(f\). It is maybe more obvious if you write:</p>
+
+$$g(t) = f(r(t)).$$
+
+We say that \(g(t)\) is a composition of \(r\) and \(f\). This important because computing the derivative of such composed function requires in mathematics to use a technique called the <b>chain rule</b>. It says that the derivative of the a composite function (such as \(g(t)\)) is given by:
+
+$$g'(t) = r'(t) \cdot f'(g(t)).$$
+
+In this particular case we have to deal with the <a href="https://en.wikipedia.org/wiki/Chain_rule#Higher_dimensions">chain rule in higher dimensions</a>.
+<ul style="font-size: 14px; margin-top: 12px;">
+<li>If you wonder about why the terms are added up. This comes from the idea of total derivative versus partial derivative.  In words, the total change in a function is equal to the sum of the partial changes.  In general, this is related to the Jacobian of the function defined by 
+
+$J_{ij}=\frac{\partial f_i}{\partial x_j}$
+
+which satisfies
+
+$f(x+\delta x)-f(x)=J\delta x,$
+
+for $\delta x$ very small. This is a local approximation for the function $f$.</li>
+<li>if you wonder: why we use the notation $\dfrac {\partial f} {\partial z}$ and $\dfrac {d x} {d t}$? Why using $\partial$ in one case and $d$ in the other? Why not $\partial$ or $d$ in both cases? The $\partial$ terminology means taking the derivative with all other variables fixed, whereas the $d$ terminology means the total change in the function with respect to a given change in the underlying variables.  Because x,y and z are functions of one variable (t), you can use the total derivative, whereas g depends on multiple variables, so you need to have the full equation written down.</li>
+</ul>
+We told you it wouldn't be simple...
+</div>
+
+<p style="margin-top: 12px;">If you rewrite the terms in vector form you get:</p>
+
+$
+\begin{array}{l}
+\dfrac {dg} {dt} = \left< \dfrac {\partial f} {\partial x} \bigg\rvert_{P_0}, \dfrac {\partial f} {\partial y} \bigg\rvert_{P_0}, \dfrac {\partial f} {\partial z} \bigg\rvert_{P_0} \right> \cdot \left<  \dfrac {d x} {d t} \bigg\rvert_{t_0}  \dfrac {d y} {d t} \bigg\rvert_{t_0}  \dfrac {d z} {d t} \bigg\rvert_{t_0} \right> = 0\\
+
+\leftrightarrow \nabla f|_P \cdot r'(t_0) = 0.
+
+\end{array}
+$
+
+<div class="question" style="margin-top: 12px;">The dot product of two vector is \(a \cdot b = a_x b_x + a_y b_y + a_z b_z\).</div>
+
+<p>And we know that the dot product of two vectors is 0 if they are perpendicular to each other. Thus the gradient, is perpendicular to the surface at \(P\).</p>
+
+<h2>Lighting</h2>
+
+<p>The code for adding lighting is straightforward. We will use a technique similar to the one we studied in the lesson devoted to the ray-tracing algorithm (please check the lesson <a href="../../3d-basic-rendering/introduction-to-shading/shading-lights.html">shading from Volume 1</a> if you need a refresher on this topic). We will loop over all the lights in the scene and compute their contribution to the shaded point's color (for the lack of a better term as we haven't touch on the topic of radiometry yet). In this example, we only support point light sources (note the square falloff):</p>
+
+<div name="code" class="code">Vec3f shade(
+    const Vec3f& rayOrigin,
+    const Vec3f& rayDirection,
+    const float& t,
+    const ImplicitShape *shape,
+    const std::vector&ltconst std::shared_ptr&ltImplicitShape&gt&gt scene,
+    const std::vector&ltconst std::shared_ptr&ltPointLight&gt&gt lights)
+{
+    constexpr float delta = 10e-5;
+    Vec3f p = rayOrigin + t * rayDirection;
+    Vec3f n = Vec3f(
+        shape->getDistance(p + Vec3f(delta, 0, 0)) - shape->getDistance(p + Vec3f(-delta, 0, 0)),
+        shape->getDistance(p + Vec3f(0, delta, 0)) - shape->getDistance(p + Vec3f(0, -delta, 0)),
+        shape->getDistance(p + Vec3f(0, 0, delta)) - shape->getDistance(p + Vec3f(0, 0, -delta)));
+    n.normalize();
+
+    Vec3f R = 0;
+
+    // loop over all lights in the scene and add their contribution to P's brightness
+    for (auto light: lights) {
+        Vec3f lightDir = light->pos - p;
+        if (lightDir.dotProduct(n) > 0) {
+            float dist2 = lightDir.norm();
+            lightDir.normalize();
+            bool shadow = 1 - sphereTraceShadow(p, lightDir, sqrtf(dist2), scene);
+            R += shadow * lightDir.dotProduct(n) * light->col * light->intensity / (4 * M_PI * dist2);
+        }
+    }
+
+    return R;
+}</div>
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="width: 400px;" src="../../../images/upload/distance-fields/spheretraced41d.png?" />
+<p class="caption left">Figure 5: scene illuminated by two point lights.</p>
+</div>
+
+<p>For shadows, we will need to cast a ray from the shaded point in the direction of the light and check whether the ray intersects an object along the way to the light. If it does, the point is in the shadow of the light and the light's contribution is 0. The <span class="code-inline">sphereTraceShadow()</span> is very similar to the our <span class="code-inline">sphereTrace()</span> method. Both function use the sphere-tracing algorithm to find if the ray intersects an object but for shadows we don't need to shade the intersected point so we return from the function as soon as an intersection is found. The function returns a boolean (<span class="code-inline">true</span> if the ray intersected an object and <span class="code-inline">false</span> otherwise) rather than a color (<span class="code-inline">Vec3f</span>).</p>
+
+<div name="code" class="code">bool sphereTraceShadow(
+    const Vec3f& rayOrigin,
+    const Vec3f& rayDirection,
+    const float& maxDistance,
+    const std::vector&ltconst std::shared_ptr&ltImplicitShape&gt&gt scene)
+{
+    constexpr float threshold = 10e-5;
+    float t = 0;
+
+    while (t < maxDistance) {
+        float minDistance = kInfinity;
+        Vec3f from = rayOrigin + t * rayDirection;
+        for (auto shape : scene) {
+            float d = shape->getDistance(from);
+            if (d < minDistance)
+                minDistance = d;
+                // did we find an intersection?
+                if (minDistance <= threshold * t)
+                    return true;
+        }
+        
+        // no intersection, move along the ray by minDistance
+        t += minDistance;
+    }
+
+    return false;
+}</div>
+
+<p>Figure 5 shows a simple scene illuminated by two point lights.</p>
+
+<h2>Anti-Aliasing</h2>
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="width: 400px;" src="../../../images/upload/distance-fields/sphere-tracing-aa-2d41d.png?" />
+<p class="caption left">Figure 6: the ray intersects the green sphere but the cone also intersects the red sphere.</p>
+</div>
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="width: 400px;" src="../../../images/upload/distance-fields/sphere-tracing-aa-4d41d.png?" />
+<p class="caption left">Figure 7: a close up on the section of the cone that intersects the red sphere. Note that several unbounding spheres (in blue) fills the criteria \(d \le r\).</p>
+</div>
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="width: 400px;" src="../../../images/upload/distance-fields/sphere-tracing-aa-3d41d.png?" />
+<p class="caption left">Figure 8: the vertical extent of a pixel projected at a distance t from its ray origin.</p>
+</div>
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="width: 400px;" src="../../../images/upload/distance-fields/sphere-tracing-aa-1d41d.png?" />
+<p class="caption left">Figure 9: fraction of coverage of a disk of radius \(r\) by an intersecting half-plane of signed distance \(d\).</p>
+</div>
+
+<p>We haven't touched yet on the topic of aliasing and anti-aliasing either. If you don't know what this is, then don't worry about it for now too much. If you have an idea of what these two terms mean then you can keep reading. In short though (if you are just curious) anti-aliasing helps reducing the staircase effect you can see around the edge of objects, an effect due to the discrete nature of digital image (digital images breaks a continuous space down into pixels).</p>
+
+<p>The most common method to fight aliasing is to cast more than just one ray for each pixel in the image and average the contribution of these rays, a technique called (to say things quickly) <a href="https://en.wikipedia.org/wiki/Supersampling">supersampling</a>.  Hart though proposed another approach that is rather interesting because it takes advantage of the very nature of the sphere-tracing algorithm itself. Let's talk about this method briefly.</p>
+
+<p>For anti-aliasing Harts proposes to use a technique known as <b>cone-tracing</b>. We won't detail this technique here, but the underlying idea is to replace the rays with cones (check the lesson on <a href="../../../indexf17c.html">anti-aliasing</a>). Computing the intersection of cones with objects is a rather difficult thing to do, but Hart noticed that the sphere-tracing algorithm offers a simple solution to this problem (even if his solution is not entirely accurate). The cone here is a crude representation of the pixel's volumetric extension into the scene (figure 8). Remember that in the sphere-tracing algorithm we move along the ray by computing the distance from our current position on the ray to closest object in the scene. Let's call this object \(O\) and the distance \(d\). The minimum distance \(d\) can be seen as the radius of a sphere (Hart calls it an <i>unbounding sphere</i>), centred around our current position \(t\) on the ray. We can observe that if the unbounding sphere's radius (\(d\)) is equal or smaller than the radius of the cone's section, then the cone intersects \(O\) as well. This idea is illustrated in figure 6 and 7.</p>
+
+<div class="scratchquote">As sphere tracing progresses along the ray, if the distance \(d\) returned by a DUF produces an unbounding sphere that projects to an area smaller than a pixel on the screen, then this is considered a cone intersection. The point along the sphere is treated as if it were on the surface of the nearest object, and is shaded.</div>
+
+<p>The algorithm to render to a pixel in the image now looks as follows:</p>
+
+<ul>
+<li>Initialisation step: initialize the pixel's color to 0, \(t\) to 0.</li>
+<li>Step 1: find the nearest object in the scene from our current position \(t\) on the ray.</li>
+<li>Step 2: if this object is at a distance \(d\) lower than the threshold \(\epsilon\) then the ray intersects the object. Shade the object at the intersection point, add the result to the pixel's color and break from the loop.</li>
+<li>Step 3: if the object is at a distance lower than the cone radius then the cone intersects the object. Shade the object at the intersection point and add the result to the pixel's color (using the blending algorithm described below).</li>
+<li>Step 4: else (if the object is at a distance greater than the threshold and the cone radius), then move along the ray by distance \(d\) and repeat the entire loop (from step 1 to step 4) unless \(t\) is greater than the ray maximum distance. If this is the case, then break from the loop.</li>
+<li>Return the pixel's color.</li>
+</ul>
+
+<p>A good estimation for the radius of the cone at distance \(t\) can be computed as follows:</p>
+
+$$r = 2 \dfrac {\tan(fov / 2)}{N_H} t.$$
+
+<p>Where \(N_H\) is the image height and \(fov\) is the vertical camera field-of-view (in radians).  We assume as usual, that the image plane is 1 unit away from the camera origin. If you are don't understand this construction, check the lesson <a href="../../3d-basic-rendering/ray-tracing-generating-camera-rays.html">Ray-Tracing: Generating Camera Rays</a>. Then if you divide \(2\tan(\alpha/2)t\) by the number of rows in the image (you will need to use \(N_W\) instead of \(N_H\) if you use a horizontal field of view) you will get what is technically the pixel size at distance \(t\), but this value can also be used as an estimation for the radius of the cone at that distance (figure 8). In summary, when:</p>
+
+$$ d \le r,$$
+
+<p>then the cone intersects the object \(O\). Each time this happens as we progress along the ray, we will compute the partial coverage of the intersected object over the entire area of the pixel, and accumulate the contribution of this object to the pixel color using alpha blending. Hart proposes to use the following metrics to compute the object's percentage coverage, the ratio object over pixel area which is lower than 1 (figure 9):</p>
+
+$$\alpha = \dfrac {1}{2} - \dfrac {d \sqrt{r^2 - d^2}} {\pi r^2} - \dfrac{1}{\pi}\arcsin \dfrac {d}{r},$$
+
+<div class="question">Proof for this formula can be found in the book Graphics Gems "Area of Intersection: Circle and Half-Plane (p. 38).</div>
+
+<p>and use this value as the opacity value to blend the object's color \(c_1\) to the current's pixel color \(c_2\) using the classic alpha-blending formula (where \(c_1\) and \(c_2\) here are already multiplied by their respective opacity values):</p>
+
+$$c=c_1 + c_2 (1 - \alpha_1).$$
+
+<p>While the principle is rather simple, implementing this algorithm is not as simple as one might expect. If you look at figure 6, you will note that we don't have one by three unbounding spheres for what is essentially a single intersection of the cone with the red sphere. So what do you do in this case? do you accumulate the contribution of the red sphere to the pixel's color three times? This would obviously be wrong. One of the solutions consists of storing the position of these unbounding spheres in a list and compute the contribution of the red sphere to the pixel's color only once, using the unbounding sphere for which the distance to the red sphere is the smallest. In our example this would be the first of the three unbounding spheres. The cone might intersect several objects along the way, generating a sequence of unbounding spheres each time, so you will need to be careful about that as well. The final implementation is left as an exercise for the reader. Will provide our own solution in a further revision of this lesson.</p> 
+
+<h2>Transformations</h2>
+
+<p>The distance estimators we developed for each type of surface were developed on the assumption that objects were centred about the origin and somehow symmetrical. In other words, the sphere can't be turned into some sort of ellipsoid shape, and the cube can't be turned into a rectangular box. So how do we transform these objects? How do we scale, translate and/or rotate them? The solution is somehow simple: we don't. Rather than transforming the object by a matrix \(M\) what we will do instead is transform the ray's origin and direction by the object inverse transform \(M^{-1}\). This method was described in detail in the lesson <a href="../../3d-basic-rendering/transforming-objects-using-matrices.html">Transforming Objects using Matrices</a> so we won't describe it here again. But in short the idea is to transform the ray back into the object's "object-space" (the space in which the object is before it gets transformed).</p>
+
+<p>Though there is a problem when this method is used in the context of sphere-tracing. To say things quickly, you can divide transformations into two categories: <a href="https://en.wikipedia.org/wiki/Isometry">isometric</a> and non-isometric transforms. Isometric transforms are transforms that preserve distances. Rotation and translation belong to this category. Scale on the other hand doesn't preserve distances. If you scale a vertex whose position is originally at <3,3,3> by a factor of <2,2,2>, then the position of the vertex will be <6,6,6>. If you do the same thing for a point whose initial position is <0,0,0> then the position of this point after transformation will be <0,0,0>. If you now compute the distance between the first and second point before and after transformation you will get roughly 5.2 and 10.4. Cleary this transformation didn't preserve distances. If you do the same exercise with a translation (translating the first and second vertex by the same amount) you will see that distances are preserved (and with rotation too).</p>
+
+<p>That distances are not preserved (when scale is applied) is a problem in the context of sphere-tracing because all our calculations are based on the assumption that we can compare distances between a point on the ray and points on the surface of the objects making up the scene (it is not in the context of ray-tracing for a reason we explain in the lesson <a href="../../3d-basic-rendering/transforming-objects-using-matrices.html">Transforming Objects using Matrices</a> but for sphere-tracing it is a problem). If these objects are scaled up or down in different ways, then the distances will be getting from our distance estimators won't be strictly comparable to each other. This will lead to incorrect results.</p>
+
+<p>One possible solution is to separate isometric transformations such as translation and rotation from non-isometric transformations such as scale. This is tricky when you deal with 4x4 matrix: these matrices are precisely used because they combine in a single structure scale, rotation and translation. It is possible to decompose or break down a 4x4 matrix into a singular scale, rotation and translation matrix using something like a <i>Jacobi transformation</i>. Explaining this method would take a while and goes beyond the scope of this lesson (this lesson contains enough maths already right?) but hopefully there is an easier solution.</p>
+
+<p>To keep things simple, it is best to keep rotation and translation separate from scale, so that you can process the two types of transformations separately. You can represent each type of transformation the way you like best, like translation as a vector and rotation as a 3x3 matrix or as <a href="https://en.wikipedia.org/wiki/Euler_angles">Euler angles</a>. For scale, dealing with non-uniform scale is also rather difficult. So it is best to start with a singular scale value.</p>
+
+<p>Applying the inverse of a translation or rotation to a point is rather simple. Keep in mind that the inverse of an orthogonal matrix is the matrix transpose. So for 3x3 rotation matrices, you don't need to go through a complex process to get the matrix inverse. You just need to transpose it, which is simple. For scale, we will also apply the inverse of the scale \(S^{-1}\) to the ray's origin and direction, but then once you have computed the distance from the point in object space to the nearest point on the surface of the object, you will need to scale that distance back by the scale value \(S\). Your code could look as follows:</p>
+
+<div name="code" class="code">Matrix33f rotateX(const  float& angle) {...}
+
+Matrix33f rotateY(const  float& angle) {...}
+
+Matrix33f rotateZ(const  float& angle) {...}
+
+float getDistance(const Vec3f& from, const Vec3f& translation, const Vec3f& eulerAngles, const float& scale)
+{
+    Vec3f fromObjectSpace = from - translation; // apply inverse translation T^-1
+    Matrix33f rotX = rotateX(eulerAngles.x);
+    Matrix33f rotY = rotateY(eulerAngles.y);
+    Matrix33f rotZ = rotateZ(eulerAngles.z);
+    Matrix33f rot = rotX * rotY * rotZ;
+    rot.transpose(); // transpose the matrix to get R^-1
+    fromObjectSpace = fromObjectSpace * rot; // apply inverse rotation R^-1
+    fromObjectSpace *= 1 / scale; // apply inverse scale S^-1
+
+    // compute distance from fromObjectSpace to nearest point on the surface of the object
+    float d = ...
+
+    // apply scale again to preserve distances
+    return d * scale;
+}</div>
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="width: 400px;" src="../../../images/upload/distance-fields/sphere-trace-transformationsd41d.png?" />
+<p class="caption left">Figure 10: a transformed cube.</p>
+</div>
+
+<p>The program provided with this lesson doesn't really support transformations. We thought it would be great though to show you a practical example of the method that consists of transforming the position along the ray into the object's "object-space". If you are interested in this particular feature, check the <span class="code-inline">getDistance()</span> method of the cube's class. In this example we actually use a 4x4 matrix. We were careful to use a matrix that doesn't scale the object. It only translates and rotates the object as you can see in the image on the right though as mentioned before, if you really want to support transformations properly it is best to avoid 4x4 matrices and keep rotation, scale and translation separate. Keep in mind that this code doesn't handle non-uniform scale. Furthermore the code below is not optimised at all since we perform the matrix inverse calculation each time the <span class="code-inline">getDistance()</span> mehthod is called. This is of course not how it should be done if you write production code. You should compute the inverse matrix once in the constructor of the class and store all the transformation data (rotation, scale, translation) as member variables.</p>
+
+<div name="code" class="code">class Cube : public ImplicitShape
+{
+public:
+    Cube() {}
+    float getDistance(const Vec3f& from) const 
+    {
+        // first transform the input point into the object's "object-space".
+        float scale = 2.f;
+        
+        // this matrix doesn't scale the object
+        Matrix44f objectToWorld(0.542903, -0.545887, 0.638172, 0, 0.778733, 0.611711, -0.139228, 0, -0.314374, 0.572553, 0.7572, 0, 0, 1.459974, 0, 1);
+        Matrix44f worldToObject = objectToWorld.inverse();
+        
+        Vec3f fromObjectSpace = from;
+        worldToObject.multDirMatrix(from, fromObjectSpace);
+        fromObjectSpace *= 1.f / scale;
+        fromObjectSpace.x = std::fabs(fromObjectSpace.x);
+        fromObjectSpace.y = std::fabs(fromObjectSpace.y);
+        fromObjectSpace.z = std::fabs(fromObjectSpace.z);
+        
+        // now compute the distance from the point to the neares point on the surface of the object
+        Vec3f d = fromObjectSpace - corner;
+        
+        Vec3f dmax = d;
+        dmax.x = std::max(dmax.x, 0.f);
+        dmax.y = std::max(dmax.y, 0.f);
+        dmax.z = std::max(dmax.z, 0.f);
+        
+        // don't forget to apply the scale back
+        return scale * (std::min(std::max(d.x, std::max(d.y, d.z)), 0.f) + dmax.length());
+    }
+    Vec3f corner{0.25, 0.25, 0.25};
+};
+</div></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='maths-behind-sphere-tracing.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 3 of  6</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='constructive-solid-geometry-blends-deformers.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/advanced-rendering/rendering-distance-fields/basic-sphere-tracer by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:20:16 GMT -->
+</html>

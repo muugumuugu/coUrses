@@ -1,0 +1,487 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1/creating-simple-2D-noise by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:21:51 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Value Noise and Procedural Patterns: Part 1 (Creating a Simple 2D Noise)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='value noise, procedural pattern generation, deterministic, random number generator, RNG, periodic, continuity, differentiability, sampling, aliasing, white noise, solid textures, permutation, hash table'>
+<meta name='date' content='2016-05-15 11:39:24'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Value Noise and Procedural Patterns: Part 1</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction.html">Introduction</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="creating-simple-1D-noise.html">Creating a Simple 1D Noise</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="creating-simple-2D-noise.html"><b>Creating a Simple 2D Noise</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="simple-pattern-examples.html">Simple Pattern Examples</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code11bf.html?id=55&amp;origin=/lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1">Source Code</a></div></div></div><p>We have explained most of the techniques used for creating noise in the previous chapter. Creating higher dimensional noise should be from now on much more straightforward task, as they are all based on the same concepts and techniques. Be sure to have mastered and truly understood what we described in the previous chapter before you move on. If things are not quite clear yet, read it again or drop us an email if you have questions.</p>
+
+<p>Remember that all noise functions return a float but that its input can be a float, a 2D point or a 3D point. The name given to the noise function is related to the dimension of its input value. A 2D noise is therefore a noise function that takes a 2D point as input. A 3D noise takes a 3D point and we even mentioned a 4D noise in the first chapter of this lesson where the fourth dimension accounts in fact for time (it will produce a noise pattern based on a 3D point but animated through time).</p>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" style="width: 300px;" src="../../../images/upload/noise-part-1/2dnoise-grid4x4d41d.png?" />
+<p class="caption left">Figure 1: for a 2D noise the random values are created at the vertex positions of a regular grid.</p>
+</div>
+
+<p>If you read the lesson on Interpolation (we suggest you do it now if you have not) you may already have an idea of how things work for 2D noise. For the 2D case we will distribute random values at the vertex position of a regular 2D grids (figure 1). The 2D version of the noise function will take a 2D point as input. Let's call this point P. Similarly to the 1D version we will need to find the position of that point on the grid. Like for the 1D case, our 2D grid has a predefined resolution (the grid is square so the resolution is the same along the x and y axis). Let's say 4 (which is a power of two) for the sake of this explanation. We will use the same modulo trick to remap the position of P on the grid if the point is outside the grid boundaries (if P's coordinates are lower than 0 or greater than 4). We will perform the modulo operation on P's x and y coordinates. That will give us a new coordinates for the point on the grid (let's call this new point Pnoise). </p>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" style="width: 300px;" src="../../../images/upload/noise-part-1/2dnoise-grid8x8d41d.png?" />
+<p class="caption left">Figure 2: if the point is outside the grid boundary we need to compute its position in the grid using the modulo trick on the point x and y coordinates.</p>
+</div>
+
+<p>As you can see on figure 2 and 3, the point is surrounded by the four vertices of a cell. We will use the same technique described in the lesson on interpolation to find a value for that point by linearly interpolating the values from the cell corners. To do this, we will first compute tx and ty which are the counterpart of t in our 1D noise. </p>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" style="width: 300px;" src="../../../images/upload/noise-part-1/2dnoise-interpod41d.png?" />
+<p class="caption left">Figure 3: bilinear interpolation.</p>
+</div>
+
+<p>We can now interpolate the values from the two corners on the left with the values from the two corners on the right using tx. That would give us two values nx0 and nx1 which corresponds to the linear interpolation along the x axis of c01/c10 (nx0) and c01/c11 (nx1). We have now two interpolated values on the lower and upper edge of the cell vertically aligned on Pnoise's x coordinate that we will in turn linearly interpolate using ty. The result of this interpolation along the y axis, is our final noise value for P.</p>
+
+<p>Here is the code of our simple 2D value noise. The size of the grid is 256 on each side. Note that like for the 1D noise, it is possible to change the remapping function for t. In this version we have chosen the <span class="code-inline">Smoothstep</span> function but you could experiment by ignoring the function (using tx and ty directly), using the <span class="code-inline">Cosine</span> smooth function or any alternative smooth function you know about.</p>
+
+<div name="code" class="code">#include &ltcstdio&gt
+#include &ltrandom&gt
+#include &ltfunctional&gt
+#include &ltiostream&gt
+#include &ltfstream&gt
+#include &ltcmath&gt
+
+template&lttypename T&gt
+class Vec2
+{
+public:
+    Vec2() : x(T(0)), y(T(0)) {}
+    Vec2(T xx, T yy) : x(xx), y(yy) {}
+    Vec2 operator * (const T &r) const { return Vec2(x * r, y * r); }
+    T x, y;
+};
+
+typedef Vec2&ltfloat&gt Vec2f;
+
+template&lttypename T = float&gt
+inline T lerp(const T &lo, const T &hi, const T &t)
+{ return lo * (1 - t) + hi * t; }
+
+inline 
+float smoothstep(const float &t) { return t * t * (3 - 2 * t); }
+
+class ValueNoise
+{
+public:
+    ValueNoise(unsigned seed = 2016)
+    {
+        std::mt19937 gen(seed);
+        std::uniform_real_distribution<float> distrFloat;
+        auto randFloat = std::bind(distrFloat, gen);
+
+        // create an array of random values
+        for (unsigned k = 0; k < kMaxTableSize * kMaxTableSize; ++k) {
+            r[k] = randFloat();
+        }
+    }
+
+    float eval(Vec2f &p) const
+    {
+        int xi = std::floor(p.x); 
+        int yi = std::floor(p.y);
+
+        float tx = p.x - xi;
+        float ty = p.y - yi;
+
+        int rx0 = xi & kMaxTableSizeMask;
+        int rx1 = (rx0 + 1) & kMaxTableSizeMask;
+        int ry0 = yi & kMaxTableSizeMask;
+        int ry1 = (ry0 + 1) & kMaxTableSizeMask;
+
+        // random values at the corners of the cell using permutation table
+        const float & c00 = r[ry0 * kMaxVerticesMask + rx0]; 
+        const float & c10 = r[ry0 * kMaxVerticesMask + rx1]; 
+        const float & c01 = r[ry1 * kMaxVerticesMask + rx0]; 
+        const float & c11 = r[ry1 * kMaxVerticesMask + rx1];
+
+        // remapping of tx and ty using the Smoothstep function 
+        float sx = smoothstep(tx);
+        float sy = smoothstep(ty);
+
+        // linearly interpolate values along the x axis
+        float nx0 = lerp(c00, c10, sx);
+        float nx1 = lerp(c01, c11, sx);
+
+        // linearly interpolate the nx0/nx1 along they y axis
+        return lerp(nx0, nx1, sy);
+    }
+
+    static const unsigned kMaxTableSize = 256;
+    static const unsigned kMaxTableSizeMask = kMaxTableSize - 1;
+    float r[kMaxTableSize * kMaxTableSize];
+};
+
+int main(int argc, char **argv)
+{
+    unsigned imageWidth = 512;
+    unsigned imageHeight = 512;
+    float *noiseMap = new float[imageWidth * imageHeight];
+
+    // generate value noise
+    ValueNoise noise;
+    float frequency = 0.05f;
+    for (unsigned j = 0; j < imageHeight; ++j) {
+        for (unsigned i = 0; i < imageWidth; ++i) {
+            // generate a float in the range [0:1]
+            noiseMap[j * imageWidth + i] = noise.eval(Vec2f(i, j) * frequency);
+        }
+    }
+
+    // output noise map to PPM
+    std::ofstream ofs;
+    ofs.open("../../../indexf17c.html", std::ios::out | std::ios::binary);
+    ofs << "P6\n" << imageWidth << " " << imageHeight << "\n255\n";
+    for (unsigned k = 0; k < imageWidth * imageHeight; ++k) {
+        unsigned char n = static_cast<unsigned char>(noiseMap[k] * 255);
+        ofs << n << n << n;
+    }
+    ofs.close();
+
+    delete[] noiseMap;
+
+    return 0;
+}</div>
+
+<p>If you you run the code it will produce the following image (left):</p>
+
+<div class="captionImage right" style="width: 531px;">
+<img class="left" style="width: 531px;" src="../../../images/upload/noise-part-1/2dnoise-resultd41d.png?" />
+<p class="caption left">Figure 4: on the left, the result of our noise function. On the right, the result of the Ken Perlin version of the noise function. His version looks much more convincing that ours, but in this lesson we are just learning about the concepts upon which it is built and its properties. To learn about Perlin's noise, check the lesson Noise part 2.</p>
+</div>
+
+<p>Note that the result is probably not as good as we had hoped for. The resulting noise is quite blocky. Noise from professional applications produces much smoother results. Remember that this lesson's goal is to teach you the basics concepts the noise function is built upon. To improve the results we will need to use more elaborate techniques but it will be hard to study them unless you can build a simple function first. Don't worry too much about the result of the noise function for now, and just try to grasp how it works, learn and understand its properties. You can still have fun playing around with this code and create some interesting effects/images as we will see in the next chapter. You will learn about creating a better looking noise in the next lesson (part 2).</p>
+
+<h2>3D Noise and Beyond</h2>
+
+<p>In this lesson we will just give an example of 1D and 2D noise. We will provide code for 3D and 4D noise in the next lesson on noise. However, if you read the lesson on interpolation and understood the concept explained in this chapter, you should easily be able to extend the code to write a 3D noise. All you need to do is to interpolate the random values along the x axis (resulting in 4 values), interpolate the result of this interpolation along the y axis (2 values). You will be left with two values that you will need to interpolate along the third dimension (the z axis) to get a final result (the second lesson on noise contains an example of 3D noise).</p>
+
+<p>Now there is a problem with our current code. We mentioned in first chapter that noise was a compact function which didn't use a lot of memory. However in the 2D case we already have a allocated a 256x256 array of random values. If we use the same technique for the 3D version, we will need to allocate a 256x256x256 array of floats which starts to be quite a significant chunk of memory for a function that is supposed to use very little of it. Ken Perlin solved this problem with a simple and elegant solution in the form of a permutation table which we will explain now.</p>
+
+<h2>Introducing the Concept of Permutation</h2>
+
+<p>Assuming we want the noise function to stay memory efficient, we will limit ourselves with using an array of 256 random values to compute our noise, whether we deal with the 1D, 2D or 3D version of the function. To deal with this limitation, all we need to do is to be sure that any input value to the noise function (a float, a 2D or 3D point) can map to one and only one value in this array of random values. As you already know, each input point coordinates to our noise function is converted into an integer. And this integer is used to look up into the array of random values. Ken Perlin stored the numbers 0 to 255 in an additional array of 256 integers and shuffled (permuted) the entries of this array, randomly swapping each one of them. In fact Perlin extended the size of this array to 512 and copied the values for the indices in the range 0 to 255 to the indices 256 to 511. In other words copying the first half of the array into the second half.</p>
+
+<div name="code" class="code">std::mt19937 gen(seed);
+std::uniform_real_distribution<float> distrFloat;
+auto randFloat = std::bind(distrFloat, gen);
+
+// create an array of random values and initialize permutation table
+for (unsigned k = 0; k < kMaxTableSize; ++k) {
+    r[k] = randFloat();
+    permutationTable[k] = k;
+}
+
+// shuffle values of the permutation table
+std::uniform_int_distribution<unsigned> distrUInt;
+auto randUInt = std::bind(distrUInt, gen);
+for (unsigned k = 0; k < kMaxTableSize; ++k) {
+    unsigned i = randUInt() & kMaxTableSizeMask;
+    std::swap(permutationTable[k], permutationTable[i]);
+    permutationTable[k + kMaxTableSize] = permutationTable[k];
+}</div>
+
+<p>Instead of directly looking up into the array of random values, we will first do a lookup using our integer position into this permutation array. As we know, the integer value for our input point is necessarily a multiple of 255. Let's say that this number is 201. Using this value to do a lookup in the permutation array will return the value which is stored in the table at the index position 201. The result of this lookup is an integer in the range 0 to 255 which we can now use as an index in the array of random values.</p>
+
+<p>You may wonder why the permutation array is twice the size of the function period (512 in size instead of 256). If we deal with a 2D noise, we will first do a lookup in the permutation table using the integer value for the x coordinate of our input point (as described). This will return an integer value in the range [0:255]. We will add the result of this lookup to the integer value for the input point y coordinate and use the sum of these two numbers as an index of the permutation table again. Since the result of the first permutation lookup is in the range [0:255] and that the integer value for the point's y coordinate is also in the range [0:255], it means that the range of possible index value for the permutation table is [0:511]. Hence the size of the permutation array (512). This code might help to clear things up for you:</p>
+
+<div name="code" class="code">int xi = std::floor(p.x); 
+int yi = std::floor(p.y);
+
+float tx = p.x - xi;
+float ty = p.y - yi;
+
+int rx0 = xi & kMaxTableSizeMask;
+int rx1 = (rx0 + 1) & kMaxTableSizeMask;
+int ry0 = yi & kMaxTableSizeMask;
+int ry1 = (ry0 + 1) & kMaxTableSizeMask;
+
+// random values at the corners of the cell using permutation table
+const float & c00 = r[permutationTable[permutationTable[rx0] + ry0]];
+const float & c10 = r[permutationTable[permutationTable[rx1] + ry0]];
+const float & c01 = r[permutationTable[permutationTable[rx0] + ry1]];
+const float & c11 = r[permutationTable[permutationTable[rx1] + ry1]];</div>
+
+<p>This technique is very neat because it continues to work as you add more dimensions to your noise function. It provides us with a technique to map any input point to a unique location in the random value array. All we do is to use the input point's coordinates as indices of the permutation table. In programming we call this technique a <b>hash table</b>, or a hash function. These techniques were quite popular at the time (and still are but is not as well known by the younger developers). They are useful to map a particular key (a point location for example) to some data stored in a memory block making the lookup process efficient (check the lesson on programming techniques to learn more about hash functions).</p>
+
+<p>Here is finally the latest memory efficient version of our 2D noise function using the permutation table:</p>
+
+<div name="code" class="code">#include &ltcstdio&gt
+#include &ltrandom&gt
+#include &ltfunctional&gt
+#include &ltiostream&gt
+#include &ltfstream&gt
+#include &ltcmath&gt
+
+template&lttypename T&gt
+class Vec2
+{
+public:
+    Vec2() : x(T(0)), y(T(0)) {}
+    Vec2(T xx, T yy) : x(xx), y(yy) {}
+    Vec2 operator * (const T &r) const { return Vec2(x * r, y * r); }
+    T x, y;
+};
+
+typedef Vec2&ltfloat&gt Vec2f;
+
+template&lttypename T = float&gt
+inline T lerp(const T &lo, const T &hi, const T &t)
+{ return lo * (1 - t) + hi * t; }
+
+inline 
+float smoothstep(const float &t) { return t * t * (3 - 2 * t); }
+
+class ValueNoise
+{
+public:
+    ValueNoise(unsigned seed = 2016)
+    {
+        std::mt19937 gen(seed);
+        std::uniform_real_distribution<float> distrFloat;
+        auto randFloat = std::bind(distrFloat, gen);
+
+        // create an array of random values and initialize permutation table
+        for (unsigned k = 0; k < kMaxTableSize; ++k) {
+            r[k] = randFloat();
+            permutationTable[k] = k;
+        }
+
+        // shuffle values of the permutation table
+        std::uniform_int_distribution<unsigned> distrUInt;
+        auto randUInt = std::bind(distrUInt, gen);
+        for (unsigned k = 0; k < kMaxTableSize; ++k) {
+            unsigned i = randUInt() & kMaxTableSizeMask;
+            std::swap(permutationTable[k], permutationTable[i]);
+            permutationTable[k + kMaxTableSize] = permutationTable[k];
+        }
+    }
+
+    float eval(Vec2f &p) const
+    {
+        int xi = std::floor(p.x); 
+        int yi = std::floor(p.y);
+
+        float tx = p.x - xi;
+        float ty = p.y - yi;
+
+        int rx0 = xi & kMaxTableSizeMask;
+        int rx1 = (rx0 + 1) & kMaxTableSizeMask;
+        int ry0 = yi & kMaxTableSizeMask;
+        int ry1 = (ry0 + 1) & kMaxTableSizeMask;
+
+        // random values at the corners of the cell using permutation table
+        const float & c00 = r[permutationTable[permutationTable[rx0] + ry0]];
+        const float & c10 = r[permutationTable[permutationTable[rx1] + ry0]];
+        const float & c01 = r[permutationTable[permutationTable[rx0] + ry1]];
+        const float & c11 = r[permutationTable[permutationTable[rx1] + ry1]];
+
+        // remapping of tx and ty using the Smoothstep function 
+        float sx = smoothstep(tx);
+        float sy = smoothstep(ty);
+
+        // linearly interpolate values along the x axis
+        float nx0 = lerp(c00, c10, sx);
+        float nx1 = lerp(c01, c11, sx);
+
+        // linearly interpolate the nx0/nx1 along they y axis
+        return lerp(nx0, nx1, sy);
+    }
+
+    static const unsigned kMaxTableSize = 256;
+    static const unsigned kMaxTableSizeMask = kMaxTableSize - 1;
+    float r[kMaxTableSize];
+    unsigned permutationTable[kMaxTableSize * 2];
+};
+
+int main(int argc, char **argv)
+{
+    unsigned imageWidth = 512;
+    unsigned imageHeight = 512;
+    float *noiseMap = new float[imageWidth * imageHeight];
+#if 0
+    // generate white noise
+    unsigned seed = 2016;
+    std::mt19937 gen(seed);
+    std::uniform_real_distribution<float> distr;
+    auto dice = std::bind(distr, gen); // std::function&ltfloat()&gt
+
+    for (unsigned j = 0; j < imageHeight; ++j) {
+        for (unsigned i = 0; i < imageWidth; ++i) {
+            // generate a float in the range [0:1]
+            noiseMap[j * imageWidth + i] = dice();
+        }
+    }
+#else
+    // generate value noise
+    ValueNoise noise;
+    float frequency = 0.05f;
+    for (unsigned j = 0; j < imageHeight; ++j) {
+        for (unsigned i = 0; i < imageWidth; ++i) {
+            // generate a float in the range [0:1]
+            noiseMap[j * imageWidth + i] = noise.eval(Vec2f(i, j) * frequency);
+        }
+    }
+#endif
+
+    // output noise map to PPM
+    std::ofstream ofs;
+    ofs.open("../../../indexf17c.html", std::ios::out | std::ios::binary);
+    ofs << "P6\n" << imageWidth << " " << imageHeight << "\n255\n";
+    for (unsigned k = 0; k < imageWidth * imageHeight; ++k) {
+        unsigned char n = static_cast<unsigned char>(noiseMap[k] * 255);
+        ofs << n << n << n;
+    }
+    ofs.close();
+
+    delete[] noiseMap;
+
+    return 0;
+}</div></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='creating-simple-1D-noise.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 3 of  5</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='simple-pattern-examples.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1/creating-simple-2D-noise by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:21:57 GMT -->
+</html>

@@ -1,0 +1,192 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/advanced-rendering/introduction-acceleration-structure/what-else by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:19:49 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Introduction to Acceleration Structures (What Else?)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='ray-tracing, bounding box, grid, BVH, space partitioning data structure, k-d tree, octree, spatial division, spatial coherence, space tracing, 3D-Digital Differential Analyser, DDA'>
+<meta name='date' content='2015-10-08 15:12:09'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Introduction to Acceleration Structures</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction.html">Introduction</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="bounding-volume.html">Bounding Volume</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="bounding-volume-hierarchy-BVH-part1.html">Bounding Volume Hierarchy: BVH (part 1)</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="bounding-volume-hierarchy-BVH-part2.html">Bounding Volume Hierarchy: BVH (part 2)</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="grid.html">Grid</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="what-else.html"><b>What Else?</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code022f.html?id=36&amp;origin=/lessons/advanced-rendering/introduction-acceleration-structure">Source Code</a></div></div></div><h2>Towards Interactive and Realtime Ray Tracing</h2>
+
+<div class="scratchquote">"Ray tracing isn't too slow; computers are too slow." (Kajiya 1986)</div>
+
+<p>In the 1980s, even though ray tracing was considered as a better method over scanline algorithms to generate photo-realistic images, it was also known for being much slower. But as Kajiya pointed out, ray tracing is not slow. Computers are. However the good news, and that is certainly why we hear about ray tracing more and more since at least the early 2000's, computers are now fast enough (thanks to parallel computing in particular) to even ray trace certain scenes in real time. However, beside using better hardware, accelerating ray tracing in any possible ways is still necessary for achieving such performances and the most three commons ways for doing so are accelerating the ray-geometry itself, using acceleration structures such as those we presented in this lesson (to reduce the number of objects to be checked against rays) and tracing continuous bundles or rays (a technique we will talk about in another lesson).</p>
+
+<p>In this lesson we have presented an "incomplete" version of a BVH (incomplete because we are yet to learn how to insert the triangles rather than the objects). The idea of grouping objects under a hierarchy of bounding volumes (extents) is almost as old as ray tracing itself (Rubin and Whitted, 1980). We have also presented a simple implementation of the grid acceleration structure which we will be using for the rest of the basic section. Other algorithms exist most notably <b>Octrees</b> (Glassner, 1984), <b>BSP trees</b> (Binary Space Partitioning, Fuchsetal.1980) and <b>K-d trees</b>. In order to more quickly complete the other lessons of this section, we won't detail these techniques in this version of the lesson (you can find information on Octrees and K-d trees in the following sections). The main advantage of these techniques over grids is mainly that they address the teapot in a stadium problem by partitioning space more finely around objects.</p>
+
+<h2>What is a Good Acceleration Structure?</h2>
+
+<p>We mentioned before that grids are suffering from the teapot in the stadium problem. However as we also pointed out, a good acceleration structure, is a structure which gives the best possible performances for wild range of scenes. Every acceleration structure method has it pros and cons, but generally, BVH are considered to this day, to perform best compared to other methods. Several factors should be taken into account to judge the advantages of a given structure: the memory cost associated with it, the time it takes to build this structure (which is important if we aim for interactive ray tracing. K-d trees for example are slower to build than grids), the complexity (vs simplicity) and robustness of the algorithm, how it performs under different scene configurations (no pathological case such as the teapot in the stadium problem), and more importantly of course, the speed-ups it provides compared to a naive ray tracing implementation and other acceleration structures. Some models also require the user to tweak some control parameters (for example the \(\lambda \) parameter in the grid acceleration structure) which is not always considered as a good thing. Comparing acceleration structures is also difficult because the performance very much depend on the quality of the implementation itself.</p>
+
+<h2>Pros and Cons</h2>
+
+<p>What are the pros and cons of acceleration structures? As you can observe, the code necessary to support acceleration structures is probably the longest and most complicated we had to write so far. The first cons is certainly that they introduce a great deal of complexity to the ray tracing algorithm which is originally very simple. Creating the acceleration structure can also take a significant amount of time (particularly if your goal is to reach interactive or real-time frame rates) as well as consume a lot memory.</p>
+
+<h2>The Future</h2>
+
+<p>Acceleration structures have been the center of a massive amount of research in the computer graphics community. Even though the strengths and weaknesses of existing methods are now well studied and very well understood, this research is still very much alive today, particularly as the needs for interactive or real time ray tracing becomes more important. A lot of the current research tends to improve existing methods sometimes within some particular contexts (such as for example developing an acceleration structure that is efficient for animated scenes) however the trend in this area at the moment is almost to look at the problem from a very different angle. Recent research tends to focus on pointing out that acceleration structures which consume a lot of memory and are slow to build don't need to be created upfront but can be somehow constructed on the fly as rays are traversing space. The Divide-and-Conquer Ray Tracing algorithm (DACRT) introduced by Mora (2011) for instance, recursively subdivide groups of rays and objects together. Rather than treating one ray at a time, in this method, packets of rays are tested against groups of objects which, in a parallel computing environment, can provide drastic speedups for a fraction of the memory cost compared to traditional acceleration structures. It is likely that future renderers will have a very different architecture to those built on Fujimoto, Glassner and Kajiya's ideas.</p>
+
+<h2>Source Code</h2>
+
+<p>You can download the full source code for this lesson in the next chapter.</p>
+
+<h2>References</h2>
+
+<p><i>A 3-Dimensional Representation for Fast Rendering of Complex Scenes</i>, Rubin and Whitted, 1980.</p>
+<p><i>A Parallel Ray Tracing Computer</i>, Cleary et al., 1983.</p>
+<p><i>A Fast Voxel Traversal Algorithm for Ray Tracing</i>, Amanatides, 1983.</p>
+<p><i>Ray Tracing Complex Scenes</i>, Kay and Kajiya, 1986.</p>
+<p><i>Accelerated Ray Tracing</i>, Fujimoto, 1985.</p>
+<p><i>ARTS: Accelerated Ray Tracing Systems</i>, Fujimoto, 1986.</p>
+<p><i>A Survey of Ray Tracing Acceleration Techniques</i>, Arvo and Kirk, 1989.</p>
+<p><i>Impoved Ray Tagging for Voxel-Based Ray Tracing</i>,&nbsp;Dirk and Arvo, 1991.</p>
+<p><i>Ray Tracing Animated Scenes using Coherent Grid Traversal</i>, Wald et al., 2006</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='grid.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 6 of  7</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='../../../code022f.html?id=36&amp;origin=/lessons/advanced-rendering/introduction-acceleration-structure'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/advanced-rendering/introduction-acceleration-structure/what-else by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:19:54 GMT -->
+</html>

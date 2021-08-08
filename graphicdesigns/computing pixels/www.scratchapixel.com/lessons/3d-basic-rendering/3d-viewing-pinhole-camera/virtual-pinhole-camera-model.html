@@ -1,0 +1,365 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/3d-viewing-pinhole-camera/virtual-pinhole-camera-model by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:10:32 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>3D Viewing: the Pinhole Camera Model (A Virtual Pinhole Camera Model)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='camera, pinhole camera, perspective projection, circle of confusion, film back, resolution gate, film gate, focal length, depth of field, field of view, image plane, zoom, focal distance, angle of view, aspect ratio, anamorphic, format, aperture, image size, resolution'>
+<meta name='date' content='2014-12-04 07:04:05'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>3D Viewing: the Pinhole Camera Model</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="how-pinhole-camera-works-part-1.html">How a pinhole camera works (part 1)</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="how-pinhole-camera-works-part-2.html">How a pinhole camera works (part 2)</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="virtual-pinhole-camera-model.html"><b>A Virtual Pinhole Camera Model</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="implementing-virtual-pinhole-camera.html">Implementing a Virtual Pinhole Camera</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code253b.html?id=24&amp;origin=/lessons/3d-basic-rendering/3d-viewing-pinhole-camera">Source Code</a></div></div></div><p>Our next step is to develop a virtual camera working on the exact same principle than a pinhole camera. More precisely, our goal is to create a camera model delivering images similar to those produced by a real pinhole camera. If we take a picture of a given object with a pinhole camera, then when a 3D replica of that object is rendered with our virtual camera, the size and shape of the object in the CG render must match exactly the size and shape of the real object in the photograph. But before we start looking into the model itself, it is important to learn a few more things about cameras but which apply this time specifically to the field of computer graphics.</p>
+
+<p>First the details:</p>
+
+<ul>
+<li>CG cameras have a near and far clipping planes. Objects closer than the near clipping plane or farther than the far clipping plane are invisible to the camera. They can be used to exclude some of a scene's geometry and render only certain portions of the scene, but they only exist because they are necessary for rasterization to work.</li>
+<li>In this chapter, we will also see why in CG the image plane is positioned in front of the camera's aperture rather than behind as with real pinhole cameras. This plays an important role in the way cameras are conventionally defined in CG.</li>
+<li>Finally, we need to look into how we can render a scene from any given viewpoint. This is something we already talked about in the previous lesson, but this point will be covered again briefly in this chapter.
+</ul>
+
+<p>The really important question we haven't really looked into yet (asked and answered), is, "studying real cameras to understand how they work is great, but how is the camera model being actually used in the end to produce images?". We will show in this chapter, that the answer to this question depends on whether we use the rasterisation or ray-tracing rendering technique.</p>
+
+<p>In this chapter, we won't get into developing a virtual camera model just yet. We are first going to review the points listed above one by one to give a complete "picture" of the way cameras work in CG. The model itself will be introduced and implemented in a program in the next (and final) chapter of this lesson.</p>
+
+<h2>How Do We Represent Cameras in the CG World?</h2>
+
+<div class="captionImage right" style="width: 530px;">
+<img class="left" src="../../../images/upload/cameras/pinholecam1d41d.png?"/><p class="caption left">Figure 1: for our virtual camera, we can move the image plane in front of the aperture. That way, the projected image of the scene on the image plane is not inverted.</p>
+</div>
+
+<p>Photographs produced by real world pinhole cameras are upside down. This is happening because, as explained in the first chapter, the film plane is located behind the center of projection, however this can be avoided if the projection plane lies on the same side as the scene as shown in figure 1. In the real world, the image plane can't obviously be located in front of the aperture, but in the virtual world of computers, constructing our camera that way is not a problem at all. Conceptually, by construction, this lead to seeing the hole of the camera (which is also the centre of projection) as the actual position of the eye, and the image plane, the image that the eye is looking at.</p>
+
+<p>Defining our virtual camera that way, is showing us more clearly how constructing an image by following light rays from wherever point in the scene they are emitted from, to the eye, turns out to be a simple geometrical problem which was given the name of (as you know it now) <b>perspective projection</b>. Perspective projection is a method for building an image through this apparatus which is a sort of pyramid whose apex is aligned with the eye, and whose base defines the surface of a canvas on which the image of the 3D scene is "projected" onto.</p>
+
+<h2>Near and Far Clipping Planes and the Viewing Frustum</h2>
+
+<div class="captionImage right" style="width: 300px;">
+<img style="width: 300px;" class="left" src="../../../images/upload/cameras/frustumd41d.png?"/><p class="caption left">Figure 2: any object contained within the viewing frustum is visible.</p>
+</div>
+
+<p>The <b>near</b> and <b>far clipping</b> plane are virtual planes located in front of the camera and parallel to the image plane (the plane in which the image is contained). The location of each clipping plane is measured along the camera's line of sight (the camera local z-axis). They are used in most virtual camera models and have no equivalent in the real world. Objects closer than the near clipping plane or farther than the far clipping plane are invisible to the camera. Scanline renderers using the z-buffer algorithm such as OpenGL, need these clipping planes to control the range of depth values over which the objects' depth coordinate are remapped when points from the scene are projected onto the image plane (and this is their primary if only function). Without getting into too much details, let's just say that adjusting the near and far clipping planes can also help to resolve precision issues which arise with this type of renderers. More information of this problem known as z-fighting can be found in the next lesson. In ray tracing, clipping planes are not required by the algorithm to work, and are generally not used.</p>
+
+<h2>The Near Clipping Plane and the Image Plane</h2>
+
+<div class="captionImage right" style="width: 300px;">
+<img style="width: 300px;" class="left" src="../../../images/upload/cameras/clippingplanescanvas1d41d.png?"/><p class="caption left">Figure 3: the canvas can be positioned anywhere along the local camera z-axis. Note that its size varies with position.</p>
+</div>
+
+<div class="captionImage right" style="width: 300px;">
+<img style="width: 300px;" class="left" src="../../../images/upload/cameras/canvascoordinates5d41d.png?"/><p class="caption left">Figure 4: in this example the canvas is positioned at the near clipping plane. The bottom-left and top-right coordinates of the canvas are used to determine whether a point projected on the canvas is visible to camera.</p>
+</div>
+
+<p>The canvas (also termed screen in other CG books), is the 2D surface (a  bounded region of the image plane) on which the image of the scene is projected onto. In the previous lesson, by convention, we placed the canvas 1 unit away from the eye, however, the position of the canvas along the camera local z-axis doesn't really matter. We only made that choice because it simplified the equations for computing the points projected coordinates, but in fact, as you can see in figure 3, the projection of the geometry onto the canvas produces the same image regardless of its position, thus you are not required to keep the distance from the eye to the canvas equal to 1. We also know that the viewing frustum is a truncated pyramid (the base of the pyramid is defined by the far clipping plane and the top of the pyramid is cut off by the near clipping plane). This volume defines the part of the scene that is visible to camera. A very common way of projecting points onto the canvas in CG, is to remap points contained within the volume defined by the viewing frustum to the <b>unit cube</b> (a cube of side length 1). This technique is central to the development of the perspective projection matrix which is the topic of our next lesson. We don't really need to understand it for now. What is interesting to know about the perspective projection matrix in the context of this lesson though, is that it works on the basis that the image plane is located at the near clipping plane. We won't be using the matrix in this lesson nor studying it, however in anticipation for the next lesson devoted to this topic, we will place the canvas at the near clipping plane. Keep in mind though that this is an arbitrary decision, and that, unless you use a special technique such as the perspective projection matrix that requires the canvas to be positioned at a specific location, it can otherwise be positioned anywhere along the camera local z-axis.</p>
+
+<p>From now on and for the rest of this lesson, we will though assume that the canvas (or screen or image plane), is positioned at the near clipping plane. Keep in mind that this is just an arbitrary decision, and that the equations we will develop in the next chapter to project points onto the canvas works independently from the its position along the camera's line of sight (which is also the camera z-axis). This setup is illustrated in figure 4.</p>
+
+<p>Keep in mind as well, that the distance between the eye and the canvas, the near clipping plane and the focal length are all different things. We will focus on this point more fully in the next chapter.</p> 
+
+<h2>Computing the Canvas Size and the Canvas Coordinates</h2>
+
+<div class="captionImage right" style="width: 450px;">
+<img class="left" src="../../../images/upload/cameras/clippingplanes2d41d.png?"/><p class="caption left">Figure 5: side view of our camera setup.  Objects closer than the near clipping plane or farther than the far clipping plane are invisible to the camera. The distance from the eye to the canvas is defined as the near clipping plane. The canvas size depends on this distance (Znear) as well as the angle of view. A point is only visible to camera if the projected point x- and y-coordinates are contained within the canvas boundaries (in this example P1 is visible because P1' is contained within the limits of the canvas, while P2 is invisible).</p>
+</div>
+
+<div class="captionImage right" style="width: 450px;">
+<img class="left" src="../../../images/upload/cameras/clippingplanes1d41d.png?"/><p class="caption left">Figure 6:  a point is only visible to camera if the projected point x- and y-coordinates are contained within the canvas boundaries (in this example P1 is visible because P1' is contained within the limits of the canvas, while P2 is invisible).</p>
+</div>
+
+<div class="captionImage right" style="width: 300px;">
+<img style="width: 300px;" class="left" src="../../../images/upload/cameras/canvascoordinates6d41d.png?"/><p class="caption left">Figure 7: the canvas coordinates are used to determine whether a point lying on the image plane is visible to the camera.</p>
+</div>
+
+<p>The reason why we insisted a lot in the previous section on the fact that the canvas could be anywhere along the camera local z-axis, is because that position has an effect on the canvas size. When the distance between the eye and the canvas decreases, the canvas gets smaller, and when that distance increases, it gets bigger. The bottom-left and top-right coordinates of the canvas are directly linked to the canvas size. Once we know the size, computing these coordinates is trivial considering that the canvas (or screen) is centred about the image plane coordinate system origin. Why are these coordinates important? Because they can be used to easily check whether a point projected on the image plane lies within the canvas and is therefore visible to camera. In figure 5, 6 and 7 two points are projected onto the canvas. One of them (P1') is contained within the canvas limits and is visible to the camera. The other (P2') is outside the boundaries and is thus invisible. When we both know the canvas coordinates and the point projected coordinates, then testing if the point is visible is really simple.</p> 
+
+<p>Let's see how we can mathematically compute these coordinates. In the second chapter of this lesson, we gave the equation to compute the canvas size (we will assume that the canvas is a square for now as in figure 3, 4 and 6):</p>
+
+$$\text{Canvas Size} = \tan({\theta \over 2}) * \text{Distance to Canvas}$$
+
+<p>Where \(\theta\) is the angle of view (note that when the canvas is a square, the vertical and horizontal angle of view are the same). Since the distance from the eye to the canvas is defined as the near clipping plane, we can write:</p>
+
+$$\text{Canvas Size} = \tan({\theta \over 2}) * Z_{near}.$$
+
+<p>Where \(Z_{near}\) is the distance between the eye and the near clipping plane along the camera local z-axis (figure 5). Since the canvas is centred about the image plane coordinate system's origin, computing the canvas's corners coordinates is trivial. We need to divide the canvas size by 2, and set the sign of the coordinate based on the corner's position relative to the coordinate system's origin:</p>
+
+$$
+\begin{array}{l}
+\text{top} &=&&\dfrac{\text {canvas size}}{2}\\
+\text{right} &=&&\dfrac{\text {canvas size}}{2}\\
+\text{bottom} &=&-&\dfrac{\text {canvas size}}{2}\\
+\text{left} &=&-&\dfrac{\text {canvas size}}{2}\\
+\end{array}
+$$
+
+<p>Once we know the canvas bottom-left and top-right canvas coordinates, we can then compare the projected point coordinates with these values (we, of course, first need to compute the points coordinates onto the image plane which is positioned at the near clipping plane. We will learn how to do so in the next chapter). Points lie within the canvas boundary (and are therefore visible), if their x and y coordinates are either greater or equal and lower or equal than the canvas bottom-left and top-right canvas coordinates respectively. The following code fragment computes the canvas coordinates and tests the coordinates of a point lying on the image plane against these coordinates:</p>
+
+<div class="code" style="padding-left: 5px;">float canvasSize = tan(angleOfView * 0.5) * Znear;
+float top = canvasSize / 2;
+float bottom = -top;
+float right = canvasSize / 2;
+float left = -right;
+// compute projected point coordinates
+Vec3f Pproj = ...;
+if (Pproj.x < left || Pproj.x > right || Pproj.y < bottom || Pproj.y > top) {
+    // point outside canvas boundaries. It is not visible
+}
+else {
+    // point inside canvas boundaries. Point is visible
+}</div>
+
+<h2>Camera to World and World to Camera Matrix</h2>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left" src="../../../images/upload/perspective-matrix/camera2d41d.png?"/><p class="caption left">Figure 8: transforming the camera coordinate system with the camera-to-word transformation matrix.</p></div>
+
+<p>Finally, we need to have a method to produce images of an object or scene from any given viewpoint. This is a topic we have already talked about in the previous lesson, but we will cover it again briefly in this chapter. CG cameras are similar to real cameras with that respect: in CG, we look at the camera's view (the equivalent to a real camera view finder) and move around the scene or object to select a viewpoint ("viewpoint" is the camera position in relationship to the subject).<p>
+
+<p>When a camera is created, by default it is located at the origin and oriented along the negative z-axis (figure 8). The reason of this orientation is explained in detail in the <a href="../computing-pixel-coordinates-of-3d-point/mathematics-computing-2d-coordinates-of-3d-points.html">previous lesson</a>. By doing so, the camera local and world coordinate system's x-axis point in the same direction. Defining camera's transformations with a 4x4 matrix is convenient. This 4x4 matrix which is no different from 4x4 matrices used to transform 3D objects, is called the <b>camera-to-world</b> transformation matrix (because it defines the camera's transformations with respect to the world coordinate system).</p>
+
+<p>The camera-to-world transformation matrix is used differently depending on whether rasterisation or ray-tracing is being used:</p>
+<ul>
+<li>In rastersation, the inverse of the matrix (the world-to-camera 4x4 matrix) is used to convert points defined in world space to camera space. Once in camera space, we can perform a perspective divide to compute the projected point coordinates in the image plane. An in-depth description of this process can be found in the previous lesson.</li>
+<li>In ray-tracing, we build camera rays in the camera's default position (the rays' origin and direction) and then transform them with the camera-to-world matrix. The full process is detailed in the lesson "Rays and Cameras" [link]</li>
+</ul>
+
+<p>Don't worry if you don't understand yet very well how things work in ray-tracing. We will study rasterisation first and then move on to ray-tracing next.</p>
+
+<h2>Understanding How Virtual Cameras Are Used</h2>
+
+<p>At this point of the lesson, we have explained almost everything there is to know about pinhole cameras and CG cameras. However, we haven't really explained how images are formed with these cameras. The process actually depends on whether the rendering technique being used is rasterisation or ray-tracing. We are now going to consider each case individually.</p>
+
+<div class="captionImage right" style="width: 450px;">
+<img class="left" src="../../../images/upload/cameras/pinholecam3d41d.png?"/><p class="caption left">Figure 9: in the real world, when the light from a light source reaches an object, it is reflected back into the scene in many directions. Only one ray goes in the direction of the camera and strikes the film or sensor.</p>
+</div>
+
+<div class="captionImage right" style="width: 450px;">
+<img class="left" src="../../../images/upload/cameras/pinholecam2d41d.png?"/><p class="caption left">Figure 10: each ray reflected off of the surface of an object and passing through the aperture, strikes a pixel.</p>
+</div>
+
+<p>Before we do so though, let's briefly recall again the principle of a pinhole camera. When light rays emitted by a light source intersect objects from the scene, they are reflected off of the surface of these objects in random directions. For each point of the scene visible by the camera, only one of these reflected rays will pass through the aperture of the pinhole camera and strike the surface of the photographic paper (or film or sensor) in one unique location. If we divide the surface of the film into a regular grid of pixels, what we get is a <b>digital pinhole camera</b> which is essentially what we want our virtual camera to be (figure 9 and 10).</p>
+
+<p>This is how things work with a real pinhole camera. But how does it work in CG? In CG, cameras are built on the principle of a pinhole camera, but the image plane is in front of the center of projection (the aperture which in our virtual camera model we prefer to call the eye) as shown in figure 11. How is the image produced with this virtual pinhole camera model, depends on the rendering technique being used. Let's consider the two main visibility algorithms: rasterisation and ray-tracing.</p>
+
+<span style="display: inline-block; background-color: rgb(230, 230, 230); width: 100%; clear: both; margin: 0px; padding: 10px; font-weight: 800; box-sizing: border-box;">Rasterisation</span>
+
+<div class="captionImage right" style="width: 450px;">
+<img class="left" src="../../../images/upload/cameras/pinholecam4d41d.png?"/><p class="caption left">Figure 11: perspective projection of 3D points onto the image plane.</p>
+</div>
+
+<div class="captionImage right" style="width: 450px;">
+<img class="left" src="../../../images/upload/cameras/pinholecam5d41d.png?"/><p class="caption left">Figure 12: perspective projection of a 3D point onto the image plane.</p>
+</div>
+
+<p>We are not going to explain how the rasterisation algorithm works in this chapter. To have a complete overview of the algorithm, you are invited to read the lesson devoted to the REYES algorithm [link], a popular rasterisation algorithm. What we are going to look into, is how is the pinhole camera model being used with this particular rendering technique. To do so, let's recall that that each ray passing through the aperture of a pinhole camera strikes the surface of the film in one location, which is eventually a pixel if we consider the case of digital images. Let's take the case of one particular ray R, reflected off of the surface of an object at O, traveling towards the eye in the direction D, passing through the aperture of the camera in A, and striking the image at the pixel location X (figure 12). To simulate this process, all we need to do is compute in which pixel of an image any given light ray strikes the image, and record the color of this light ray (the color of the object at the point where the ray was emitted from, which in the real world, is essentially the information carried by the light ray itself) at that pixel location in the image.</p>
+
+<p>This essentially comes back to computing the pixel coordinates X of the 3D point O using perspective projection. In perspective projection, the position of a 3D point onto the image plane, is found by computing the intersection of a line connecting the point to the eye with the image plane. The method for computing this point of intersection, was described in detail in the <a href="../computing-pixel-coordinates-of-3d-point/mathematics-computing-2d-coordinates-of-3d-points.html">previous lesson</a>. In the next chapter, we will learn how to compute these coordinates when the canvas is positioned at an arbitrary distance from the eye (in the previous lesson, the distance between the eye and the canvas was always assumed to be equal to 1).</p>
+
+<div class="question">Don't worry too much if you don't understand clearly how rasterisation works at this point. As mentioned before, a lesson is devoted to this topic alone. The only thing that you need to remember from that lesson, is the process by which we can "project" 3D points onto the image plane and compute the projected point pixel coordinates as well as remember that this is the method that we will be using with rasterisation.</div>
+
+<p>The projection process can be seen as an interpretation of the way an image is formed inside a pinhole camera, by "following" the path of light rays from whether points they are emitted from in the scene to the eye, and "recording" the position (in terms of pixel coordinates) where these light rays intersect the image plane. To do so, we first need to transform points from world space to camera space, perform a perspective divide on the points in camera space to compute their coordinates in screen space, then convert the points' coordinates in screen space to NDC space and finally convert these coordinates from NDC space to raster space. We used this method in the previous lesson to produce a wireframe image of a 3D object.</p>
+
+<div class="code" style="padding-left: 5px;">for (each point in scene) {
+    transform point from world space to camera space;
+    perform perspective divide (x/-z, y/-z);
+    if (point lies within canvas boundaries) {
+        convert coordinates to NDC space;
+        convert coordinates from NDC to raster space;
+        record point in image;
+    }
+}
+// connect projected points to each other to recreate the object's edges
+...
+</div>
+
+<p>In this technique, the image is formed by a collection of "points" (these are not really points, but conceptually, it is convenient to define where the light rays are reflected off of the surface of objects as points) projected onto the image. In other words, you start from the geometry and you "cast" light paths to the eye, to find the pixel coordinates where these rays hit the image plane and from the coordinates of these intersections points on the canvas, you can then find where they should be recorded in the digital image. In a way, the rasterisation approach is "object centric".</p>
+
+<span style="display: inline-block; background-color: rgb(230, 230, 230); width: 100%; clear: both; margin: 0px; padding: 10px; font-weight: 800; box-sizing: border-box;">Ray-Tracing</span>
+
+<div class="captionImage right" style="width: 450px;">
+<img class="left" src="../../../images/upload/cameras/pinholecam6d41d.png?"/><p class="caption left">Figure 13: the direction of a light ray R can be defined by tracing a line from the point O to the camera's aperture A or from the camera's aperture A to the pixel X, the pixel struck by the ray.</p>
+</div>
+
+<div class="captionImage right" style="width: 450px;">
+<img class="left" src="../../../images/upload/cameras/pinholecam7d41d.png?"/><p class="caption left">Figure 14: the ray-algorithm can be described in three steps. First, we build a ray by tracing a line from the eye to the centre of the current pixel. Then, we cast this ray into the scene and check if this ray intersects any geometry in the scene. If it does, we set the current pixel's color to the object's color at the intersection point. This process is repeated for each pixel of the image.</p>
+</div>
+
+<p>The way things work in ray-tracing (with respect to the camera model), is the opposite to the way the rasterisation algorithm works. When a light ray R reflected off of the surface of an object passes through the aperture of the pinhole camera and hit the surface of the image plane, it hits a particular pixel X on the image as described earlier. In other words, to each pixel X in an image, corresponds a light ray R with a given direction D and a given origin O. Note that, we do not need to know the origin of the ray to define its direction. The direction of the ray can be found by tracing a line from O (the point where the ray is emitted), to the camera's aperture A. It can also be defined by tracing a line from the pixel X which the ray intersects, to the camera's aperture A (as shown in figure 13). Therefore, if you can find the ray direction D by tracing a line from X (the pixel) to A (the camera's aperture), then you can extend this ray into the scene to find O (the origin of the light ray) as shown in figure 14. This is the principle of ray-tracing (which is also called ray-casting). We can produce an image by setting the pixel's colors with the color of the light rays' respective points of origin. Due to the nature of pinhole camera, to each pixel in the image corresponds one singular light ray which we can construct by tracing a line from the pixel to the camera's aperture. We then cast this ray into the scene, and set the pixel's color to the color of the object the ray intersects (if any &mdash; the ray might not intersect any geometry indeed, in which case we set the pixel's color to black). This point of intersection, corresponds to the point on the surface of the object, from which the light ray was reflected off towards the eye.</p>
+
+<p>To the contrary of the rasterisation algorithm, ray-tracing is "image centric". Rather than following the natural path of the light ray, form the object to the camera (as we do with rasterisation in a way), <b>we follow the exact same path but in the other direction</b>, from the camera to the object.</p>
+
+<div class="question">In our virtual camera model rays are all emitted from the camera origin thus the aperture is reduced to a singular point (the center of projection); the concept of aperture size in this model doesn't exist. Our CG camera model behaves as an <b>ideal pinhole camera</b> in a way, because we consider that a single ray only is passing through the aperture (as opposed to a beam of light containing many rays as with real pinhole cameras). This is of course impossible with a real pinhole camera. When the hole becomes too small light rays are diffracted. With such an ideal pinhole camera, we can create perfectly sharp images.</div>
+
+<p>Here is the complete algorithm in pseudo-code:</p>
+
+<div class="code" style="padding-left: 5px;">for (each pixel in the image) {
+    // step 1
+    build a camera ray: trace line from current pixel location to camera's aperture;
+    // step 2
+    cast ray into the scene;
+    // step 3
+    if (ray intersects an object) {
+        set current pixel's color with object's color at the intersection point;
+    }
+    else {
+        set current pixel's color to black;
+    }
+}</div>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../../images/upload/cameras/pinholecam8d41d.png?"/><p class="caption left">Figure 15: the point visible to camera is the point with the closest distance to the eye.</p>
+</div>
+
+<p>As explained in the first lesson, things are bit more complex in ray-tracing because any given camera ray can intersect several objects as shown in figure 15. Of all these points, the point visible to the camera is the point with the closest distance to the eye. If you are interested to a quick introduction to the ray-tracing algorithm, you can read the <a href="../introduction-to-ray-tracing.html">first lesson</a> of this section or keep reading the lessons from this section which are devoted to ray-tracing specifically.</b>
+
+<div class="question">Advanced: it may have come to your mind that several rays may be striking the image at the same pixel location. This is idea is illustrated in the adjacent image. In the real world this is in fact happening all the time, because the surfaces from which the rays are reflected from are precisely continuous surfaces. In reality, what we have is the projection of a continuous surface (the surface of an object) onto another continuous surface (the surface of a pixel). It is important to keep in mind that a pixel in the physical world, is not an ideal point, but a surface receiving light reflected off from another surface. In fact, it would be more accurate to see the phenomenon (which we often do in CG) as <b>an "exchange" or transport of light energy between surfaces</b>. You can find information on this topic in lessons from the Mathematics and Physics of Compute Graphics (check the Mathematics of Shading and Monte Carlo Methods) as well the lesson of this section called Monte Carlo Ray Tracing and Path Tracing.</div>
+
+<h2>What's Next?</h2>
+
+<p>We are finally ready to implement a pinhole camera model with the same controls than the controls you can find in a software such as Maya. It will be followed as usual with the source code of a program, capable of producing images matching the output of Maya.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='how-pinhole-camera-works-part-2.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 3 of  5</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='implementing-virtual-pinhole-camera.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/3d-viewing-pinhole-camera/virtual-pinhole-camera-model by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:10:37 GMT -->
+</html>

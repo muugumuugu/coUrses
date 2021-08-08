@@ -1,0 +1,541 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/3d-viewing-pinhole-camera/implementing-virtual-pinhole-camera by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:10:37 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>3D Viewing: the Pinhole Camera Model (Implementing a Virtual Pinhole Camera)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='camera, pinhole camera, perspective projection, circle of confusion, film back, resolution gate, film gate, focal length, depth of field, field of view, image plane, zoom, focal distance, angle of view, aspect ratio, anamorphic, format, aperture, image size, resolution'>
+<meta name='date' content='2014-12-04 07:04:05'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>3D Viewing: the Pinhole Camera Model</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="how-pinhole-camera-works-part-1.html">How a pinhole camera works (part 1)</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="how-pinhole-camera-works-part-2.html">How a pinhole camera works (part 2)</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="virtual-pinhole-camera-model.html">A Virtual Pinhole Camera Model</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="implementing-virtual-pinhole-camera.html"><b>Implementing a Virtual Pinhole Camera</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code253b.html?id=24&amp;origin=/lessons/3d-basic-rendering/3d-viewing-pinhole-camera">Source Code</a></div></div></div><h2>Implementing a Virtual Pinhole Camera Model</h2>
+
+<p>In the last three chapters, we have learned pretty much everything there is to know about the pinhole camera model. This type of camera is the simplest to simulate in CG and is the model most commonly used by video games and 3D applications. As briefly mentioned in the first chapter, pinhole cameras by their design can only produce sharp images (without any depth of field). While being simple and easy to implement, the model is also often criticised for not being able to simulate visual effects such as depth of field or lens flare. While these effects may be perceived as a visual artefact by some, they play an important role in the aesthetic experiences of photographs and films. Don't think this a choice we make because we don't know how to simulate these effects. Simulating them is not that hard (because it essentially relies on well known and basic optical rules) but very costly especially compared to the time it takes to render an image with a basic pinhole camera model. In the last lesson of this section though, we will present a method for simulating depth of field (which is still costly but less costly than if we had to physically simulate the effect of a camera lens).</p>
+
+<p>In this chapter, we will use everything we have learned in the previous chapters about the pinhole camera model, and write a program to implement this model. To convince you that this model works and that there is nothing mysterious or magic about how images are produced in a software such as Maya, we will produce a series of images by changing different camera parameters in Maya and our program and compare the results. If all goes well, when the camera settings are matching, images produced by the two applications should also match. Let's get started.</p>
+
+<h2>Implementing an Ideal Pinhole Camera Model</h2>
+
+<p>When we will refer to the pinhole camera in the rest of this chapter, we will use the term focal length and film size. Do not confuse them with the near clipping plane and the canvas size terms. The former apply to the pinhole camera, the latter apply to the virtual camera model only, however they do somehow indeed relate to each other. Let's quickly explain again how.</p>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../../images/upload/cameras/clippingplanescanvasd41d.png?"/><p class="caption left">Figure 1: mathematically the canvas can be anywhere we want along the line of sight. Its boundaries are defined as the intersection of the image plane with the viewing frustum.</p></div>
+
+<p>To deliver the same image, the pinhole camera and the virtual camera need to have same viewing frustum. The viewing frustum itself is basically defined by two, and only two parameters: the point of convergence, or the camera or eye origin (all these terms designate the same point), and the angle of view. Additionally, we also learned in the previous chapters, that the angle of view was itself defined by the film size and the focal length which are two parameters of the pinhole camera.</p>
+
+<h3>Where Shall the Canvas/Screen Be?</h3>
+
+<p>In CG, once the viewing frustum is defined, we then need to define where is the virtual image plane going to be. Mathematically though the canvas can be anywhere we want along the line of sight, as long as the surface on which we project the image onto, is contained with the viewing frustum as shown in figure 1; it can be anywhere between the apex of the pyramid (obviously not the apex itself) and its base (which is defined by the far clipping plane) or even further if we wanted to.</p>
+
+<div class="question"><b>Don't mistake the distance between the eye (the center of projection) and the canvas for the focal length</b>. They are not the same. The <b>position of the canvas does not define how wide or narrow the viewing frustum is</b> (neither does the near clipping plane); the viewing frustum shape is only defined by the focal length and the film size (the combination of both parameters defines the angle of view and thus the magnification at the image plane). As for the near clipping plane, it is just an arbitrary plane which with the far clipping plane, is used to "clip" geometry along the camera local z-axis and remap points z-coordinates to the range [0,1]. Why and how is the remapping done is explained in the lesson on the REYES algorithm [link], a popular rasterization algorithm, and the next lesson devoted to the perspective projection matrix.</div>
+
+<p>When the distance between the eye and the image plane is equal to 1, it is convient because it simplifies the equations to compute the coordinates of a point projected on the canvas. However if we were making that choice, we wouldn't have the opportunity to study the generic (and slightly more complex) case in which the distance to the canvas is arbitrary. And since our goal on Scratchapixel is to learn how things work rather than making our life easier, let's skip this option and choose the generic case instead. For now, we decided to position the canvas at the near clipping plane. Don't try to make any sense as to why we decide to do so. It is only motivated by pedagogical reasons. The near clipping plane is a parameter that the user can change thus by setting the image plane at the near clipping plane, this forces  us to study the equations for projecting points on a canvas located at an arbitrary distance to the eye. We are also cheating slightly because in fact, the way the perspective projection matrix works is based on implicitly setting up the image plane at the near clipping plane. Thus by making this choice, we are also anticipating what we will be studying in the next lesson. However keep in mind that <b>where is the canvas positioned has no effect on the output image</b> (the image plane can either be located between the eye and the near clipping plane. Objects between the eye and the near clipping plane could still be projected on the image plane; equations for the perspective matrix would still work).</p>
+
+<h3>What Will our Program Do</h3>
+
+<p>In this lesson, we are going to create a program to generate a wireframe image of a 3D object by projecting the objects vertices onto the image plane. The program will be very similar to the one we wrote in the previous lesson, only we are now going to extend the code to integrate the concept of focal length and film size. Film formats are generally rectangular, not square, thus our program will also output images with a rectangular shape. Remember that in chapter 2, we mentioned that the resolution gate aspect ratio also called device aspect ratio (the image width over its height), was not necessarily the same than the film gate aspect ratio (the film width over its height). In the last part of this chapter, we will also write some code to handle this case.</p>
+
+<p>Here is a list of the parameters our pinhole camera model will require:</p>
+
+<table class='table-basic' style="vertical-align: middd;">
+<tr>
+<th width="20%">Camera Parmeter</th>
+<th width="15%">Type</th>
+<th>Description</th>
+</tr>
+
+<tr>
+<th colspan="3" style="background-color: #BBDEFB;">Intrinsic Parmeters</th>
+</tr>
+
+<tr>
+<td>Focal Length</td>
+<td>float</td>
+<td style="text-align: left;">Defines the distance between the eye (the camera position), and the image plane in a pinhole camera. This parameter is used to compute the angle of view (chapter 2). Be careful not to confuse the focal length which is used to compute the angle of view, and the distance to the virtual camera's image plane, which is positioned at the near clipping plane. In Maya this value is expressed in mm.</td>
+</tr>
+<tr>
+<td>Camera Aperture</td>
+<td>2 floats</td>
+<td style="text-align: left;">Defines the physical dimension of the film that would be used in a real camera. The angle of view depends on this value. It also defines the film gate aspect ratio (chapter 2). The physical size (generally in inches) of the most common film formats can be found in this <a href="https://en.wikipedia.org/wiki/List_of_film_formats">Wikipedia article<a> (in Maya, this parameter can be defined either in inches or mm).</td>
+</tr>
+<tr>
+<td>Clipping Planes</td>
+<td>2 floats</td>
+<td style="text-align: left;">Near and far clipping planes are imaginary planes located at two particular distances from the camera along the camera's sight line. Only objects between a camera's two clipping planes are rendered in that camera's view.<br/>In our pinhole camera model, the canvas is positioned at the near clipping plane (chapter 3). Do not confuse the near clipping plane with the focal length (see remark above).</td>
+</tr>
+<tr>
+<td>Image Size</td>
+<td>2 integers</td>
+<td style="text-align: left;">Defines the size in pixels of the output image. The image size also defines the resolution gate aspect ratio (chapter 2).</td>
+</tr>
+<tr>
+<td>Fit Resolution Gate</td>
+<td>enum</td>
+<td style="text-align: left;">This is an advanced option used in Maya to define the strategy to be used when the resolution aspect ratio is different from the film gate aspect ratio (chapter 2).</td>
+</tr>
+
+<th colspan="3" style="background-color: #BBDEFB;">Extrinsic Parmeters</th>
+</tr>
+<tr>
+<td>Camera to World</td>
+<td>4x4 matrix</td>
+<td style="text-align: left;">The camera to world transformation. Defines the camera position and orientation (chapter 3).</td>
+</tr>
+</table>
+
+<p>We will also need the following parameters which we can compute from the parameters listed above:</p>
+
+<table class='table-basic' style="vertical-align: middle;">
+
+<tr>
+<th width="20%">Variable</th>
+<th width="15%">Type</th>
+<th>Description</th>
+</tr>
+<tr>
+<td>Angle of View</td>
+<td>float</td>
+<td style="text-align: left;">The angle of view is computed from the focal length and the film size parameters.</td>
+</tr>
+<tr>
+<td>Canvas/Screen Window</td>
+<td>4 floats</td>
+<td style="text-align: left;">These are the coordinates of the "canvas" (in the RenderMan specifications the canvas is called the "screen window") in the image plane. These coordinates are computed from the canvas size and the film gate aspect ratio.</td>
+</tr>
+<tr>
+<td>Film Gate Aspect Ratio</td>
+<td>float</td>
+<td style="text-align: left;">The ratio between the film width and the film height.</td>
+</tr>
+<tr>
+<td>Resolution Gate Aspect Ratio</td>
+<td>float</td>
+<td style="text-align: left;">The ratio between the image width and its height (in pixels).</td>
+</tr>
+</table>
+
+<div class="captionImage right" style="width: 450px;">
+<img class="left" src="../../../images/upload/cameras/canvascoordinatesd41d.png?"/><p class="caption left">Figure 2: the bottom-left and top-right coordinates define the boundaries of the canvas. Any projected point whose x- and y-coordinates are contained within these boundaries are visible to camera.</p>
+</div>
+
+<div class="captionImage right" style="width: 450px;">
+<img class="left" src="../../../images/upload/cameras/canvascoordinates2d41d.png?"/><p class="caption left">Figure 1: the canvas size depends on the near clipping plane and the horizontal angle of field of view. From the canvas size we can easily infer the canvas bottom-left and top-right coordinates.</p>
+</div>
+
+<p>Remember that when a 3D point is projected onto the image plane, we need to test the projected point x- and y-coordinates against the canvas coordinates to find out if the point is visible in the camera's view or not. The point can only be visible if it lies within the canvas limits. We already know how to compute the projected point coordinates using perspective divide. But what we don't know yet, are the canvas bottom-left and top-right coordinates (figure 2). How do we find these coordinates then?</p>
+
+<p>Note that in almost every cases we want the canvas to be centred around the canvas coordinate system origin (figure 2, 3 and 4). This is not always or doesn't have to be the case. Stereo camera setup for example requires the canvas to be slightly shifted to the left or to the right of the coordinate system origin. In this lesson, we will always assume that the canvas is centred about the image plane coordinate system origin.</p>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../../images/upload/cameras/canvascoordinates3d41d.png?"/><p class="caption left">Figure 4: computing the canvas bottom-left and top-right coordinates is simple when we know the canvas size.</p>
+</div>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../../images/upload/cameras/angleofview1d41d.png?"/><p class="caption left">Figure 5: xx.</p>
+</div>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../../images/upload/cameras/canvascoordinates4d41d.png?"/><p class="caption left">Figure 6: xx.</p>
+</div>
+
+<p>Computing the canvas or screen window coordinates is simple. Since the canvas is centred about the screen coordinate system origin, they are all equal to half the canvas size, and are negative if they either below or to the left  of the y-axis and x-axis of the screen coordinate system respectively (figure 4). The canvas size itself depends on the angle of view and the near clipping plane (since we decided to position the image plane at the near clipping plane). The angle of view itself depends on the film size and the focal length. Let's compute each one of these variables.</p>
+
+<p>Note though that the film format as mentioned several times, is more often rectangular than square. Thus the angular horizontal and vertical extent of the viewing frustum are different. We will need the horizontal angle of view to compute the left and right coordinates and the vertical angle of view to compute the bottom and top coordinates.</p>
+
+<h3>Computing the Canvas Coordinates: The Long Way</h3>
+
+<p>Let's start with the horizontal angle of view. We already introduced the equation to compute the angle of view in the previous chapters. It can easily be done using trigonometric idendities. If you look at the camera setup from the top, you can see that we can trace a right triangle (figure 6). Both the adjacent and opposite side of that triangles are known: they correspond to the focal length and half of the film horizontal aperture. However, to use theses values in a trigonometric identity, they need to have the same unit. Typically, film gate dimensions are defined in inches, and focal length is defined in millimeters. Generally inches are converted in mm but you can convert mm to inches if you prefer; the result will be the same. One inch corresponds to 25.4 millimetres. The find the horizontal angle of view, we will use a trigonometric identity that says that the tangent of an angle is the ratio of the length of the opposite side to the length of the adjacent side (equation 1):</p>
+
+$$
+\begin{array}{l}
+\tan({\theta_H \over 2}) & = & {A \over B} \\& = & \color{red}{\dfrac {\dfrac { (\text{Film Aperture Width} * 25.4) } { 2 } } { \text{Focal Length} }}.
+\end{array}
+$$
+
+<p>Where \(\theta_H\) is the horizontal angle of view. Now that we have theta, we can compute the canvas size. We know it depends on the angle of view and the near clipping plane (because the canvas is positioned at the near clipping plane). We will use the same trigonometric identity (figure 6) to compute the canvas size (equation 2):</p>
+
+$$
+\begin{array}{l}
+\tan({\theta_H \over 2}) = {A \over B} =
+\dfrac{\dfrac{\text{Canvas Width} } { 2 } } { Z_{near} }, \\
+\dfrac{\text{Canvas Width} } { 2 } = \tan({\theta_H \over 2}) * Z_{near},\\
+\text{Canvas Width}= 2 * \color{red}{\tan({\theta_H \over 2})} * Z_{near}.
+\end{array}
+$$
+
+<p>If we want to avoid computing the trigonometric function <span class="code-inline">tan()</span>, we can substitute the function on the right hand side of equation 1:</p>
+
+$$
+\begin{array}{l}
+\text{Canvas Width}= 2 * \color{red}{\dfrac {\dfrac { (\text{Film Aperture Width} * 25.4) } { 2 } } { \text{Focal Length} }} * Z_{near}.
+\end{array}
+$$
+
+<p>To compute the right coordinate, we need to divide the whole equation by 2. We get:</p>
+
+$$
+\begin{array}{l}
+\text{right} = \color{red}{\dfrac {\dfrac { (\text{Film Aperture Width} * 25.4) } { 2 } } { \text{Focal Length} }} * Z_{near}.
+\end{array}
+$$
+
+<p>Computing the left is trivial. Here is a code fragment to compute the left and right coordinates:</p>
+
+<div name="code" class="code">float focalLength = 35;
+// 35mm Full Aperture
+float filmApertureWidth = 0.980;
+float filmApertureHeight = 0.735;
+static const float inchToMm = 25.4;
+float nearClippingPlane = 0.1;
+float farClipingPlane = 1000;
+
+int main(int argc, char **argv)
+{
+#if 0
+    // First method. Compute the horizontal angle of view first
+    float angleOfViewHorizontal = 2 * atan((filmApertureWidth * inchToMm / 2) / focalLength);
+    float right = tan(angleOfViewHorizontal / 2) * nearClippingPlane;
+#else
+    // Second method. Compute the right coordinate directly
+    float right = ((filmApertureWidth * inchToMm / 2) / focalLength) * nearClippingPlane;
+#endif
+
+    float left = -right;
+
+    printf("Screen window left/right coordinates %f %f\n", left, right);
+    
+    ...
+}</div>
+
+<p>We can use the same technique to compute the top and bottom coordinates, only this time, we need to compute the vertical angle of view (\(\theta_V\)):</p>
+
+$$
+\tan({\theta_V \over 2}) = {A \over B} = \color{red}{\dfrac {\dfrac { (\text{Film Aperture Height} * 25.4) } { 2 } } { \text{Focal Length} }}.
+$$
+
+<p>We can then find the equation for the top coordinate:</p>
+
+$$
+\text{top} = \color{red}{\dfrac {\dfrac { (\text{Film Aperture Height} * 25.4) } { 2 } } { \text{Focal Length} }} * Z_{near}.
+$$
+
+<p>Here is the code to compute all four coordinates:</p>
+
+<div name="code" class="code">int main(int argc, char **argv)
+{
+#if 0
+    // First method. Compute the horizontal and vertical angle of view first
+    float angleOfViewHorizontal = 2 * atan((filmApertureWidth * inchToMm / 2) / focalLength);
+    float right = tan(angleOfViewHorizontal / 2) * nearClippingPlane;
+    float angleOfViewVertical = 2 * atan((filmApertureHeight * inchToMm / 2) / focalLength);
+    float top = tan(angleOfViewVertical / 2) * nearClippingPlane;
+#else
+    // Second method. Compute the right and top coordinates directly
+    float right = ((filmApertureWidth * inchToMm / 2) / focalLength) * nearClippingPlane;
+    float top = ((filmApertureHeight * inchToMm / 2) / focalLength) * nearClippingPlane;
+#endif
+
+    float left = -right;
+    float bottom = -top;
+
+    printf("Screen window bottom-left, top-right coordinates %f %f %f %f\n", bottom, left, top, right);
+    ...
+}</div>
+
+<h3>Computing the Canvas Coordinates: The Quick Way</h3>
+
+<p>The code we wrote is working just fine, however, there is a slightly faster way of computing the canvas coordinates (which you are likely to see being used in production code). The method consists of computing the vertical angle of view to get the bottom top coordinates and they multiply these coordinates by the film aspect ratio. Mathematically this is working because this comes back to writing:</p>
+
+$$
+\begin{array}{l}
+\text{right} & = & \text{top} * \dfrac{\text{Film Aperture Width}}{\text{Film Aperture Height}} \\
+& = & \color{}{\dfrac {\dfrac { (\text{Film Aperture Height} * 25.4) } { 2 } } { \text{Focal Length} }} * Z_{near} * \dfrac{\text{Film Aperture Width}}{\text{Film Aperture Height}} \\
+& = & \color{}{\dfrac {\dfrac { (\text{Film Aperture Width} * 25.4) } { 2 } } { \text{Focal Length} }} * Z_{near}.
+\end{array}
+$$
+
+<p>The following code shows how to implement this solution:</p>
+
+<div name="code" class="code">int main(int argc, char **argv)
+{
+    float top = ((filmApertureHeight * inchToMm / 2) / focalLength) * nearClippingPlane;
+    float bottom = -top;
+    float filmAspectRatio = filmApertureWidth / filmApertureHeight;
+    float left = bottom * filmAspectRatio;
+    float left = -right;
+    
+    printf("Screen window bottom-left, top-right coordinates %f %f %f %f\n", bottom, left, top, right);
+    ...
+}</div>
+
+<h3>Does it Work? Checking the Code</h3>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../../images/upload/cameras/similartriangles1d41d.png?"/><p class="caption left">Figure 7: xx.</p>
+</div>
+
+<p>Before we test the code, we need to make a slight change to the function that projects points onto the image plane. Remember that to compute the projected point coordinates, we use a property of similar triangles. If A, B, A' and B' are the opposite and adjacent side of two similar triangles then we can write:</p>
+
+$$
+\begin{array}{l}
+{A \over B} = {A' \over B'} = {P.y \over P.z} = {P'.y \over Z_{near}}\\
+P'.y = {P.y \over P.z } * Z_{near} 
+\end{array}
+$$
+
+<p>In the previous lesson, we positioned the canvas 1 unit away from the eye, thus the near clipping plane was equal to 1 and it reduced the equation to a simple division of the point x- and y-coordinates by the point z-coordinate (in other words we ignored \(Z_{near}\)). In the function to compute the projected point coordinates, we will also test whether the point is visible or not. We will do so by comparing the projected point coordinates with the canvas coordinates. In the program, if any of the triangle's vertices is outside the canvas boundaries, we will draw the triangle in red (if you see a red triangle in the image, then at least one of its vertices lies outside the canvas). Here is an updated version of the function projecting points onto the canvas and computing the raster coordinates of a 3D point:</p>
+
+<div name="code" class="code">bool computePixelCoordinates(
+    const Vec3f &pWorld,
+    const Matrix44f &worldToCamera,
+    const float &b,
+    const float &l,
+    const float &t,
+    const float &r,
+    const float &near,
+    const uint32_t &imageWidth,
+    const uint32_t &imageHeight,
+    Vec2i &pRaster)
+{
+    Vec3f pCamera;
+    worldToCamera.multVecMatrix(pWorld, pCamera);
+    Vec2f pScreen;
+    pScreen.x = pCamera.x / -pCamera.z * near;
+    pScreen.y = pCamera.y / -pCamera.z * near;
+    
+    Vec2f pNDC;
+    pNDC.x = (pScreen.x + r) / (2 * r);
+    pNDC.y = (pScreen.y + t) / (2 * t);
+    pRaster.x = (int)(pNDC.x * imageWidth);
+    pRaster.y = (int)((1 - pNDC.y) * imageHeight);
+
+    bool visible = true;
+    if (pScreen.x < l || pScreen.x > r || pScreen.y < b || pScreen.y > t)
+        visible = false;
+
+    return visible;
+}</div>
+
+<p>Here is a summary of the changes we made to the function:</p>
+<ul>
+<li>line 16 and 17: the result of the perspective divide is multiplied by the near clipping plane.</li>
+<li>line 20 and 21: to remap the point from screen space to NDC space, we divide the point x and y-coordinates in screen space by the canvas width and height respectively.</li>
+<li>line 26 and 27: the point coordinates in screen space are compared with the bottom-left, top-right canvas coordinates. if the point lies outside, we set the visible variable to false.</li>
+</ul>
+
+<p>The rest of the program (which you can find in the source code section), is similar to the previous program. We loop over all the triangles of the 3D model, convert the triangle's vertices coordinates to raster coordinates and store the result in a SVG file. Let's render a few images in Maya and with our program and check the results.</p>
+
+<img class="left" src="../../../images/upload/cameras/cameraresultsd41d.png?"/>
+
+<p>As you can see the results match. Maya and our program produce the same results (the size and position of the model in the images are consistent between applications). When the triangles overlap the canvas boundaries they are red as expected.</p>
+
+<h3>When the Resolution Gate and Film Gate Ratio Don't Match</h3>
+
+<p>When the film gate aspect ratio and the resolution gate aspect ratio (also called device aspect ratio) are different, we basically need to decide wether we fit the resolution gate within the film gate or the other way around (the film gate is fit to match the resolution gate). Let's check what the different options are:</p>
+
+<div class="question">In the following text, when we say that the film gate matches the resolution gate, we only mean that they match in terms of relative size (otherwise they couldn't be compared to each other since they are not expressed in the same units. The former is expressed in inches and the latter in pixels). If we draw a rectangle to represent the film gate for instance, then we will draw the resolution gate so that either the top and bottom or the the left and right side of the resolution gate rectangle are aligned with the top and bottom or left and right side of the film gate rectangle respectively (this is what we did in figure 8).</div>
+
+<div class="captionImage right" style="width: 400px;">
+<img class="left" src="../../../images/upload/cameras/fitgateresolution3d41d.png?"/><p class="caption left">Figure 8: when the film gate aspect ratio and the resolution gate ratio don't match, we need to choose between four options.</p></div>
+
+<ul>
+<li>Fill Mode: we fit the resolution gate within the film gate (the blue box is contained within the red box). We have to handle two cases:
+    <ul>
+    <li>Figure 8a: when the film aspect ratio is greater than the device aspect ratio, the canvas left and right coordinates need to be scaled down to match the left and right coordinates of the resolution gate. This can be done by multiplying the left and right coordinates by the resolution aspect ratio over the film aspect ratio.</li>
+    <li>Figure 8c: when the film aspect ratio is lower than the device aspect ratio, the canvas top and bottom coordinates need to be scaled down to match the top and bottom coordinates of the resolution gate. This can be done by multiplying the top and bottom coordinates by the film aspect ratio over the resolution aspect ratio.</li>
+    </ul>
+</li>
+<li>Overscan Mode: we fit the film gate within the resolution gate (the red box is contained within the blue box). We have to handle two cases:
+    <ul>
+    <li>Figure 8b: when the film aspect ratio is greater than the device aspect ratio, the canvas top and bottom coordinates need to be scaled up to match the resolution gate top and bottom coordinates. To do so, we multiply the canvas top and bottom coordinates by the film aspect ratio over the resolution aspect ratio.</li>
+    <li>Figure 8d: when the film aspect ratio is lower than the device aspect ratio, the canvas left and right coordinates need to be scaled up to match the resolution gate top and bottom coordinates. To do so, we multiply the canvas top and bottom coordinates by the resolution aspect ratio over the film aspect ratio.</li>
+    </ul>
+</li>
+</ul>
+
+<p>The following code fragment demonstrates how you can implement these four cases:</p>
+
+<div name="code" class="code">float xscale = 1;
+float yscale = 1;
+
+switch (fitFilm) {
+    default:
+    case kFill:
+        if (filmAspectRatio &gt; deviceAspectRatio) {
+            // 8a
+            xscale = deviceAspectRatio / filmAspectRatio;
+        }
+        else {
+            // 8c
+            yscale = filmAspectRatio / deviceAspectRatio;
+        }
+        break;
+    case kOverscan:
+        if (filmAspectRatio &gt; deviceAspectRatio) {
+            // 8b
+            yscale = filmAspectRatio / deviceAspectRatio;
+        }
+        else {
+            // 8d
+            xscale = deviceAspectRatio / filmAspectRatio;
+        }
+        break;
+}
+
+right *= xscale;
+top *= yscale;
+left = -right;
+bottom = -top;</div>
+
+<p>Check the next chapter to get the source code of the complete program.</p>
+
+<h2>Conclusion</h2>
+
+<p>In this lesson, you have learned pretty much everything there is to know about simulating a pinhole camera in CG. In the process, we have also learned how to project points onto the image plane, and find if these points are visible to the camera by comparing their coordinates to the canvas coordinates. The concepts learned in this lesson will be useful to study the perspective projection matrix (which is the topic of the next lesson), the REYES algorithm, a popular rasterisation algorithm (lesson 8), and how images are formed in ray-tracing (lesson 9).</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='virtual-pinhole-camera-model.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 4 of  5</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='../../../code253b.html?id=24&amp;origin=/lessons/3d-basic-rendering/3d-viewing-pinhole-camera'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/3d-viewing-pinhole-camera/implementing-virtual-pinhole-camera by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:10:42 GMT -->
+</html>

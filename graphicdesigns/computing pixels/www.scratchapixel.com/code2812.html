@@ -1,0 +1,491 @@
+<!--
+<html>
+<head>
+<title>Scratchapixel</title>
+
+<link rel="stylesheet" type="text/css" href="/css/scratchapixel2.css"/>
+<link rel="stylesheet" type="text/css" href="/css/page.css"/>
+<link rel="stylesheet" type="text/css" href="/css/code.css"/>
+<link href='http://fonts.googleapis.com/css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='http://fonts.googleapis.com/css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<script type="text/javascript"
+	src="/scratchapixelSDK.js">
+</script>
+
+</head>
+<html>
+<body onload="onload();">
+<div class="code-column">
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/code.php?id=10&origin=/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes&src=0 by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 19:00:37 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>A Minimal Ray-Tracer: Rendering Simple Shapes (Sphere, Cube, Disk, Plane, etc.) (source code)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='A Minimal Ray-Tracer: Rendering Simple Shapes (Sphere, Cube, Disk, Plane, etc.), source code'>
+<meta name='date' content=''>
+
+<link rel="stylesheet" type="text/css" href="css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="css/page.css"/>
+
+<link href='../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","mml2jax.html","asciimath2jax.html","MathMenu.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","AMSsymbols.html","noErrors.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+<link rel='stylesheet' type='text/css' href='css/responsive.css'/>
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='index-2.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div class='lesson-title' style='padding: 0px; margin: 20px 0px 10px 0px;'><a href='lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes.html'>A Minimal Ray-Tracer: Rendering Simple Shapes (Sphere, Cube, Disk, Plane, etc.)</a></div><div style='box-sizing: border-box; padding: 20px 0px 0px 0px; display: inline-block; border-top: 1px none grey; width: 100%;'><div>This project contains the following files (right-click files you'd like to download):</div><a oncontextmenu='onMouseDownCodeCtxt(this, "code/upload/ray-tracing-simple-shapes/simpleshapes.cpp")' style='display: inline-block; margin: 10px 10px 10px 0px; color: rgb(50, 100, 200);' href='code2812.html?id=10&amp;origin=/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes&amp;src=0'>simpleshapes.cpp</a><a oncontextmenu='onMouseDownCodeCtxt(this, "code/upload/ray-tracing-simple-shapes/raybox.cpp")' style='display: inline-block; margin: 10px 10px 10px 0px; color: rgb(50, 100, 200);' href='code46f1.html?id=10&amp;origin=/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes&amp;src=1'>raybox.cpp</a><a oncontextmenu='onMouseDownCodeCtxt(this, "code/upload/ray-tracing-simple-shapes/geometry.h")' style='display: inline-block; margin: 10px 10px 10px 0px; color: rgb(50, 100, 200);' href='codea3b4.html?id=10&amp;origin=/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes&amp;src=2'>geometry.h</a></div><div name='code' class='code'>//[header]
+// A simple program that uses ray-tracing to render a scene made out of spheres
+//[/header]
+//[compile]
+// Download the simpleshapes.cpp and geometry.h files to a folder.
+// Open a shell/terminal, and run the following command where the files is saved:
+//
+// c++ -o simpleshapes simpleshapes.cpp -O3 -std=c++11 -DMAYA_STYLE
+//
+// Run with: ./simpleshapes. Open the file ./out.png in Photoshop or any program
+// reading PPM files.
+//[/compile]
+//[ignore]
+// Copyright (C) 2012  www.scratchapixel.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+//[/ignore]
+
+#include &lt;cstdio&gt;
+#include &lt;cstdlib&gt;
+#include &lt;memory&gt;
+#include &lt;vector&gt;
+#include &lt;utility&gt;
+#include &lt;cstdint&gt;
+#include &lt;iostream&gt;
+#include &lt;fstream&gt;
+#include &lt;cmath&gt;
+#include &lt;limits&gt;
+#include &lt;random&gt;
+
+#include &quot;geometry.h&quot;
+
+const float kInfinity = std::numeric_limits&lt;float&gt;::max();
+std::random_device rd;
+std::mt19937 gen(rd());
+std::uniform_real_distribution&lt;&gt; dis(0, 1);
+
+inline
+float clamp(const float &amp;lo, const float &amp;hi, const float &amp;v)
+{ return std::max(lo, std::min(hi, v)); }
+
+inline
+float deg2rad(const float &amp;deg)
+{ return deg * M_PI / 180; }
+
+inline
+Vec3f mix(const Vec3f &amp;a, const Vec3f&amp; b, const float &amp;mixValue)
+{ return a * (1 - mixValue) + b * mixValue; }
+
+struct Options
+{
+    uint32_t width;
+    uint32_t height;
+    float fov;
+    Matrix44f cameraToWorld;
+};
+
+// [comment]
+// Object base class
+// [/comment]
+class Object
+{
+ public:
+    Object() : color(dis(gen), dis(gen), dis(gen)) {}
+    virtual ~Object() {}
+    // Method to compute the intersection of the object with a ray
+    // Returns true if an intersection was found, false otherwise
+    // See method implementation in children class for details
+    virtual bool intersect(const Vec3f &amp;, const Vec3f &amp;, float &amp;) const = 0;
+    // Method to compute the surface data such as normal and texture coordnates at the intersection point.
+    // See method implementation in children class for details
+    virtual void getSurfaceData(const Vec3f &amp;, Vec3f &amp;, Vec2f &amp;) const = 0;
+    Vec3f color;
+};
+
+// [comment]
+// Compute the roots of a quadratic equation
+// [/comment]
+bool solveQuadratic(const float &amp;a, const float &amp;b, const float &amp;c, float &amp;x0, float &amp;x1)
+{
+    float discr = b * b - 4 * a * c;
+    if (discr &lt; 0) return false;
+    else if (discr == 0) {
+        x0 = x1 = - 0.5 * b / a;
+    }
+    else {
+        float q = (b &gt; 0) ?
+            -0.5 * (b + sqrt(discr)) :
+            -0.5 * (b - sqrt(discr));
+        x0 = q / a;
+        x1 = c / q;
+    }
+
+    return true;
+}
+
+// [comment]
+// Sphere class. A sphere type object
+// [/comment]
+class Sphere : public Object
+{
+public:
+    Sphere(const Vec3f &amp;c, const float &amp;r) : radius(r), radius2(r *r ), center(c) {}
+    // [comment]
+    // Ray-sphere intersection test
+    //
+    // \param orig is the ray origin
+    //
+    // \param dir is the ray direction
+    //
+    // \param[out] is the distance from the ray origin to the intersection point
+    //
+    // [/comment]
+    bool intersect(const Vec3f &amp;orig, const Vec3f &amp;dir, float &amp;t) const
+    {
+        float t0, t1; // solutions for t if the ray intersects
+#if 0
+        // geometric solution
+        Vec3f L = center - orig;
+        float tca = L.dotProduct(dir);
+        if (tca &lt; 0) return false;
+        float d2 = L.dotProduct(L) - tca * tca;
+        if (d2 &gt; radius2) return false;
+        float thc = sqrt(radius2 - d2);
+        t0 = tca - thc;
+        t1 = tca + thc;
+#else
+        // analytic solution
+        Vec3f L = orig - center;
+        float a = dir.dotProduct(dir);
+        float b = 2 * dir.dotProduct(L);
+        float c = L.dotProduct(L) - radius2;
+        if (!solveQuadratic(a, b, c, t0, t1)) return false;
+#endif
+        if (t0 &gt; t1) std::swap(t0, t1);
+
+        if (t0 &lt; 0) {
+            t0 = t1; // if t0 is negative, let's use t1 instead
+            if (t0 &lt; 0) return false; // both t0 and t1 are negative
+        }
+
+        t = t0;
+
+        return true;
+    }
+    // [comment]
+    // Set surface data such as normal and texture coordinates at a given point on the surface
+    //
+    // \param Phit is the point ont the surface we want to get data on
+    //
+    // \param[out] Nhit is the normal at Phit
+    //
+    // \param[out] tex are the texture coordinates at Phit
+    //
+    // [/comment]
+    void getSurfaceData(const Vec3f &amp;Phit, Vec3f &amp;Nhit, Vec2f &amp;tex) const
+    {
+        Nhit = Phit - center;
+        Nhit.normalize();
+        // In this particular case, the normal is simular to a point on a unit sphere
+        // centred around the origin. We can thus use the normal coordinates to compute
+        // the spherical coordinates of Phit.
+        // atan2 returns a value in the range [-pi, pi] and we need to remap it to range [0, 1]
+        // acosf returns a value in the range [0, pi] and we also need to remap it to the range [0, 1]
+        tex.x = (1 + atan2(Nhit.z, Nhit.x) / M_PI) * 0.5;
+        tex.y = acosf(Nhit.y) / M_PI;
+    }
+    float radius, radius2;
+    Vec3f center;
+};
+
+// [comment]
+// Returns true if the ray intersects an object. The variable tNear is set to the closest intersection distance and hitObject
+// is a pointer to the intersected object. The variable tNear is set to infinity and hitObject is set null if no intersection
+// was found.
+// [/comment]
+bool trace(const Vec3f &amp;orig, const Vec3f &amp;dir, const std::vector&lt;std::unique_ptr&lt;Object&gt;&gt; &amp;objects, float &amp;tNear, const Object *&amp;hitObject)
+{
+    tNear = kInfinity;
+    std::vector&lt;std::unique_ptr&lt;Object&gt;&gt;::const_iterator iter = objects.begin();
+    for (; iter != objects.end(); ++iter) {
+        float t = kInfinity;
+        if ((*iter)-&gt;intersect(orig, dir, t) &amp;&amp; t &lt; tNear) {
+            hitObject = iter-&gt;get();
+            tNear = t;
+        }
+    }
+
+    return (hitObject != nullptr);
+}
+
+// [comment]
+// Compute the color at the intersection point if any (returns background color otherwise)
+// [/comment]
+Vec3f castRay(
+    const Vec3f &amp;orig, const Vec3f &amp;dir,
+    const std::vector&lt;std::unique_ptr&lt;Object&gt;&gt; &amp;objects)
+{
+    Vec3f hitColor = 0;
+    const Object *hitObject = nullptr; // this is a pointer to the hit object
+    float t; // this is the intersection distance from the ray origin to the hit point
+    if (trace(orig, dir, objects, t, hitObject)) {
+        Vec3f Phit = orig + dir * t;
+        Vec3f Nhit;
+        Vec2f tex;
+        hitObject-&gt;getSurfaceData(Phit, Nhit, tex);
+        // Use the normal and texture coordinates to shade the hit point.
+        // The normal is used to compute a simple facing ratio and the texture coordinate
+        // to compute a basic checker board pattern
+        float scale = 4;
+        float pattern = (fmodf(tex.x * scale, 1) &gt; 0.5) ^ (fmodf(tex.y * scale, 1) &gt; 0.5);
+        hitColor = std::max(0.f, Nhit.dotProduct(-dir)) * mix(hitObject-&gt;color, hitObject-&gt;color * 0.8, pattern);
+    }
+
+    return hitColor;
+}
+
+// [comment]
+// The main render function. This where we iterate over all pixels in the image, generate
+// primary rays and cast these rays into the scene. The content of the framebuffer is
+// saved to a file.
+// [/comment]
+void render(
+    const Options &amp;options,
+    const std::vector&lt;std::unique_ptr&lt;Object&gt;&gt; &amp;objects)
+{
+    Vec3f *framebuffer = new Vec3f[options.width * options.height];
+    Vec3f *pix = framebuffer;
+    float scale = tan(deg2rad(options.fov * 0.5));
+    float imageAspectRatio = options.width / (float)options.height;
+    // [comment]
+    // Don't forget to transform the ray origin (which is also the camera origin
+    // by transforming the point with coordinates (0,0,0) to world-space using the
+    // camera-to-world matrix.
+    // [/comment]
+    Vec3f orig;
+    options.cameraToWorld.multVecMatrix(Vec3f(0), orig);
+    for (uint32_t j = 0; j &lt; options.height; ++j) {
+        for (uint32_t i = 0; i &lt; options.width; ++i) {
+            // [comment]
+            // Generate primary ray direction. Compute the x and y position
+            // of the ray in screen space. This gives a point on the image plane
+            // at z=1. From there, we simply compute the direction by normalized
+            // the resulting vec3f variable. This is similar to taking the vector
+            // between the point on the image plane and the camera origin, which
+            // in camera space is (0,0,0):
+            //
+            // ray.dir = normalize(Vec3f(x,y,-1) - Vec3f(0));
+            // [/comment]
+#ifdef MAYA_STYLE
+            float x = (2 * (i + 0.5) / (float)options.width - 1) * scale;
+            float y = (1 - 2 * (j + 0.5) / (float)options.height) * scale * 1 / imageAspectRatio;
+#elif
+
+            float x = (2 * (i + 0.5) / (float)options.width - 1) * imageAspectRatio * scale;
+            float y = (1 - 2 * (j + 0.5) / (float)options.height) * scale;
+#endif
+            // [comment]
+            // Don't forget to transform the ray direction using the camera-to-world matrix.
+            // [/comment]
+            Vec3f dir;
+            options.cameraToWorld.multDirMatrix(Vec3f(x, y, -1), dir);
+            dir.normalize();
+            *(pix++) = castRay(orig, dir, objects);
+        }
+    }
+
+    // Save result to a PPM image (keep these flags if you compile under Windows)
+    std::ofstream ofs(&quot;./out.ppm&quot;, std::ios::out | std::ios::binary);
+    ofs &lt;&lt; &quot;P6\n&quot; &lt;&lt; options.width &lt;&lt; &quot; &quot; &lt;&lt; options.height &lt;&lt; &quot;\n255\n&quot;;
+    for (uint32_t i = 0; i &lt; options.height * options.width; ++i) {
+        char r = (char)(255 * clamp(0, 1, framebuffer[i].x));
+        char g = (char)(255 * clamp(0, 1, framebuffer[i].y));
+        char b = (char)(255 * clamp(0, 1, framebuffer[i].z));
+        ofs &lt;&lt; r &lt;&lt; g &lt;&lt; b;
+    }
+
+    ofs.close();
+
+    delete [] framebuffer;
+}
+
+// [comment]
+// In the main function of the program, we create the scene (create objects)
+// as well as set the options for the render (image widht and height etc.).
+// We then call the render function().
+// [/comment]
+int main(int argc, char **argv)
+{
+    // creating the scene (adding objects and lights)
+    std::vector&lt;std::unique_ptr&lt;Object&gt;&gt; objects;
+
+    // generate a scene made of random spheres
+    uint32_t numSpheres = 32;
+    gen.seed(0);
+    for (uint32_t i = 0; i &lt; numSpheres; ++i) {
+        Vec3f randPos((0.5 - dis(gen)) * 10, (0.5 - dis(gen)) * 10, (0.5 + dis(gen) * 10));
+        float randRadius = (0.5 + dis(gen) * 0.5);
+        objects.push_back(std::unique_ptr&lt;Object&gt;(new Sphere(randPos, randRadius)));
+    }
+
+    // setting up options
+    Options options;
+    options.width = 640;
+    options.height = 480;
+    options.fov = 51.52;
+    options.cameraToWorld = Matrix44f(0.945519, 0, -0.325569, 0, -0.179534, 0.834209, -0.521403, 0, 0.271593, 0.551447, 0.78876, 0, 4.208271, 8.374532, 17.932925, 1);
+
+    // finally, render
+    render(options, objects);
+
+    return 0;
+}
+</div><!-- end of code --></div><!-- end of code-column -->
+</article>
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/code.php?id=10&origin=/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes&src=0 by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 19:00:37 GMT -->
+</html>

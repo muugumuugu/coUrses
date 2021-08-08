@@ -1,0 +1,310 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-generating-camera-rays/definition-ray by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 18:01:14 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Ray-Tracing: Generating Camera Rays (Definition of a Ray)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='camera ray, primary ray, camera, ray-tracing, ray'>
+<meta name='date' content='2014-08-15 10:34:46'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+	<!-- Open Graph data -->
+	<meta property='fb:app_id' content='1535346446701691'/>
+	<meta property='og:title' content='Ray-Tracing: Generating Camera Rays'/>
+	<meta property='og:type' content='article'/>
+	<meta property='og:url' content='https://www.scratchapixel.com//lessons/3d-basic-rendering/ray-tracing-generating-camera-rays'/>
+	<meta property='og:image' content='https://www.scratchapixel.com/images/design/logo_scratchapixel2015.png'/>
+	<meta property='og:description' content='Lesson summary: Next, we will learn how to render a triangle and simple shapes using ray tracing. However, in order to render geometry, we first need to learn how to generate rays from the camera.'/> 
+	<meta property='og:site_name' content='Scratchapixel'/>
+	<meta property='fb:admins' content='1260067275'/>
+	
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Ray-Tracing: Generating Camera Rays</div><div style='width: 100%; margin: 0px; display: table; vertical-align: middle; border: 1px none red;'>
+			<div style='display: table-row; height: 30px;'>
+			<div style='margin: 0px; padding: 0px; border: 1px none blue ; display: table-cell; vertical-align: middle;'>
+				<a href='https://twitter.com/share' class='twitter-share-button' data-lang='en'>Tweet</a>
+			</div></div>
+			<div style='display: table-row; height: 30px;'>
+			<div style='padding: 0px; border: 1px none blue ; display: table-cell; vertical-align: middle;'>
+				<div style='margin-top: 5px;' class='fb-like' data-share='true' data-width='450' data-show-faces='true'></div>
+			</div></div></div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="definition-ray.html"><b>Definition of a Ray</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="generating-camera-rays.html">Generating Camera Rays</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="standard-coordinate-systems.html">Standard Coordinate Systems</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code2e5d.html?id=7&amp;origin=/lessons/3d-basic-rendering/ray-tracing-generating-camera-rays">Source Code</a></div></div></div><span style='display: inline-block; width: 100%; margin: 0px 0px 10px 0px;'><i>Keywords: camera ray, primary ray, camera, ray-tracing, ray.</i></span><h2>Prerequisites</h2>
+
+<p>Most of the techniques we will be studying from that lesson onwards, will use what we learned about points, vectors, matrices, cameras, and trigonometry in the lesson on <a href="../../mathematics-physics-for-computer-graphics/geometry.html">Geometry</a>. We will reuse a lot of the things we learned in the lesson <a href="../3d-viewing-pinhole-camera.html">Computing the Pixel of a 3D Point</a> about the different coordinates systems vertices and vectors can be transformed into. You should also be familiar with the concepts studied in the lesson <a href="../3d-viewing-pinhole-camera.html">3D Viewing: the Pinhole Camera Model</a>. Be sure you have covered these grounds first before you start reading this lesson.</p>
+
+<h2>What Is This Lesson About?</h2>
+
+<p>In the introductory lesson on <a href="../ray-tracing-overview.html">Ray-Tracing</a>, we already quickly mentioned how ray-tracing can be used to solve the visibility problem. Let's recall that visible surface determination in the context of 3D rendering is the process used to determine which parts of the scene geometry is visible through the camera. We can use ray-tracing to compute visibility (this process was already explained in the previous lesson) by casting a ray through each pixel in the image and looking for the nearest object that this ray intersects (if any). Let's also recall that ray-tracing is a technique for computing intersections between rays and surfaces. Using ray-tracing to compute visibility is also called <b>ray-casting</b>.</p>
+
+<div class="scratchquote">Given a set of obstacles in the Euclidean space, two points in the space are said to be visible to each other, if the line segment that joins them does not intersect any obstacles. (definition of <a href="http://en.wikipedia.org/wiki/Visibility_(geometry)">visibility</a> on Wikipedia)</div>
+ 
+ <p>Producing  an image using ray-tracing to solve visibility requires to loop over all the pixels in the image, generate a ray for each pixel, cast this ray into the scene and look for a possible intersection between this ray and any surface in the scene. These rays are called <b>primary rays</b> (or camera or eye rays) because they are the first rays cast into the scene (secondary rays are used to compute things like shadows, reflections, refractions, etc.). To find if the ray intersects a surface, we need to test each object in the scene for a possible intersection against this ray. A ray might intersect more than one surface. The visible surface is the surface with the closest intersection distance. By distance we mean the distance from the origin of the ray (which in the case of a primary ray, is the position of the camera) and the intersection point.</p>
+ 
+<div name="code" class="code">for (int j = 0; j < height; ++j) {
+    for (int i = 0; i < width; ++i) {
+        // generate primary ray (this is what this lesson is about)
+        ...
+        float tnear = INFINITY; // closest intersection, set to INFINITY to start with
+        for (int k = 0; k < numObjects; ++k) {
+             float t = INFINITY; // intersection to the current object if any
+             if objects[k]->intersect(pimaryRay, tnear) && t < tnear) {
+                 tnear = t;
+                 framebuffer= objects[k].color;
+            }
+        }
+    }
+}</div>
+ 
+<p>In this lesson, we will formalize the concept of ray and more importantly how primary rays are generated to simulate pinhole cameras. Once we understand how primary rays are generated, the next step will consist of learning a few techniques to compute the intersection between rays and geometry. These are the minimum requirements to produce an image of 3D objects using ray-tracing.</p>
+ 
+<div class="question">Note about ray-tracing and perspective projection: the pinhole camera model is the simplest to simulate in CG. As with rasterization, this is the model we will also be using for ray-tracing. Images formed with this model . Remember that the mapping from 3D to 2D described by a pinhole camera is a perspective projection.</div>
+ 
+<p>In this chapter, we will learn a few useful things about rays. In the next chapter, we will study how primary rays are computed.</p>
+ 
+<h2>Defining Rays</h2>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../../images/upload/ray-tracing-camera/rayd41d.png?" />
+<p class="caption left">Figure 1: a ray is defined by an origin and a direction.</p>
+</div>
+
+<p>As stated in the <a href="../ray-tracing-overview/light-transport-ray-tracing-whitted.html">previous lesson</a>,</p>
+
+<div class="scratchquote">Ray-tracing is a technique used to compute the visibility between points. It is simply a technique based on the concept of ray which can be mathematically (and in a computer program) defined as a point (the origin of the ray in space) and a direction. Then the idea behind ray-tracing is to find mathematical solutions to compute the intersection of this ray with various types of geometry: triangles, quadrics (which we study in one of the following lessons), NURBs, etc. This is really all there is to ray-tracing.</div>
+
+<p>The part we will explain in this lesson (and in this chapter more specifically) is the notion of ray and the way we can define it both in theory and in programming. The only two variables we need to define a ray are a point and a vector. The point (which programmatically we will simply define as a <span class="code-inline">vec3f</span>) represents the origin of the ray and the vector, its direction. Keep in mind that direction should generally be normalized.</p>
+
+<div  name="code" class="code">// the minimum requirement for defining a ray is a position and a direction
+Vec3f orig; // ray origin
+Vec3f dir; // ray direction (normalized)</div>
+
+<p>What this point and this direction represent when combined together is a half-line. Mathematically, any point on this half line can be defined as:</p>
+
+$$P = orig + t * dir.$$
+
+<p>Where \(t\) is the distance from the origin of the point to the point on the half-line. This variable can either be negative or positive. It \(t\) is negative, the point on the ray is behind the ray origin and if \(t\) is positive, the point P is in "front" of the ray's origin. Practically, when we use ray-tracing, we are generally only interested in finding the intersection of the ray with surfaces located in front of the ray's origin. This means that we will only consider an intersection between a ray and a surface valid if \(t\) is positive.</p>
+
+<div name="code" class="code">// define ray's origin and direction
+Vec3f orig = ...;
+Vec3f dir = ...;
+float t = INFINITY;
+// does this ray intersect the object? intersect() returns true if an intersection was found
+if (object.intersect(orig, dir, t) && t > 0) {
+    // this is a valid intersection, the hit point is in front of the ray's origin
+    ...
+}</div>
+
+<p>From a mathematical standpoint, the equation above is called a <a href="http://en.wikipedia.org/wiki/Parametric_equation">parametric equation</a>. The half-line is described by an equation which is a function of the parametric variable \(t\) (or parameter).</p>
+
+<p>Ray-geometry intersection routines always return the intersection (if one was found) in terms of the parameter \(t\). In other words, if an intersection was found then the ray-geometry intersection routine would compute the distance from the ray origin to that intersection and return this information to you. From there you can easily compute the position of the intersection or hit point in 3D space using the ray parametric equation we introduced above.</p>
+
+<div name="code" class="code">// define ray's origin and direction
+Vec3f orig = ...;
+Vec3f dir = ...;
+float t = INFINITY; // intersection distance to the object (if any). Set to very large number to start with
+// does this ray intersect the object? intersect() returns true if an intersection was found
+if (object.intersect(orig, dir, t) && t > 0) {
+    // this is a valid intersection, the hit point is in front of the ray's origin, compute hit point using t
+    Vec3f hitPoint = orig + dir * t;
+}</div>
+
+<p>This is really all there is to rays. From a programming point of view, rays can also be defined as a C++ class:</p>
+
+<div name="code" class="code">class Ray
+{
+public:
+    Ray(), orig(0), dir(0,0,-1) {}
+    Ray(const Vec3f &o, const Vec3f &d) : orig(o), dir(d) {}
+    // etc.
+    ...
+    Vec3f orig;
+    Vec3f dir;
+};</div>
+
+<p>Some programers like to add more member variables to this class, such as for instance a \(t_{min}\) and a \(t_{max}\) distance. They define a range of valid values for \(t\). In other words, if the ray-geometry routine returns a value for \(t\) that is not contained within the range [\(t_{min}\), \(t_{max}\)], then there would actually be no intersection (even if \(t\) is greater than 0).</p>
+
+<div name="code" class="code">class Ray
+{
+public:
+    Ray(), orig(0), dir(0,0,-1), tMin(0.1), tMax(1000) {}
+    Ray(const Vec3f &o, const Vec3f &d) : orig(o), dir(d), tMin(0.1), tMax(1000) {}
+    // etc.
+    ...
+    Vec3f orig;
+    Vec3f dir;
+    float tMin, tMax;
+};
+
+Ray ray;
+// set ray direction and origin
+ray.orig = ...;
+ray.dir = ...;
+float t = INFINITY;
+if (object.intersect(ray, t) && t &gt= ray.tMin && t &lt= r.tMax) {
+     // valid intersection
+     ...
+} </div>
+
+<p>You can add as many parameters as you want to the <span class="code-inline">Ray</span> class. You can decide to use a Ray class or not. This is entirely left to personal preferences and requirements. There is no rule about the way you represent this data in your program. Some programmers like to add information to the Ray class such as the distance \(t\) to the closest visible surface (which you set in the ray-geometry routine when an intersection is found), a pointer to the hit object, etc. Some other programmers prefer to separate this information from the ray variables and store them instead in a structure or a class called <span class="code-inline">Intersection</span> for instance. Again, apart from having to at least define the ray origin and ray direction, everything else can be done in just the way you like (and is optional).</p>
+
+<div class="question">One thing that can be useful though in programming is to label the ray somehow based on its type: primary, shadow, reflection, refraction, etc. It can be used to gather statistics (if you want to know how many shadows were cast to render a given scene for example) and can be used in the code to call different functions based on the ray type. This is also a common practice.</div>
+
+<h2>What Are Rays Used For?</h2>
+
+<p>Rays can be used pretty much everywhere. They are used to solve the visibility problem, gather information about the colors of objects, compute shadows, etc. The type of rays we will be learning about in this lesson are called <b>camera rays</b> or <b>primary rays</b>.</p>
+
+<div class="captionImage right" style="width: 450px;">
+<img class="left" src="../../../images/upload/ray-tracing-camera/ray1d41d.png?" />
+<p class="caption left">Figure 2: camera or primary rays are rays which have for origin the origin of the camera and passes through the pixels centers. If a primary ray hits geometry in the scene we compute the color of the object at the intersection point and assign this color to the pixel the ray passes through.</p>
+</div>
+
+<p>For each pixel in the frame we will need to construct one camera ray which we will cast into the scene. If rays intersect objects we will compute the color of the objects at these intersection points and assign these colors to the corresponding pixels. This is in short, how a CG image is created with ray-tracing. We can make the distinction between primary rays (the first rays cast into the scene which have for origin the origin of the camera) and <b>secondary rays</b> (shadow, diffuse, specular, transmission, etc. rays) which we use in shading. Secondary rays are spawned from primary rays at the ray's intersection point. The direction of these secondary rays depends on their type: shadow (we cast a ray in the direction of the light), reflection (we cast a ray in the reflection direction), refraction (we cast a ray in the refraction direction which can be computed using Snell's law), etc.</p>
+
+<h2>What's Next ?</h2>
+
+<p>In the next chapter we will learn how to initialize camera rays for each pixel of the frame, at which point all we need to do to get an image is to implement a simple ray-object intersection routine and store the result to an image file format.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 1 of  4</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='generating-camera-rays.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-generating-camera-rays/definition-ray by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 18:02:10 GMT -->
+</html>

@@ -1,0 +1,376 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/advanced-rendering/rendering-distance-fields/maths-behind-sphere-tracing by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:20:05 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Rendering Implicit Surfaces and Distance Fields: Sphere Tracing (Maths Behind Sphere-Tracing)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='distance field, implicit function, sphere tracing, CSG, Constructive Solid Geometry, ray marching, implicit surfaces, gradient, level surface, level set, blobbies, soft objects, meatballs'>
+<meta name='date' content='2016-11-27 15:56:09'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Rendering Implicit Surfaces and Distance Fields: Sphere Tracing</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction.html">Introduction</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="maths-behind-sphere-tracing.html"><b>Maths Behind Sphere-Tracing</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="basic-sphere-tracer.html">A Simple Sphere-Tracer</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="constructive-solid-geometry-blends-deformers.html">Constructive Solid Geometry, Blends and Deformers</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="blobbies.html">Blobbies</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code2e85.html?id=59&amp;origin=/lessons/advanced-rendering/rendering-distance-fields">Source Code</a></div></div></div><h2>The Maths of Sphere-Tracing</h2>
+
+<p>To understand the sphere-tracing algorithm you need to first remember the fact that the shapes that we will render with this method can be defined mathematically or implicitly. Recall that for instance the implicit form of the sphere is:</p>
+
+$$x^2 + y^2 + z^2 - r^2 = 0,$$
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="width: 400px;" src="../../../images/upload/distance-fields/sphere-tracing-fig5d41d.png?" />
+<p class="caption left">Figure 1: A is the set of points making up the surface of the implicit sphere. They all satisfy the equation $x^2 + y^2 + z^2 - r^2 = 0$.</p>
+</div>
+
+<p>where \(x\), \(y\) and \(z\) are the coordinates of a point in 3D space. All it says is that points that actually lie on the surface of the sphere, in other words all points making up the surface of the sphere or its isosurface, satisfy this equation. In other words, if you raise the point coordinates to the power of two sum them up, subtract the radius of the sphere raised to the power of two as well, then the result is 0 for all points lying on the surface of the sphere. All these points belong to a set that we will call \(A\) (figure 1).</p>
+
+<p>Now once you understand certain shapes like sphere, cubes, cones, cylinders (and many more, we will show examples later on) can be represented with equations, the next step in developing a method similar to sphere-tracing, is to answer the following question:</p>
+
+<div class="scratchquote">"Is it possible to find a equation that returns the distance from a point (let's call it \(P\)) in space to the nearest point on the surface of an implicit shape?"</div>
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="width: 400px;" src="../../../images/upload/distance-fields/sphere-tracing-fig7d41d.png?" />
+<p class="caption left">Figure 2: a DIF is a function that returns the distance from any point to the nearest point on the surface of the implicit object. A DUF is a function that returns a distance equal to or lower than the distance returned by the DIF.</p>
+</div>
+
+<p>In other words, we need to find the point in the set \(A\) that is the closest to \(P\). In figure 1, we denoted this equation \(d(P, A)\). This is not the mathematical notation used by Hart, but hopefully this is more meaningful if you are not a mathematician. Technically, if we can find an equation that returns the distance from \(P\) to the nearest point in \(A\), then we have what we called in the previous chapter a <b>DIF</b> or <b>distance implicit function</b>. Though remember that we also mentioned that while using a DIF is ideal, any function that returns a distance equal to or lower than the function that would return by a DIF would work as well. Hart called such functions <b>DUFs</b> or <b>distance underestimate implicit function</b>. We can write that:</p>
+
+$$DUF(P) \le DIF(P)$$
+
+<div class="scratchquote">The distance \(d\) returned by a DUF can be considered the radius of a sphere guaranteed not to intersect the implicit surface. Such spheres are called <i>unbounding</i> spheres.</div>
+
+<p>Figure 2 shows the example of two points \(P\) and \(P'\) from which we want to compute ideally the nearest point on the simplicity shape (a sphere in this particular case). However for \(P\) we use a DIF to compute that distance and it returns indeed the "optimum distance" that is the distance between a \(P\) and the nearest point on the surface of the sphere, though for \(P'\) we use a DIF that returns a distance lower than that optimum distance. In summary, the distance returned by a DUF function for a given point \(P\) is equal to or lower than the distance return by a DIF function. DIFs are better than DUFs because they return the optimum distance, so with a DIF we will be able to get to the intersection point in fewer steps that with a DUF. But as mentioned in the previous chapter, it is not always possible to find a DIF for a given implicit shape therefore it is always possible in such case to use a DUF instead (assuming we can also find such function for the shape in question). The following and of course most important question is then: "how do we find either a DIF or a DUF for any given shape". Is there a formula that would allow us to find these functions systematically?</p>
+
+<p>The foundation of Hart's method relies precisely on proving that indeed, it is possible using maths to find a generic solution to this problem. His method relies on a mathematical concept called the <b>Lipschitz constant</b> denoted \(M\) in this lesson:</p>
+
+$$f(a) - f(b) \le M ||a - b||.$$
+
+<p>Here \(a\) and \(b\) are just two values that are acceptable for the function \(f(x)\). What this equation says is that there is a constant called \(M\) such that the product of \(M\) with the absolute value of \(a-b\) is greater or equal to \(f(a) - f(b)\). \(M\) here as we already mentioned is called the Lipschitz constant and is also a simple real value like \(a\) and \(b\). It can be interpreted in this particular case as some sort of constant that scales the term \(||a-b||\) up or down. There is nothing really complicated to this idea. This theorem is only true when \(f(x)\) is continuous and differentiable (to simplify), though we won't get into these technical details nor demonstrate the theorem itself as it can be quite daunting. Suffice to say that this theorem is true for implicit functions.</p>
+
+<p>Note that there is no upper limit to \(M\) but there is lower bound or minimum. In other words, there is a minimum for \(M\) such that the \(M||a-b|| \ge f(a) - f(b)\) holds true for any \(a\) and \(b\). But any value for \(M\) that is greater than that minimum will work too (for example if the minimum possible value for \(M\) is 1, then any value greater than 1 will work for \(M\) as well).</p>
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="width: 400px;" src="../../../images/upload/distance-fields/sphere-tracing-fig6d41d.png?" />
+<p class="caption left">Figure 3: the Lipschitz constant \(M\) can be interpreted as the slope of the function \(f(x)\).</p>
+</div>
+
+<p>We can re-arrange the terms for the Lipschitz constant equation as follows:</p>
+
+$$
+\begin{array}{l}
+f(a) - f(b) \le M ||a - b||,\\
+M \ge \dfrac {f(a) - f(b)} {||a - b||}.
+\end{array}
+$$
+
+<p>This is interesting because the term on the right hand side of the second equation (second line) has a name in mathematics and also has some very important properties. It is called a <b>difference quotient</b> is in calculus the method by which we can compute a <b>function derivative</b>. The difference quotient is written as:</p>
+
+$$\dfrac {f(b) - f(a)} {b - a} .$$
+
+<p>technically this represents the <b>mean (or average) value</b> of the derivative of \(f\) over the interval \([a, b]\) (if you want to learn more about this topic such for the <b><a href="https://en.wikipedia.org/wiki/Mean_value_theorem">mean value theorem</a></b> on the web). When \(a\) and \(b\) are far apart, we only get an approximation of the derivative of \(f\) at \(a\) (whether we compute the derivative at \(a\) or \(b\) or in the middle depends on whether we use forward, backward or central difference but we won't get into these details here). To go from the approximation to the exact solution requires to make the difference between \(a\) and \(b\) very small which we can write as:</p>
+
+$$f'(a) = \lim\limits_{||a-b|| \to 0} \dfrac{f(b)-f(a)}{b-a} = \lim\limits_{h \to 0} \dfrac {f(a+h) - f(a)} {h},$$
+
+<p>with \(h = a - b\). In words it says that the difference quotient gives the derivative (denoted \(f'\)) of the function \(f\) when the difference between \(a\) and \(b\) (which we replaced with the term \(h\)) approaches 0 (the limit).</p>
+
+<p>This is great for us because in short, it also means that the Lipshitz constant \(M\) is equal to the function's \(f\) derivative:</p>
+
+$$M \ge \lim\limits_{||a-b|| \to 0} \dfrac{f(b)-f(a)}{b-a} \rightarrow f'(x).$$
+
+<p>Practically this observation is going to be useful later on to compute \(M\). Though before we get to that point we will first explain why is the Lipschitz constant useful.</p>
+
+<p>Let's assume that \(b\) is a point on the surface of an implicit shape and \(a\) some random point in space (figure 4). If that is true then we can write that:</p>
+
+$$||b -a|| = d(a, A).$$
+
+where \(d(a, A)\) here is our distance estimation function, the function that returns the distance from \(a\) to the nearest distance on the surface of the implicit object, which in our case is \(b\). Simple. <b>Remember that \(d(a, A)\) is the function we are looking for</b>. Now let's look at this other equation:<p>
+
+$$f(a) - f(b).$$
+
+<p>where \(f\) is our implicit function (such as \(x^2+y^2+z^2-r^2 = 0\) if we render spheres). If \(b\) lies exactly on the surface of the implicit object then we know that f(x) = 0. The implicit function returns the signed distance of a point to the isosurface, so if the point lies on the isosurface that distance is 0. In which case our previous equation simplifies to (assuming \(b\) is on the shape's surface):</p>
+
+$$f(a) - f(b) = f(a).$$
+
+<p>Let's put all the pieces of the puzzles together. We have:<p>
+
+$$f(a) - f(b) \le M||a-b||.$$
+
+<p>Since \(||a-b|| = d(a, A)\) we can write:</p>
+
+$$f(a) - f(b) \le M d(a, A).$$
+
+<p>and since \(f(a) - f(b)\) simplifies to \(f(a)\) when \(b\) lies on the shape's surface, which is the case for which we try to find a solution, we get:</p>
+
+$$f(a) \le M d(a, A).$$
+
+<p>We finally get a solution for our distance estimation function which is:</p>
+
+$$d(a, A) \ge \dfrac {f(a)} {M}.$$
+
+<div class="important"><p>The key part here is to realize that \(d(a, A)\) returns the "ideal" or optimum distance between point \(a\) and the nearest point on the surface of the object. Another way of saying this is that \(d(a,A)\) is a DIF. And recall that:</p>
+
+$$DIF \ge DUF.$$
+
+<p>Thus if the term on the right side of the equation (\(f(a)/M\)) is <b>lower</b> than that "optimum" distance \(d(a,A)\), then we can use that term as a DUF (if you don't understand this idea clearly read again):</p>
+
+$$
+\begin{array}{l}
+DIF \ge DUF.\\
+d(a, A) \ge \dfrac {f(a)} {M},
+\end{array}
+$$
+
+<p>where \(DIF = d(a, A)\) and \(DUF = f(a)/M\).</p>
+
+<p>In conclusion, we can find a DUF for any implicit function, if we divide the function itself by the function's Lipschitz constant, hence the need of computing a value for that constant \(M\).</p>
+
+</div>
+
+<p>So how do we compute a value for \(M\)? Remember that:</p>
+
+$$M \ge f'(x).$$
+
+<p>Now \(f'(x)\) is a function so its value is likely to vary as \(x\) varies. Though note that if \(M\) is equal to the function  derivative's (\(f'(x)\)) maximum value then we will satisfy the above condition:<p> 
+
+<div class="important">\(M\) is at least equal to \(f'(x)\)'s maximum value.</div>
+
+<div style="width: 670px; display: inline-block; margin: 12px 0; padding: 0;">
+<img class="left" src="../../../images/upload/distance-fields/sphere-tracing-fig9d41d.png?" />
+<p class="caption left" style="margin: 0; padding: 0; font-size: 12px;">Figure 5: a graph of a function \(f(x)\) and its derivative f'(x). The derivates reaches its maximum value when the tangent on \(f(x)\) is the steepest.</p>
+</div>
+
+<p>So how do we find \(f'(x)\) maximum value? With mathematics of course. Remember from your lessons on calculus that the function derivative can be interpreted as the slope of the function \(f\). This idea is illustrated in figure 3 and 5. The slope is basically a line tangent to a point on the function where the derivative of that function is evaluated. Note that as you move from one point to the next along the x-axis, the slope (aka steepness) of the tangent varies. Sometimes it's very steep (the tangent is almost vertical), sometimes it's almost horizontal. The tangent is very steep when the function changes very rapidly from one point to the other and it's quite flat when this change is small. This variation of the slope can also be displayed as a graph. This idea is illustrated in figure 5. The red curve in figure 5 is a graph of the function \(f(x) = -3x^3 - 3x^2 + 5x + 4\). For the sake of the exercise, we will just consider the section of the curve for which \(x\) varies between roughly -1.6 and 1.2. The green curve is a graph of that function first order derivative \(f'(x)=-9x^2-6x+5\) (in the lesson we assume you know how to compute the derivative of exponential functions. You can find a lot of tutorials on this topic on the web). It shows the variation of the tangent's slope as a function of \(x\). Note that when the tangent is the steepest, the function derivative reaches a <b>maximum</b>. That maximum, is the value we are looking for. Alternatively, note that \(f'(x) = 0\) when the tangent is entirely flat. We now understand when is maximum value for f'(x) reached but how do we compute its actual value?</p>
+
+<p>If you look at figure 5, note that the tangent at that point where \(f'(x)\) reaches its maximum value is also flat. And what did we learn about flat tangents? That we have flat tangents wherever the function's derivative is equal to 0. Thus if we wish to find where \(f'(x)\) has a flat tangent, all we need to do is compute the derivative of \(f'(x)\) i.e. \(f''(x)\) (\(f(x)\) second derivative) and then find the solution for which \(f''(x)=0\) (find the value of \(x\) for which \(f(x) = 0\)). This is illustrated in the following figure (figure 6).</p>
+
+<div style="width: 670px; display: inline-block; margin: 12px 0; padding: 0;">
+<img class="left" src="../../../images/upload/distance-fields/sphere-tracing-fig10d41d.png?" />
+<p class="caption left" style="margin: 0; padding: 0; font-size: 12px;">Figure 6: solving \(f''(x)=0\) tells us where \(f'(x)\) has a flat tangent.</p>
+</div>
+
+<p>We how that \(f'(x)=-9x^2-6x+5\) so \(f''(x)=-18x-6\). This equation has a simple solution in this case which is \(x = -6/18=-1/3\). Now all we need to do in order to find \(f'(x)\)'s maximum value, is to plug our solution in the first order derivative function. We get: \(f'(-1/3) = -9(-1/3)^2-6(-1/3) + 5=-1+2+5=6\). Et voila!</p>
+
+<div class="important"><p>This demonstration showed you a solution to find a value for the function's Lipschitz constant \(M\). We know \(M\) needs to be at least equal to the function derivative maximum value,</p>
+
+$$M \ge f'(x),$$
+
+<p>and we know that in order to compute that value, we need to find the solution to the function second order derivative (\(f''(x)\)). We then plug this solution in \(f'(x)\) and that gives us a solution for \(M\).</p></div>
+
+<p>Hopefully you can now understand the mathematical principle upon which sphere-tracing is built. Don't worry if it still looks abstract to you, we will look at a few real examples in the rest of this lesson.</p>
+
+<div class="question">Note that we have only studied a 1D function in this part of the lesson but we deal with 3D shapes. The concept of tangent in 1D translates to the concept of vector in 3D space and gradient.</div> 
+
+<h2>Practical Examples</h2>
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="width: 400px;" src="../../../images/upload/distance-fields/sphere-tracing-sphered41d.png?" />
+<p class="caption left">Figure 7: nearest distance to point on implicit sphere.</p>
+</div>
+
+<p>Interestingly enough the method we just described doesn't need to be used all the times. There are some shapes for which it is in fact pretty straightforward to find the perfect DIF without making much of an effort. For example, it's pretty simple to see that the nearest distance to a <b>sphere</b> is just the distance from the point \(P\) to the center of the sphere (the origin for now) minus the sphere radius:</p>
+
+$$d(P, Sphere) = ||P|| - r =0.$$
+
+<p>Where \(||P||\) in code is computed with <span class="code-inline">sqrtf(x*x+y*y+z*z)</span>. One important note. For now we assume that all shapes are centred around the origin (thus \(C\) the center of the sphere has coordinates <0,0,0>). Later in the lesson we will learn how to deal with transformations such as scale, rotation and translation. But for now, we will assume a canonical shape centred around the origin.</p>
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="width: 400px;" src="../../../images/upload/distance-fields/sphere-tracing-planed41d.png?" />
+<p class="caption left">Figure 8: nearest distance to point on implicit plane.</p>
+</div>
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="width: 400px;" src="../../../images/upload/distance-fields/sphere-tracing-cubed41d.png?" />
+<p class="caption left">Figure 9: nearest distance to point on implicit cube.</p>
+</div>
+
+<p>Finding the nearest point on a <b>plane</b> is simple too. We need a point on the plane (any point will do) and compute the vector that goes from that point to our position. Then we compute the dot product of this resulting vector with the plane normal. In the lesson on <a href="../../mathematics-physics-for-computer-graphics/geometry/math-operations-on-points-and-vectors.html">geometry</a>, we explained that the dot of a normalized vector \(V_N\) (the plane's normal) with an arbitrary vector \(V_A\) that is not necessarily normalized gives the length of \(V_A\) projected onto the axis defined by \(V_N\). If you look at figure 8, you will notice that this length is just the distance \(d\) from our positon in space to the nearest point on the plane.</p>
+
+$$d(P, Plane) = (P - P_{plane}) \cdot N$$
+
+<p>where \(N\) is the plane normal and \(P_{plane}\) is a point on the plane.</p>
+
+<p>Computing the nearest point to a <b>cube</b> can also be found using geometry. If you look at figure 9, you will see that we can encounter two different scenarios: when the point is inside the cube (\(P_3\)) when the point is outside of the cube (\(P_1\), and \(P_2\)).</p>
+
+<ul>
+<li>The first thing you want to do is mirror our point \(P\) into the positive <a href="https://en.wikipedia.org/wiki/Octant_(solid_geometry)">octant</a> of space. This works because the cube is symmetrical and that we deal with distances only. And we do it because it simplifies the problem.</li>
+
+<div name="code" class="code">from.x = std::fabs(from.x);
+from.y = std::fabs(from.y);
+from.z = std::fabs(from.z);</div>
+
+<li>Then you compute the difference between the corner of the cube whose coordinates are all positive (the corner of the cube that is also located in the positive octant of space) and our point \(P\) whose coordinates are also all positive (let's call it \(P_+\)). If the point is inside the cube, the coordinates of the resulting vector \(V\) will necessarily be negative (all of them). We want to find the face of the cube that \(P_+\) is the closest to. To do so, take the coordinates of this vector \(V\) with the maximum value, and clamp the result to 0. If one of the coordinates is positive, then this means that the point is outside of the cube, and in this case, we need to compute the distance to the cube in a different way.</p>
+
+<div name="code" class="code">Vec3f v = from - corner;
+float nearestDistance = (max(v.x, max(v.y, v.z));
+nearestDistance = min(nearestDistance, 0);</div>
+
+<li>if the point is outside of the cube (then <span class="code-inline">nearestDistance</span> is still 0 at this point), we need to compute the distance using a different method. If the point is outside of the cube, the vector \(V\) may have a mix of positive and negative coordinates. First clamp all negative coordinates to 0 (see why by looking at \(P_1\) in figure 9):</li>
+
+<div name="code" class="code">v.x = max(v.x, 0);
+v.y = max(v.y, 0);
+v.z = max(v.z, 0);</div>
+
+<p>And then compute the length of the resulting vector, this will be the distance from \(P\) to the nearest point on the surface of the cube. Add  the result to <span class="code-inline">nearestDistance</span>:</p>
+
+<div name="code" class="code"> nearestDistance += v.length();</div>
+
+</ul>
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="width: 400px;" src="../../../images/upload/distance-fields/sphere-tracing-cylinderd41d.png?" />
+<p class="caption left">Figure 10: nearest distance to point on implicit cylinder.</p>
+</div>
+
+<p>The solution for a <b>torus</b> is also quite simple. The main idea is to reduce the 3D point \(P\) to a 2D point lying in a plane passing through the torus: the intersection of the plane with the torus defines a circle (as illustrated in figure 10). By reducing the problem to a 2D point and a circle lying in the same plane, we can apply the same technique than the one we used for spheres: subtract the radius of the circle from the distance from the point to the center of the circle. This will give us the distance of the point to the circle and thus the torus.</p>
+
+<p>To compute the coordinates of \(P\) as a 2D point, first compute the distance of the point from the world origin in the xz-plane and subtract to this result the torus larger radius (\(R_0\). This gives the x-coordinate of the point \(P\) on the plane with regard to the center of the circle. Then set the y-coordinate of this 2D point with \(P_y\). The length of the point gives the distance from the 2D point to the center of the circle. Subtract the inner radius of the torus to this length and you will get the distance of \(P\) to the nearest point on the torus surface. The equation is:
+
+$$d(P, Torus) = \sqrt{ (\sqrt{P.x^2 + P.z^2} - R_0^2) + P.y^2 } - R_1^2.$$
+
+<h2>When and Where Will I Use the Lipschitz Constant Thing?</h2>
+
+<p>We didn't use the techniques based on the Lipschitz constant for these simple shapes, so you may think, "what was the point of studying all that if we don't use it?". In the <a href="blobbies.html">last chapter of this lesson</a>, we will show that when geometry can't be used to develop a DIF or a DUF, then we can always revert to the more complex but generic solution presented in this chapter.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='introduction.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 2 of  6</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='basic-sphere-tracer.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/advanced-rendering/rendering-distance-fields/maths-behind-sphere-tracing by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:20:10 GMT -->
+</html>

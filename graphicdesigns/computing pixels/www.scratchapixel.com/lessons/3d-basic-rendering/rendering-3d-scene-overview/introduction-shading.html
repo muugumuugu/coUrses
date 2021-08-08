@@ -1,0 +1,285 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/rendering-3d-scene-overview/introduction-shading by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:09:48 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Rendering an Image of a 3D Scene: an Overview (Shading)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='ray tracing, rasterization, rasterisation, pixel, discretisation, raster, aliasing, vector graphics, triangle, triangulation, smooth shading, sampling, tessellation, polygonal mesh, NURBS, subdivision surface, voxel, implicit surface, meatballs, bloodies, rendering primitive, perspective projection, foreshortening effect, orthographic projection, perspective divide, hidden surface elimination, hidden surface determination, hidden surface removal, occlusion culling, visible surface determination, shading, absorption, reflection, normal, scattering, shader, light transport, forward tracing, backward tracing, indirect diffuse, wireframe, frustum, screen space, raster space, depth sorting algorithm, acceleration structure, law of reflection, reflected direction, incident direction, Snell law, Fresnel equation, roughness, specular reflection, subsurface scattering, indirect diffuse, indirect specular, caustics, soft shadows, global illumination, radiosity, Monte Carlo ray tracing, primary ray, secondary ray, shadow ray, unidirectional path tracing, Appel, Whitted, photon mapping, albedo, energy conservation, physically plausible rendering, cosine law'>
+<meta name='date' content='2014-11-12 23:28:46'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Rendering an Image of a 3D Scene: an Overview</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="computer-discrete-raster.html">It All Starts with a Computer and a Computer Screen</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="rendering-3d-scene.html">And It Follows with a 3D Scene</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="3d-rendering-overview.html">An Overview of the Rendering Process: Visibility and Shading</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="perspective-projection.html">Perspective Projection</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="visibility-problem.html">The Visibility Problem</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="light-simulator.html">A Light Simulator</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction-light-transport.html">Light Transport</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction-shading.html"><b>Shading</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="summary-rendering.html">Summary and Other Considerations About Rendering</a></div></div></div><p>While everything in the real world is the result of light interacting with matter, some of these interactions are actually too complex to simulate using the light transport approach. This is when shading kicks in.</p>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left" src="../../../images/upload/rendering-3d-scene-overview/color-brightnessd41d.png?"/><p class="caption left">Figure 1: if you look at two objects under the same lighting conditions, if these objects seem to have the same color (same hue), but that one is darker than the other, then clearly, how bright they are is not the result of how much light falls on these objects, but more the result of how much light each one of these objects reflects back into their environment.</p>
+</div>
+
+<p>As mentioned in the previous chapter, simulating the appearance of an object requires that we can can compute for each point on the surface of that object, its color and its brightness. Color and brightness are tightly linked with each other. You need to distinguish between the brightness of an object which is due to how much light falls on its surface, and the brightness of an object's color (also sometimes called the color's luminance). The brightness of a color as well as its hue and saturation is a color property. If you look at two objects under the same lighting conditions, if these objects seem to have the same color (same <a href="http://en.wikipedia.org/wiki/Chromaticity">chromaticity</a>), but that one is darker than the other, then clearly, how bright they are is not the result of how much light falls on these objects, but more the result of how much light each one of these objects reflects back into their environment. In other words, these two objects have the same color (the same chromaticity) but one reflects more light than the other (or to put it differently one absorbs more light than the other). The brightness (or luminance) of their color is different. The characteristic color of an object is called <b><a href="http://en.wikipedia.org/wiki/Albedo">albedo</a></b> in computer graphics. How is this color found, is explained in the lesson on <a href="http://localhost/lessons/mathematics-physics-for-computer-graphics">Colors</a> (which you can find in the section Mathematics and Physics of Computer Graphics).</p>
+
+<div class="question">Note that an object <b>can not</b> reflect more light than it receives (unless it emits light, which is the case of light sources). The color of an object can generally be computed (at least for diffuse surfaces) as the ratio of reflected light over the amount of incoming (white) light. Because an object can not reflect more light than it receives, this ratio is always lower than 1. Which is why colors of objects are always defined in the RGB system between 0 and 1 if you use float or 0 and 255 if you a byte to encode colors. Check the lesson on <a href="http://localhost/lessons/mathematics-physics-for-computer-graphics">Colors</a> to learn more about this topic. It's actually better to define this ratio as a percentage. For instance if the ratio, or the color or the albedo (they are all there same thing) is 0.18, then the object reflects 18% of the light it receives back in the environment.</div>
+
+<p>If we defined the color of an object as the ratio of the amount of reflected light over the amount of light incident on the surface (as explained in the note above), that color can't be greater than one. This doesn't mean though that the amount of light incident and reflected off of the surface of an object can't be greater than one (it's only the ratio between the two which can't be greater than one). What we actually see with our eyes, is the amount of light incident on a surface, multiplied by the object color and reflected back to the eye. For example if the energy of the light impinging upon the surface is 1000, and the color of the object is 0.5, then the amount of light actually reflected by the surface to the eye is 500 (this is actually wrong from the point of view of physics, but this is just for you to get the idea - in the lesson on shading and light transport, we will actually look into what this 1000 or 500 value actually means in terms of physical units, and learn that it's actually more complicated than just multiplying the two numbers together).</p>
+
+<p>Thus assuming we know what the color of an object is, to compute the actual brightness of a point P on the surface of that object under some given lighting conditions (brightness as in the actual amount of light energy reflected by the surface to the eye and not as in the actual brightness or luminance of the object's albedo), we need to account for two things:</p>
+<ul>
+<li>How much light falls on the object at this point.</li>
+<li>How much light is reflected at this point in the viewing direction.</li>
+</ul>
+<p>Remember again that for specular surfaces, the amount of light reflected by that surfaces depends on the angle of view. If you move around a mirror, the image you see in the mirror changes: the amount of light reflected towards you changes with the viewpoint.</p>
+
+<div style="width: 370px;" class="captionImage right">
+<img class="left" src="../../../images/upload/rendering-3d-scene-overview/shading1d41d.png?"/><p class="caption left">Figure 2: to compute the actual brightness of a point P on the surface of that object under some given lighting conditions, we need to account for two things, how much light falls on the object at this point and how much light is reflected at this point in the viewing direction. To compute how much light arrives upon P, we need to sum up the contribution of the light sources (direct lighting) and from other surfaces (indirect lighting).</p>
+</div>
+
+<p>Assuming we know what the color of the object is (its albedo), we then need to find how much light arrives at the point (let's call it P again), and how much is reflected in the viewing direction, the direction from P to the eye.</p>
+<ul>
+<li>The former problems requires to "collect" or <b>gather</b> light above the surface at P, and is more a light transport problem. We already explained in the previous chapter how this can be done. Rays can be traced directly to lights to compute direct lighting and secondary rays can be spawned from P to compute indirect lighting (the contribution of other surfaces to the illumination of P).  However, while it seems essentially like a light transport problem, we will see in the lessons on Shading and Light Transport that the direction of these rays is actually defined by the surface type (is it diffuse or specular), and that shaders play a role in choosing the direction of these rays. Note also that, other methods than ray tracing can be used to compute both direct and indirect lighting.</li>
+<li>The latter problem (how much light is reflected for a given direction) is far more complex and it will now be explained in more details.</li>
+</ul>
+
+<p>First, you need to remember that light reflected back in the environment by a surface, is the result of very complex interactions between light rays (or photons if you know what they are) with the material the object is made of. There is three important things to note at this point:<p>
+<ul>
+<li>These interaction are generally so complex that it is not practical to simulate them.</li>
+<li>The amount of light reflected depends on the view direction. Surfaces generally don't reflect incident light equally in all directions. That's actually not true of perfectly diffuse surfaces (diffuse surfaces appear equally bright from all viewing directions,)  but this is true of all specular surfaces and since most objects in the real-world have a mix of diffuse and specular reflections anyway, more often than not, light is generally not reflected equally.</li>
+
+<div style="width: 370px;" class="captionImage right">
+<img class="left" src="../../../images/upload/rendering-3d-scene-overview/reflection2d41d.png?"/><p class="caption left">Figure 3: for mirror surfaces, if the reflected ray and the view direction are not the same, the reflected ray of light is not visible by the eye. The amount of light reflected is a function of the incoming light direction and the viewing direction.</p>
+</div>
+
+<li>The amount of light redirected in the viewing direction, also depends on the incoming light direction. To compute how much light is reflected in the direction \(\omega_v\) ("v" here is used here for view and \(\omega\) is the Greek letter omega), we also need to take in account the incoming lighting direction \(\omega_i\) ("i" stands for incident or incoming). The idea is illustrated in figure 3. Let's see what happens when the surface from which a ray is reflected, is a mirror. According to the law of reflection, the angle between the incident direction \(\omega_i\) of a light ray and the normal at the point of incidence, and the direction between the reflected or mirror direction \(\omega_r\) and the normal are the same. When the viewing direction \(\omega_v\) and the reflected direction \(\omega_r\) are the same (figure 3 - top), then we see the reflected ray (it enters the eye). However when \(\omega_v\) and \(\omega_r\) are different (figure 3 - bottom), then because the reflected ray doesn't travel towards the eye, the eye doesn't see it. Thus, how much light is reflected towards the eye depends on the incident light direction \(\omega_i\) (as explained before) as well as the viewing direction \(\omega_v\).</li>
+</ul>
+
+<div class="important">
+<p><b>Let's summarise</b>. What do we know?</p>
+<ul>
+<li>It's too complex to simulate light-matter interactions (interactions happening at the microscopic and atomic level). Thus, clearly we need to come up with a different solution.</li>
+<li>The amount of light reflected from a point varies with the view direction \(\omega_v\).</li>
+<li>The amount of light reflected from a point for a given view direction \(\omega_v\), depends on the incoming light direction \(\omega_i\).</li> 
+</ul>
+</div>
+
+<p><b>Shading, which you can see as the part of the rendering process that is responsible for computing the amount of light reflected from surfaces to the eye (or other surfaces in the scene)</b>, depends on at least two variables: where light comes from (the incident light direction \(\omega_i\)) and where it goes to (the outgoing or viewing direction, \(\omega_v\)). Where light comes from is independent of the surface itself, but how much light is reflected back for a given direction, depends on the surface type: is it diffuse, or specular? As suggested before, gathering light arriving at the incident point is more a light transport problem. But regardless of the technique used to gather the amount of light arriving at P, what we need, is to actually know where this light comes from, as in from which direction. The job of putting all these things together, is done by what we call a <b>shader</b>. A shader can be seen as a program within your program, which is essential some sort of routine that takes an incident light direction and a view direction as an input variables and return the fraction of light the surface would reflect for these directions.</p>
+
+$$\text{ ratio of reflected light = shader }(\omega_i, \omega_o)$$
+
+<p>Simulating light-matter interactions to get a result is complex, but hopefully the result of these numerous interactions is predictable and consistent, thus it can be approximated or modelled with mathematical functions. Where are these functions coming from? What are they? How are they found? We will answer these questions in the lessons from the section devoted to <a href="http://localhost/lessons/shading-procedural-texturing">Shading</a>. Let's only try to get an intuition of how and why this works for now.</p>
+
+<p>The law of reflection for example which we introduced in a previous chapter, can be written as:</b>
+
+$$\omega_r = \omega_i - 2(N . \omega_i) N$$
+
+<p>In plain english, it says that the reflection direction \(\omega_r\), can be computed as \(\omega_i\) minus two times the dot product between N (the surface normal at the point of incidence) and \(\omega_i\) (the incident light direction) multiplied by N. This equation has more to do with computing a direction than the amount of light reflected by the surface. However if for any given incident direction (\(\omega_i\)), you find out that \(\omega_r\) coincides with \(\omega_v\) (the view direction) then clearly, the ratio of reflected light for this particular configuration is 1 (figure 3 - top). If \(\omega_r\)  and \(\omega_v\) are different though, then the amount of reflected light would be 0. To formalise this idea, you can write:</p>
+
+$$
+\text {ratio of reflected light} =
+\begin{cases}
+1 & \omega_r = \omega_o \\
+0 & \text{otherwise}
+\end{cases}
+$$
+
+<div class="question">This is just an example. For perfectly mirror surface, we never proceed that way. But the point here is for you to understand that if we can describe the behaviour of light with equations, then we can find ways of computing how much light is reflected for any given set of incident and outgoing directions without having to run a complex and time consuming simulation. This is really what shaders do: replacing complex light-matter interactions with a mathematical model, which is fast to compute. These models are not always very accurate nor physically plausible as we will soon see, but they are the most practical way of approximating the result of these interactions. Research in the field of shading is mostly about developing new mathematical models that match as closely as possible the way materials reflect light. As you may imagine this is a difficult task: it's challenging on its own, but more importantly, materials exhibit some very different behaviours thus it's generally impossible to simulate accurately all materials with one single model. Instead it is often necessary to develop one model that works for example to simulate the appearance of cotton, one to simulate the appearance of silk, etc.</div>
+
+<p>What about simulating the appearance of a diffuse surface? For diffuse surfaces, we know that light is reflected equally in all directions. The amount of light reflected towards the eye is thus the total amount of light arriving at the surface (at any given point) multiplied by the surface color (the <b>fraction</b> of the total amount of incident light the surface reflects back in the environment), divided by some normalisation factor that needs to be there for mathematical/physical accuracy reason, but this will be explained in details in the lessons devoted to shading. Note that for diffuse reflections, the incoming and outgoing light directions have no influence on the amount of reflected light. But this is an exception in a way. For most material, the amount of reflected light depends on \(\omega_i\) and \(\omega_v\).</p>
+
+<p>The behaviour of glossy surfaces, is the most difficult to reproduce with equations. Many solutions have been proposed, the simplest (and easiest to implement in code) being the Phong specular model, which you may have heard about.</p>
+
+<div class="question">The Phong model computes the perfect mirror direction using the equation for the law of reflection which depends on the surface normal and the incident light direction. It then computes the deviation (or difference) raised to some exponent, between the actual view direction and the mirror direction (it takes the dot product between these two vectors) and assume that the brightness of the surface at the point of incidence, is inversely proportional to this difference. The smaller the difference, the shinier the surface. The exponent parameter helps controlling the spread of the specular reflection (check the lessons from the Shading section to learn more about the Phong model).</div>
+
+<p>However good models follow some well know properties which the Phong model doesn't have. One of this rules for instance, is that the model <b>conserves energy</b>. The amount of light reflected in all directions shouldn't be greater than the total amount of incident light. If a model doesn't have this property (the Phong model doesn't have that property), then it would actually break the laws of physics, and while it might provide a visually pleasing result, it would not produce one that is physically plausible.</p>
+
+<div class="question">Have you already heard the term <b>physically plausible rendering</b>? It designates a rendering system designed around the idea that all shaders and light transport models comply with the laws of physics. In the early age of computer graphics, speed and memory were more important than accuracy and a model was often considered to be good if it was fast and had a low memory footprint (at the expense of being accurate). But in our quest for photo-realism and because computer are now faster than they were when the first shading models were designed), we don't trade accuracy for speed anymore and use physically based models wherever possible (even they are slower than non-physically based models). The conservation of energy is one of the most important properties of a physically based model. Existing physically based rendering engines, can produce images of great realism.</div>
+
+<p>Let's put these ideas together with some pseudo-code:</p>
+
+<div name="code" class="code">Vec3f myShader(Vec3f Wi, Vec3f Wo)
+{
+    // define the object color, roughness, etc.
+    ...    
+    // do some mathematics to compute the ratio of light reflected
+    // by the surface for this given pair of incident and outgoing direction
+    ...
+    return ratio;
+}
+
+Vec3f shadeP(Vec3f ViewDirection, Vec3f Point, Vec3f SurfaceNormal)
+{
+    Vec3f totalAmountReflected = 0;
+    for (all light sources above P [direct|indirect]) {
+        totalAmountReflected += 
+            lightEnergy * 
+            shaderDiffuse(LightDirection, ViewDirection) *
+            dotProduct(SurfaceNormal, LightDirection);
+    }
+
+    return totalAmountReflected;
+}</div>
+
+<p>Notice how the code is separated in two main sections: a routine (line 11) to gather all light coming from all directions above P, and another routine (line 1), the shader, used to compute the fraction of light reflected by the surface for any given pair of incident and view direction. The loop (often called a light loop) is used to sum up the contribution of all possible light sources in the scene to the illumination of P. Each one of these light sources have a certain energy and of course comes from a certain direction (the direction defined by the line between P and the light source position in space), thus all we need to do is send this information to the shader, with the view direction. The shader will return which fraction for that given light source direction is reflected towards the eye and then multiply the result of the shader with the amount of light produced by this light source. Summing up this results for all possible light sources in the scene, gives the total amount of light reflected from P towards the eye (which is the result we are looking for).</p>
+
+<p>Not that in the sum (line 18), there is a third term (a dot product between the normal and the light direction). This term is very important in shading and relates to what we call the <b>cosine law</b>. It will be explained in details in the sections on Light Transport and Shading (you can also find information about it in the lesson on the Rendering Equation which you will find in this section). For now you should just know that it is there to account for the way light energy is spread across the surface of an object, as the angle between the surface and the light source varies.</p>
+
+<h2>Conclusion</h2>
+
+<p>There is a fine line between light transport and shading. In fact, as we will learn in the section on Light Transport, light transport algorithms will often rely on shaders, to find out in which direction they should spawn secondary rays to compute indirect lighting.<p>
+
+<p>The two things you should remember from this chapters are, the definition of shading and what a shader is:</p>
+
+<ul>
+<li>Shading, is the part of the rendering process that is responsible for computing the amount of light reflected in any given viewing direction. In other word, it is where and when we give objects in the image their final appearance from a particular viewpoint, how they look, their color, their texture, their brightness, etc. <b>Simulating the appearance of an object requires to answer one question only: how much light does an object reflect back to the eye (or any other direction for that matter which is particularly useful when indirect lighting is computed), over the total amount it receives?</b></li>
+
+<li><p>Shaders are designed to answer this question. You can see a shader as some sort of black box to which you ask the question: "if this object is made of wood, if this wood has this given color and this given roughness, if some quantity of light impinges upon this object from the direction \(\omega_i\), how much of that light would be reflected by this object back in the environment in the direction \(\omega_v\)?". The shader will answer this question. We like to describe it as a black box, not because what's happening inside that box is mysterious, but more because it can be seen as a separate entity in the rendering system (it serves only one function which is to answer the above question, and answering this question doesn't require the shader to have any over knowledge about the system than the surface property - its roughness, its color, etc. - and the incoming and outgoing direction being considered) which is why shaders in realtime APIs for example (such as OpenGL - but this often true of all rendering systems whether realtime or off-line) are written separately from the rest of your application.</p>
+
+<p>What's happening in this box is not mysterious at all. What gives objects their unique appearance is the result of complex interactions between light particles (photons) and atoms objects are made of. Simulating these interactions is not practical. We observed though, that the result of these interactions is predictable and consistent, and we know that mathematics can be used to "model", or represent, how the real world works. A mathematical model is never exactly the same as the real thing, however it is convenient way of expressing a complex problem in a compact form, and can be used to compute the solution (or approximation) of a complex problem in a fraction of the time it would take to actually simulate the real thing. The science of shading, is about developing such models to describe the appearance of objects, as a result of the way light interacts with them at the micro- and atomic scale. The complexity of these models really depends on the type of surface we want to replicate the appearance of. Models to replicate the appearance of perfectly diffuse and mirror-like surface are simple. Coming up with good models to replicate the look of glossy and translucent surfaces is a much harder task.</p>
+<p>These models will be studied in the <a href="http://localhost/lessons/shading-procedural-texturing">Shading section</a>.</p>
+</li>
+</ul>
+
+<div class="question">In the past, techniques used to render a 3D scenes in real-time were very much predefined by the API with little control given to the users to change them. Realtime technologies moved away from that paradigm to offer a more programmable pipeline in which each step of the rendering process is controlled by separate "programs" called "shaders". The current OpenGL APIs now support four of such "shaders": the vertex, the geometry, the tessellation and the fragment shader. The shader in which the color of a point in the image is computed, is the fragment shader. All over shaders have little to do with defining the object's look. You should be aware that the term "shader" is therefore generally used now in a broader sense.</div></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='introduction-light-transport.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 8 of  9</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='summary-rendering.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/rendering-3d-scene-overview/introduction-shading by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:09:54 GMT -->
+</html>

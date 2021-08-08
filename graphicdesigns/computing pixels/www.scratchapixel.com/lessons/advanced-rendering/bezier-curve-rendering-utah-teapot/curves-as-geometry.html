@@ -1,0 +1,406 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/advanced-rendering/bezier-curve-rendering-utah-teapot/curves-as-geometry by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:19:15 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>B&eacute;zier Curves and Surfaces: the Utah Teapot (Rendering Curves as Geometry: Hair Rendering)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='B&eacute;zier curve, B&eacute;zier surface, parametric surface, Utah teapot, Newell, Bernstein polynomials, quadratic, cubic, B&eacute;zier basis matrix, De Casteljau algorithm, tesselation, Taylor series, forward difference, B&eacute;zier  patch normal'>
+<meta name='date' content='2015-10-08 15:06:53'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>B&eacute;zier Curves and Surfaces: the Utah Teapot</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="bezier-curve.html">B&eacute;zier Curve</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="bezier-surface.html">B&eacute;zier Surfaces</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="fast-forward-differencing.html">Fast Forward Differencing</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="bezier-patch-normal.html">Calculating Normals of B&eacute;zier Surfaces</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="curves-as-geometry.html"><b>Rendering Curves as Geometry: Hair Rendering</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code76b5.html?id=35&amp;origin=/lessons/advanced-rendering/bezier-curve-rendering-utah-teapot">Source Code</a></div></div></div><h2>How Do I Render Curves?</h2>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../../images/upload/bezier/bez-twistedhaird41d.png?" />
+<p class="caption left">Figure 1: a B&eacute;zier curves rendered as thin cylinder.</p>
+</div>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../../images/upload/bezier/bez-curvestand41d.png?" />
+<p class="caption left">Figure 2: creating points and tangents at regular intervals along the curve.</p>
+</div>
+
+<p>After we wrote the lesson on B&eacute;zier curves and surfaces, someone sent us a question regarding ways of rendering 3D B&eacute;zier curves as geometry. If you have access to some graphics API (OpenGL, DirectX, WebGL, etc.) you can probably create a 3D window and display a 3D curve as a series of short lines. Though of course an alternative solution to this approach is to actually somehow represent the curve with some 3D geometry that can also be rendered. The most two common approaches to this problem are:</p>
+
+<ul>
+<li><b>ribbons</b>: the idea of a ribbon is simple, you just create a strip of quads along the curve. The geometry created looks like a ribbon of course, that is a flat surface. The problem with this approach is often to define what the normal of these quads should be and how should the quads be oriented? You have several options but the most common one is often to have the quads normal facing the camera.</li>
+<li><b>thin cylinder</b> or surface of circular cross section or string of spaghetti (as described in the RIS documentation): in this particular case, we do render the curve as a cylinder or round tube following the shape of the curve (as shown in the rendered image above). Like a hose if you prefer. In this particular approach, note that we generate of course more geometry than with a ribbon (the geometry is likely to contain more polygons) but there is also no problem with the normal orientation.</li>
+</ul>
+
+<p>Both approaches are particularly well suited anyway to render things such as <b>hair</b>, <b>fur</b> or <b>grass</b> and this is why we thought it would be great to have a chapter dedicated to this topic, even if we plan to write a lesson especially devoted to the topic of <b>hair rendering</b> in the future (at least we hope this short introduction will satisfy your curiosity in the meantime).</p>
+
+<p>We won't show the ribbon solution in this chapter. We will only focus on the second option though it is much simpler to implement the first option from the second, than the other way around. So let's do it shall we?</p>
+
+<h3>Step 1: Create Position at Regular Intervals</h3>
+
+<p>What do we need? We first need to create loops of vertices along the curve and then connect these vertices to each other to make faces. First, we know how to create 3D position along the curve. In our example, we will use a B&eacute;zier curve with more than 4 points. What we need to do is to compute how many curves we have from the number of input control points, then iterate over each one of these curves, and finally "walk" along the current curve to create a series of 3D positions at regular intervals. We will also compute the tangent at the point, which we will need in step 2 to create a local coordinate system.</p>
+
+<div name="code" class="code">constexpr uint32_t curveNumPts = 22;
+Vec3f curveData[curveNumPts] = {
+    {-0.0029370324, 0.0297554422, 0},
+    ...
+    { 0.7606914144, 1.7038639600, 0}
+};
+
+void createCurveGeometry()
+{
+    uint32_t ndivs = 16;
+    uint32_t ncurves = 1 + (curveNumPts - 4) / 3;
+    Vec3f pts[4];
+    for (uint32_t i = 0; i < ncurves; ++i) {
+        for (uint32_t j = 0; j < ndivs; ++j) {
+            pts[0] = curveData[i * 3];
+            pts[1] = curveData[i * 3 + 1];
+            pts[2] = curveData[i * 3 + 2];
+            pts[3] = curveData[i * 3 + 3];
+            float s = j / (float)ndivs;
+            Vec3f pt = evalBezierCurve(pts, s);
+            Vec3f tangent = derivBezier(pts, s).normalize();
+        }
+        ...
+    }
+    ...
+}</div>
+
+<h3>Step 2: Create a Local Coordinate System to Generate a Loop of Vertices</h3>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../../images/upload/bezier/bez-curvescoordinatesysd41d.png?" />
+<p class="caption left">Figure 3: creating a local coordinate system with the up axis oriented along the curve's tangent.</p>
+</div>
+
+<p>In step 2, we will create a local coordinate system which we will need in step 3, to create a loop of points that will later become the vertices of our thin cylinder. What we want is for all the points of that loop to be lying on a plane perpendicular to the curve tangent. All we know so far is the tangent of the curve at given sampled point. From this tangent we can create a Cartesian coordinate system. The challenge though is that we need to keep this Cartesian coordinate system always consistently oriented along the curve, in order to easily connect the vertices to each to form faces in step 3 and 4. This can be easily done by always taking the same "random" vector as a starting point and using the trick described in the lesson on geometry, which consists of first computing the cross product between our vector  \(v\) and a random vector \(r\). This will give us a vector \(u\) perpendicular to \(v\). Then by taking the cross product between \(u\) and \(v\) we can create a third vector \(w\) which is both perpendicular to \(u\) and \(v\). The three vectors \(u\), \(v\) and \(w\) will then form a Cartesian coordinate system.</p>
+
+<p>If we always take the tangent along the curve as the up vector of our coordinate system, as well as always choosing a consistent vector for \(r\), then we can create a series of consistent Cartesian coordinate system along the curve as shown in figure 3. Though note that the way we chose \(r\) depends on the y-coordinate of the tangent or up vector. We choose \(r\) to be as different as possible to the tangent vector. So we first find out which one of the tangent coordinates has the highest value, and choose \(r\) accordingly (lines 9 to 38 in the code below).</p> 
+
+<div name="code" class="code">void createCurveGeometry()
+{
+    ...
+    for (uint32_t i = 0; i < ncurves; ++i) {
+        for (uint32_t j = 0; j < ndivs; ++j) {
+            ...
+            Vec3f tangent = derivBezier(pts, t).normalize();
+
+            uint8_t maxAxis;
+            if (std::abs(tangent.x) > std::abs(tangent.y))
+                if (std::abs(tangent.x) > std::abs(tangent.z))
+                    maxAxis = 0;
+                else
+                    maxAxis = 2;
+            else if (std::abs(tangent.y) > std::abs(tangent.z))
+                    maxAxis = 1;
+            else
+                maxAxis = 2;
+
+            Vec3f up, forward, right;
+
+            switch (maxAxis) {
+                case 0:
+                case 1:
+                    up = tangent;
+                    forward = Vec3f(0, 0, 1);
+                    right = up.crossProduct(forward);
+                    forward = right.crossProduct(up);
+                    break;
+                case 2:
+                    up = tangent;
+                    right = Vec3f(0, 0, 1);
+                    forward = right.crossProduct(up);
+                    right = up.crossProduct(forward);
+                    break;
+                default:
+                    break;
+            };
+
+            ...
+        }
+    }
+    ...
+}</div>
+
+<h3>Step 3: Generate loop of vertices</h3>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../../images/upload/bezier/bez-curvespointsd41d.png?" />
+<p class="caption left">Figure 4: loops of points oriented along the curves at regular intervals.</p>
+</div>
+
+<p>The next step consists of creating loops of points properly oriented around the curve. We will first create a ring of points using basic trigonometry (in the x-z plane of the world coordinate system) and then use the Cartesian coordinate system to transform the point to their final position. Remember than a transformation matrix is nothing more than just the tree vectors representing the axes of a coordinate system. If we apply the equation of point-matrix multiplication our points should then be oriented properly (they will be lying in the x-z plane of the Cartesian coordinate system). All there is left to do is just add or translate the points position along the curve to move them to their final position along the curve. We also want the cylinder to get thiner as we get closer to the tip of the curve. For this purpose, we compute a normalized (in the range [0:1]) parametric position along the curve (line 7). This value is then used to scale the points position (line 8 and 11). We also set the normal of the points (which we will then become the vertices of cylinder mesh) which is simply the transformed points position (without the translation - line 16). Don't forget to normalize them. Here is the code:</p>
+
+<div name="code" class="code">void createCurveGeometry()
+{
+    ...
+    for (uint32_t i = 0; i < ncurves; ++i) {
+        for (uint32_t j = 0; j < ndivs; ++j) {
+            ...
+            float sNormalized= (i * ndivs + j) / float(ndivs * ncurves);
+            float rad = 0.1 * (1 - sNormalized);
+            for (uint32_t k = 0; k <= ndivs; ++k) {
+                float t = k / (float)ndivs;
+                float theta = t * 2 * M_PI;
+                Vec3f pc(cos(theta) * rad, 0, sin(theta) * rad);
+                float x = pc.x * right.x + pc.y * up.x + pc.z * forward.x;
+                float y = pc.x * right.y + pc.y * up.y + pc.z * forward.y;
+                float z = pc.x * right.z + pc.y * up.z + pc.z * forward.z;
+                P[i * (ndivs + 1) * ndivs + j * ndivs + k] = Vec3f(pt.x + x, pt.y + y, pt.z + z);
+                N[i * (ndivs + 1) * ndivs + j * ndivs + k] = Vec3f(x, y, z).normalize();
+                st[i * (ndivs + 1) * ndivs + j * (ndivs + 1) + k] = Vec2f(sNormalized, t);
+            }
+        }
+    }
+    ...
+}</div>
+
+<h3>Step 4: Meshing</h3>
+
+<p>In the final step, we will connect the vertices to each other to form the faces of the mesh. This is just a bit of logic, which doesn't require much explanation. You just need to get it right. We need to create an array of integers in which we store the number of vertices each face in the mesh is made of. All the faces are quads apart from the last row of faces in the mesh at the tip of the curves which are triangles. The strip of triangles at the tip of the curve form a cone whose apex is simply the last point of the curve. Generating the st coordinates for that mesh isn't complicated. All you need to do is set the normalized parametric position along the curve as the s-coordinate of the vertex and the parametric position of the vertex in the ring as its t-coordinate. Images below show the result of the meshing and the vertex normals for <span class="code-inline">ndivs = 8</span>.</p>
+
+<img class="left" style="margin-bottom: 10px;" src="../../../images/upload/bezier/bez-twistedhair1d41d.png?" />
+
+<p>Here is the code of the complete and final function:</p>
+
+<div name="code" class="code">void createCurveGeometry()
+{
+    uint32_t ndivs = 8;
+    uint32_t ncurves = 1 + (curveNumPts - 4) / 3;
+    Vec3f pts[4];
+    std::unique_ptr&ltVec3f []&gt P(new Vec3f[(ndivs + 1) * ndivs * curves + 1]);
+    std::unique_ptr&ltVec3f []&gt N(new Vec3f[(ndivs + 1) * ndivs * ncurves + 1]);
+    std::unique_ptr&ltVec2f []&gt st(new Vec2f[(ndivs + 1) * ndivs * ncurves + 1]);
+    for (uint32_t i = 0; i < ncurves; ++i) {
+        for (uint32_t j = 0; j < ndivs; ++j) {
+            pts[0] = curveData[i * 3];
+            pts[1] = curveData[i * 3 + 1];
+            pts[2] = curveData[i * 3 + 2];
+            pts[3] = curveData[i * 3 + 3];
+            float s = j / (float)ndivs;
+            Vec3f pt = evalBezierCurve(pts, s);
+            Vec3f tangent = derivBezier(pts, s).normalize();
+            
+            uint8_t maxAxis;
+            if (std::abs(tangent.x) > std::abs(tangent.y))
+                if (std::abs(tangent.x) > std::abs(tangent.z))
+                    maxAxis = 0;
+                else
+                    maxAxis = 2;
+            else if (std::abs(tangent.y) > std::abs(tangent.z))
+                    maxAxis = 1;
+            else
+                maxAxis = 2;
+
+            Vec3f up, forward, right;
+
+            switch (maxAxis) {
+                case 0:
+                case 1:
+                    up = tangent;
+                    forward = Vec3f(0, 0, 1);
+                    right = up.crossProduct(forward);
+                    forward = right.crossProduct(up);
+                    break;
+                case 2:
+                    up = tangent;
+                    right = Vec3f(0, 0, 1);
+                    forward = right.crossProduct(up);
+                    right = up.crossProduct(forward);
+                    break;
+                default:
+                    break;
+            };
+
+            float sNormalized = (i * ndivs + j) / float(ndivs * ncurves);
+            float rad = 0.1 * (1 - sNormalized);
+            for (uint32_t k = 0; k <= ndivs; ++k) {
+                float t = k / (float)ndivs;
+                float theta = t * 2 * M_PI;
+                Vec3f pc(cos(theta) * rad, 0, sin(theta) * rad);
+                float x = pc.x * right.x + pc.y * up.x + pc.z * forward.x;
+                float y = pc.x * right.y + pc.y * up.y + pc.z * forward.y;
+                float z = pc.x * right.z + pc.y * up.z + pc.z * forward.z;
+                P[i * (ndivs + 1) * ndivs + j * (ndivs + 1) + k] = Vec3f(pt.x + x, pt.y + y, pt.z + z);
+                N[i * (ndivs + 1) * ndivs + j * (ndivs + 1) + k] = Vec3f(x, y, z).normalize();
+                st[i * (ndivs + 1) * ndivs + j * (ndivs + 1) + k] = Vec2f(sNormalized , t);
+            }
+        }
+    }
+    P[(ndivs + 1) * ndivs * ncurves] = curveData[curveNumPts - 1];
+    N[(ndivs + 1) * ndivs * ncurves] = (curveData[curveNumPts - 2] - curveData[curveNumPts - 1]).normalize();
+    st[(ndivs + 1) * ndivs * ncurves] = Vec2f(1, 0.5);
+    uint32_t numFaces = ndivs * ndivs * ncurves;
+    std::unique_ptr&ltuint32_t []&gt verts(new uint32_t[numFaces]);
+    for (uint32_t i = 0; i < numFaces; ++i)
+        verts[i] = (i < (numFaces - ndivs)) ? 4 : 3;
+    std::unique_ptr&ltuint32_t []&gt vertIndices(new uint32_t[ndivs * ndivs * ncurves * 4 + ndivs * 3]);
+    uint32_t nf = 0, ix = 0;
+    for (uint32_t k = 0; k < ncurves; ++k) {
+        for (uint32_t j = 0; j < ndivs; ++j) {
+            if (k == (ncurves - 1) && j == (ndivs - 1)) { break; }
+            for (uint32_t i = 0; i < ndivs; ++i) {
+                vertIndices[ix] = nf;
+                vertIndices[ix + 1] = nf + (ndivs + 1);
+                vertIndices[ix + 2] = nf + (ndivs + 1) + 1;
+                vertIndices[ix + 3] = nf + 1;
+                ix += 4;
+                ++nf;
+            }
+            nf++;
+        }
+    }
+    
+    for (uint32_t i = 0; i < ndivs; ++i) {
+        vertIndices[ix] = nf;
+        vertIndices[ix + 1] = (ndivs + 1) * ndivs * ncurves;
+        vertIndices[ix + 2] = nf + 1;
+        ix += 3;
+        nf++;
+    }
+}</div>
+
+<p>You can see the result of the mesh being rendered in a ray tracer at the top of this chapter. You can also find the complete source code in the last chapter of this lesson.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='bezier-patch-normal.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 5 of  6</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='../../../code76b5.html?id=35&amp;origin=/lessons/advanced-rendering/bezier-curve-rendering-utah-teapot'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/advanced-rendering/bezier-curve-rendering-utah-teapot/curves-as-geometry by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:19:21 GMT -->
+</html>
