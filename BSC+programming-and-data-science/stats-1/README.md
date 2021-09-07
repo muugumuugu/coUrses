@@ -93,6 +93,7 @@
 + extends on ordinal data, and also has a fixed unit to measure differenece between two values.
 + always numeric.
 + ratios meaningless since it's all about the differences, the zero is arbitrary.
++ can be converted to ratio scale by fixing a zero and performing subtraction ( similar to origin - shifting)
 + example
 	+ star ratings
 
