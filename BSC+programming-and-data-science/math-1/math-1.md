@@ -30,6 +30,35 @@
 
 ## Lec 4 - Set Theory
 
+## Lecture 10 -
+
+## Lecture 11 - Degrees of Infinity
+>Enumaration - **bijection** with ℕ
+> Enumerable Sets are called Countable. They maybe finite or infinite
+
+### ℝ is uncountably infinit
+	> proof by diagonalization (enumarating sequences of {1,0} and picking the sequence off the diagonal --> negating it and hence finding a sequence that had not been counted
+
+### Continuam Hypothesis
+> Is there a set with cardinality between that of ℕ  and ℝ?
+> *Independent of Set Theory Axioms*, the existence of such a set cannot be proved or disproved.
+
+
+## Lecture 12 - Rectangular Co-Ordinate System
+
+> Based on assosciating **ℝ** with a **2d grid of perpendicular lines** (axes)
+
+## Lec 13 - Distance Formula
+
+## Lec 14 - Section Formula
+
+## Lec 15 - Area of a Triangle
+
+## Lec 16 - Slope of a Line
+> Gradient or Inclination with +ve X Axis
+
+>**m**= <i>tan</i>θ , θ measured from left to right between + ve X-axis and line
+
 ## Lec 17 - Parallel and Perpendicular Lines
 + Parralelness --> m<sub>1</sub>=m<sub>2</sub>
 + Perpendicularity --> m<sub>1</sub>=-1/m<sub>2</sub>
