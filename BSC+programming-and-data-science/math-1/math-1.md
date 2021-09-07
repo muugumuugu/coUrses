@@ -1,6 +1,8 @@
 ## Lec 1 - Natural Numbers and their Operations
 
->ℕ {0,1,2,3,....} - discrete set
+>ℕ --> {0,1,2,3,....}
+>>discrete set
+
 ### Operations of ℕ
 + \+
 + \-
