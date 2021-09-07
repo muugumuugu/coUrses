@@ -5,14 +5,14 @@
 >The art of learning from data
 
 ### Branches of Statistcs
----
+
 + Descriptive Statistics - summarization and description
 	+ purpose of study is to examine info for its own intrinsic interest
 + Inferential Statistics - drawing conclusions from data
 	+ involves dealing with possibility of chance
 	+ draws conclusion about the entire dataset( *poplation* ) from a chosen subset( the *sample* )
 ### DataSets
----
+
 + population
 	+ all elements we are interested in
 + sample
@@ -23,7 +23,6 @@
 ## 1.2: Introduction and Types of Data - Understanding Data
 
 ### Data
----
 
 > facts & figures collected, analyzed, and summarized for interpretation and presentation.
 
@@ -33,18 +32,25 @@
 	+ Data Not Available - generate and/or collect data.
 
 ### Organization of Data
----
 
 + Unstructured Data is scattered and needs *Contextualization* and *Organization* before Analysis.
 + Organization is posible thru many ways, like **tabulation**, etc.
 
 #### Variables and Cases
+
 + case - a unit from which data is collected.
 + variable - attribute of the units that varies across the sampling set of the units.
 
 #### Tabulation
+
 + each variable must have its own column, and same type of value/measurement unit across the units to be consistent and comparable
 + each case has its own unique row, with values ( could be NA ) for each variable.
+
+## 1.3 : Introduction and Types of Data - Classification of Data
++ Numerical Data
+	+ Unit of Measurement
++ Categorical Data
+	+ Value of Variable belongs to a certaim enumerable set of values.
 
 
 
