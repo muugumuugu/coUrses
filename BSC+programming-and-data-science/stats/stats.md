@@ -1,12 +1,16 @@
 # WEEK 1 Downloading Data, Intro to Statistics
-## 1.1
+## 1.1 : Introduction and Types of Data
 >The art of learning from data
 
 ### Branches of Statistcs
+---
 + Descriptive Statistics - summarization and description
+  + purpose of study is to examine info for its own intrinsic interest
 + Inferential Statistics - drawing conclusions from data
   + involves dealing with possibility of chance
-### datasets
+  + draws conclusion about the entire dataset(*poplation*) from a chosen subset(the *sample*)
+### DataSets
+---
 + population
   + all elements we are interested in
 + sample
