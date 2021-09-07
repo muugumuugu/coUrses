@@ -47,12 +47,26 @@
 + each case has its own unique row, with values ( could be NA ) for each variable.
 
 ## 1.3 : Introduction and Types of Data - Classification of Data
-+ Numerical Data
-	+ Unit of Measurement
-+ Categorical Data
-	+ Value of Variable belongs to a certaim enumerable set of values.
 
+>Numerical Data
++ Unit of Measurement
++ quantitative
++ types
+	+ discrete
+	+ continuous
 
+>Categorical Data
++ Value of Variable belongs to a certaim enumerable set of values.
+	+ identify the group membership
++ qualitative
+
+>Time Series Data
+>> data recorded over time
+
+>Cross Sectional Data
+>>data recorded at a point of time
+
+## 1.3 : Introduction and Types of Data - Scales of Measurement
 
 
 
