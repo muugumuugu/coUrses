@@ -2,9 +2,9 @@
 
 >ℕ {0,1,2,3,....} - discrete set
 ### Operations of ℕ
-+ +
-+ -
-+ *
++ \+
++ \-
++ \*
 + /
 + a|b a is a divisor of b > output True / False
 + %
@@ -22,7 +22,7 @@
 
 ### Important Irrationals
 + Polynomial
-	+ √2
+	+ √2, √3 , etc
 + Trancendental
 	+ π
 	+ e
