@@ -6,7 +6,7 @@
 + \-
 + \*
 + /
-+ a|b a is a divisor of b > output True / False
++ a|b a is a *divisor* of b --> output *True* / *False*
 + %
 
 ### Primes
@@ -30,8 +30,14 @@
 
 ## Lec 4 - Set Theory
 
-## Lecture - 17
-## Lec-18 - Represantation of a Line:1
+## Lec 17 - Parallel and Perpendicular Lines
++ Parralelness --> m<sub>1</sub>=m<sub>2</sub>
++ Perpendicularity --> m<sub>1</sub>=-1/m<sub>2</sub>
+
+###Angle of Intersection
+> θ = (m<sub>1</sub>-m<sub>2</sub>)/(1+ m<sub>1</sub>m<sub>2</sub>
+
+## Lec 18 - Represantation of a Line:1
 + Point on a Lines
 + Horizontal and Vertical Lines
 + Point-Slope Form
