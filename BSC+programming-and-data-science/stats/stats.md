@@ -45,9 +45,6 @@
 #### Tabulation
 + each variable must have its own column, and same type of value/measurement unit across the units to be consistent and comparable
 + each case has its own unique row, with values ( could be NA ) for each variable.
-```math
-sqrt(2)
-```
 
 
 
