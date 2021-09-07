@@ -1,0 +1,32 @@
+#WEEK 1 Downloading Data, Intro to Statistics
+##1.1
+>The art of learning from data
+
+###Branches of Statistcs
++ Descriptive Statistics - summarization and description
++ Inferential Statistics - drawing conclusions from data
+  + involves dealing with possibility of chance
+###datasets
++ population
+  + all elements we are interested in
++ sample
+  + subset of the population which will be studied in detail.
+  + a good sample has good representation.
+>inference from sample can be extended to be true, upto some error, for the population
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#WEEK 2 Describing Categorial Data - one variable
+#WEEK 3 Describing Numerical Data - one variable
+#WEEK 4 Assosiation between Two Variables
