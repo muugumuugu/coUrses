@@ -25,7 +25,7 @@
 	+ facts & figures collected, analyzed, and summarized for interpretation and presentation.
 	+ Where to Find Data?
 		+ Data Already Available - download the published data
-			+ [Common Data Sets] (http://data.gov.in)
+			+ [Common Data Sets](http://data.gov.in)
 	 + Data Not Available - generate and/or collect data.
 
 
