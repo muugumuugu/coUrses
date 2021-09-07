@@ -97,8 +97,8 @@
 	+ star ratings
 
 ### Ratio Scale of Measurement
-+ extends from interval data	, and has a fixed , meaningful zero, so that a standalone value also is a useable characteristic.
-+ possible to perform all arithmetic on suc data
++ extends from interval data, and has a fixed , meaningful zero, so that a standalone value also is a useable characteristic.
++ possible to perform all arithmetic on such data
 + example
 	+ height
 
