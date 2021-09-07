@@ -68,6 +68,40 @@
 
 ## 1.3 : Introduction and Types of Data - Scales of Measurement
 
+## Categorical Data
+
+### Nominal Scale of Measurement
++ NO ordering in such variables.
++ they are just lables.
++ they can be numerically coded.
++ only give an characterestic identification to the case.
++ don't imply amything
++ example
+	+ gender
+	+ jersey number
+
+### Ordinal Scale of  Measurement
++ labels with ranks.
++ order relevant.
++ data is still a label, that is it takes a categorical value, and hence can also be numerically codded (keep order in mind).
++ example
+	+ worded ratings
+
+## Numerical Data
+
+### Interval Scale of Measurement
++ extends on ordinal data, and also has a fixed unit to measure differenece between two values.
++ always numeric.
++ ratios meaningless since irts all about the differences, the zero is arbitrary.
++ example
+	+ star ratings
+
+### Ratio Scale of Measurement
++ extends from interval data	, and has a fixed , meaningful zero, so that a standalone value also is a useable characteristic.
++ possible to perform all arithmetic on suc data
++ example
++ height
+
 
 
 # WEEK 2 Describing Categorial Data - one variable
