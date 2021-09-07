@@ -21,14 +21,19 @@
 >inference from sample can be extended to be true, upto some error, for the population
 
 ## 1.2: Introduction and Types of Data - Understanding Data
-+ Data
-	+ facts & figures collected, analyzed, and summarized for interpretation and presentation.
-	+ Where to Find Data?
-		+ Data Already Available - download the published data
-			+ [Common Data Sets](http://data.gov.in)
-	 + Data Not Available - generate and/or collect data.
 
-	+ Unstructured Data is scattered and needs *Contextualization* and ***Organization*** before *Analysis*.
+### Data
+---
+
+> facts & figures collected, analyzed, and summarized for interpretation and presentation.
+
++ Where to Find Data?
+	+ Data Already Available - download the published data
+		+ [Gov. provided Common Data Sets](http://data.gov.in)
+	+ Data Not Available - generate and/or collect data.
+### ORganization of Data
++ Unstructured Data is scattered and needs *Contextualization* and ***Organization*** before *Analysis*.
++ Organization is posible thru many ways, like **tabulation**, etc.
 
 
 
