@@ -88,10 +88,10 @@ hence the need for irrational.
 >generating by set comprehension. we can have a set of all sets that do not contain themselves but then does this set contain itself?
 hence it is not definitive to form a set of all sets.
 
-> In general call any unsuitable collection a **Class**.
+> In general call any unsuitable collection a ***Class***.
 
 ## Lecture 11 - Degrees of Infinity
->Enumaration - **bijection** with ℕ
+>Enumaration - ***bijection*** with ℕ
 >> Enumerable Sets are called Countable. They may be finite or infinite
 
 ### ℝ is uncountably infinit
@@ -104,7 +104,7 @@ hence it is not definitive to form a set of all sets.
 
 ## Lec 12 - Rectangular Co-Ordinate System
 
-> Based on assosciating **ℝ** with a **2d grid of perpendicular lines** (axes)
+> Based on assosciating ***ℝ*** with a ***2d grid of perpendicular lines*** (axes)
 
 ## Lec 13 - Distance Formula
 
@@ -115,7 +115,7 @@ hence it is not definitive to form a set of all sets.
 ## Lec 16 - Slope of a Line
 > Gradient or Inclination with +ve X Axis
 
->**m**= <i>tan</i>θ , θ measured from left to right between + ve X-axis and line
+>***m***= <i>tan</i>(θ) , θ measured from left to right between + ve X-axis and line
 
 ## Lec 17 - Parallel and Perpendicular Lines
 + Parralelness --> m<sub>1</sub>=m<sub>2</sub>
@@ -150,7 +150,7 @@ hence it is not definitive to form a set of all sets.
 
 ## Lec 24 - Straight Line Fit
 
-+ SSE
+###SSE
 
 ## Lec 25 - Quadratic Functions ,examples of QF, SLope of a QF
 + Parabolas
@@ -174,18 +174,28 @@ hence it is not definitive to form a set of all sets.
 	+ sum/product method
 
 ## Lec 28 - Soln of QE using square method.
-+ Complete the square.
+> Complete the square.
 
 ## Lec 29 - Quadratic Formula
 
 ## Lec 30 - Polynomials
+
 ## Lec 31 - Degree of polynomial
-+ degree of zero polynomial is undefined
+
+> degree of zero polynomial is undefined
+
 ## Lec 32 - Algebra of polynomials --> + & -
+
 ## Lec 33 - Algebra of polynomials --> *
+
 ## Lec 34 - Algebra of polynomials --> /
+
 ## Lec 35 - division algorithm
-+ Rational Functions
+
+> Rational Functions
+
 ## Lec 36 - Graphs of Polynomials : Identification/ Characteriztion
-+ the curve of polynomials is always smooth( continous without sharp corners).
+
+> the curve of polynomials is always smooth( continous without sharp corners).
+
 ## Lec 37 - Zeroes of Polynomial Functions
