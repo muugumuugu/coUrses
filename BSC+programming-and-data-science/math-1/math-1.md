@@ -30,7 +30,48 @@
 
 ## Lec 4 - Set Theory
 
-## Lecture 10 - Sets V/S Collections
+### Properties of a set
++ No duplicates included
++ order irrelavent
+
+>subset --> set formed from selected elements of a superset
+>> equivalent to **binary sequences** of the length #cardinality-of-superset
+
+### Special Sets
++ φ --> Empty Set . Subset of All Sets Vacously.
++ ℙ(X) --> Set Of all Subsets of X.
+
+## Lec 5 - Construction of Sets and Set Operations
+
+>Set Comprehension
+>> { *g*(x) | *some condition* on x, where x ∈ to a *certain* ***predifined*** *set* }}
+>> g --> transform\
+>> some condition --> filter\
+>> predifined set --> generator
+
+>Intervals
+
+>Operations
+>> Unions\
+>> Intersections\
+>> Set Difference\
+>> Complementation relative to a Universal Sets
+
+## Lec 6 - Relations
+> Cartesion P
+## Lec 8 - Prime Numbers
+
++ Euclid's Infinity of Primes.
++ π(x) = # of primes < x
++ Prime Number Th. - π(x)--> x/ln(x) as x-->∞
+
+
+## Lec 9 - Why is a Number Irrational?
+
+>The Real line is continous but some points on the line like √2, obtained from the pythogorean unit right triangle, cannot be represented as a ratio,
+hence the need for irrational.
+
+## Lec 10 - Sets V/S Collections
 
 > ℕ is defined in set theory as
 >> 0 --> φ\
@@ -40,6 +81,12 @@
 
 >>Arithmetic Operations are defined in terms of Set Building operations (Union, Intersection & Cartesion Product)
 
+### Is there a Set of All Sets??? - Russel's Paradox
+
+>generating by set comprehension. we can have a set of all sets that do not contain themselves but then does this set contain itself?
+hence it is not definitive to form a set of all sets.
+
+> In general call any unsuitable collection a **Class**.
 
 ## Lecture 11 - Degrees of Infinity
 >Enumaration - **bijection** with ℕ
@@ -53,7 +100,7 @@
 >> *Independent of Set Theory Axioms*, the existence of such a set cannot be proved or disproved.
 
 
-## Lecture 12 - Rectangular Co-Ordinate System
+## Lec 12 - Rectangular Co-Ordinate System
 
 > Based on assosciating **ℝ** with a **2d grid of perpendicular lines** (axes)
 
