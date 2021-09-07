@@ -36,7 +36,9 @@
 >> 0 --> φ\
 >>1 --> {0, {0}} ==> {φ. {φ}}\
 >>2 --> {1, {1}} ==> {φ, {φ} ,{φ, {φ}}}\
->> j+1 --> {j, {j}}\
+>> j+1 --> {j, {j}}
+
+>>Arithmetic Operations are defined in terms of Set Building operations (Union, Intersection & Cartesion Product)
 
 
 ## Lecture 11 - Degrees of Infinity
