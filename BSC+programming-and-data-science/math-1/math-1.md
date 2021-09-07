@@ -37,7 +37,7 @@
 + order irrelavent
 
 >subset --> set formed from selected elements of a superset
->> equivalent to **binary sequences** of the length #cardinality-of-superset
+>> equivalent to ***binary sequences*** of the length #cardinality-of-superset
 
 ### Special Sets
 + φ --> Empty Set . Subset of All Sets Vacously.
@@ -47,9 +47,9 @@
 
 >Set Comprehension
 >> { *g*(x) | *some condition* on x, where x ∈ to a *certain* ***predifined*** *set* }}
->> g --> transform\
->> some condition --> filter\
->> predifined set --> generator
+>>> g              --> *transform*\
+>>> some condition --> *filter*\
+>>> predifined set --> *generator*
 
 >Intervals
 
