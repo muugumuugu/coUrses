@@ -30,11 +30,18 @@
 
 ## Lec 4 - Set Theory
 
-## Lecture 10 -
+## Lecture 10 - Sets V/S Collections
+
+> ℕ is defined in set theory as
+>> 0 --> φ
+>>1 --> {0, {0}} ==> {φ. {φ}}
+>>2 --> {1, {1}} ==> {φ, {φ} ,{φ, {φ}}}
+>> j+1 --> {j, {j}}
+
 
 ## Lecture 11 - Degrees of Infinity
 >Enumaration - **bijection** with ℕ
->> Enumerable Sets are called Countable. They maybe finite or infinite
+>> Enumerable Sets are called Countable. They may be finite or infinite
 
 ### ℝ is uncountably infinit
 > proof by diagonalization (enumarating sequences of {1,0} and picking the sequence off the diagonal --> negating it and hence finding a sequence that had not been counted
