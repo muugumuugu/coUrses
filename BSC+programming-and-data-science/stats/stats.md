@@ -42,10 +42,10 @@
 + case - a unit from which data is collected.
 + variable - attribute of the units that varies across the sampling set of the units.
 
-####Tabulation
-+ Each variable must have its own column, and same type of value/measurement unit across the units to be consistent and comparable
+#### Tabulation
++ each variable must have its own column, and same type of value/measurement unit across the units to be consistent and comparable
 + each case has its own unique row, with values ( could be NA ) for each variable.
-
+$$sqrt(2)$$
 
 
 
