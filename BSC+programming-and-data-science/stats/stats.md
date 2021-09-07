@@ -28,7 +28,7 @@
 			+ [Common Data Sets](http://data.gov.in)
 	 + Data Not Available - generate and/or collect data.
 
-
+	+ Unstructured Data is scattered and needs *Contextualization* and ***Organization*** before *Analysis*.
 
 
 
