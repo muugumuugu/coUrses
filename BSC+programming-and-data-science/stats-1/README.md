@@ -66,7 +66,7 @@
 >Cross Sectional Data
 >>data recorded at a point of time
 
-## 1.3 : Introduction and Types of Data - Scales of Measurement
+## 1.4 : Introduction and Types of Data - Scales of Measurement
 
 ## Categorical Data
 
@@ -100,10 +100,11 @@
 + extends from interval data	, and has a fixed , meaningful zero, so that a standalone value also is a useable characteristic.
 + possible to perform all arithmetic on suc data
 + example
-+ height
-
-
+	+ height
 
 # WEEK 2 Describing Categorial Data - one variable
+
+## 2.1 : Describing Categorial Data - Frquency Distributions
+
 # WEEK 3 Describing Numerical Data - one variable
 # WEEK 4 Assosiation between Two Variables
