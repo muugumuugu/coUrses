@@ -34,14 +34,14 @@
 
 ## Lecture 11 - Degrees of Infinity
 >Enumaration - **bijection** with ℕ
-> Enumerable Sets are called Countable. They maybe finite or infinite
+>> Enumerable Sets are called Countable. They maybe finite or infinite
 
 ### ℝ is uncountably infinit
-	> proof by diagonalization (enumarating sequences of {1,0} and picking the sequence off the diagonal --> negating it and hence finding a sequence that had not been counted
+> proof by diagonalization (enumarating sequences of {1,0} and picking the sequence off the diagonal --> negating it and hence finding a sequence that had not been counted
 
 ### Continuam Hypothesis
 > Is there a set with cardinality between that of ℕ  and ℝ?
-> *Independent of Set Theory Axioms*, the existence of such a set cannot be proved or disproved.
+>> *Independent of Set Theory Axioms*, the existence of such a set cannot be proved or disproved.
 
 
 ## Lecture 12 - Rectangular Co-Ordinate System
