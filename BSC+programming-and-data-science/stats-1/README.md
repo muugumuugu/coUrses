@@ -92,7 +92,7 @@
 ### Interval Scale of Measurement
 + extends on ordinal data, and also has a fixed unit to measure differenece between two values.
 + always numeric.
-+ ratios meaningless since irts all about the differences, the zero is arbitrary.
++ ratios meaningless since it's all about the differences, the zero is arbitrary.
 + example
 	+ star ratings
 
