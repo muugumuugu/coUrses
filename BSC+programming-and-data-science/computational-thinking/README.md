@@ -16,9 +16,9 @@
 + filtering means selecting a susbset of the data based on the value of one of the case-variabled (attribute of that data entry).
 + we can do multiple filters together, and nest the filtering within the iteration also.
 
-## iterations using combination of filter conditions
+## Iterations using Combination of Filter conditions
 
-## introduction to flowcharts
+## Introduction to Flowcharts
 
 ###Symbols
 + Processs : Process/Activity - Operation that CHanges Vallue
@@ -29,29 +29,32 @@
 ###  Generic Flowchart for Iteration
 
 ![iteration algorithm](imgs/iteration-alg.png)
+
 which is simply a pictorial representation of
 
- ________________________________
-|st=>start: START                |
-|e=>end: END                     |
-|op1=>operation:Initialize       |
-|               Variables        |
-|op2=>operation:mark element as  |
-|                       visited  |
-|op3=>operation:move element to  |
-|                   checked stack|
-|op4=>operation:update variables |
-|          with data from element|
-|cond1=>condition: are there     |
-|             unchecked elements |
-|            in the iterable set.|
-|cond2=>condition: element passes|
-|        through filter condition|
-|________________________________|
-|                                |
-|st->op1->cond1                  |
-|cond1(no)->e(right)             |
-|cond1(yes)->op2->op3->cond2     |
-|cond2(yes)->op4->op1            |
-|cond2(no)->op1                  |
-|________________________________|
+ ================================
+|st=>start: START                |\
+|e=>end: END                     |\
+|op1=>operation:Initialize       |\
+|               Variables        |\
+|op2=>operation:mark element as  |\
+|                       visited  |\
+|op3=>operation:move element to  |\
+|                   checked stack|\
+|op4=>operation:update variables |\
+|          with data from element|\
+|cond1=>condition: are there     |\
+|             unchecked elements |\
+|            in the iterable set.|\
+|cond2=>condition: element passes|\
+|        through filter condition|\
+|________________________________|\
+|                                |\
+|st->op1->cond1                  |\
+|cond1(no)->e(right)             |\
+|cond1(yes)->op2->op3->cond2     |\
+|cond2(yes)->op4->op1            |\
+|cond2(no)->op1                  |\
+ ================================
+
+## Flowchart for Sum in Filtering
