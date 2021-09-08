@@ -32,29 +32,31 @@
 
 which is simply a pictorial representation of
 
- ================================\
-|st=>start: START                |\
-|e=>end: END                     |\
-|op1=>operation:Initialize       |\
-|               Variables        |\
-|op2=>operation:mark element as  |\
-|                       visited  |\
-|op3=>operation:move element to  |\
-|                   checked stack|\
-|op4=>operation:update variables |\
-|          with data from element|\
-|cond1=>condition: are there     |\
-|             unchecked elements |\
-|            in the iterable set.|\
-|cond2=>condition: element passes|\
-|        through filter condition|\
-|________________________________|\
-|                                |\
-|st->op1->cond1                  |\
-|cond1(no)->e(right)             |\
-|cond1(yes)->op2->op3->cond2     |\
-|cond2(yes)->op4->op1            |\
-|cond2(no)->op1                  |\
+```
  ================================
+|st=>start: START                |
+|e=>end: END                     |
+|op1=>operation:Initialize       |
+|               Variables        |
+|op2=>operation:mark element as  |
+|                       visited  |
+|op3=>operation:move element to  |
+|                   checked stack|
+|op4=>operation:update variables |
+|          with data from element|
+|cond1=>condition: are there     |
+|             unchecked elements |
+|            in the iterable set.|
+|cond2=>condition: element passes|
+|        through filter condition|
+|________________________________|
+|                                |
+|st->op1->cond1                  |
+|cond1(no)->e(right)             |
+|cond1(yes)->op2->op3->cond2     |
+|cond2(yes)->op4->op1            |
+|cond2(no)->op1                  |
+ ================================
+```
 
 ## Flowchart for Sum in Filtering
