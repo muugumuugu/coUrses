@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Night #3: Regular Expressions in Processing | Daniel Shiffman</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="../../../../../css/main.css">
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../../../apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../../../favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../../../favicon-16x16.png">
+    <link rel="manifest" href="../../../../../site.webmanifest">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+    <script src="../../../../../js/main.js"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    <script>
+      (adsbygoogle = window.adsbygoogle || []).push({
+        google_ad_client: "ca-pub-9064317682916014",
+        enable_page_level_ads: true
+      });
+    </script>
+</head>
+
+
+  <body>
+
+    <!--[if lt IE 7]>
+    <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+<![endif]-->
+<nav id="global-nav" aria-label="Main navigation">
+  <ul class="nav-links">
+    <li><a href="../../../../../index.html" class="nav-logo">DANIEL <br>SHIFFMAN</a></li>
+    <span class="line-charm"></span>
+    <li><a href="../../../../../books/index.html">BOOKS</a></li>
+    <li><a href="../../../../../videos/index.html">VIDEOS</a></li>
+    <li><a href="../../../../../learning/index.html">LEARNING</a></li>
+    <li><a href="../../../../../about/index.html">ABOUT</a></li>
+    <span class="line-charm"></span>
+    <li><a href="http://twitter.com/shiffman" target="_blank">TWITTER</a></li>
+    <li><a href="http://github.com/shiffman" target="_blank">GITHUB</a></li>
+    <li><a href="https://www.patreon.com/codingtrain?ty=h" target="_blank">PATREON</a></li>
+  </ul>
+</nav>
+<div id="container">
+  <button aria-controls="global-nav" aria-haspopup="true" tabindex="2" id="menu-button">
+    <span class="menu-icon" aria-hidden="true">
+      <img src="../../../../../images/nav-btn.svg" alt="Menu toggle" />
+    </span>
+  </button>
+</div>
+<!-- <span class="mobile-quick-links">VIEW QUICK LINKS</span> -->
+
+
+      <link rel="stylesheet" type="text/css" href="../../../../../css/prism.css">
+<link rel="stylesheet" type="text/css" href="../../../../../css/highlight.css">
+
+<main class="left-container out blog">
+    <div class="content-wrapper article blog">
+
+        <span class="line-charm first"></span>
+        <p class="date">Dec 22, 2011</p>
+        <h1 class="no-btm">Night #3: Regular Expressions in Processing</h1>
+        <p>Several years ago I became somewhat obsessed with regular expressions while reading Jeffrey Friedl&#8217;s <a href="http://regex.info">Mastering Regular Expressions</a>.  At the time, I wrote <a href="http://shiffman.net/teaching/a2z/regex/">a short tutorial about regular expressions</a> for my course Programming from A to Z.  The sad truth is that if you&#8217;ve ever done regular expressions in Java, it&#8217;s pretty darn awkward compared to, say, python or perl.  The good news is there are some nice regex helper functions in Processing that can make it a bit easier.  Before we get to that let&#8217;s start with the Java API: </p>
+<ul>
+<li><a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">Pattern</a> &#8212; a compiled representation of a regular expression.</li>
+<li><a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Matcher.html">Matcher</a> &#8212; an engine that performs match operations on a character sequence (or String) by interpreting a Pattern.</li>
+</ul>
+<p>An example of Pattern and Matcher in Java (which you can write directly into Processing) looks like the following:</p>
+
+<figure class="highlight"><pre><code class="language-java" data-lang="java"><span class="nc">String</span> <span class="n">inputtext</span> <span class="o">=</span> <span class="s">"This is a test of regular expressions."</span><span class="o">;</span>  <span class="c1">// Input text</span>
+<span class="nc">String</span> <span class="n">regex</span> <span class="o">=</span> <span class="s">"test"</span><span class="o">;</span>              <span class="c1">// The regular expression to match</span>
+<span class="nc">Pattern</span> <span class="n">p</span> <span class="o">=</span> <span class="nc">Pattern</span><span class="o">.</span><span class="na">compile</span><span class="o">(</span><span class="n">regex</span><span class="o">);</span> <span class="c1">// Making a Pattern object with the regex </span>
+<span class="nc">Matcher</span> <span class="n">m</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="na">matcher</span><span class="o">(</span><span class="n">inputtext</span><span class="o">);</span>   <span class="c1">// Matching that regex in the input string</span>
+<span class="k">if</span> <span class="o">(</span><span class="n">m</span><span class="o">.</span><span class="na">find</span><span class="o">())</span> <span class="o">{</span>
+  <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">m</span><span class="o">.</span><span class="na">group</span><span class="o">());</span>     <span class="c1">// Here's the match!</span>
+<span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+  <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"No match!"</span><span class="o">);</span>   <span class="c1">// No match!</span>
+<span class="o">}</span></code></pre></figure>
+
+<p>Of course, in most cases, you want to do something more sophisticated where you iterate over many matches.</p>
+
+<figure class="highlight"><pre><code class="language-java" data-lang="java"><span class="c1">// Regex that matches double words</span>
+<span class="c1">// Ugh, look at all these double back slashes!!</span>
+<span class="nc">String</span> <span class="n">regex</span> <span class="o">=</span> <span class="s">"\\b(\\w+)\\b\\W+\\1"</span><span class="o">;</span>   
+
+<span class="nc">Pattern</span> <span class="n">p</span> <span class="o">=</span> <span class="nc">Pattern</span><span class="o">.</span><span class="na">compile</span><span class="o">(</span><span class="n">regex</span><span class="o">);</span>     <span class="c1">// Compile Regex</span>
+<span class="nc">Matcher</span> <span class="n">m</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="na">matcher</span><span class="o">(</span><span class="n">content</span><span class="o">);</span>         <span class="c1">// Create Matcher</span>
+<span class="k">while</span> <span class="o">(</span><span class="n">m</span><span class="o">.</span><span class="na">find</span><span class="o">())</span> <span class="o">{</span>
+  <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">m</span><span class="o">.</span><span class="na">group</span><span class="o">());</span>
+<span class="o">}</span></code></pre></figure>
+
+<p>Processing provides some regex helper functions that wrap all of this Java Pattern/Matcher stuff.  They are <a href="http://processing.org/reference/match_.html">match()</a> and <a href="http://processing.org/reference/matchAll_.html">matchAll()</a>.  </p>
+<p>The match() function is used to apply a regular expression to a piece of text, and return matching groups (elements found inside parentheses) as a String array. If there is no match, the function will return null. If no groups are specified in the regular expression, but the sequence matches, an array of length one (with the matched text as the first element of the array) will be returned. </p>
+<p>Here&#8217;s an example (this is straight from the reference page).</p>
+
+<figure class="highlight"><pre><code class="language-java" data-lang="java"><span class="nc">String</span> <span class="n">s</span> <span class="o">=</span> <span class="s">"Inside a tag, you will find &lt;tag&gt;content&lt;/tag&gt;."</span><span class="o">;</span>
+<span class="nc">String</span><span class="o">[]</span> <span class="n">m</span> <span class="o">=</span> <span class="n">match</span><span class="o">(</span><span class="n">s</span><span class="o">,</span> <span class="s">"&lt;tag&gt;(.*?)&lt;/tag&gt;"</span><span class="o">);</span>
+<span class="n">println</span><span class="o">(</span><span class="s">"Found '"</span> <span class="o">+</span> <span class="n">m</span><span class="o">[</span><span class="mi">1</span><span class="o">]</span> <span class="o">+</span> <span class="s">"' inside the tag."</span><span class="o">);</span>
+<span class="c1">// Prints to the console:</span>
+<span class="c1">// "Found 'content' inside the tag."</span></code></pre></figure>
+
+<p>The matchAll() function is at first a bit confusing because it returns a two dimensional array.  But if you look right back to how match() works, it&#8217;s pretty simple.  match() assumes you want just one match, and gives you an array, a list of all the groups for that single match.  matchAll() assumes you want all the matches, so it gives you a bunch of those arrays, one for every match.   What&#8217;s an array of an array?  A two dimensional array!  The first dimension is the match itself, and the second dimension is the group for that match, i.e.</p>
+
+<figure class="highlight"><pre><code class="language-java" data-lang="java"><span class="nc">String</span> <span class="n">s</span> <span class="o">=</span> <span class="s">"Some tags! &lt;tag&gt;one&lt;/tag&gt; &lt;tag&gt;two&lt;/tag&gt; &lt;tag&gt;three&lt;/tag&gt;."</span><span class="o">;</span>
+
+<span class="c1">// Match this regular expression</span>
+<span class="nc">String</span><span class="o">[][]</span> <span class="n">m</span> <span class="o">=</span> <span class="n">matchAll</span><span class="o">(</span><span class="n">s</span><span class="o">,</span> <span class="s">"&lt;tag&gt;(.*?)&lt;/tag&gt;"</span><span class="o">);</span>
+<span class="c1">// Loop through all the matches     </span>
+<span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">m</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+  <span class="c1">// Print out group 1 for each match                </span>
+  <span class="n">println</span><span class="o">(</span><span class="s">"Found '"</span> <span class="o">+</span> <span class="n">m</span><span class="o">[</span><span class="n">i</span><span class="o">][</span><span class="mi">1</span><span class="o">]</span> <span class="o">+</span> <span class="s">"' inside a tag."</span><span class="o">);</span> 
+<span class="o">}</span></code></pre></figure>
+
+<p>This new example uses a regex that matches anything inside an HTML href tag and draws it the screen.</p>
+<p><a href="../../../../../wp/wp-content/uploads/2011/12/Regex.zip"><img src="../../../../../wp/wp-content/uploads/2011/12/regex.png" alt="" title="regex" width="500" height="298" class="alignnone size-full wp-image-994" /></a></p>
+<p><a href="../../../../../wp/wp-content/uploads/2011/12/Regex.zip">Regex.zip</a></p>
+
+
+    </div>
+</main>
+
+<aside class="right-container quick-links out">
+  <h5>HIGHLIGHTED TUTORIALS</h5>
+
+  <div class="quick-link">
+      <a href="../../../../../p5/kinect/index.html" class="secondary">Microsoft Kinect with Processing</a>
+  </div>
+
+
+    <!-- <h5>LATEST POSTS</h5>
+	
+	    <div class="quick-link">
+	        <a href="/2014/11/01/gsoc-2014/" class="secondary">Google Summer of Code 2014</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/2014/01/01/happynewyear/" class="secondary">Happy 2014!</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/2013/09/24/gsoc/" class="secondary">Processing Google Summer of Code</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/2013/08/01/video-lesson-documentation/" class="secondary">Video Lesson Documentation</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2012/03/01/box2d-blob-skeleton/" class="secondary">Box2D Blob Skeleton</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2011/12/28/night-8-rendering-out-as-image-sequence/" class="secondary">Night #8: Rendering an image sequence</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2011/12/27/night-7-nature-of-code-excerpts/" class="secondary">Night #7: Nature of Code excerpts</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2011/12/26/night-6-image-sequence-object-with-variable-speed/" class="secondary">Night #6: Image Sequence Object (with variable speed)</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/25/night-5-thread-in-processing/" class="secondary">Night #5: thread() in Processing</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/23/night-4-sorting-the-vertices-of-a-polygon/" class="secondary">Night #4: Sorting the Vertices of a Polygon</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/22/night-3-regular-expressions-in-processing/" class="secondary">Night #3: Regular Expressions in Processing</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/21/night-2-fade-sound-in-and-out-using-minim/" class="secondary">Night #2: Fade Sound In and Out Using Minim</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/20/night-1-zoom-and-pan-in-2d/" class="secondary">Night #1: Zoom and Pan in 2D</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/20/hanukkah-8-nights-of-processing/" class="secondary">Hanukkah: 8 Nights of Processing</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/04/26/opencv-matching-faces-over-time/" class="secondary">OpenCV Matching Faces Over Time</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2011/02/28/revisiting-flight404-particles/" class="secondary">Revisiting Flight404 Particles</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2011/02/13/asteroids-spaceship/" class="secondary">Asteroids Spaceship</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/nature%20of%20code/processing.org/2011/02/10/nature-of-code-book-pvector-spring-example/" class="secondary">Nature of Code book: PVector Spring example</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/02/03/rotate-a-vector-processing-js/" class="secondary">Rotate a Vector (Processing.js!)</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/book/2011/01/28/the-economics-of-self-publishing-via-kickstarter-so-far/" class="secondary">The Economics of Self-Publishing via Kickstarter (so far)</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/opencv/2011/01/23/how-to-build-opencv-static-libraries-mac-os-x/" class="secondary">How to Build OpenCV Static Libraries Mac OS X (10.5 compatible!)</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/01/21/nature-of-code-book-on-kickstarter/" class="secondary">Nature of Code book on Kickstarter</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/kinect/processing.org/2011/01/15/kinect-library-tutorial-and-documentation-page/" class="secondary">Kinect Library Tutorial and Documentation Page</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/01/13/new-kinect-example-average-point-tracking/" class="secondary">New Kinect Example Average Point Tracking</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/kinect/library/processing.org/2010/12/18/updated-kinect-library-for-processing/" class="secondary">Updated Kinect Library for Processing</a>
+	    </div>
+    
+    <div class="quick-link">
+        <a href="/blog.html" class="secondary">SEE ALL</a>
+    </div> -->
+</aside>
+
+<script src="../../../../../js/blog.js"></script>
+<script src="../../../../../js/prism.js"></script>
+
+
+    <footer class="left-container about out">
+    <div class="content-wrapper article">
+        <p>Source code for this website can be found on <a href="https://github.com/shiffman/shiffman.net/" target="_blank">Github</a>.</p>
+    </div>
+</footer>
+
+
+<script>
+
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-94163-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </body>
+
+</html>

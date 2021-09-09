@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>OpenCV Matching Faces Over Time | Daniel Shiffman</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="../../../../../css/main.css">
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../../../apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../../../favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../../../favicon-16x16.png">
+    <link rel="manifest" href="../../../../../site.webmanifest">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+    <script src="../../../../../js/main.js"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    <script>
+      (adsbygoogle = window.adsbygoogle || []).push({
+        google_ad_client: "ca-pub-9064317682916014",
+        enable_page_level_ads: true
+      });
+    </script>
+</head>
+
+
+  <body>
+
+    <!--[if lt IE 7]>
+    <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+<![endif]-->
+<nav id="global-nav" aria-label="Main navigation">
+  <ul class="nav-links">
+    <li><a href="../../../../../index.html" class="nav-logo">DANIEL <br>SHIFFMAN</a></li>
+    <span class="line-charm"></span>
+    <li><a href="../../../../../books/index.html">BOOKS</a></li>
+    <li><a href="../../../../../videos/index.html">VIDEOS</a></li>
+    <li><a href="../../../../../learning/index.html">LEARNING</a></li>
+    <li><a href="../../../../../about/index.html">ABOUT</a></li>
+    <span class="line-charm"></span>
+    <li><a href="http://twitter.com/shiffman" target="_blank">TWITTER</a></li>
+    <li><a href="http://github.com/shiffman" target="_blank">GITHUB</a></li>
+    <li><a href="https://www.patreon.com/codingtrain?ty=h" target="_blank">PATREON</a></li>
+  </ul>
+</nav>
+<div id="container">
+  <button aria-controls="global-nav" aria-haspopup="true" tabindex="2" id="menu-button">
+    <span class="menu-icon" aria-hidden="true">
+      <img src="../../../../../images/nav-btn.svg" alt="Menu toggle" />
+    </span>
+  </button>
+</div>
+<!-- <span class="mobile-quick-links">VIEW QUICK LINKS</span> -->
+
+
+      <link rel="stylesheet" type="text/css" href="../../../../../css/prism.css">
+<link rel="stylesheet" type="text/css" href="../../../../../css/highlight.css">
+
+<main class="left-container out blog">
+    <div class="content-wrapper article blog">
+
+        <span class="line-charm first"></span>
+        <p class="date">Apr 26, 2011</p>
+        <h1 class="no-btm">OpenCV Matching Faces Over Time</h1>
+        <p><iframe src="http://player.vimeo.com/video/22873042?title=0&amp;byline=0&amp;portrait=0&amp;autoplay=0" width="398" height="299" frameborder="0"></iframe></p>
+<p>One of the most common questions I get regarding blob tracking is &#8220;memory.&#8221;   How do I know which blob is which over time?  Computer vision libraries, for the most part, simply pass you a list of blobs (with x, y, width, and height properties) for any given moment in time.  But the blobs themselves represent only a snapshot of that particular moment and contain no information related to whether the blobs existed before this very moment.   This may seem absurd given that as human beings it&#8217;s so easy for us to watch a rectangle moving across a screen and understand conceptually that it is the same rectangle.  But without additional information (such as color matching, an AR marker, etc.) there&#8217;s no way for an algorithm that analyzes one frame of video to know anything about a previous frame.  And so we need to apply the same intuitions our brain uses (it was there a moment ago, it&#8217;s probably still there now) to our algorithms.  </p>
+<p>To illustrate one solution to this problem, I&#8217;ve created an example that tags an OpenCV face &#8220;rectangle&#8221; with an ID number and attempts to track that face over time, matching new faces that OpenCV finds with earlier ones.  This example is somewhat of an oversimplification whose purpose is to demonstrate a particular technique &#8212; a new face is the same as the previous one that was closest to it.  But there are certainly additional and more sophisticated ways that the match could be made.  In addition, it&#8217;s likely useful to add some interpolation to the face&#8217;s movement and size changes so that it appears less jittery.</p>
+<p>First, we need to establish our own Face class.  OpenCV just gives us a new array of Rectangle objects every frame so we need our own Face object that persists (in an ArrayList).</p>
+
+<figure class="highlight"><pre><code class="language-java" data-lang="java"><span class="kd">class</span> <span class="nc">Face</span> <span class="o">{</span>
+  
+  <span class="c1">// A Rectangle</span>
+  <span class="nc">Rectangle</span> <span class="n">r</span><span class="o">;</span>
+  
+  <span class="c1">// Am I available to be matched?</span>
+  <span class="kt">boolean</span> <span class="n">available</span><span class="o">;</span>
+  
+  <span class="c1">// Should I be deleted?</span>
+  <span class="kt">boolean</span> <span class="n">delete</span><span class="o">;</span>
+  
+  <span class="c1">// How long should I live if I have disappeared?</span>
+  <span class="kt">int</span> <span class="n">timer</span> <span class="o">=</span> <span class="mi">127</span><span class="o">;</span>
+  
+  <span class="c1">// Assign a number to each face</span>
+  <span class="kt">int</span> <span class="n">id</span><span class="o">;</span></code></pre></figure>
+
+<p>Our main program then needs an ArrayList to keep track of the Face objects that currently exist:</p>
+
+<figure class="highlight"><pre><code class="language-java" data-lang="java"><span class="nc">ArrayList</span> <span class="n">faceList</span><span class="o">;</span></code></pre></figure>
+
+<p>Finally, in draw(), OpenCV gives us an array of Rectangle objects, the faces it currently sees.</p>
+
+<figure class="highlight"><pre><code class="language-java" data-lang="java">  <span class="nc">Rectangle</span><span class="o">[]</span> <span class="n">faces</span> <span class="o">=</span> <span class="n">opencv</span><span class="o">.</span><span class="na">detect</span><span class="o">();</span></code></pre></figure>
+
+<p>It&#8217;s our job to match these with any Face objects we have in our ArrayList.  The way I see it, there are three scenarios.</p>
+<p>1) We have nothing in our Face ArrayList.  In this case, we add a new Face object for every single Rectangle in the faces array, i.e.</p>
+
+<figure class="highlight"><pre><code class="language-java" data-lang="java">  <span class="k">if</span> <span class="o">(</span><span class="n">faceList</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">())</span> <span class="o">{</span>
+    <span class="c1">// Just make a Face object for every face Rectangle</span>
+    <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">faces</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+      <span class="n">faceList</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="nc">Face</span><span class="o">(</span><span class="n">faces</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">x</span><span class="o">,</span><span class="n">faces</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">y</span><span class="o">,</span><span class="n">faces</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">width</span><span class="o">,</span><span class="n">faces</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">height</span><span class="o">));</span>
+    <span class="o">}</span></code></pre></figure>
+
+<p>2) OpenCV found more faces than we currently have in our list.   In this case, we need to match our current Face objects with an OpenCV Rectangle and then add new Face objects for any remaining Rectangles.</p>
+
+<figure class="highlight"><pre><code class="language-java" data-lang="java"><span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(</span><span class="n">faceList</span><span class="o">.</span><span class="na">size</span><span class="o">()</span> <span class="o">&lt;</span> <span class="o">=</span> <span class="n">faces</span><span class="o">.</span><span class="na">length</span><span class="o">)</span> <span class="o">{</span>
+    <span class="kt">boolean</span><span class="o">[]</span> <span class="n">used</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">boolean</span><span class="o">[</span><span class="n">faces</span><span class="o">.</span><span class="na">length</span><span class="o">];</span>
+    <span class="c1">// Match existing Face objects with a Rectangle</span>
+    <span class="k">for</span> <span class="o">(</span><span class="nc">Face</span> <span class="n">f</span> <span class="o">:</span> <span class="n">faceList</span><span class="o">)</span> <span class="o">{</span>
+       <span class="c1">// Find faces[index] that is closest to face f</span>
+       <span class="c1">// set used[index] to true so that it can't be used twice</span>
+       <span class="kt">float</span> <span class="n">record</span> <span class="o">=</span> <span class="mi">50000</span><span class="o">;</span>
+       <span class="kt">int</span> <span class="n">index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">;</span>
+       <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">faces</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+         <span class="kt">float</span> <span class="n">d</span> <span class="o">=</span> <span class="n">dist</span><span class="o">(</span><span class="n">faces</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">x</span><span class="o">,</span><span class="n">faces</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">y</span><span class="o">,</span><span class="n">f</span><span class="o">.</span><span class="na">r</span><span class="o">.</span><span class="na">x</span><span class="o">,</span><span class="n">f</span><span class="o">.</span><span class="na">r</span><span class="o">.</span><span class="na">y</span><span class="o">);</span>
+         <span class="k">if</span> <span class="o">(</span><span class="n">d</span> <span class="o">&lt;</span> <span class="n">record</span> <span class="o">&amp;</span><span class="err">#</span><span class="mo">03</span><span class="mi">8</span><span class="o">;&amp;</span><span class="err">#</span><span class="mo">03</span><span class="mi">8</span><span class="o">;</span> <span class="o">!</span><span class="n">used</span><span class="o">[</span><span class="n">i</span><span class="o">])</span> <span class="o">{</span>
+           <span class="n">record</span> <span class="o">=</span> <span class="n">d</span><span class="o">;</span>
+           <span class="n">index</span> <span class="o">=</span> <span class="n">i</span><span class="o">;</span>
+         <span class="o">}</span> 
+       <span class="o">}</span>
+       <span class="c1">// Update Face object location</span>
+       <span class="n">used</span><span class="o">[</span><span class="n">index</span><span class="o">]</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+       <span class="n">f</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="n">faces</span><span class="o">[</span><span class="n">index</span><span class="o">]);</span>
+    <span class="o">}</span></code></pre></figure>
+
+<p>Notice how in the above code boolean variables are used to keep track of which Rectangles have already been matched.  We don't want two Face objects to think they are the same face!</p>
+<p>3) Finally, the third scenario is that we have more Face objects than OpenCV has found.  In this case, we need to match our existing Face objects and then mark any leftover ones for deletion.</p>
+
+<figure class="highlight"><pre><code class="language-java" data-lang="java">  <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+    <span class="c1">// All Face objects start out as available</span>
+    <span class="k">for</span> <span class="o">(</span><span class="nc">Face</span> <span class="n">f</span> <span class="o">:</span> <span class="n">faceList</span><span class="o">)</span> <span class="o">{</span>
+      <span class="n">f</span><span class="o">.</span><span class="na">available</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+    <span class="o">}</span> 
+    <span class="c1">// Match Rectangle with a Face object</span>
+    <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">faces</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+      <span class="c1">// Find face object closest to faces[i] Rectangle</span>
+      <span class="c1">// set available to false</span>
+       <span class="kt">float</span> <span class="n">record</span> <span class="o">=</span> <span class="mi">50000</span><span class="o">;</span>
+       <span class="kt">int</span> <span class="n">index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">;</span>
+       <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">faceList</span><span class="o">.</span><span class="na">size</span><span class="o">();</span> <span class="n">j</span><span class="o">++)</span> <span class="o">{</span>
+         <span class="nc">Face</span> <span class="n">f</span> <span class="o">=</span> <span class="n">faceList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">j</span><span class="o">);</span>
+         <span class="kt">float</span> <span class="n">d</span> <span class="o">=</span> <span class="n">dist</span><span class="o">(</span><span class="n">faces</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">x</span><span class="o">,</span><span class="n">faces</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">y</span><span class="o">,</span><span class="n">f</span><span class="o">.</span><span class="na">r</span><span class="o">.</span><span class="na">x</span><span class="o">,</span><span class="n">f</span><span class="o">.</span><span class="na">r</span><span class="o">.</span><span class="na">y</span><span class="o">);</span>
+         <span class="k">if</span> <span class="o">(</span><span class="n">d</span> <span class="o">&lt;</span> <span class="n">record</span> <span class="o">&amp;</span><span class="err">#</span><span class="mo">03</span><span class="mi">8</span><span class="o">;&amp;</span><span class="err">#</span><span class="mo">03</span><span class="mi">8</span><span class="o">;</span> <span class="n">f</span><span class="o">.</span><span class="na">available</span><span class="o">)</span> <span class="o">{</span>
+           <span class="n">record</span> <span class="o">=</span> <span class="n">d</span><span class="o">;</span>
+           <span class="n">index</span> <span class="o">=</span> <span class="n">j</span><span class="o">;</span>
+         <span class="o">}</span> 
+       <span class="o">}</span>
+       <span class="c1">// Update Face object location</span>
+       <span class="nc">Face</span> <span class="n">f</span> <span class="o">=</span> <span class="n">faceList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">index</span><span class="o">);</span>
+       <span class="n">f</span><span class="o">.</span><span class="na">available</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+       <span class="n">f</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="n">faces</span><span class="o">[</span><span class="n">i</span><span class="o">]);</span>
+    <span class="o">}</span> </code></pre></figure>
+
+<p>Full source is here: <a href="../../../../../p5/whichface.zip">whichface.zip</a></p>
+
+
+    </div>
+</main>
+
+<aside class="right-container quick-links out">
+  <h5>HIGHLIGHTED TUTORIALS</h5>
+
+  <div class="quick-link">
+      <a href="../../../../../p5/kinect/index.html" class="secondary">Microsoft Kinect with Processing</a>
+  </div>
+
+
+    <!-- <h5>LATEST POSTS</h5>
+	
+	    <div class="quick-link">
+	        <a href="/2014/11/01/gsoc-2014/" class="secondary">Google Summer of Code 2014</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/2014/01/01/happynewyear/" class="secondary">Happy 2014!</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/2013/09/24/gsoc/" class="secondary">Processing Google Summer of Code</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/2013/08/01/video-lesson-documentation/" class="secondary">Video Lesson Documentation</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2012/03/01/box2d-blob-skeleton/" class="secondary">Box2D Blob Skeleton</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2011/12/28/night-8-rendering-out-as-image-sequence/" class="secondary">Night #8: Rendering an image sequence</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2011/12/27/night-7-nature-of-code-excerpts/" class="secondary">Night #7: Nature of Code excerpts</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2011/12/26/night-6-image-sequence-object-with-variable-speed/" class="secondary">Night #6: Image Sequence Object (with variable speed)</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/25/night-5-thread-in-processing/" class="secondary">Night #5: thread() in Processing</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/23/night-4-sorting-the-vertices-of-a-polygon/" class="secondary">Night #4: Sorting the Vertices of a Polygon</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/22/night-3-regular-expressions-in-processing/" class="secondary">Night #3: Regular Expressions in Processing</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/21/night-2-fade-sound-in-and-out-using-minim/" class="secondary">Night #2: Fade Sound In and Out Using Minim</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/20/night-1-zoom-and-pan-in-2d/" class="secondary">Night #1: Zoom and Pan in 2D</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/20/hanukkah-8-nights-of-processing/" class="secondary">Hanukkah: 8 Nights of Processing</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/04/26/opencv-matching-faces-over-time/" class="secondary">OpenCV Matching Faces Over Time</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2011/02/28/revisiting-flight404-particles/" class="secondary">Revisiting Flight404 Particles</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2011/02/13/asteroids-spaceship/" class="secondary">Asteroids Spaceship</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/nature%20of%20code/processing.org/2011/02/10/nature-of-code-book-pvector-spring-example/" class="secondary">Nature of Code book: PVector Spring example</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/02/03/rotate-a-vector-processing-js/" class="secondary">Rotate a Vector (Processing.js!)</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/book/2011/01/28/the-economics-of-self-publishing-via-kickstarter-so-far/" class="secondary">The Economics of Self-Publishing via Kickstarter (so far)</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/opencv/2011/01/23/how-to-build-opencv-static-libraries-mac-os-x/" class="secondary">How to Build OpenCV Static Libraries Mac OS X (10.5 compatible!)</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/01/21/nature-of-code-book-on-kickstarter/" class="secondary">Nature of Code book on Kickstarter</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/kinect/processing.org/2011/01/15/kinect-library-tutorial-and-documentation-page/" class="secondary">Kinect Library Tutorial and Documentation Page</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/01/13/new-kinect-example-average-point-tracking/" class="secondary">New Kinect Example Average Point Tracking</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/kinect/library/processing.org/2010/12/18/updated-kinect-library-for-processing/" class="secondary">Updated Kinect Library for Processing</a>
+	    </div>
+    
+    <div class="quick-link">
+        <a href="/blog.html" class="secondary">SEE ALL</a>
+    </div> -->
+</aside>
+
+<script src="../../../../../js/blog.js"></script>
+<script src="../../../../../js/prism.js"></script>
+
+
+    <footer class="left-container about out">
+    <div class="content-wrapper article">
+        <p>Source code for this website can be found on <a href="https://github.com/shiffman/shiffman.net/" target="_blank">Github</a>.</p>
+    </div>
+</footer>
+
+
+<script>
+
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-94163-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </body>
+
+</html>

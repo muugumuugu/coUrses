@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Night #2: Fade Sound In and Out Using Minim | Daniel Shiffman</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="../../../../../css/main.css">
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../../../apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../../../favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../../../favicon-16x16.png">
+    <link rel="manifest" href="../../../../../site.webmanifest">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+    <script src="../../../../../js/main.js"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    <script>
+      (adsbygoogle = window.adsbygoogle || []).push({
+        google_ad_client: "ca-pub-9064317682916014",
+        enable_page_level_ads: true
+      });
+    </script>
+</head>
+
+
+  <body>
+
+    <!--[if lt IE 7]>
+    <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+<![endif]-->
+<nav id="global-nav" aria-label="Main navigation">
+  <ul class="nav-links">
+    <li><a href="../../../../../index.html" class="nav-logo">DANIEL <br>SHIFFMAN</a></li>
+    <span class="line-charm"></span>
+    <li><a href="../../../../../books/index.html">BOOKS</a></li>
+    <li><a href="../../../../../videos/index.html">VIDEOS</a></li>
+    <li><a href="../../../../../learning/index.html">LEARNING</a></li>
+    <li><a href="../../../../../about/index.html">ABOUT</a></li>
+    <span class="line-charm"></span>
+    <li><a href="http://twitter.com/shiffman" target="_blank">TWITTER</a></li>
+    <li><a href="http://github.com/shiffman" target="_blank">GITHUB</a></li>
+    <li><a href="https://www.patreon.com/codingtrain?ty=h" target="_blank">PATREON</a></li>
+  </ul>
+</nav>
+<div id="container">
+  <button aria-controls="global-nav" aria-haspopup="true" tabindex="2" id="menu-button">
+    <span class="menu-icon" aria-hidden="true">
+      <img src="../../../../../images/nav-btn.svg" alt="Menu toggle" />
+    </span>
+  </button>
+</div>
+<!-- <span class="mobile-quick-links">VIEW QUICK LINKS</span> -->
+
+
+      <link rel="stylesheet" type="text/css" href="../../../../../css/prism.css">
+<link rel="stylesheet" type="text/css" href="../../../../../css/highlight.css">
+
+<main class="left-container out blog">
+    <div class="content-wrapper article blog">
+
+        <span class="line-charm first"></span>
+        <p class="date">Dec 21, 2011</p>
+        <h1 class="no-btm">Night #2: Fade Sound In and Out Using Minim</h1>
+        <p>I made this example earlier in the semester after seeing countless projects with the following functionality: turning a sound on when a sensor reading reaches a given level, turning the sound off when a sensor reading falls below a certain level.  Most the projects used Minim for sound playback and pause() and play() to start and stop a sound, along with rewind() to send the sound back to the beginning.  While this does work, I find a more effective strategy is to fade a sound in and out using shiftGain().</p>
+<p>Now this is a fairly simple problem if you can pinpoint the moment a sound should fade in.  For example, let&#8217;s say you want it to happen when the mouse is clicked.</p>
+
+<figure class="highlight"><pre><code class="language-java" data-lang="java"><span class="kt">void</span> <span class="nf">mousePressed</span><span class="o">()</span> <span class="o">{</span>
+  <span class="n">player</span><span class="o">.</span><span class="na">shiftGain</span><span class="o">(-</span><span class="mi">80</span><span class="o">,</span> <span class="mi">13</span><span class="o">,</span> <span class="mi">1000</span><span class="o">);</span> 
+<span class="o">}</span></code></pre></figure>
+
+<p>The above line of code will fade the sound over 1,000 milliseconds (i.e. 1 second) from a decibel level of -80 (inaudible) to 13 (some vaguely loud level.)</p>
+<p>If you put this code in draw(), however, you&#8217;ve got a problem.</p>
+
+<figure class="highlight"><pre><code class="language-java" data-lang="java"><span class="kt">void</span> <span class="nf">draw</span><span class="o">()</span> <span class="o">{</span>
+  <span class="k">if</span> <span class="o">(</span><span class="n">sensorVal</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">player</span><span class="o">.</span><span class="na">shiftGain</span><span class="o">(-</span><span class="mi">80</span><span class="o">,</span> <span class="mi">13</span><span class="o">,</span> <span class="mi">1000</span><span class="o">);</span> 
+  <span class="o">}</span>
+<span class="o">}</span></code></pre></figure>
+
+<p>You can&#8217;t call shiftGain() over and over again!  You want this to happen just once, the moment the sensor value reaches that threshold.  Introducing a boolean is a quick way to solve this problem.  If you set the boolean to true when the sound is fading and only call shiftGain() when the boolean is set to false, you&#8217;ve now got only one call to the function.</p>
+
+<figure class="highlight"><pre><code class="language-java" data-lang="java"><span class="kt">boolean</span> <span class="n">fade</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+
+<span class="kt">void</span> <span class="nf">draw</span><span class="o">()</span> <span class="o">{</span>
+  <span class="k">if</span> <span class="o">(</span><span class="n">sensorVal</span> <span class="o">&gt;</span> <span class="n">threshold</span> <span class="o">&amp;</span><span class="err">#</span><span class="mo">03</span><span class="mi">8</span><span class="o">;&amp;</span><span class="err">#</span><span class="mo">03</span><span class="mi">8</span><span class="o">;</span> <span class="o">!</span><span class="n">fade</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">player</span><span class="o">.</span><span class="na">shiftGain</span><span class="o">(-</span><span class="mi">80</span><span class="o">,</span> <span class="mi">13</span><span class="o">,</span> <span class="mi">1000</span><span class="o">);</span> 
+    <span class="n">fade</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+  <span class="o">}</span>
+<span class="o">}</span></code></pre></figure>
+
+<p>The question remains: when does fade get set back to false?  One likely solution is to reset the boolean when the sensor value falls below the threshold, i.e.</p>
+
+<figure class="highlight"><pre><code class="language-java" data-lang="java">  <span class="k">if</span> <span class="o">(</span><span class="n">sensorVal</span> <span class="o">&gt;</span> <span class="n">threshold</span> <span class="o">&amp;</span><span class="err">#</span><span class="mo">03</span><span class="mi">8</span><span class="o">;&amp;</span><span class="err">#</span><span class="mo">03</span><span class="mi">8</span><span class="o">;</span> <span class="o">!</span><span class="n">fade</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">player</span><span class="o">.</span><span class="na">shiftGain</span><span class="o">(-</span><span class="mi">80</span><span class="o">,</span> <span class="mi">13</span><span class="o">,</span> <span class="mi">1000</span><span class="o">);</span> 
+    <span class="n">fade</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+  <span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(</span><span class="n">sensorVal</span> <span class="o">&lt;</span> <span class="n">threshold</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">fade</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+  <span class="o">}</span></code></pre></figure>
+
+<p>Following is an example that does this with a double threshold (fading up above a value and fading down below a value).  In addition, it offers some other improvements (such as having the sound fade from its current gain level). The mouseX location is the stand-in for a sensor value.</p>
+<p><a href="../../../../../wp/wp-content/uploads/2011/12/SoundFade.zip"><img src="../../../../../wp/wp-content/uploads/2011/12/soundfade.png" alt="" title="soundfade" width="400" height="239" class="alignnone size-full wp-image-979" /></a></p>
+<p>Source: <a href="../../../../../wp/wp-content/uploads/2011/12/SoundFade.zip">SoundFade.zip</a></p>
+
+
+    </div>
+</main>
+
+<aside class="right-container quick-links out">
+  <h5>HIGHLIGHTED TUTORIALS</h5>
+
+  <div class="quick-link">
+      <a href="../../../../../p5/kinect/index.html" class="secondary">Microsoft Kinect with Processing</a>
+  </div>
+
+
+    <!-- <h5>LATEST POSTS</h5>
+	
+	    <div class="quick-link">
+	        <a href="/2014/11/01/gsoc-2014/" class="secondary">Google Summer of Code 2014</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/2014/01/01/happynewyear/" class="secondary">Happy 2014!</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/2013/09/24/gsoc/" class="secondary">Processing Google Summer of Code</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/2013/08/01/video-lesson-documentation/" class="secondary">Video Lesson Documentation</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2012/03/01/box2d-blob-skeleton/" class="secondary">Box2D Blob Skeleton</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2011/12/28/night-8-rendering-out-as-image-sequence/" class="secondary">Night #8: Rendering an image sequence</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2011/12/27/night-7-nature-of-code-excerpts/" class="secondary">Night #7: Nature of Code excerpts</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2011/12/26/night-6-image-sequence-object-with-variable-speed/" class="secondary">Night #6: Image Sequence Object (with variable speed)</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/25/night-5-thread-in-processing/" class="secondary">Night #5: thread() in Processing</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/23/night-4-sorting-the-vertices-of-a-polygon/" class="secondary">Night #4: Sorting the Vertices of a Polygon</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/22/night-3-regular-expressions-in-processing/" class="secondary">Night #3: Regular Expressions in Processing</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/21/night-2-fade-sound-in-and-out-using-minim/" class="secondary">Night #2: Fade Sound In and Out Using Minim</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/20/night-1-zoom-and-pan-in-2d/" class="secondary">Night #1: Zoom and Pan in 2D</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/20/hanukkah-8-nights-of-processing/" class="secondary">Hanukkah: 8 Nights of Processing</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/04/26/opencv-matching-faces-over-time/" class="secondary">OpenCV Matching Faces Over Time</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2011/02/28/revisiting-flight404-particles/" class="secondary">Revisiting Flight404 Particles</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2011/02/13/asteroids-spaceship/" class="secondary">Asteroids Spaceship</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/nature%20of%20code/processing.org/2011/02/10/nature-of-code-book-pvector-spring-example/" class="secondary">Nature of Code book: PVector Spring example</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/02/03/rotate-a-vector-processing-js/" class="secondary">Rotate a Vector (Processing.js!)</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/book/2011/01/28/the-economics-of-self-publishing-via-kickstarter-so-far/" class="secondary">The Economics of Self-Publishing via Kickstarter (so far)</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/opencv/2011/01/23/how-to-build-opencv-static-libraries-mac-os-x/" class="secondary">How to Build OpenCV Static Libraries Mac OS X (10.5 compatible!)</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/01/21/nature-of-code-book-on-kickstarter/" class="secondary">Nature of Code book on Kickstarter</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/kinect/processing.org/2011/01/15/kinect-library-tutorial-and-documentation-page/" class="secondary">Kinect Library Tutorial and Documentation Page</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/01/13/new-kinect-example-average-point-tracking/" class="secondary">New Kinect Example Average Point Tracking</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/kinect/library/processing.org/2010/12/18/updated-kinect-library-for-processing/" class="secondary">Updated Kinect Library for Processing</a>
+	    </div>
+    
+    <div class="quick-link">
+        <a href="/blog.html" class="secondary">SEE ALL</a>
+    </div> -->
+</aside>
+
+<script src="../../../../../js/blog.js"></script>
+<script src="../../../../../js/prism.js"></script>
+
+
+    <footer class="left-container about out">
+    <div class="content-wrapper article">
+        <p>Source code for this website can be found on <a href="https://github.com/shiffman/shiffman.net/" target="_blank">Github</a>.</p>
+    </div>
+</footer>
+
+
+<script>
+
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-94163-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </body>
+
+</html>
