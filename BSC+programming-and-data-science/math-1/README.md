@@ -67,9 +67,34 @@
 
 ## Lec 6 - Relations
 
-> Cartesion P
+> A filtered subset of a Cartesion Product b/w sets.
+>> Filter equips the subset with a binary operation hat acts on the first element of all tuples to result in the second element.
+> Can also be denoted by a node-edge (*bipartite*) graph between the vertices taken from set-1 to set-2.
+>> two vertices v<sub>a</sub> v<sub>b</sub>, representing  a ∈ A & b ∈ B respectively , are connected iff aRb. that is the relation holds for that pair.
+
+###examples
+
++ Square in 2D real plane is a relation on ℝ<sup>2</sup>Xℝ<sup>2</sup>Xℝ<sup>2</sup>Xℝ<sup>2</sup> , and also on ℝ<sup>8</sup>. The relation is that the tuple defines being a corner.
+
+###equivalence relations
++ partitions the set in question (mutually disjoint partitions, with covering union.)
++ is reflexive , symetric and transitive.
 
 ## Lec 7 - Functions
+
+> 𝑓 : X → Y, a subset of a relation where the first element is resticted to no repetations. THis constricted subset is like a Map from set of elements in X to Y.
+>>the set of first elements of tuples: Domain on which function acts.
+>>the set of second elements of tuples: Range of function.
+
+###Bijections
+
++ Injective : One-One.
++ Surjective : Onto.
+
+###Tables As Relations.
+> Extended relations . Each entry a n-tuple, where elements are mutually related by some condition. the set of such conditions is fixed and ordered and is consistent aross rows
+>> If one column is unique it can be used as a key, and if two tables share sucha column, a new table can be created by performing a ***join***, that is extending the relations via the key element, and selecting different columns from the two or more tables.
+?????????/
 
 
 ## Lec 8 - Prime Numbers
