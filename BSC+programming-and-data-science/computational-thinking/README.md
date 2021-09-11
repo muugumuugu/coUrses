@@ -105,7 +105,7 @@ while (iterator){
 
 ###PseudoCode
 
-```
+```js
 varsᵢ =0;//or some other initializing val.
 while (set.length>0){
 	val1=item.prop1;//etc..
