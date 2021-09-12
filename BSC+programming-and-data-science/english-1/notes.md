@@ -118,7 +118,9 @@
 ----> toward the inside of the mouth
 
 |&&| bilabial | labio -dental | dental |alveolar | post -alveolar|paletal |velar | gluttal |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Stop | ||||||||
+| nasal |||||||||
 
 ## Lec 05 - How to Improve your Language Skills.
 
