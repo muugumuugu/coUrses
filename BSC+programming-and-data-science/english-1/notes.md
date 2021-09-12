@@ -47,7 +47,7 @@
 
 	|Phonetic Symbol|word-1|pronounciation-1|word-2|pronounciation-2|word-3|pronounciation-3 |word-4|pronounciation-4 |word-5|pronounciation-5|
 	|-- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-	| i:|	             week |/w**i:**k/ |bean |/b**i:**.n/ |deem    |/d**i:**.m/   |feet  |/f**i:**.t/     |media |/ˈm**iː**.di.jə/           |
+	| i:|	             week |/w**i:**.k/ |bean |/b**i:**.n/ |deem    |/d**i:**.m/   |feet  |/f**i:**.t/     |media |/ˈm**iː**.di.jə/           |
 	| ɑ:|	             hard |/h**ɑ:**/ |lard  |/l**ɑ:**/ |card      |/k**ɑ:**/|laugh |/l**ɑ:**.f/    |article |/**ɑː**.tɪ.kəl/      |
 	| ɔ:|	             fork | /f**ɔ:**.rk/ |born   |/b**ɔ:**.rn/ |torn|/t**ɔ:**.rn/|walk|/w**ɔ:**.k/|August|/**ɔː**.ˈɡʌst/       |
 	| ɜ:|	             heard |/h**ɜ:**.d/ |burn |/b**ɜ:**.n/ |turn      |/t**ɜ:**.n/|word |/w**ɜ:**.d/|surface|/ˈs**ɜː**.fɪs       |
