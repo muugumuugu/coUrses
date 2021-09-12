@@ -66,8 +66,8 @@
 	| ʊə|	     tour |/t**ʊə**/ | pure |/p**ʊə**/|  mature |/məˈtʃ**ʊə**/ ||
 
 
-#####CONSONANTS
-######non-voiced
+##### CONSONANTS
+###### non-voiced
 + /p/ /b/
 + /t/ /d/
 + /k/ /g/
@@ -76,7 +76,7 @@
 + /θ/ /ð/
 + /ʃ/ /ʒ/
 + /ʈʃ/ /dʒ/
-######voiced
+###### voiced
 + /h/
 + /w/
 + /n/
