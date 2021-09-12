@@ -25,9 +25,10 @@
 >>+ Lower Case
 
 #### Phonetics
-– when you see the two dots /:/ it means the sound is long
-– each symbol represents a sound
-– when you see this dash /’/ it means the next syllable is stressed
+
++ when you see the two dots /:/ it means the sound is long
++ each symbol represents a sound
++ when you see this dash /’/ it means the next syllable is stressed
 
 ##### VOWELS
 + Short vowels
