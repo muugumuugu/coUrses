@@ -170,14 +170,14 @@ hence the need for irrational.
 
 > θ = (m<sub>1</sub>-m<sub>2</sub>)/(1+ m<sub>1</sub>m<sub>2</sub>
 
-## Lec 18 - Represantation of a Line:1
+## Lec 18 - Represantation of a Line-1
 
 + Point on a Lines
 + Horizontal and Vertical Lines
 + Point-Slope Form
 + Two-Point Form
 
-## Lec 19 - Representation of a Line:2 and Applications of Rectangular Co-ordinated.
+## Lec 19 - Representation of a Line-2 and Applications of Rectangular Co-ordinated.
 
 + Slope-intercept form
 + XY- intercept frm
@@ -213,7 +213,7 @@ hence the need for irrational.
 
 
 
-## Lec 26 - Solution of a QE using Graph, Slope: Line & Parabola
+## Lec 26 - Solution of a QE using Graph, Slope -> Line & Parabola
 
 + use zeroes of QF to get roots of QE.
 + Sensitivity of change in run in terms of the rise --> slope
@@ -253,7 +253,7 @@ hence the need for irrational.
 
 > Rational Functions
 
-## Lec 36 - Graphs of Polynomials : Identification/ Characteriztion
+## Lec 36 - Graphs of Polynomials - > Identification/ Characteriztion
 
 > the curve of polynomials is always smooth( continous without sharp corners).
 
