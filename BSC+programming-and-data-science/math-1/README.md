@@ -1,14 +1,10 @@
 
 ---------------------
-TOC
----
-|Lec ID| Lec Name|
-| ---| --- |
-|1 | [Natural Numbers and their Operations](#lec-1---natural-numbers-and-their-operations) |
+
 ---------------------
 # WEEK 1
 
-## Lec 1 - Natural Numbers and their Operations
+## Lec 01 - Natural Numbers and their Operations
 
 >ℕ --> {0,1,2,3,....}
 >>discrete set
@@ -27,12 +23,12 @@ TOC
 + Sieve of Erothenes
 + Unique Factorization Th.
 
-## Lec 2 - Rational Numbers
+## Lec 02 - Rational Numbers
 
 + GCD
 + Density of ℚ
 
-## Lec 3 - Real Numbers
+## Lec 03 - Real Numbers
 
 ### Important Irrationals
 
@@ -42,7 +38,7 @@ TOC
 	+ π
 	+ e
 
-## Lec 4 - Set Theory
+## Lec 04 - Set Theory
 
 ### Properties of a set
 
@@ -57,7 +53,7 @@ TOC
 + φ --> Empty Set . Subset of All Sets Vacously.
 + ℙ(X) --> Set Of all Subsets of X.
 
-## Lec 5 - Construction of Sets and Set Operations
+## Lec 05 - Construction of Sets and Set Operations
 
 >Set Comprehension
 >> { *g*(x) | *some condition* on x, where x ∈ to a *certain* ***predifined*** *set* }}
@@ -73,7 +69,7 @@ TOC
 >> Set Difference\
 >> Complementation relative to a Universal Sets
 
-## Lec 6 - Relations
+## Lec 06 - Relations
 
 > A filtered subset of a Cartesion Product b/w sets.
 >> Filter equips the subset with a binary operation hat acts on the first element of all tuples to result in the second element.
@@ -88,7 +84,7 @@ TOC
 + partitions the set in question (mutually disjoint partitions, with covering union.)
 + is reflexive , symetric and transitive.
 
-## Lec 7 - Functions
+## Lec 07 - Functions
 
 > 𝑓 : X → Y, a subset of a relation where the first element is resticted to no repetations. THis constricted subset is like a Map from set of elements in X to Y.
 >>the set of first elements of tuples: Domain on which function acts.
@@ -105,13 +101,13 @@ TOC
 ?????????/
 
 
-## Lec 8 - Prime Numbers
+## Lec 08 - Prime Numbers
 
 + Euclid's Infinity of Primes.
 + π(x) = # of primes < x
 + Prime Number Th. - π(x)--> x/ln(x) as x-->∞
 
-## Lec 9 - Why is a Number Irrational?
+## Lec 09 - Why is a Number Irrational?
 
 >The Real line is continous but some points on the line like √2, obtained from the pythogorean unit right triangle, cannot be represented as a ratio,
 hence the need for irrational.
@@ -133,7 +129,7 @@ hence the need for irrational.
 
 > In general call any unsuitable collection a ***Class***.
 
-## Lecture 11 - Degrees of Infinity
+## Lec 11 - Degrees of Infinity
 
 >Enumaration - ***bijection*** with ℕ
 >> Enumerable Sets are called Countable. They may be finite or infinite
