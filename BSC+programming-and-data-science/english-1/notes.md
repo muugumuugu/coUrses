@@ -25,7 +25,7 @@
 ##### VOWELS
 + Short vowels
 
-	|Phonetic Symbol|word-pronounciation-1|word-pronounciation-2|word-pronounciation-3|word-pronounciation-4  |word-pronounciation-4|
+	|Phonetic Symbol|word-pronounciation-1|word-pronounciation-2|word-pronounciation-3|word-pronounciation-4  |word-pronounciation-5|
 	|--             |       ---           |        ---          |       ---           |       ---             |        ---          |
 	| ɪ|	                pit /pɪt/         | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/| sick    /sɪk/       |
 	| e|	            pet /pet/         | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|                     |
@@ -37,17 +37,16 @@
 
 + Long vowels
 
-	|Phonetic Symbol|word-pronounciation-1|word-pronounciation-2|word-pronounciation-3|word-pronounciation-4|word-pronounciation-4|
+	|Phonetic Symbol|word-pronounciation-1|word-pronounciation-2|word-pronounciation-3|word-pronounciation-4|word-pronounciation-5|
 	|--             |       ---           |        ---          |       ---           |       ---           |        ---          |
 	| i:|	             week.            | bean          /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
 	| ɑ:|	             hard.            | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
 	| ɔ:|	             fork.            | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
 	| ɜ:|	             heard.           | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
-	| u:|
-	         boot.            | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
+	| u:|                boot.            | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
 + Diphthong vowels.
 
-	|Phonetic Symbol|word-pronounciation-1|word-pronounciation-2|word-pronounciation-3|word-pronounciation-4          |word-pronounciation-4     |
+	|Phonetic Symbol|word-pronounciation-1|word-pronounciation-2|word-pronounciation-3|word-pronounciation-4          |word-pronounciation-5     |
 	|--             |       ---           |        ---          |       ---           |       ---                     |        ---               |
     | eɪ|	             place.           | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
 	| oʊ|	             home.            | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
