@@ -39,7 +39,7 @@
 	|-- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 	| i:|	             week |/w**i:**k/ |bean |/b**i:**n/ |deem    |/d**i:**m/   |feet  |/f**i:**t/     |media |/ˈmiː.di.jə/           |
 	| ɑ:|	             hard |/h**ɑ:**/ |lard  |/l**ɑ:**/ |card      |/k**ɑ:**/|laugh |/l**ɑ:**f/    |article |/**ɑː**.tɪ.kəl/      |
-	| ɔ:|	             fork |/f**ɔ:**rk/ |born   |/b**ɔ:**rn/ |torn|/t**ɔ:**rn/|walk|/w**ɔ:**k/|August|/**ɔː**ˈɡʌst/       |
+	| ɔ:|	             fork | /f**ɔ:**rk/ |born   |/b**ɔ:**rn/ |torn|/t**ɔ:**rn/|walk|/w**ɔ:**k/|August|/**ɔː**ˈɡʌst/       |
 	| ɜ:|	             heard |/h**ɜ:**d/ |burn |/b**ɜ:**n/ |turn      |/t**ɜ:**n/|word |/w**ɜ:**d/|surface|/ˈs**ɜː**.fɪs       |
 	| u:|                boot |/b**u:**t/ |boon |/b**u:**n/ |moon      |/m**u:**n/|group |/gr**u:**p/   |beautiful |/ˈbj**uː**.tɪ.fəl/ |
 + Diphthong vowels.
