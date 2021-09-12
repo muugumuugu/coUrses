@@ -4,7 +4,7 @@ TOC
 ---
 |Lec ID| Lec Name|
 | ---| --- |
-|1 | [Natural Numbers and their Operations](#Lec 1 - Natural Numbers and their Operations) |
+|1 | [Natural Numbers and their Operations](#lec-1---natural-numbers-and-their-operations) |
 ---------------------
 # WEEK 1
 
