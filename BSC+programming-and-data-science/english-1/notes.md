@@ -67,15 +67,17 @@
 
 
 ##### CONSONANTS
-###### voiced - voiceless pairs
-+ /p/ - /b/
-+ /t/ - /d/
-+ /k/ - /g/
-+ /f/ - /v/
-+ /s/ - /z/
-+ /θ/ - /ð/ --> **th**ought - **th**em
-+ /ʃ/ - /ʒ/ --> **sh**y - trea**su**re
-+ /ʈʃ/ - /dʒ/ --> **ch**ime - **j**am
+###### voiceless - voiced pairs
+|voiceless|voiced| word voiceless|word voiced|
+| --- | --- | --- | --- |
+| /p/ | /b/ |||
+| /t/ | /d/ |||
+| /k/ | /g/ |||
+| /f/ | /v/ |||
+| /s/ | /z/ |||
+| /θ/ | /ð/ | **th**ought | **th**em|
+| /ʃ/ | /ʒ/ | **sh**y | trea**su**re|
+| /ʈʃ/ | /dʒ/ | **ch**ime | **j**am|
 ###### voiced
 + /h/
 + /w/
