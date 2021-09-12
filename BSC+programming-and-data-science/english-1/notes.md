@@ -39,11 +39,11 @@
 
 	|Phonetic Symbol|word-pronounciation-1|word-pronounciation-2|word-pronounciation-3|word-pronounciation-4|word-pronounciation-5|
 	|--             |       ---           |        ---          |       ---           |       ---           |        ---          |
-	| i:|	             week /wi:k/      | bean          /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
-	| ɑ:|	             hard /hɑ:rd/    | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
-	| ɔ:|	             fork /fɔ:rk      | born /bɔ:rn/         |  ffff         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
-	| ɜ:|	             heard /hɜ:rd/    | burn /bɜ:rn/         |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
-	| u:|                boot /bu:t/      | boon          /bu:n/ |  moon         /mu:n/ | difficult /ˈdɪ.fɪ.kəlt/|       |
+	| i:|	             week /wi:k/      | bean /bi:n/         |  deem      /di:m/  | difficult /ˈdɪ.fɪ.kəlt/|       |
+	| ɑ:|	             hard /hɑ:rd/    | lard  /lɑ:rd/        |  card      /kɑ:rd/ | difficult /ˈdɪ.fɪ.kəlt/|       |
+	| ɔ:|	             fork /fɔ:rk      | born /bɔ:rn/         |  torn     /tɔ:rn/  | difficult /ˈdɪ.fɪ.kəlt/|       |
+	| ɜ:|	             heard /hɜ:rd/    | burn /bɜ:rn/         |  turn      /tɜ:rn/  | difficult /ˈdɪ.fɪ.kəlt/|       |
+	| u:|                boot /bu:t/      | boon /bu:n/          |  moon        /mu:n/ | difficult /ˈdɪ.fɪ.kəlt/|       |
 + Diphthong vowels.
 
 	|Phonetic Symbol|word-pronounciation-1|word-pronounciation-2|word-pronounciation-3|word-pronounciation-4          |word-pronounciation-5     |
