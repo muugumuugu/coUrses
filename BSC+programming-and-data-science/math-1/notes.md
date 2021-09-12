@@ -151,7 +151,7 @@ d=√∑(x<sub>i<sub>1</sub></sub>-x<sub>i<sub>2</sub></sub>)<sup>2</sup>
 
 ## Lec 14 - Section Formula
 
-<sup>(m<sub>2</sub>x⃗<sub>1</sub>+ m<sub>1</sub>x⃗<sub>2</sub>)</sup>/<sub>(m<sub>1</sub>+m<sub>2</sub>)</sub>
+(m<sub>2</sub>x⃗<sub>1</sub>+ m<sub>1</sub>x⃗<sub>2</sub>)/(m<sub>1</sub>+m<sub>2</sub>)
 
 ## Lec 15 - Area of a Triangle
 
@@ -168,7 +168,7 @@ d=√∑(x<sub>i<sub>1</sub></sub>-x<sub>i<sub>2</sub></sub>)<sup>2</sup>
 
 ###Angle of Intersection
 
-> θ = (m<sub>1</sub>-m<sub>2</sub>)/(1+ m<sub>1</sub>m<sub>2</sub>
+> θ = (m<sub>1</sub>-m<sub>2</sub>)/(1+ m<sub>1</sub>m<sub>2</sub>)
 
 ## Lec 18 - Represantation of a Line-1
 
@@ -239,7 +239,7 @@ d=√∑(x<sub>i<sub>1</sub></sub>-x<sub>i<sub>2</sub></sub>)<sup>2</sup>
 
 ## Lec 29 - Quadratic Formula
 
-<sup>(-b ± √(b²-4ac))</sup>/<sub>2a</sub>
+(-b ± √(b²-4ac))/2a
 
 ## Lec 30 - Polynomials
 
