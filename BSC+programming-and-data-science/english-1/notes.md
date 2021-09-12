@@ -24,7 +24,7 @@
 + Short vowels
 
 	|Phonetic Symbol|word-1|pronounciation-1|word-2|pronounciation-2|word-3|pronounciation-3         |word-4|pronounciation-4             |word-5|pronounciation-5|
-	|--|| ---|| --- || ---|| --- || ---|| --- || ---|| --- || ---|| --- |
+	|-- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 	| ɪ|	                pit |/p**ɪ**t/|fit       |/f**ɪ**t/  |pick           |/p**ɪ**k/|difficult |/ˈd**ɪ**.f**ɪ**.kəlt/|sick     |/s**ɪ**k/  |
 	| e|	            pet |/p**e**t/|sent       |/s**e**nt/ |attention  |/əˈt**e**n.ʃən/|neck|/n**e**k/|mess|/m**e**s/ |
 	| æ|	            pat |/p**æ**t/     |flat       |/fl**æ**t/|family   |/ˈf**æ**.mə.li/|cap  |/k **æ**p/|back      |/b**æ**k/ |
@@ -36,7 +36,7 @@
 + Long vowels
 
 	|Phonetic Symbol|word-1|pronounciation-1|word-2|pronounciation-2|word-3|pronounciation-3 |word-4|pronounciation-4 |word-5|pronounciation-5|
-	|--|| ---|| --- || ---|| --- || ---|| --- || ---|| --- || ---|| --- |
+	|-- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 	| i:|	             week |/w**i:**k/|bean |/b**i:**n/|deem    |/d**i:**m/   |feet  |/f**i:**t/     |media |/ˈmiː.di.jə/           |
 	| ɑ:|	             hard |/h**ɑ:**/|lard  |/l**ɑ:**/|card      |/k**ɑ:**/|laugh |/l**ɑ:**f/    |article |/**ɑː**.tɪ.kəl/      |
 	| ɔ:|	             fork |/f**ɔ:**rk|born   |/b**ɔ:**rn/|torn|/t**ɔ:**rn/|walk|/w**ɔ:**k/|August|/**ɔː**ˈɡʌst/       |
@@ -45,12 +45,12 @@
 + Diphthong vowels.
 
 	|Phonetic Symbol|word-1|pronounciation-1|word-2|pronounciation-2|word-3|pronounciation-3           |word-4|pronounciation-4          |word-5|pronounciation-5     |
-	|--|| ---|| --- || ---|| --- || ---|| --- || ---|| --- || ---|| --- |
-|eɪ|	            place |/pl**eɪ**s/|late |/l**eɪ**t/|dangerous |/ˈd**eɪ**n.dʒə.rəs/|| |
-	| oʊ|	            home |/h**oʊ**m/|phone |/f**oʊ**n/|global |/ˈɡl**oʊ**.bəl/|| |
-	| aʊ|	           mouse |/m**aʊ**s/|brown |/br**aʊ**n/|accountant |/əˈk**aʊ**n.t̬ənt/|| |
-	| ɪə|	            clear |/kl**ɪə**/|fear    |/f**ɪə**/|career |/kəˈr**ɪə**/|| |
+	|-- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+|eɪ|	            place |/pl**eɪ**s/|late |/l**eɪ**t/|dangerous |/ˈd**eɪ**n.dʒə.rəs/| |
+	| oʊ|	            home |/h**oʊ**m/|phone |/f**oʊ**n/|global |/ˈɡl**oʊ**.bəl/| |
+	| aʊ|	           mouse |/m**aʊ**s/|brown |/br**aʊ**n/|accountant |/əˈk**aʊ**n.t̬ənt/| |
+	| ɪə|	            clear |/kl**ɪə**/|fear    |/f**ɪə**/|career |/kəˈr**ɪə**/| |
 	| eə|	            care |/k**eə**/|wear| /w**eə**/|  declare| /dɪˈkl**eə**/|
-	| ɔɪ|	             boy |/b**ɔɪ**/|toy |/t**ɔɪ**/|enjoyable |/ɪnˈdʒ**ɔɪ**.jə.bəl/|||
-	| aɪ|	             find |/f**aɪ**nd/| bite|/b**aɪ**t/| tiger  |/ˈt**aɪ**.ɡə/|||
-	| ʊə|	      tour |/t**ʊə**/ | pure /p**ʊə**/|  mature |/məˈtʃ**ʊə**/ |||
+	| ɔɪ|	             boy |/b**ɔɪ**/|toy |/t**ɔɪ**/|enjoyable |/ɪnˈdʒ**ɔɪ**.jə.bəl/||
+	| aɪ|	             find |/f**aɪ**nd/| bite|/b**aɪ**t/| tiger  |/ˈt**aɪ**.ɡə/||
+	| ʊə|	      tour |/t**ʊə**/ | pure /p**ʊə**/|  mature |/məˈtʃ**ʊə**/ ||
