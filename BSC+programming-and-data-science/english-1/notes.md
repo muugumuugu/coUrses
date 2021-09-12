@@ -119,12 +119,15 @@
 
 |&&| bilabial | labio -dental | dental |alveolar | post -alveolar|paletal |velar | gluttal |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| stop              |p,b|||t,d|||k,g||
+| stop              |p,b|||t,d|||k,g|kh, gh|
 | nasal             |m|||n|||ŋ||
 |flap               ||||r|||||
 |fricative          ||f,v|θ,ð|s,z|ʈʃ,dʒ|||h|
-|approximant        ||||||j|||
+|approximant        ||||w||j|||
 |lateral approximant||||l|||||
+
+[ vowel chart] (https://en.wikipedia.org/wiki/IPA_vowel_chart_with_audio)
+
 ## Lec 05 - How to Improve your Language Skills.
 
 > Read from context, and do try applying rules from known Languages when the grammer seems alien.
@@ -144,7 +147,7 @@ Greet->Purpose->Availibility Check.
 
 
 
-
+# WEEK 2
 
 
 
