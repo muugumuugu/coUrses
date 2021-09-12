@@ -24,27 +24,36 @@
 
 ##### VOWELS
 + Short vowels
-	|Phonetic Symbol| word-pronounciation | word-pronounciation | word-pronounciation |   word-pronounciation | word-pronounciation|
-	|--             |       ---           |        ---          |       ---           |       ---             |      ---           |
-	| ɪ|	            |   pit /pɪt/         | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
-	| e|	pet
-	| æ|	pat
-	| ʌ|	cut
-	| ʊ|	put
-	| ɒ|	dog
-	| ə|	about.
+
+	|Phonetic Symbol|word-pronounciation-1|word-pronounciation-2|word-pronounciation-3|word-pronounciation-4  |word-pronounciation-4|
+	|--             |       ---           |        ---          |       ---           |       ---             |        ---          |
+	| ɪ|	                pit /pɪt/         | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/| sick    /sɪk/       |
+	| e|	            pet /pet/         | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|                     |
+	| æ|	            pat /pæt/         | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|                     |
+	| ʌ|	            cut /kʌt/         | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|                     |
+	| ʊ|	            put /pʊt/         | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|                     |
+	| ɒ|	            dog /dɒg/         | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|                     |
+	| ə|	            about.            | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|                     |
+
 + Long vowels
-	| i:|	week
-	| ɑ:|	hard
-	| ɔ:|	fork,
-	| ɜ:|	heard
-	| u:|	boot.
-+ Diphthong vowels in the IPA are
-    | eɪ|	place
-	| oʊ|	home
-	| aʊ|	mouse
-	| ɪə|	clear
-	| eə|	care
-	| ɔɪ|	boy
-	| aɪ|	find
-	| ʊə|	tour.
+
+	|Phonetic Symbol|word-pronounciation-1|word-pronounciation-2|word-pronounciation-3|word-pronounciation-4|word-pronounciation-4|
+	|--             |       ---           |        ---          |       ---           |       ---           |        ---          |
+	| i:|	             week.            | bean          /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
+	| ɑ:|	             hard.            | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
+	| ɔ:|	             fork.            | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
+	| ɜ:|	             heard.           | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
+	| u:|
+	         boot.            | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
++ Diphthong vowels.
+
+	|Phonetic Symbol|word-pronounciation-1|word-pronounciation-2|word-pronounciation-3|word-pronounciation-4          |word-pronounciation-4     |
+	|--             |       ---           |        ---          |       ---           |       ---                     |        ---               |
+    | eɪ|	             place.           | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
+	| oʊ|	             home.            | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
+	| aʊ|	             mouse.           | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
+	| ɪə|	             clear.           | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
+	| eə|	             care.            | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
+	| ɔɪ|	             boy.             | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
+	| aɪ|	             find.            | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
+	| ʊə|	              tour.           | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
