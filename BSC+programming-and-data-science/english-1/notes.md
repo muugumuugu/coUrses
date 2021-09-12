@@ -27,13 +27,13 @@
 
 	|Phonetic Symbol|word-pronounciation-1|word-pronounciation-2|word-pronounciation-3|word-pronounciation-4  |word-pronounciation-5|
 	|--             |       ---           |        ---          |       ---           |       ---             |        ---          |
-	| ɪ|	                pit /pɪt/         | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/| sick    /sɪk/       |
-	| e|	            pet /pet/         | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|                     |
-	| æ|	            pat /pæt/         | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|                     |
-	| ʌ|	            cut /kʌt/         | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|                     |
-	| ʊ|	            put /pʊt/         | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|                     |
-	| ɒ|	            dog /dɒg/         | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|                     |
-	| ə|	            about.            | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|                     |
+	| ɪ|	                pit /pɪt/         | fit           /fɪt/  |pick           /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/| sick    /sɪk/       |
+	| e|	            pet /pet/         | sent         /sent/ |attention  /əˈten.ʃən/|                       |                    |
+	| æ|	            pat /pæt/         |flat           /flæt/|family   /ˈfæ.mə.li/ |                       |                    |
+	| ʌ|	            cut /kʌt/         |jump          /dʒʌmp/|  cover    /ˈkʌ.vər/ |       ?               |                     |
+	| ʊ|	            put /pʊt/         |book           /bʊk/ |cushion  /ˈkʊ.ʃən/   |       ?               |                     |
+	| ɒ|	            dog /dɒg/         |dog            /dɒg/ |hospital /ˈhɒs.pɪ.təl/|       ?              |                     |
+	| ə|	            about /əˈbaʊt/    |system      /ˈsɪs.təm/|complete /kəmˈpliːt/  |           ?           |                     |
 
 + Long vowels
 
