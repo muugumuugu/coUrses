@@ -2,7 +2,7 @@
 
 ## Lec 01 - Learning English
 
-### how lanhguage works.
+### how language works.
 + a product of human mind's tendency to fins and apply patterns.
 + so
  in younger age
@@ -89,3 +89,62 @@
 | /j/ | |
 | /ŋ/ | **y**um |
 | /l/ | si**ng** |
+
+
+
+## Lec 03 - Speech sounds in English
+
+>Vowels are *nearly free* flow of air, minimum obstruction from articulators.
+> Consonants require obstructions to be produced, and so cannot be streched over a duration
+
+### Articulation of Consonants
++ (A) aspiration -> extra aur flow.
++ (V) voice -> extraneous vibration of vocal chords.
++ Normal -> Nasal, produced by lowering uvula.
+|&&| -V _ -A | -V _ +A | +V _ -A | +V _ +A | Normal
+| --- | --- | --- | --- | --- | --- |
+|Velar|k|kh|g|gh|nj|
+|Palatal|c|ch|j|jh|ny|
+|Retroflex|T|Th|D|Dh|N|
+|Dental|t|th|d|dh|n
+|Labial|p|ph|b|bh|m
+
+
+## Lec 04 - Articulation of Vowel and Consonant sounds
+
+## Lec 05 - How to Improve your Language Skills.
+
+> Read from context, and do try applying rules from known Languages when the grammer seems alien.
+
+## Lecture 06 - Telephone English
+
+Greet->Purpose->Availibility Check.
+
+## Lecture 07 - Language Learning and Use
+
+>E-Language
+>> External language, finite input from environment.
+> Internal Language
+>> Universal Grammer picked up in formative years, and paterns extended from it.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!---------------------->
