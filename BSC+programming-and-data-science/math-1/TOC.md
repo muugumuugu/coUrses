@@ -1,3 +1,7 @@
+TOC
+---
+|Lec ID| Lec Name|
+| ---| --- |
 | 01|[Natural Numbers and their Operations](##-lec-01---natural-numbers-and-their-operations)|
 | 02|[Rational Numbers](##-lec-02---rational-numbers)|
 | 03|[Real Numbers](##-lec-03---real-numbers)|
