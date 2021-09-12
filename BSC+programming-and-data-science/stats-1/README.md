@@ -103,9 +103,52 @@
 + example
 	+ height
 
-# WEEK 2 Describing Categorial Data - one variable
+# WEEK 2 Describing Categorical Data - one variable
 
-## 2.1 : Describing Categorial Data - Frquency Distributions
+## 2.1 : Describing Categorical Data - Frquency Distributions
+> Frequency Table - Listing of diistinct values of a Catgerical Value and their counts in the cases.
+>> One Tally Mark for each occurence of the value.
+### In Google Sheets
+Select data Cells ⇾ Format Menu ⇾ Data ⇾ Pivot Table ⇾ Add rows and Data.
+
+> Relative Frequency - a standard for comparison. Ratio of frequency to Total Count.
+
+##2.2 : Describing Categorical Data - Charts of Categorical Data
+
+### graphs
+> Displays of the frequency Table.
++ Bar Charts
+	+ For compact Representation of Data.
+	+ Bars shouldn't Touch each other
+	+ ***Pareto Chart*** - bars are ordered in ascending/descending order of value if data is Ordinal/ Interval Scale. (No meaning for a Nominal data-set)
+
++ Pie Charts
+	+ display y=the portions
+	+ Suitable for representing relative frquencies.
+
+## 2.3 : Describe Categorical Data - BestPractices-1
+
+> Annotate Data in Charts with both labels of the Categorical Value, and with the frequency/relative frequency.
+
+## 2.4 : Best Practices - 2
+
+> Area Principle:
+>> area occupied by portion of chart should correspond to ampunt of data.
+
+>Misleading Baselines.
+>> Such truncatio confuses due to
+>>> + loss of data
+>>> + incorrect represa=entation in terms of proportions.
+>>if needed Y axis breaks should be marked.
+
+## 2.5 Mode and Median.
+> Central Tendency  Measures.
+
+> Mode
+>> category with heighest frequency.
+
+> Median (for ordinal data only)
+>> mid value of sorted  values.
 
 # WEEK 3 Describing Numerical Data - one variable
 # WEEK 4 Assosiation between Two Variables

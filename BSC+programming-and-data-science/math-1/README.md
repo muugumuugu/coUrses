@@ -1,3 +1,11 @@
+
+---------------------
+TOC
+---
+|Lec ID| Lec Name|
+1 | [Natural Numbers and theit Operations](Lec 1 - Natural Numbers and their Operations)
+
+---------------------
 # WEEK 1
 
 ## Lec 1 - Natural Numbers and their Operations
