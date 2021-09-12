@@ -85,8 +85,8 @@
 | /w/ | |
 | /n/ | |
 | /m/ | |
-| /r/ | |
-| /j/ | |
+| /r/ | co**rr**ect|
+| /j/ | be**y**ond |
 | /ŋ/ | **y**um |
 | /l/ | si**ng** |
 
@@ -119,9 +119,12 @@
 
 |&&| bilabial | labio -dental | dental |alveolar | post -alveolar|paletal |velar | gluttal |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Stop | ||||||||
-| nasal |||||||||
-
+| stop              |p,b|||t,d|||k,g||
+| nasal             |m|||n|||ŋ||
+|flap               ||||r|||||
+|fricative          ||f,v|θ,ð|s,z|ʈʃ,dʒ|||h|
+|approximant        ||||||j|||
+|lateral approximant||||l|||||
 ## Lec 05 - How to Improve your Language Skills.
 
 > Read from context, and do try applying rules from known Languages when the grammer seems alien.
