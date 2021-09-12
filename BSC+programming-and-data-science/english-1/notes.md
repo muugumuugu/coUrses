@@ -46,11 +46,11 @@
 
 	|Phonetic Symbol|word-1|pronounciation-1|word-2|pronounciation-2|word-3|pronounciation-3|word-4|pronounciation-4|word-5|pronounciation-5|
 	|-- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-	|eɪ|	            place |/pl**eɪ**s/|late |/l**eɪ**t/|dangerous |/ˈd**eɪ**n.dʒə.rəs/| |
+	|eɪ|	            bait |/b**eɪ**t/| place |/pl**eɪ**s/|late |/l**eɪ**t/|dangerous |/ˈd**eɪ**n.dʒə.rəs/| |
 	| oʊ|	            home |/h**oʊ**m/|phone |/f**oʊ**n/|global |/ˈɡl**oʊ**.bəl/| |
-	| aʊ|	           mouse |/m**aʊ**s/|brown |/br**aʊ**n/|accountant |/əˈk**aʊ**n.t̬ənt/| |
+	| aʊ|	          house |/h**aʊ**s/| mouse |/m**aʊ**s/|brown |/br**aʊ**n/|accountant |/əˈk**aʊ**n.t̬ənt/| |
 	| ɪə|	            clear |/kl**ɪə**/|fear    |/f**ɪə**/|career |/kəˈr**ɪə**/| |
-	| eə|	            care |/k**eə**/|wear| /w**eə**/|  declare| /dɪˈkl**eə**/|
+	| eə|	           air |**eə**| care |/k**eə**/|wear| /w**eə**/|  declare| /dɪˈkl**eə**/|
 	| ɔɪ|	             boy |/b**ɔɪ**/|toy |/t**ɔɪ**/|enjoyable |/ɪnˈdʒ**ɔɪ**.jə.bəl/||
 	| aɪ|	             find |/f**aɪ**nd/| bite|/b**aɪ**t/| tiger  |/ˈt**aɪ**.ɡə/||
-	| ʊə|	      tour |/t**ʊə**/ | pure |/p**ʊə**/|  mature |/məˈtʃ**ʊə**/ ||
+	| ʊə|	     tour |/t**ʊə**/ | pure |/p**ʊə**/|  mature |/məˈtʃ**ʊə**/ ||
