@@ -25,15 +25,15 @@
 ##### VOWELS
 + Short vowels
 
-	|Phonetic Symbol|word-pronounciation-1|word-pronounciation-2|word-pronounciation-3    |word-pronounciation-4      |word-pronounciation-5|
-	|--             |       ---           |        ---          |       ---                |       ---                |        ---          |
-	| ɪ|	                pit /pɪt/         | fit           /fɪt/  |pick           /pɪk/      | difficult /ˈdɪ.fɪ.kəlt/    | sick    /sɪk/       |
-	| e|	            pet /p**e**t/     | sent       **e**nt/ |attention  /əˈt**e**n.ʃən/| neck /n**e**k/            |                    |
-	| æ|	            pat /p**æ**t/     |flat       /fl**æ**t/|family   /ˈf**æ**.mə.li/      | cap  /k **æ**p/       |                    |
-	| ʌ|	            cut /kʌt/         |jump          /dʒʌmp/|  cover    /ˈkʌ.vər/      |       ?                   |                     |
-	| ʊ|	            put /pʊt/         |book           /bʊk/ |cushion  /ˈkʊ.ʃən/        |about       /əˈba**ʊ**t/   |                     |
-	| ɒ|	            dog /dɒg/         |dog            /dɒg/ |hospital /ˈhɒs.pɪ.təl/    |       ?                   |                     |
-	| ə|	            about /**ə**ˈbaʊt/|system   ˈsɪs.t**ə**m/|complete /k**ə**mˈpliːt/  | difficult /ˈdɪ.fɪ.k**ə**lt/|cover    /ˈkʌ.v**ə**r/   |
+	|Phonetic Symbol|word-pronounciation-1|word-pronounciation-2|word-pronounciation-3         |word-pronounciation-4             |word-pronounciation-5|
+	|--             |       ---           |        ---          |       ---                    |       ---                        |        ---         |
+	| ɪ|	                pit /p**ɪ**t/     | fit       /f**ɪ**t/  |pick           /p**ɪ**k/      | difficult /ˈd**ɪ**.f**ɪ**.kəlt/   | sick     /s**ɪ**k/  |
+	| e|	            pet /p**e**t/     | sent       **e**nt/ |attention  /əˈt**e**n.ʃən/     | neck /n**e**k/                  | mess      /m**e**s/ |
+	| æ|	            pat /p**æ**t/     |flat       /fl**æ**t/|family   /ˈf**æ**.mə.li/       | cap  /k **æ**p/                 | back      /b**æ**k/ |
+	| ʌ|	            cut /k**ʌ**t/     |jump      /dʒ**ʌ**mp/|cover    /ˈk**ʌ**.vər/         | luck /l**ʌ**k/                 | fuss      /f**ʌ**s/ |
+	| ʊ|	            put /pʊt/         |book           /bʊk/ |cushion  /ˈkʊ.ʃən/            |about       /əˈba**ʊ**t/          | good   /g**ʊ**d/   |
+	| ɒ|	            dog /d**ɒ**g/     |hot        /h**ɒ**t/ |hospital /ˈh**ɒ**s.pɪ.təl/    |sock         /s**ɒ**k/            | boss /b**ɒ**s/      |
+	| ə|	            about /**ə**ˈbaʊt/|system   ˈsɪs.t**ə**m/|complete /k**ə**mˈpliːt/      | difficult /ˈdɪ.fɪ.k**ə**lt/       |cover   /ˈkʌ.v**ə**r/|
 
 + Long vowels
 
