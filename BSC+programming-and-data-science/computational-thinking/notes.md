@@ -1,3 +1,5 @@
+# WEEK 1
+
 ## lec 1.1 - Introduction to Datasets
 
 -- > make a subset of data from the available set
@@ -53,6 +55,8 @@ cond2(no)->cond1
 
 ## lec 1.5 - Flowchart for Sum in Filtering
 
+
+# WEEK 2
 ## lec 2.1 - Conditional Termination in Iteration
 
 ```js
@@ -115,4 +119,6 @@ while (set.length>0){
 	set.remove current element.
 }
 ```
-###
+
+
+# WEEK 3

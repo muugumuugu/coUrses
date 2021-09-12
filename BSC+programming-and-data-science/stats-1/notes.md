@@ -1,4 +1,6 @@
-# WEEK 1 Downloading Data, Intro to Statistics
+# WEEK 1
+## Downloading Data, Intro to Statistics
+___
 
 ## Lec 1.1 - Introduction and Types of Data - Basic Definitions
 
@@ -103,7 +105,9 @@
 + example
 	+ height
 
-# WEEK 2 Describing Categorical Data - one variable
+# WEEK 2
+## Describing Categorical Data - one variable
+___
 
 ## Lec 2.1 - Describing Categorical Data - Frquency Distributions
 > Frequency Table - Listing of diistinct values of a Catgerical Value and their counts in the cases.
@@ -150,5 +154,16 @@ Select data Cells ⇾ Format Menu ⇾ Data ⇾ Pivot Table ⇾ Add rows and Data
 > Median (for ordinal data only)
 >> mid value of sorted  values.
 
-# WEEK 3 Describing Numerical Data - one variable
-# WEEK 4 Assosiation between Two Variables
+# WEEK 3
+# Describing Numerical Data - one variable
+___
+
+
+# WEEK 4
+# Assosiation between Two Variables
+___
+
+
+
+
+<!-------->
