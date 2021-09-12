@@ -1,22 +1,22 @@
 ## TOC
 + semester-1
 	+ [English -1](english-1/)
-		+ [x] WEEK1
-		+ [x] WEEK2
-		+ [ ] WEEK3
-		+ [ ] WEEK4
+		+ [x] [WEEK1](english-1/notes.md#WEEK1)
+		+ [x] [WEEK2](english-1/notes.md#WEEK2)
+		+ [ ] [WEEK3](english-1/notes.md#WEEK3)
+		+ [ ] [WEEK4](english-1/notes.md#WEEK4)
 	+ [Computational Thinking](computational-thinking/)
-		+ [x] WEEK1
-		+ [x] WEEK2
-		+ [ ] WEEK3
-		+ [ ] WEEK4
+		+ [x] [WEEK1](computational-thinking/notes.md#WEEK1)
+		+ [x] [WEEK2](computational-thinking/notes.md#WEEK2)
+		+ [ ] [WEEK3](computational-thinking/notes.md#WEEK3)
+		+ [ ] [WEEK4](computational-thinking/notes.md#WEEK4)
 	+ [Mathematics For Data Science -1](math-1/)
-		+ [x] WEEK1
-		+ [x] WEEK2
-		+ [ ] WEEK3
-		+ [ ] WEEK4
+		+ [x] [WEEK1](math-1/notes.md#WEEK1)
+		+ [x] [WEEK2](math-1/notes.md#WEEK2)
+		+ [ ] [WEEK3](math-1//notes.md#WEEK3)
+		+ [ ] [WEEK4](math-1/notes.md#WEEK4)
 	+ [Statistics for Data Science-1](stats-1/)
-		+ [x] WEEK1
-		+ [x] WEEK2
-		+ [ ] WEEK3
-		+ [ ] WEEK4
+		+ [x] [WEEK1](stats-1/notes.md#WEEK1)
+		+ [x] [WEEK2](stats-1/notes.md#WEEK2)
+		+ [ ] [WEEK3](stats-1//notes.md#WEEK3)
+		+ [ ] [WEEK4](stats-1/notes.md#WEEK4)
