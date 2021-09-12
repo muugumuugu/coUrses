@@ -115,7 +115,10 @@
 
 ### English doesn't have all consonant sounds, only 24.
 
+----> toward the inside of the mouth
 
+|&&| bilabial | labio -dental | dental |alveolar | post -alveolar|paletal |velar | gluttal |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 
 ## Lec 05 - How to Improve your Language Skills.
 
