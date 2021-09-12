@@ -101,6 +101,7 @@
 + (A) aspiration -> extra aur flow.
 + (V) voice -> extraneous vibration of vocal chords.
 + Normal -> Nasal, produced by lowering uvula.
+
 |&&| -V _ -A | -V _ +A | +V _ -A | +V _ +A | Normal
 | --- | --- | --- | --- | --- | --- |
 |Velar|k|kh|g|gh|nj|
@@ -111,6 +112,10 @@
 
 
 ## Lec 04 - Articulation of Vowel and Consonant sounds
+
+### English doesn't have all consonant sounds, only 24.
+
+
 
 ## Lec 05 - How to Improve your Language Skills.
 
@@ -124,6 +129,7 @@ Greet->Purpose->Availibility Check.
 
 >E-Language
 >> External language, finite input from environment.
+
 > Internal Language
 >> Universal Grammer picked up in formative years, and paterns extended from it.
 
