@@ -147,7 +147,11 @@ hence the need for irrational.
 
 ## Lec 13 - Distance Formula
 
+d=√∑(x<sub>i<sub>1</sub></sub>-x<sub>i<sub>2</sub></sub>)<sub>2</sub>
+
 ## Lec 14 - Section Formula
+
+<sup>(m<sub>2</sub>x⃗<sub>1</sub>+ m<sub>1</sub>x⃗<sub>2</sub>)<sup>/<sub>(m<sub>1</sub>+m<sub>2</sub>)</sub>
 
 ## Lec 15 - Area of a Triangle
 
@@ -196,6 +200,8 @@ hence the need for irrational.
 ## Lec 24 - Straight Line Fit
 
 ###SSE
+>Sum of Squares of Errors
+>>∑(xᵢ - X)²
 
 # WEEK 4
 
@@ -233,7 +239,12 @@ hence the need for irrational.
 
 ## Lec 29 - Quadratic Formula
 
+<sup>(-b ± √(b²-4ac))</sup>/<sub>2a</sub>
+
 ## Lec 30 - Polynomials
+
+>∑ a<sub>i</sub>x<sub>i</sub><sup>p<sub>i</sub></sup>
+>> p<sub>i</sub> ∈ ℤ
 
 ## Lec 31 - Degree of polynomial
 
