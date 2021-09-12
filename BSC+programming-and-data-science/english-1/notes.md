@@ -25,15 +25,15 @@
 ##### VOWELS
 + Short vowels
 
-	|Phonetic Symbol|word-pronounciation-1|word-pronounciation-2|word-pronounciation-3|word-pronounciation-4  |word-pronounciation-5|
-	|--             |       ---           |        ---          |       ---           |       ---             |        ---          |
-	| ɪ|	                pit /pɪt/         | fit           /fɪt/  |pick           /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/| sick    /sɪk/       |
-	| e|	            pet /pet/         | sent         /sent/ |attention  /əˈten.ʃən/|                       |                    |
-	| æ|	            pat /pæt/         |flat           /flæt/|family   /ˈfæ.mə.li/ |                       |                    |
-	| ʌ|	            cut /kʌt/         |jump          /dʒʌmp/|  cover    /ˈkʌ.vər/ |       ?               |                     |
-	| ʊ|	            put /pʊt/         |book           /bʊk/ |cushion  /ˈkʊ.ʃən/   |       ?               |                     |
-	| ɒ|	            dog /dɒg/         |dog            /dɒg/ |hospital /ˈhɒs.pɪ.təl/|       ?              |                     |
-	| ə|	            about /əˈbaʊt/    |system      /ˈsɪs.təm/|complete /kəmˈpliːt/  |           ?           |                     |
+	|Phonetic Symbol|word-pronounciation-1|word-pronounciation-2|word-pronounciation-3    |word-pronounciation-4      |word-pronounciation-5|
+	|--             |       ---           |        ---          |       ---                |       ---                |        ---          |
+	| ɪ|	                pit /pɪt/         | fit           /fɪt/  |pick           /pɪk/      | difficult /ˈdɪ.fɪ.kəlt/    | sick    /sɪk/       |
+	| e|	            pet /pet/         | sent         /sent/ |attention  /əˈten.ʃən/    |                           |                    |
+	| æ|	            pat /pæt/         |flat           /flæt/|family   /ˈfæ.mə.li/      |                           |                    |
+	| ʌ|	            cut /kʌt/         |jump          /dʒʌmp/|  cover    /ˈkʌ.vər/      |       ?                   |                     |
+	| ʊ|	            put /pʊt/         |book           /bʊk/ |cushion  /ˈkʊ.ʃən/        |about       /əˈba**ʊ**t/   |                     |
+	| ɒ|	            dog /dɒg/         |dog            /dɒg/ |hospital /ˈhɒs.pɪ.təl/    |       ?                   |                     |
+	| ə|	            about /**ə**ˈbaʊt/|system   ˈsɪs.t**ə**m/|complete /k**ə**mˈpliːt/  | difficult /ˈdɪ.fɪ.k**ə**lt/|cover    /ˈkʌ.v**ə**r/   |
 
 + Long vowels
 
