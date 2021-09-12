@@ -37,11 +37,11 @@
 
 	|Phonetic Symbol|word-1|pronounciation-1|word-2|pronounciation-2|word-3|pronounciation-3 |word-4|pronounciation-4 |word-5|pronounciation-5|
 	|-- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-	| i:|	             week |/w**i:**k/|bean |/b**i:**n/|deem    |/d**i:**m/   |feet  |/f**i:**t/     |media |/ˈmiː.di.jə/           |
-	| ɑ:|	             hard |/h**ɑ:**/|lard  |/l**ɑ:**/|card      |/k**ɑ:**/|laugh |/l**ɑ:**f/    |article |/**ɑː**.tɪ.kəl/      |
-	| ɔ:|	             fork |/f**ɔ:**rk|born   |/b**ɔ:**rn/|torn|/t**ɔ:**rn/|walk|/w**ɔ:**k/|August|/**ɔː**ˈɡʌst/       |
-	| ɜ:|	             heard |/h**ɜ:**d/|burn |/b**ɜ:**n/|turn      |/t**ɜ:**n/|word |/w**ɜ:**d/|surface|/ˈs**ɜː**.fɪs       |
-	| u:|                boot |/b**u:**t/|boon |/b**u:**n/|moon      |/m**u:**n/|group |/gr**u:**p/   |beautiful |/ˈbj**uː**.tɪ.fəl/ |
+	| i:|	             week |/w**i:**k/ |bean |/b**i:**n/ |deem    |/d**i:**m/   |feet  |/f**i:**t/     |media |/ˈmiː.di.jə/           |
+	| ɑ:|	             hard |/h**ɑ:**/ |lard  |/l**ɑ:**/ |card      |/k**ɑ:**/|laugh |/l**ɑ:**f/    |article |/**ɑː**.tɪ.kəl/      |
+	| ɔ:|	             fork |/f**ɔ:**rk/ |born   |/b**ɔ:**rn/ |torn|/t**ɔ:**rn/|walk|/w**ɔ:**k/|August|/**ɔː**ˈɡʌst/       |
+	| ɜ:|	             heard |/h**ɜ:**d/ |burn |/b**ɜ:**n/ |turn      |/t**ɜ:**n/|word |/w**ɜ:**d/|surface|/ˈs**ɜː**.fɪs       |
+	| u:|                boot |/b**u:**t/ |boon |/b**u:**n/ |moon      |/m**u:**n/|group |/gr**u:**p/   |beautiful |/ˈbj**uː**.tɪ.fəl/ |
 + Diphthong vowels.
 
 	|Phonetic Symbol|word-1|pronounciation-1|word-2|pronounciation-2|word-3|pronounciation-3           |word-4|pronounciation-4          |word-5|pronounciation-5     |
@@ -53,4 +53,4 @@
 	| eə|	            care |/k**eə**/|wear| /w**eə**/|  declare| /dɪˈkl**eə**/|
 	| ɔɪ|	             boy |/b**ɔɪ**/|toy |/t**ɔɪ**/|enjoyable |/ɪnˈdʒ**ɔɪ**.jə.bəl/||
 	| aɪ|	             find |/f**aɪ**nd/| bite|/b**aɪ**t/| tiger  |/ˈt**aɪ**.ɡə/||
-	| ʊə|	      tour |/t**ʊə**/ | pure /p**ʊə**/|  mature |/məˈtʃ**ʊə**/ ||
+	| ʊə|	      tour |/t**ʊə**/ | pure |/p**ʊə**/|  mature |/məˈtʃ**ʊə**/ ||
