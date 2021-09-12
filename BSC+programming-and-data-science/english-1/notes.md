@@ -28,12 +28,12 @@
 	|Phonetic Symbol|word-1|pronounciation-1|word-2|pronounciation-2|word-3|pronounciation-3         |word-4|pronounciation-4             |word-5|pronounciation-5|
 	|-- | --- | --- |--- | --- |--- | --- |--- | --- |--- | --- |
 	| ɪ|	                pit |/p**ɪ**t/     | fit       |/f**ɪ**t/  |pick           |/p**ɪ**k/      | difficult |/ˈd**ɪ**.f**ɪ**.kəlt/   | sick     |/s**ɪ**k/  |
-	| e|	            pet |/p**e**t/     | sent       |/s**e**nt/ |attention  |/əˈt**e**n.ʃən/     | neck /n**e**k|/                  | mess    |  /m**e**s/ |
+	| e|	            pet |/p**e**t/     | sent       |/s**e**nt/ |attention  |/əˈt**e**n.ʃən/     | neck  | /n**e**k/           | mess    |  /m**e**s/ |
 	| æ|	            pat |/p**æ**t/     |flat       |/fl**æ**t/|family   |/ˈf**æ**.mə.li/       | cap  |/k **æ**p/                 | back      |/b**æ**k/ |
 	| ʌ|	            cut |/k**ʌ**t/     |jump      |/dʒ**ʌ**mp/|cover    |/ˈk**ʌ**.vər/         | luck |/l**ʌ**k/                 | fuss      |/f**ʌ**s/ |
 	| ʊ|	            put |/pʊt/         |book           |/bʊk/ |cushion  |/ˈkʊ.ʃən/            |about       |/əˈba**ʊ**t/          | good   |/g**ʊ**d/   |
 	| ɒ|	            dog |/d**ɒ**g/     |hot        |/h**ɒ**t/ |hospital |/ˈh**ɒ**s.pɪ.təl/    |sock         |/s**ɒ**k/            | boss |/b**ɒ**s/      |
-	| ə|	          about |/**ə**ˈbaʊt/  |system   |/sɪs.t**ə**m/|complete |/k**ə**mˈpliːt/|      | difficult |/ˈdɪ.fɪ.k**ə**lt/       |cover   |/ˈkʌ.v**ə**r/|
+	| ə|	          about |/**ə**ˈbaʊt/  |system   |/sɪs.t**ə**m/|complete |/k**ə**mˈpliːt/|    difficult |/ˈdɪ.fɪ.k**ə**lt/       |cover   |/ˈkʌ.v**ə**r/|
 
 + Long vowels
 
