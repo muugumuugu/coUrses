@@ -25,34 +25,34 @@
 ##### VOWELS
 + Short vowels
 
-	|Phonetic Symbol|word-pronounciation-1|word-pronounciation-2|word-pronounciation-3         |word-pronounciation-4             |word-pronounciation-5|
-	|--             |       ---           |        ---          |       ---                    |       ---                        |        ---         |
-	| ɪ|	                pit /p**ɪ**t/     | fit       /f**ɪ**t/  |pick           /p**ɪ**k/      | difficult /ˈd**ɪ**.f**ɪ**.kəlt/   | sick     /s**ɪ**k/  |
-	| e|	            pet /p**e**t/     | sent       **e**nt/ |attention  /əˈt**e**n.ʃən/     | neck /n**e**k/                  | mess      /m**e**s/ |
-	| æ|	            pat /p**æ**t/     |flat       /fl**æ**t/|family   /ˈf**æ**.mə.li/       | cap  /k **æ**p/                 | back      /b**æ**k/ |
-	| ʌ|	            cut /k**ʌ**t/     |jump      /dʒ**ʌ**mp/|cover    /ˈk**ʌ**.vər/         | luck /l**ʌ**k/                 | fuss      /f**ʌ**s/ |
-	| ʊ|	            put /pʊt/         |book           /bʊk/ |cushion  /ˈkʊ.ʃən/            |about       /əˈba**ʊ**t/          | good   /g**ʊ**d/   |
-	| ɒ|	            dog /d**ɒ**g/     |hot        /h**ɒ**t/ |hospital /ˈh**ɒ**s.pɪ.təl/    |sock         /s**ɒ**k/            | boss /b**ɒ**s/      |
-	| ə|	            about /**ə**ˈbaʊt/|system   ˈsɪs.t**ə**m/|complete /k**ə**mˈpliːt/      | difficult /ˈdɪ.fɪ.k**ə**lt/       |cover   /ˈkʌ.v**ə**r/|
+	|Phonetic Symbol|word-1|pronounciation-1|word-2|pronounciation-2|word-3|pronounciation-3         |word-4|pronounciation-4             |word-5|pronounciation-5|
+	|-- | --- | --- |--- | --- |--- | --- |--- | --- |--- | --- |
+	| ɪ|	                pit |/p**ɪ**t/     | fit       |/f**ɪ**t/  |pick           |/p**ɪ**k/      | difficult |/ˈd**ɪ**.f**ɪ**.kəlt/   | sick     |/s**ɪ**k/  |
+	| e|	            pet |/p**e**t/     | sent       **e**nt|/ |attention  /əˈt**e**n.ʃən|/     | neck /n**e**k|/                  | mess      /m**e**s/ |
+	| æ|	            pat |/p**æ**t/     |flat       |/fl**æ**t/|family   |/ˈf**æ**.mə.li/       | cap  |/k **æ**p/                 | back      |/b**æ**k/ |
+	| ʌ|	            cut |/k**ʌ**t/     |jump      |/dʒ**ʌ**mp/|cover    |/ˈk**ʌ**.vər/         | luck |/l**ʌ**k/                 | fuss      |/f**ʌ**s/ |
+	| ʊ|	            put |/pʊt/         |book           |/bʊk/ |cushion  |/ˈkʊ.ʃən/            |about       |/əˈba**ʊ**t/          | good   |/g**ʊ**d/   |
+	| ɒ|	            dog |/d**ɒ**g/     |hot        |/h**ɒ**t/ |hospital |/ˈh**ɒ**s.pɪ.təl/    |sock         |/s**ɒ**k/            | boss |/b**ɒ**s/      |
+	| ə|	          about |/**ə**ˈbaʊt/  |system   ˈsɪs.t**ə**m|/|complete /k**ə**mˈpliːt|/      | difficult /ˈdɪ.fɪ.k**ə**lt|/       |cover   /ˈkʌ.v**ə**r/|
 
 + Long vowels
 
-	|Phonetic Symbol|word-pronounciation-1|word-pronounciation-2|word-pronounciation-3|word-pronounciation-4|word-pronounciation-5|
-	|--             |       ---           |        ---          |       ---           |       ---           |        ---          |
-	| i:|	             week /wi:k/      | bean /bi:n/         |  deem      /di:m/  | difficult /ˈdɪ.fɪ.kəlt/|       |
-	| ɑ:|	             hard /hɑ:rd/    | lard  /lɑ:rd/        |  card      /kɑ:rd/ | difficult /ˈdɪ.fɪ.kəlt/|       |
-	| ɔ:|	             fork /fɔ:rk      | born /bɔ:rn/         |  torn     /tɔ:rn/  | difficult /ˈdɪ.fɪ.kəlt/|       |
-	| ɜ:|	             heard /hɜ:rd/    | burn /bɜ:rn/         |  turn      /tɜ:rn/  | difficult /ˈdɪ.fɪ.kəlt/|       |
-	| u:|                boot /bu:t/      | boon /bu:n/          |  moon        /mu:n/ | difficult /ˈdɪ.fɪ.kəlt/|       |
+	|Phonetic Symbol|word-1|pronounciation-1|word-2|pronounciation-2|word-3|pronounciation-3 |word-4|pronounciation-4 |word-5|pronounciation-5|
+	|-- | --- | --- |--- | --- |--- | --- |--- | --- |--- | --- |
+	| i:|	             week |/w**i:**k/  | bean |/b**i:**n/     |  deem    |/d**i:**m/   |feet  |/f**i:**t/     |media |/ˈmiː.di.jə/           |
+	| ɑ:|	             hard |/h**ɑ:**/   | lard  |/l**ɑ:**/    |  card      |/k**ɑ:**/  | laugh |/l**ɑ:**f/    |article |/**ɑː**.tɪ.kəl/      |
+	| ɔ:|	             fork |/f**ɔ:**rk  | born /b**ɔ:**rn|/   |  torn     /t**ɔ:**rn|/  | walk /w**ɔ:**k|/     | August /**ɔː**ˈɡʌst/       |
+	| ɜ:|	             heard |/h**ɜ:**d/ | burn |/b**ɜ:**n/    |  turn      |/t**ɜ:**n/  | word |/w**ɜ:**d/     | surface /ˈs**ɜː**.fɪs       |
+	| u:|                boot |/b**u:**t/  | boon |/b**u:**n/    |  moon      |/m**u:**n/  | group |/gr**u:**p/   |beautiful |/ˈbj**uː**.tɪ.fəl/ |
 + Diphthong vowels.
 
-	|Phonetic Symbol|word-pronounciation-1|word-pronounciation-2|word-pronounciation-3|word-pronounciation-4          |word-pronounciation-5     |
-	|--             |       ---           |        ---          |       ---           |       ---                     |        ---               |
-    | eɪ|	             place.           | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
-	| oʊ|	             home.            | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
-	| aʊ|	             mouse.           | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
-	| ɪə|	             clear.           | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
-	| eə|	             care.            | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
-	| ɔɪ|	             boy.             | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
-	| aɪ|	             find.            | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
-	| ʊə|	              tour.           | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
+	|Phonetic Symbol|word-1|pronounciation-1|word-2|pronounciation-2|word-3|pronounciation-3           |word-4|pronounciation-4          |word-5|pronounciation-5     |
+	|-- | --- | --- |--- | --- |--- | --- |--- | --- |--- | --- |
+    | eɪ|	            place |/pl**eɪ**s/ |  late |/l**eɪ**t/     | dangerous |/ˈd**eɪ**n.dʒə.rəs/  | | |
+	| oʊ|	            home |/h**oʊ**m/  |  phone |/f**oʊ**n/    | global |/ˈɡl**oʊ**.bəl/        | | |
+	| aʊ|	           mouse |/m**aʊ**s/  |  brown |/br**aʊ**n/   | accountant |/əˈk**aʊ**n.t̬ənt/  | | |
+	| ɪə|	            clear |/kl**ɪə**/ | fear    |/f**ɪə**/     |  career |/kəˈr**ɪə**/          | | |
+	| eə|	            care |/k**eə**/ | wear| /w**eə**/|  declare| /dɪˈkl**eə**/|
+	| ɔɪ|	             boy |/b**ɔɪ**/  | , toy |/t**ɔɪ**/ | enjoyable |/ɪnˈdʒ**ɔɪ**.jə.bəl/| | |
+	| aɪ|	             find.            | fit           |/fɪt/  |  pick         |/pɪk/ | difficult |/ˈdɪ.fɪ.kəlt/|       |
+	| ʊə|	              tour.           | fit           |/fɪt/  |  pick         |/pɪk/ | difficult |/ˈdɪ.fɪ.kəlt/|       |
