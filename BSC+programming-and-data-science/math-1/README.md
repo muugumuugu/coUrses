@@ -4,12 +4,11 @@ TOC
 ---
 |Lec ID| Lec Name|
 | ---| --- |
-|1 | [Natural Numbers and their Operations](#lec1) |
-|1 | [Natural Numbers and their Operations](# Lec 1 - Natural Numbers and their Operations) |
+|1 | [Natural Numbers and their Operations](#Lec 1 - Natural Numbers and their Operations) |
 ---------------------
 # WEEK 1
 
-## Lec 1 - Natural Numbers and their Operations {#lec1}
+## Lec 1 - Natural Numbers and their Operations
 
 >ℕ --> {0,1,2,3,....}
 >>discrete set
