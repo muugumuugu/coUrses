@@ -4,12 +4,18 @@
 
 ### how lanhguage works.
 + a product of human mind's tendency to fins and apply patterns.
-+ so, in younger age , reverse engeineering patterns comes naturally, since no pattern is already fed.
++ so
+ in younger age
+ reverse engeineering patterns comes naturally
+ since no pattern is already fed.
 + after 15 years some older patterns have to be ignored which makes learning slightly obstructed in case of languages.
-+ but the primal language does ease one into another language , on the surface it might seem erranous, but communication in the newer language becomes possible thru the older rules too.
++ but the primal language does ease one into another language
+ on the surface it might seem erranous
+ but communication in the newer language becomes possible thru the older rules too.
 
 + Computation of Language occurs using  ***Univeral Grammar*** and the ***L**anguage **A**quisitiom **D**evice*.
-+ As adults, manipulating the already set vocal cords and articultors also takes extra effort.
++ As adults
+ manipulating the already set vocal cords and articultors also takes extra effort.
 
 ## Lec 02 - Sounds and Writing Symbols in English
 
@@ -19,6 +25,9 @@
 >>+ Lower Case
 
 #### Phonetics
+– when you see the two dots /:/ it means the sound is long
+– each symbol represents a sound
+– when you see this dash /’/ it means the next syllable is stressed
 
 ##### VOWELS
 + Short vowels
@@ -54,3 +63,24 @@
 	| ɔɪ|	             boy |/b**ɔɪ**/|toy |/t**ɔɪ**/|enjoyable |/ɪnˈdʒ**ɔɪ**.jə.bəl/||
 	| aɪ|	             find |/f**aɪ**nd/| bite|/b**aɪ**t/| tiger  |/ˈt**aɪ**.ɡə/||
 	| ʊə|	     tour |/t**ʊə**/ | pure |/p**ʊə**/|  mature |/məˈtʃ**ʊə**/ ||
+
+
+#####CONSONANTS
+######non-voiced
++ /p/ /b/
++ /t/ /d/
++ /k/ /g/
++ /f/ /v/
++ /s/ /z/
++ /θ/ /ð/
++ /ʃ/ /ʒ/
++ /ʈʃ/ /dʒ/
+######voiced
++ /h/
++ /w/
++ /n/
++ /m/
++ /r/
++ /j/
++ /ŋ/
++ /l/
