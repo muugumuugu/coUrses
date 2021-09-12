@@ -147,11 +147,11 @@ hence the need for irrational.
 
 ## Lec 13 - Distance Formula
 
-d=√∑(x<sub>i<sub>1</sub></sub>-x<sub>i<sub>2</sub></sub>)<sub>2</sub>
+d=√∑(x<sub>i<sub>1</sub></sub>-x<sub>i<sub>2</sub></sub>)<sup>2</sup>
 
 ## Lec 14 - Section Formula
 
-<sup>(m<sub>2</sub>x⃗<sub>1</sub>+ m<sub>1</sub>x⃗<sub>2</sub>)<sup>/<sub>(m<sub>1</sub>+m<sub>2</sub>)</sub>
+<sup>(m<sub>2</sub>x⃗<sub>1</sub>+ m<sub>1</sub>x⃗<sub>2</sub>)</sup>/<sub>(m<sub>1</sub>+m<sub>2</sub>)</sub>
 
 ## Lec 15 - Area of a Triangle
 
