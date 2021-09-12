@@ -126,9 +126,9 @@
 |approximant        ||||w||j|||
 |lateral approximant||||l|||||
 
-[ vowel chart] (https://en.wikipedia.org/wiki/IPA_vowel_chart_with_audio)
+[vowel chart](https://en.wikipedia.org/wiki/IPA_vowel_chart_with_audio)
 
-## Lec 05 - How to Improve your Language Skills.
+## Lec 05 - How to Improve your Language Skills
 
 > Read from context, and do try applying rules from known Languages when the grammer seems alien.
 
