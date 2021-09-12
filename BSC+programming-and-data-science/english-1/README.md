@@ -1,4 +1,4 @@
-# WEEK 1
+ # WEEK 1
 
 ## Lec 01 - Learning English
 
@@ -16,35 +16,7 @@
 ## Lec 02 - Sounds and Writing Symbols in English
 
 ### Symbols in English - Two Sets
-#### 26 Symbols
+>26 Symbols
+>> 5 Vowels, 21 Consonants.
 >>+ Upper Case
 >>+ Lower Case
-
-#### Phonetics
-
-##### VOWELS
-+ Short vowels
-	|Phonetic Symbol| word-pronounciation | word-pronounciation | word-pronounciation |   word-pronounciation | word-pronounciation|
-	|--             |       ---           |        ---          |       ---           |       ---             |      ---           |
-	| ɪ|	            |   pit /pɪt/         | fit           /fɪt/  |  pick         /pɪk/ | difficult /ˈdɪ.fɪ.kəlt/|       |
-	| e|	pet
-	| æ|	pat
-	| ʌ|	cut
-	| ʊ|	put
-	| ɒ|	dog
-	| ə|	about.
-+ Long vowels
-	| i:|	week
-	| ɑ:|	hard
-	| ɔ:|	fork,
-	| ɜ:|	heard
-	| u:|	boot.
-+ Diphthong vowels in the IPA are
-    | eɪ|	place
-	| oʊ|	home
-	| aʊ|	mouse
-	| ɪə|	clear
-	| eə|	care
-	| ɔɪ|	boy
-	| aɪ|	find
-	| ʊə|	tour.
