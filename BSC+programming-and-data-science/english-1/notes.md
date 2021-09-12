@@ -44,7 +44,7 @@
 	| u:|                boot |/b**u:**t/ |boon |/b**u:**n/ |moon      |/m**u:**n/|group |/gr**u:**p/   |beautiful |/ˈbj**uː**.tɪ.fəl/ |
 + Diphthong vowels.
 
-	|Phonetic Symbol|word-1|pronounciation-1|word-2|pronounciation-2|word-3|pronounciation-3           |word-4|pronounciation-4          |word-5|pronounciation-5     |
+	|Phonetic Symbol|word-1|pronounciation-1|word-2|pronounciation-2|word-3|pronounciation-3|word-4|pronounciation-4|word-5|pronounciation-5|
 	|-- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 	|eɪ|	            place |/pl**eɪ**s/|late |/l**eɪ**t/|dangerous |/ˈd**eɪ**n.dʒə.rəs/| |
 	| oʊ|	            home |/h**oʊ**m/|phone |/f**oʊ**n/|global |/ˈɡl**oʊ**.bəl/| |
