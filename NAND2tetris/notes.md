@@ -15,7 +15,7 @@ ROM <--> CPU <--> Ram
 + Design Hardware Abstractions using Hardware Description Language.
 ## UNIT 0.3 Hack to Tetris
 Design a mini OS, and a rich OS/ IO Std Library for the Higher Programming Language Implementation
-## Project 0
+### Project 0
 + Get NAND2Tetris Suite running
 + Try Submitting demo file.
 
@@ -42,6 +42,7 @@ Design a mini OS, and a rich OS/ IO Std Library for the Higher Programming Langu
 	|0|1|1|
 3.  NOT (x)
 	+ ¬x
+
 	|x|NOT|
 	|---|---|
 	|1|0|
@@ -55,10 +56,10 @@ Design a mini OS, and a rich OS/ IO Std Library for the Higher Programming Langu
 
 ### Truth Table to Boolean Expression.
 > Disjunctive Normal Form Formula
-1. Go Row by ROw.
+1. Go Row by Row.
 2. Focus only on Rows thqat have value 1.
 3. Write an expression that gets value 1 for that row only using NOTs and ANDs.
 4. OR all the clauses.
 
->Any expression can be represented with NOTs and ND/OR.
+>Any expression can be represented with NOTs and AND/OR.
 >> Any boolean expression can be computed using only NANDs or only NORs.
