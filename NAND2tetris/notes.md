@@ -74,17 +74,73 @@ Design a mini OS, and a rich OS/ IO Std Library for the Higher Programming Langu
 ### Gate Interface
 ```
 CHIP name{
-	IN a,b;
+	IN inpa,inpb;
 	OUT out;
 
 	PARTS:
 		/*IMPLEMANTATION*/
+		/* Description of all connections
+		eg- AND (a=inpa, b=inpb, out=andab)
+		*/
 	}
 
 ```
+> HDL is a non procedural, static descriptive language. Textual representatipn of the Gate DIagram.
+>> Order does not matter. Convention to describe left to right.
+
+## UNIT 1.5 Hardware Simulation
+
+### test scripts.
+```
+load ChipName.hdl;
+set a 0, set b 0 , eval, output;
+output-file ChipName.out;
+compare-to ChipName.cmp;
+output.list a b out;// the truth table
+set a 0, set b 1 , eval, output;
+//....
+```
+### Architect Builds the Black Box
++ A chip API
++ A test Script
++ Behavioral Simulation-> Compare FIle
+
+### Developer Realizes the stuff within the Glass Box.
++ Describe the connections in HDL and turn the stub file(interface) into a working implementation
++ Test it using the test suite.
 
 
+## UNIT 1.6 Multi-Bit Buses
 
++ Notation for multiple bits is similar to that of arrays in any higher level language.
++ eg : 16 bit input is called in by typing a[16]. then for using the entire buses use the var ```a``` without any subscript
++ to access a specific bus, call inp=a[0]..etc.
++ to access sublist ```[start..stop]```
+
+
+## UNIT 1.7 Project 1
++ Given NAND gate
++ Build:
+	+ Elementary
+		1. [ ]  Not
+		2. [ ]  And
+		3. [ ]  Or
+		4. [ ]  Xor
+		5. [ ]  Mux
+			+ a,b,set--> if set=0 -->output=a, else output=b.
+		6. [ ]  DMux
+
+	+ 16-Bit
+		1. [ ] Not16
+		2. [ ] And16
+		3. [ ] Or16
+		4. [ ] Mux16
+	+ Multi-Way
+		1. [ ] Or8Way
+		2. [ ] Mux4Way16
+		3. [ ] Mux8Way16
+		4. [ ] DMux4Way16
+		5. [ ] DMux8Way
 
 
 
