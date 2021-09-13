@@ -1,0 +1,64 @@
+# WEEK 0
+
+## UNIT 0.0 Introduction.
+
+## UNIT 0.1 The Road Ahead
+
++ How ->Implementation
++ What ->Abstraction.
++ The Black Box of programming language hierchy.
++ Seperate interface from its internal workings.
+## UNIT 0.2 Nand to Hack
+
+### big picture.
+ROM <--> CPU <--> Ram
++ Design Hardware Abstractions using Hardware Description Language.
+## UNIT 0.3 Hack to Tetris
+Design a mini OS, and a rich OS/ IO Std Library for the Higher Programming Language Implementation
+## Project 0
++ Get NAND2Tetris Suite running
++ Try Submitting demo file.
+
+## UNIT 1.1 Boolean Logic
+
+### Boolean Operations
+1. x AND y
+	+ x ^ y
+
+	|x|y|AND|
+	|---|---|---|
+	|1|0|0|
+	|0|0|0|
+	|1|1|1|
+	|0|1|0|
+2. x OR y
+	+ x ∨ y
+
+	|x|y|OR|
+	|---|---|---|
+	|1|0|1|
+	|0|0|0|
+	|1|1|1|
+	|0|1|1|
+3.  NOT (x)
+	+ ¬x
+	|x|NOT|
+	|---|---|
+	|1|0|
+	|0|1|
+
+### Describing Boolean Functions/Expressions
++ Function Expressions
++ Truth Table ( Finite number of Inputs )
+
+## UNIT 1.2 Boolean Function Synthesis
+
+### Truth Table to Boolean Expression.
+> Disjunctive Normal Form Formula
+1. Go Row by ROw.
+2. Focus only on Rows thqat have value 1.
+3. Write an expression that gets value 1 for that row only using NOTs and ANDs.
+4. OR all the clauses.
+
+>Any expression can be represented with NOTs and ND/OR.
+>> Any boolean expression can be computed using only NANDs or only NORs.
