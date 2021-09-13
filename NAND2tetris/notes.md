@@ -128,19 +128,21 @@ set a 0, set b 1 , eval, output;
 		4. [ ]  Xor
 		5. [ ]  Mux
 			+ a,b,set--> if set=0 -->output=a, else output=b.
+			+ if an ossilator is fed to the mux, it can output intermix multiple msgs.
 		6. [ ]  DMux
+			+ invert Multiplexing.
 
 	+ 16-Bit
-		1. [ ] Not16
-		2. [ ] And16
-		3. [ ] Or16
-		4. [ ] Mux16
+		7. [ ] Not16
+		8. [ ] And16
+		9. [ ] Or16
+		10. [ ] Mux16
 	+ Multi-Way
-		1. [ ] Or8Way
-		2. [ ] Mux4Way16
-		3. [ ] Mux8Way16
-		4. [ ] DMux4Way16
-		5. [ ] DMux8Way
+		11. [ ] Or8Way
+		12. [ ] Mux4Way16
+		13. [ ] Mux8Way16
+		14. [ ] DMux4Way16
+		15. [ ] DMux8Way
 
 
 
