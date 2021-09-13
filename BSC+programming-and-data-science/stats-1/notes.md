@@ -158,10 +158,107 @@ Select data Cells ⇾ Format Menu ⇾ Data ⇾ Pivot Table ⇾ Add rows and Data
 # Describing Numerical Data - one variable
 ___
 
+## Lec 3.1 - Describing Numerical Data - Frequency Tables for Numerical Data
+
+>Group the discrete variables (counts) into bins, if the number of values is small, they can themself be considered as categories.
+
+> Otherwise groupd data into bins (classes).
+>> Classes can be used for both continous and discrete data.\
+>> Take classes to be ***left-closed - right-open*** to ensure that the classes *partition* data.\
+>> Conventional to have equiwidth classes.
+### Plotting such frquency tables.
++ Use a Histogram.
+> Google Sheet Method.
+>>Insert -> Chart -> Chart - Editor -> Select Data -> Customize -> Bucket Size : Class-Width.
+
++ Stem -Leaf Plot.
+	+ Stem : All but right-most Digit
+	+ Leaf : rightmost digit.
+	+ Steps
+		1. Each Obsv := Stem
+		2. Write Stems in Ascending order in a vertical column.
+		3. Write each leaf to the write of its corresponding stem entry.
+		4. Arrange Leaves in each row in Ascending order.
+	+ Example:
+		+ data : 15,22,29,36,31,23,45,10.
+		+ Chart\
+		|STEM| LEAF|
+		| ---|--- |
+		|1|0,5|
+		|2|2,3,9|
+		|3|1,6|
+		|4|5|
+
+## Lec 3.2 - Describing Numerical Data - Mean
+
+### Numerical Summaries.
++ Meaures of Central Tendency
+	+ Mode
+	+ Median
+	+ Mean
++ Measure of Dispersion/variability/spread
+
+> Mean : Average.
+>>∑x<sub>i</sub>/n
+>>> extremely sensitive to outliers
++ μ = Population Mean
++ x̄ = Sample Mean
+
+#### Appx Mean for grouped data
+> ∑f<sub>i</sub>x<sub>i</sub>/n
+> x is the class-mark.
+
+## Lec 3.3 - Describing Numerical Data - Median and Mode
+
+> Median : Middle Value in a ***Ordered*** Dataset.
+> Mode : Most frquently occuring value.
+
+## Lec 3.4 - Describing Numerical Data - Measures of dispersion- Range
+
+>Range:
+>> Max - Min
+>> Sensitive , but only to extreme values.
+
+> Variance:
+>> Deviation of value of data points. from central value of a data-set.\
+>> σ<sup>2</sup>= ∑(x<sub>i - C)<sup>3</sup>/N
+>>>for sample means, denominator is kept ```(n-1)``` instead of n\
+>>> Std Deviation : √variance
+>>>> To maintain units of dispersion measure and data-points
+
+> Percentiles are right-closed - left-open
+>> 80percentile means 80% are < it, and 20% are >= to it.
+
+>Manual Percentile Algorithm for 100 *p th percentile ( p is a fractional val.)
+>>Arrange data Ascendingly.\
+>> If n\*p is not an integer,determine pos=floor(np). The posth data is the 100\*pth percentile
+>> Else 100*pth percentile= avg(np,np+1<sup>th</sup>obsv)
+>G sheet Percentile Algorithm.
+>> Rank= percentile*(n-1)+1
+>>>Split Rank into integer and fractional part.
+>>>>Compute the ordered data value (odv<sub>0</sub>) corresponding to integer rank.
+>>>>>Percentile=odv<sub>0</sub>+frac-rank*(odv<sub>1</sub> - odv<sub>0</sub>)
+
+### Quartiles.
++ 25th percentile --> first quartile / lower quartile.
++ 50th percentile --> Mean.
++ 75th percentile --> third quartile / upper quartile.
+
+### Five Number Summary
+1. Min
++ Q<sub>1</sub> : lower quartile
++ Q<sub>2</sub> : mean
++ Q<sub>3</sub> : upper quartile
++ Max
+
+### Inter Quartile Range
+>IQR
+>>Q<sub>3</sub>-Q<sub>1</sub>
 
 # WEEK 4
 # Assosiation between Two Variables
 ___
+
 
 
 
