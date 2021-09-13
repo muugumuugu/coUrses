@@ -67,11 +67,21 @@ Design a mini OS, and a rich OS/ IO Std Library for the Higher Programming Langu
 
 ## UNIT 1.3 Logic Gates
 
-## Circuit Implementation of Elementary Logic Gates.
+### Circuit Implementation of Elementary Logic Gates.
 
+## UNIT 1.4 Hardware Description Language
 
+### Gate Interface
+```
+CHIP name{
+	IN a,b;
+	OUT out;
 
+	PARTS:
+		/*IMPLEMANTATION*/
+	}
 
+```
 
 
 

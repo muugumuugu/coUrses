@@ -9,4 +9,4 @@ TOC
 |## UNIT 1.1|[ Boolean Logic](notes.md#unit-11-boolean-logic)|
 |## UNIT 1.2|[ Boolean Function Synthesis](notes.md#unit-12-boolean-function-synthesis)|
 |## UNIT 1.3|[ Logic Gates](notes.md#unit-13-logic-gates)|
-|## Circuit Implementation of Elementary Logic Gates.|[## Circuit Implementation of Elementary Logic Gates.](notes.md#circuit-implementation-of-elementary-logic-gates)|
+|## UNIT 1.4|[ Hardware Description Language](notes.md#unit-14-hardware-description-language)|

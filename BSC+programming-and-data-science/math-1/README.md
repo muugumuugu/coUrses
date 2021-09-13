@@ -20,7 +20,7 @@ TOC
 |16|[Slope of a Line](notes.md#lec-16---slope-of-a-line)|
 |17|[Parallel and Perpendicular Lines](notes.md#lec-17---parallel-and-perpendicular-lines)|
 |18|[Represantation of a Line-1](notes.md#lec-18---represantation-of-a-line-1)|
-|19|[Representation of a Line-2 and Applications of Rectangular Co-ordinated.](notes.md#lec-19---representation-of-a-line-2-and-applications-of-rectangular-co-ordinated.)|
+|19|[Representation of a Line-2 and Applications of Rectangular Co-ordinated.](notes.md#lec-19---representation-of-a-line-2-and-applications-of-rectangular-co-ordinated)|
 |20|[General Equation of a Line](notes.md#lec-20---general-equation-of-a-line)|
 |21|[Equation of Perpendicular & Parallel Lines in General Form](notes.md#lec-21---equation-of-perpendicular-&-parallel-lines-in-general-form)|
 |22|[Eqn of line Perpendicular to another line through a given Point](notes.md#lec-22---eqn-of-line-perpendicular-to-another-line-through-a-given-point)|
@@ -29,7 +29,7 @@ TOC
 |25|[Quadratic Functions ,examples of QF, SLope of a QF](notes.md#lec-25---quadratic-functions-,examples-of-qf,-slope-of-a-qf)|
 |26|[Solution of a QE using Graph, Slope -> Line & Parabola](notes.md#lec-26---solution-of-a-qe-using-graph,-slope-->-line-&-parabola)|
 |27|[Soln of QE using factorization](notes.md#lec-27---soln-of-qe-using-factorization)|
-|28|[Soln of QE using square method.](notes.md#lec-28---soln-of-qe-using-square-method.)|
+|28|[Soln of QE using square method.](notes.md#lec-28---soln-of-qe-using-square-method)|
 |29|[Quadratic Formula](notes.md#lec-29---quadratic-formula)|
 |30|[Polynomials](notes.md#lec-30---polynomials)|
 |31|[Degree of polynomial](notes.md#lec-31---degree-of-polynomial)|
