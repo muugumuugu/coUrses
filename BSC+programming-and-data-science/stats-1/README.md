@@ -17,3 +17,11 @@ TOC
 |3.4|[Describing Numerical Data - Measures of dispersion- Range](notes.md#lec-3.4---describing-numerical-data---measures-of-dispersion--range)|
 |3.5|[Describing Numerical Data - Percentiles, Quartiles, and Interquartile Range](notes.md#lec-3.5---describing-numerical-data---percentiles,-quartiles,-and-interquartile-range)|
 |4.1|[Association between two variables - Review of course](notes.md#lec-4.1---association-between-two-variables---review-of-course)|
+|4.2|[Association between two categorical variables - Introduction](notes.md#lec-4.2---association-between-two-categorical-variables---introduction)|
+|4.3|[Association between two categorical variables - Relative frequencies](notes.md#lec-4.3---association-between-two-categorical-variables---relative-frequencies)|
+|4.4|[Association between two numerical variables - Scatterplot](notes.md#lec-4.4---association-between-two-numerical-variables---scatterplot)|
+|4.5|[Association between two numerical variables - Describing association](notes.md#lec-4.5---association-between-two-numerical-variables---describing-association)|
+|4.6|[Association between two numerical variables - Covariance](notes.md#lec-4.6---association-between-two-numerical-variables---covariance)|
+|4.7|[Association between two numerical variables - Correlation](notes.md#lec-4.7---association-between-two-numerical-variables---correlation)|
+|4.8|[Association between two numerical variables - Fitting a line](notes.md#lec-4.8---association-between-two-numerical-variables---fitting-a-line)|
+|4.9|[Association between categorical and numerical variables](notes.md#lec-4.9---association-between-categorical-and-numerical-variables)|
