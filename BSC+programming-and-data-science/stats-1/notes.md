@@ -330,9 +330,11 @@ ___
 
 ## Lec 4.9 - Association between categorical and numerical variables
 
-
-
-
+>Point Bi-Serial Correlation Coefficient
+>> Group values into two sets based on values of the selected dichotomous variable (code them in binary, as 0 and 1) . \
+>> Calculate the mean values of the two groups ȳ<sub>0</sub> and ȳ<sub>1</sub>.\
+>>let p<sub>0</sub> and p<sub>1</sub> be the proportion of the observations. and s<sub>X</sub> be the std deviation of the random value X.
+>> r<sub>pb</sub>=(ȳ<sub>0</sub> - ȳ<sub>1</sub>.)*√(p<sub>0</sub>p<sub>1</sub>)/s<sub>x</sub>
 
 
 
