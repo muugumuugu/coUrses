@@ -181,7 +181,8 @@ ___
 		4. Arrange Leaves in each row in Ascending order.
 	+ Example:
 		+ data : 15,22,29,36,31,23,45,10.
-		+ Chart\
+		+ Chart
+
 		|STEM| LEAF|
 		| ---|--- |
 		|1|0,5|
@@ -205,7 +206,7 @@ ___
 + x̄ = Sample Mean
 
 #### Appx Mean for grouped data
-> ∑f<sub>i</sub>x<sub>i</sub>/n
+> ∑f<sub>i</sub>x<sub>i</sub>/n\
 > x is the class-mark.
 
 ## Lec 3.3 - Describing Numerical Data - Median and Mode
@@ -216,7 +217,7 @@ ___
 ## Lec 3.4 - Describing Numerical Data - Measures of dispersion- Range
 
 >Range:
->> Max - Min
+>> Max - Min\
 >> Sensitive , but only to extreme values.
 
 > Variance:
@@ -246,10 +247,10 @@ ___
 
 ### Five Number Summary
 1. Min
-+ Q<sub>1</sub> : lower quartile
-+ Q<sub>2</sub> : mean
-+ Q<sub>3</sub> : upper quartile
-+ Max
+2. Q<sub>1</sub> : lower quartile
+3. Q<sub>2</sub> : mean
+4. Q<sub>3</sub> : upper quartile
+5. Max
 
 ### Inter Quartile Range
 >IQR
