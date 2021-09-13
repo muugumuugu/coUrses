@@ -122,27 +122,27 @@ set a 0, set b 1 , eval, output;
 + Given NAND gate
 + Build:
 	+ Elementary
-		1. [ ]  Not
-		2. [ ]  And
-		3. [ ]  Or
-		4. [ ]  Xor
-		5. [ ]  Mux
+		+ [ ]  Not
+		+ [ ]  And
+		+ [ ]  Or
+		+ [ ]  Xor
+		+ [ ]  Mux
 			+ a,b,set--> if set=0 -->output=a, else output=b.
 			+ if an ossilator is fed to the mux, it can output intermix multiple msgs.
-		6. [ ]  DMux
+		+ [ ]  DMux
 			+ invert Multiplexing.
 
 	+ 16-Bit
-		7. [ ] Not16
-		8. [ ] And16
-		9. [ ] Or16
+		+ [ ] Not16
+		+ [ ] And16
+		+ [ ] Or16
 		10. [ ] Mux16
 	+ Multi-Way
-		11. [ ] Or8Way
-		12. [ ] Mux4Way16
-		13. [ ] Mux8Way16
-		14. [ ] DMux4Way16
-		15. [ ] DMux8Way
+		+ [ ] Or8Way
+		+ [ ] Mux4Way16
+		+ [ ] Mux8Way16
+		+ [ ] DMux4Way16
+		+ [ ] DMux8Way
 
 
 
