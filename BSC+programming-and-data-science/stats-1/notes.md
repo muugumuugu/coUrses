@@ -275,6 +275,75 @@ ___
 		+ --> Colums --> click on second catgeorical variable
 		+ --> Valuws --< click on either variable and then click on COUNTA under "summarize by" tab.
 
+## Lec 4.3 - Association between two categorical variables - Relative frequencies
+
++ Row Relative Frequency --> Divide each Cell Frequency by its row total frequency
++ Column Relative Frequency --> Divide each Cell Frequency by its column total frequency
++ Assosiation Rule --> Column / Row Frequency for each Row/Column respectively are non homogenous --> there is a pattern of change in one category with the other category variable.
+### Stacked Bar Chart
+> Represents counts for a particular category, and is further segmented into segments, each segment representing the frequency of that particular category within the segment.\
+> Can Represent two categories within one chart
+#### Google Sheet.
+>Select Data for Contingency Table --> Insert Chart -->Stacked Column Chart.
+>> If Stacking is ```Standard``` type, then the numbers show COunt, and ```100%``` Stacking shows relative frequency.
+
+## Lec 4.4 - Association between two numerical variables - Scatterplot
+> A graph that displays pairs of values as points on a 2D Plane.
+>> For interpretting association of two *numerical* variables.
+>>> Visual test for association.
+### Google Sheet
+
+1. Highlight Data to plot.
+2. Insert Chart --> Scatter Charts
+3. Under X-Axis Tab , choose the explanatory variable.
+4. Under Series Tab , choose the response variable.
+
+## Lec 4.5 - Association between two numerical variables - Describing association
+
+### The 4 key Qs.
+1. Direction : Is there a pattern trend up, down or both?
+2. Curvature: Does the pattern appear linear, or appear to follow some curve?
+3. Variation: Are the points tightly clustered or variable?
+4. Outliers: Are some points way off the majority pattern?
+
+## Lec 4.6 - Association between two numerical variables - Covariance
+
+### Quantyfying (Linear) Assosiation b/w numerical values.
++ Covariance
+	+ Cov(x,y)=∑(x<sub>i</sub>-x̄)*(y<sub>i</sub>-ȳ)/N
+	+ Denominator =```n-1``` if considering sample.
+	+ Difficult to interpret due to units.
++ Correlation
+
+
+## Lec 4.7 - Association between two numerical variables - Correlation
+
++ Pearson correlation Coefficient
+	+ ρ<sub>xy</sub>= Cov(x,y)/(√(σ<sub>x</sub>σ<sub>y</sub>))
+
+## Lec 4.8 - Association between two numerical variables - Fitting a line
+
+> Summarizing the linear association using a line on ℝ<sup>2</sup>
+>> R<sup>2</sup> = Measure of Accuracy of Fit = correlation coeff <sup.2</sup>
+>>Using Google Sheets
+>>> In scatter Plot --> Customize--> Series -->Trend Line. -->Label -->Use Equation.
+
+## Lec 4.9 - Association between categorical and numerical variables
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

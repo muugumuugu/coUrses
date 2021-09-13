@@ -1,17 +1,3 @@
-
-## Lec 4.3 - Association between two categorical variables - Relative frequencies
-
-+ Row Relative Frequency --> Divide each Cell Frequency by its row total frequency
-+ Column Relative Frequency --> Divide each Cell Frequency by its column total frequency
-+ Assosiation Rule --> Column / Row Frequency for each Row/Column respectively are non homogenous --> there is a pattern of change in one category with the other category variable.
-
-## Lec 4.4 - Association between two numerical variables - Scatterplot
-## Lec 4.5 - Association between two numerical variables - Describing association
-## Lec 4.6 - Association between two numerical variables - Covariance
-## Lec 4.7 - Association between two numerical variables - Correlation
-## Lec 4.8 - Association between two numerical variables - Fitting a line
-## Lec 4.9 - Association between categorical and numerical variables
-
 # WEEK 5
 
 ## Lec 5.1 - Permutations and Combinations - Basic Principles of counting
