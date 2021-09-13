@@ -1,7 +1,10 @@
 
-## Lec 4.1 - Association between two variables - Review of course
-## Lec 4.2 - Association between two categorical variables - Introduction
 ## Lec 4.3 - Association between two categorical variables - Relative frequencies
+
++ Row Relative Frequency --> Divide each Cell Frequency by its row total frequency
++ Column Relative Frequency --> Divide each Cell Frequency by its column total frequency
++ Assosiation Rule --> Column / Row Frequency for each Row/Column respectively are non homogenous --> there is a pattern of change in one category with the other category variable.
+
 ## Lec 4.4 - Association between two numerical variables - Scatterplot
 ## Lec 4.5 - Association between two numerical variables - Describing association
 ## Lec 4.6 - Association between two numerical variables - Covariance

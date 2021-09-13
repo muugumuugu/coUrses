@@ -134,7 +134,7 @@ Select data Cells ⇾ Format Menu ⇾ Data ⇾ Pivot Table ⇾ Add rows and Data
 
 > Annotate Data in Charts with both labels of the Categorical Value, and with the frequency/relative frequency.
 
-## Lec 2.4 - Best Practices - 2
+## Lec 2.4 - Describing Categorical Data - Best Practices - 2
 
 > Area Principle:
 >> area occupied by portion of chart should correspond to ampunt of data.
@@ -145,7 +145,7 @@ Select data Cells ⇾ Format Menu ⇾ Data ⇾ Pivot Table ⇾ Add rows and Data
 >>> + incorrect represa=entation in terms of proportions.
 >>if needed Y axis breaks should be marked.
 
-## Lec 2.5 - Mode and Median.
+## Lec 2.5 - Describing Categorical Data - Mode and Median
 > Central Tendency  Measures.
 
 > Mode
@@ -155,7 +155,7 @@ Select data Cells ⇾ Format Menu ⇾ Data ⇾ Pivot Table ⇾ Add rows and Data
 >> mid value of sorted  values.
 
 # WEEK 3
-# Describing Numerical Data - one variable
+## Describing Numerical Data - one variable
 ___
 
 ## Lec 3.1 - Describing Numerical Data - Frequency Tables for Numerical Data
@@ -227,6 +227,8 @@ ___
 >>> Std Deviation : √variance
 >>>> To maintain units of dispersion measure and data-points
 
+## Lec 3.5 - Describing Numerical Data - Percentiles, Quartiles, and Interquartile Range
+
 > Percentiles are right-closed - left-open
 >> 80percentile means 80% are < it, and 20% are >= to it.
 
@@ -257,8 +259,22 @@ ___
 >>Q<sub>3</sub>-Q<sub>1</sub>
 
 # WEEK 4
-# Assosiation between Two Variables
+## Assosiation between Two Variables
 ___
+
+## Lec 4.1 - Association between two variables - Review of course
+
+## Lec 4.2 - Association between two categorical variables - Introduction
+
++ Contigency Table : Two-way Table for bivariate categorical data.
++ ij position has the data which satisfies both catgeory<sub>1</sub> val=c<sub>i<sub>1</sub></sub> and category<sub>2</sub> val=c<sub>2<sub>j</dub></sub>
++ Google Sheet Method
+	+ choose column for association'+ In Data Tab - >Pivot Table.
+	+ create a pivot table, and in edutor
+		+ --> Rows --> click on first categorical variables
+		+ --> Colums --> click on second catgeorical variable
+		+ --> Valuws --< click on either variable and then click on COUNTA under "summarize by" tab.
+
 
 
 
