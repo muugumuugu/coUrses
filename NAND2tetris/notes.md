@@ -118,7 +118,8 @@ set a 0, set b 1 , eval, output;
 + to access sublist ```[start..stop]```
 
 
-## UNIT 1.7 Project 1
+## UNIT 1.7 Project 1 Overview
+
 + Given NAND gate
 + Build:
 	+ Elementary
@@ -128,7 +129,7 @@ set a 0, set b 1 , eval, output;
 		+ [ ]  Xor
 		+ [ ]  Mux
 			+ a,b,set--> if set=0 -->output=a, else output=b.
-			+ if an ossilator is fed to the mux, it can output intermix multiple msgs.
+			+ if an ossilator is fed to the mux, it can output an intertwining of multiple msgs, which can similarly be decoded
 		+ [ ]  DMux
 			+ invert Multiplexing.
 
@@ -136,13 +137,26 @@ set a 0, set b 1 , eval, output;
 		+ [ ] Not16
 		+ [ ] And16
 		+ [ ] Or16
-		10. [ ] Mux16
+		+ [ ] Mux16
 	+ Multi-Way
 		+ [ ] Or8Way
 		+ [ ] Mux4Way16
 		+ [ ] Mux8Way16
 		+ [ ] DMux4Way16
 		+ [ ] DMux8Way
+
+
+## UNIT 1.8 Perspectives
+
+1.
+
+
+
+
+
+
+
+
 
 
 
