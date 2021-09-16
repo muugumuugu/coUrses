@@ -122,3 +122,56 @@ while (set.length>0){
 
 
 # WEEK 3
+
+## lec 3.1 Presentation of datasets in Forms of Tables
+
+## lec 3.2 Below Average Students in Two Iterations
+
+## lec 3.3 Systematic process of Hypothesis verification
+
+## lec 3.4 Three Prizes Problem
+
+## lec 3.5 Introduction to procedures and Paramaters
+
++ compartmentelization of algorithm
++ repetative steps on different variables can be performed by a **procedure** that is defined to take in a **parameter**, on which it operates.
+
+## lec 3.6 PseudoCode for procedures and Paramaters-1
++ Invoke the Procedure with a parameter for the arguments it uses
++ delegation to module/procedure create need for communication b/w procedure's scope to instance's scope --> **return** value facilitates this communication. The result is passed back to where it was called.
+
+## lec 3.7 PseudoCode for procedures and Paramaters-2
++ Parameters fix the context
++ procedures modularize algorithms
+
+# WEEK 4
+
+## lec 4.1 PseudoCode for three prizes problem
+
++ Basic Criterion is Total Marks
++ Student must also be in top 3 marks in @ least 1 subject.
++ All three prizes must not be given to students of same Gender.
+
+## lec 4.2 Side Effects of Procedure
+
++ parameters passed by **refference** are *changed*
++ data integrity is also part of the boundary interface. values that should not be changed are passed by value.
+
+## lec 4.3 Concept of nested iterations using the birthday paradox Naive approaach & Using binning
+
+## lec 4.4 Importance of binning to reduce number of comparisons in nested iterations
+
++ Factor of reduction = (1-N)/(1 -N/K)
+	+ K := number of bins (bins are equi-sized_.
+
+## lec 4.5 Concept of binning to avoid the complexity of nested iterations
+
++ number of bins is a trade of between memory/space and time; more bins require more space for processing.
+
+## lec 4.6 Concept of Fair Teams
+
+## lec 4.7 Procedure to find same date of birth for different students
+
+## lec 4.8 Procedure to resolve pronoun with its equivalent matching noun
+
+## lec 4.9 Summary of contents introduced in week 1 to 4

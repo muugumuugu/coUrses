@@ -132,11 +132,11 @@
 
 > Read from context, and do try applying rules from known Languages when the grammer seems alien.
 
-## Lecture 06 - Telephone English
+## Lec 06 - Telephone English
 
 Greet->Purpose->Availibility Check.
 
-## Lecture 07 - Language Learning and Use
+## Lec 07 - Language Learning and Use
 
 >E-Language
 >> External language, finite input from environment.
@@ -149,14 +149,48 @@ Greet->Purpose->Availibility Check.
 
 # WEEK 2
 
+## Lec 01 - Consonant Clusters in English Words
+> All words have at least 1 vowel sound.
+
+### Common Sequences
++ CVCV
++ CVC
++ VC
++ CVV
++ CCVC
++ CVCC
+
+### Clusters
++ inbuilt vowel gets reduced for all but last consonant to form a multi consonant syllable
 
 
+## Lec 02 - Three Consonants in Clusters in English Vowel
++ rarer words, restrained word construction
++ only possible, largely, in first position.
++ cluster of more than three consonants does not exist in english.
 
+### underlying pattern
++ second consonant is always a stop sound.
++ third one is l/r
++ first is s.
 
+## Lec 03 - Syllables And Words.
 
+### POS -- > Classes of Words.
 
+### Sub/Verb/Obj --> Grammatical Relations within a Sentence
 
+###Syllables
 
++ Parts of a Sound, split by Pauses in the pronounciation.
++ Every Syllable has a Vowel - called the nucleus.
++ Consonants in the syllable are called its initial and final margins.
++ Onset = beginning cluster
++ Rhyme & Coda -- ????
+---
++ Multi Syllabic words have a stress pattern to highlight one vowel.
+
+## Lec 04 - What is Good Vocabulary? Part -1.
 
 
 
