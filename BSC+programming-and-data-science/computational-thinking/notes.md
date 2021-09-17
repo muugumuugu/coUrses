@@ -144,34 +144,34 @@ while (set.length>0){
 + Parameters fix the context
 + procedures modularize algorithms
 
-# WEEK 4
-
-## lec 4.1 PseudoCode for three prizes problem
+## lec 3.8 PseudoCode for three prizes problem
 
 + Basic Criterion is Total Marks
 + Student must also be in top 3 marks in @ least 1 subject.
 + All three prizes must not be given to students of same Gender.
 
-## lec 4.2 Side Effects of Procedure
+## lec 3.9 Side Effects of Procedure
 
 + parameters passed by **refference** are *changed*
 + data integrity is also part of the boundary interface. values that should not be changed are passed by value.
 
-## lec 4.3 Concept of nested iterations using the birthday paradox Naive approaach & Using binning
+# WEEK 4
 
-## lec 4.4 Importance of binning to reduce number of comparisons in nested iterations
+## lec 4.1 Concept of nested iterations using the birthday paradox Naive approaach & Using binning
+
+## lec 4.2 Importance of binning to reduce number of comparisons in nested iterations
 
 + Factor of reduction = (1-N)/(1 -N/K)
 	+ K := number of bins (bins are equi-sized_.
 
-## lec 4.5 Concept of binning to avoid the complexity of nested iterations
+## lec 4.3 Concept of binning to avoid the complexity of nested iterations
 
 + number of bins is a trade of between memory/space and time; more bins require more space for processing.
 
-## lec 4.6 Concept of Fair Teams
+## lec 4.4 Concept of Fair Teams
 
-## lec 4.7 Procedure to find same date of birth for different students
+## lec 4.5 Procedure to find same date of birth for different students
 
-## lec 4.8 Procedure to resolve pronoun with its equivalent matching noun
+## lec 4.6 Procedure to resolve pronoun with its equivalent matching noun
 
-## lec 4.9 Summary of contents introduced in week 1 to 4
+## lec 4.7 Summary of contents introduced in week 1 to 4
