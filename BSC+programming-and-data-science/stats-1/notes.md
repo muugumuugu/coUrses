@@ -223,9 +223,13 @@ ___
 > Variance:
 >> Deviation of value of data points. from central value of a data-set.\
 >> σ<sup>2</sup>= ∑(x<sub>i - C)<sup>3</sup>/N
->>>for sample means, denominator is kept ```(n-1)``` instead of n\
->>> Std Deviation : √variance
->>>> To maintain units of dispersion measure and data-points
+>>>for sample means, denominator is kept ```(n-1)``` instead of n. (Statistical Correction)\
+>> Welford’s method of computing sample variance
+>>> (n-1)\*σ<sub>n</sub><sup>2</sup>=(n-2)\*σ<sub>n-1</sub><sup>2</sup> +(x<sub>n</sub>-x̄<sub>n</sub>)\*(x<sub>n</sub>-x̄<sub>n-1</sub>)
+
+> Std Deviation : √variance
+>>To maintain units of dispersion measure and data-points
+
 
 ## Lec 3.5 - Describing Numerical Data - Percentiles, Quartiles, and Interquartile Range
 
