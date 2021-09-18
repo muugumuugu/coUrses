@@ -56,7 +56,7 @@ function readDirectory($dir,$exceptions,$level=0){
 		if(!preg_match('/^\..*/',$entry)){
 			if (is_dir("$dir/$entry") and !in_array($entry,$exceptions)){
 				$level+=1;
-				echo "<li><h>Category:$entry</h></li>\n";
+				echo "<li><h>$entry</a></h></li>\n";
 				readDirectory("$dir/$entry",$exceptions,$level);
 			}
 		}

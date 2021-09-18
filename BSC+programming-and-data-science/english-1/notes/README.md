@@ -13,3 +13,5 @@ TOC
 |02|[Three Consonants in Clusters in English Vowel](notes.md#lec-02---three-consonants-in-clusters-in-english-vowel)|
 |03|[Syllables And Words.](notes.md#lec-03---syllables-and-words)|
 |04|[What is Good Vocabulary? Part -1.](notes.md#lec-04---what-is-good-vocabulary?-part--1)|
+|05|[What is Good Vocabulary? Part -2.](notes.md#lec-05---what-is-good-vocabulary?-part--2)|
+|06|[What is Good Vocabulary? Part -3.](notes.md#lec-06---what-is-good-vocabulary?-part--3)|
