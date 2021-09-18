@@ -12,7 +12,7 @@ $exceptions=array(
 "imgs",
 "common",
 "solving-slides",
-"Common Data"
+"dataset"
 );
 $css=array("/styles/home.css");
 #$favicon="webroot/path/to/favicon.jpg"; //find an icon dum
