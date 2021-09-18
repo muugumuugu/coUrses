@@ -4,9 +4,16 @@ include_once "markdown.php";
 $editting=true;
 $backup=true;
 $wikiName="mOGiwIkY";
-$exceptions=array("scripts");
 //
-//$exceptions=array("scripts");
+$exceptions=array(
+"slides",
+"transcripts",
+"contents",
+"imgs",
+"common",
+"solving-slides",
+"Common Data"
+);
 $css=array("/styles/home.css");
 #$favicon="webroot/path/to/favicon.jpg"; //find an icon dum
 #$hackerImage="webroot/path/to/image/hackers/see.jpg"; //for index
