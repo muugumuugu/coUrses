@@ -1,4 +1,4 @@
-## The Whole Course.
+## The Qualifier Course.
 + [Lectures](https://www.youtube.com/watch?v=hImZsXxKTcE&list=TLGGRv4UzvIpursxODA5MjAyMQ)
 
 # Week 0
