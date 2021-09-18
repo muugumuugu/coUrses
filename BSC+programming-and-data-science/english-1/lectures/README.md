@@ -20,6 +20,7 @@
 # Week 2
 
 > [playlist](http://www.youtube.com/watch_videos?video_ids=Hpmh-iv6e4I,BR7dQgD8qlk,RAFLD5HY6Jc,A2eI-Ttmd7I,pHkc23_0ULI,b8Wq_9P7uqI)
+
 + [yt -Consonant Clusters in English Words](https://youtu.be/Hpmh-iv6e4I)
 + [yt -Three Consonants in Clusters in English Words](https://youtu.be/BR7dQgD8qlk)
 + [yt -Syllables and Words](https://youtu.be/RAFLD5HY6Jc)
