@@ -1,6 +1,8 @@
 # WEEK 1
+> [yt-playlist](http://www.youtube.com/watch_videos?video_ids=DgKYu1pi3qg,xcc0U_U4xhg,MMBrfQC0V9A,fC-UbX3MsGs,7tesanmUjFo,VSwUcHGAMcE,asMh3flE47E)
 
 ## Lec 01 - Learning English
+>[yt - lec](https://youtu.be/DgKYu1pi3qg)
 
 ### how language works.
 + a product of human mind's tendency to fins and apply patterns.
@@ -18,6 +20,7 @@
  manipulating the already set vocal cords and articultors also takes extra effort.
 
 ## Lec 02 - Sounds and Writing Symbols in English
+>[yt - lec](https://youtu.be/xcc0U_U4xhg)
 
 ### Symbols in English - Two Sets
 #### 26 Symbols
@@ -93,8 +96,11 @@
 
 
 ## Lec 03 - Speech sounds in English
+>[yt - lec](https://youtu.be/MMBrfQC0V9A)
 
->Vowels are *nearly free* flow of air, minimum obstruction from articulators.
+### Vowel v/s Consonants
+> Vowels are *nearly free* flow of air, minimum obstruction from articulators.
+
 > Consonants require obstructions to be produced, and so cannot be streched over a duration
 
 ### Articulation of Consonants
@@ -112,6 +118,7 @@
 
 
 ## Lec 04 - Articulation of Vowel and Consonant sounds
+>[yt - lec](https://youtu.be/fC-UbX3MsGs)
 
 ### English doesn't have all consonant sounds, only 24.
 
@@ -129,28 +136,37 @@
 [vowel chart](https://en.wikipedia.org/wiki/IPA_vowel_chart_with_audio)
 
 ## Lec 05 - How to Improve your Language Skills
+> [yt - lec](https://youtu.be/7tesanmUjFo)
 
+### More input --> Better Output.
 > Read from context, and do try applying rules from known Languages when the grammer seems alien.
 
 ## Lec 06 - Telephone English
+>[yt - lec](https://youtu.be/VSwUcHGAMcE)
+
+### Sequence of Conversation
 
 Greet->Purpose->Availibility Check.
 
 ## Lec 07 - Language Learning and Use
-
->E-Language
->> External language, finite input from environment.
-
-> Internal Language
->> Universal Grammer picked up in formative years, and paterns extended from it.
-
-
+> [yt - lec](https://youtu.be/asMh3flE47E)
+|E-Language|Internal Language|
+|---|---|
+|External language, finite input from environment.|Universal Grammer picked up in formative years, and paterns extended from it.|
 
 
 # WEEK 2
 
+> [yt-playlist](http://www.youtube.com/watch_videos?video_ids=Hpmh-iv6e4I,BR7dQgD8qlk,RAFLD5HY6Jc,A2eI-Ttmd7I,pHkc23_0ULI,b8Wq_9P7uqI)
+
 ## Lec 01 - Consonant Clusters in English Words
+[yt - lec](https://youtu.be/Hpmh-iv6e4I)
+
+### Vowel Builds the Word.
+
 > All words have at least 1 vowel sound.
+
+> All consonants have an inbuilt vowel.
 
 ### Common Sequences
 + CVCV
@@ -165,6 +181,9 @@ Greet->Purpose->Availibility Check.
 
 
 ## Lec 02 - Three Consonants in Clusters in English Vowel
+
+>[yt - lec](https://youtu.be/BR7dQgD8qlk)
+
 + rarer words, restrained word construction
 + only possible, largely, in first position.
 + cluster of more than three consonants does not exist in english.
@@ -175,6 +194,8 @@ Greet->Purpose->Availibility Check.
 + first is s.
 
 ## Lec 03 - Syllables And Words.
+
+>[yt - lec](https://youtu.be/RAFLD5HY6Jc)
 
 ### POS -- > Classes of Words.
 
@@ -192,10 +213,15 @@ Greet->Purpose->Availibility Check.
 
 ## Lec 04 - What is Good Vocabulary? Part -1.
 
+> [yt - lec](https://youtu.be/A2eI-Ttmd7I)
 
+## Lec 05 - What is Good Vocabulary? Part -2.
 
+> [yt - lec](https://youtu.be/pHkc23_0ULI)
 
+## Lec 06 - What is Good Vocabulary? Part -3.
 
+> [yt - lec](https://youtu.be/b8Wq_9P7uqI)
 
 
 <!---------------------->
