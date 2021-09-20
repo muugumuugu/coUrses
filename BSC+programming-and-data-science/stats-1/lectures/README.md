@@ -15,7 +15,7 @@
 > [playlist](http://www.youtube.com/watch_videos?video_ids=0-PO41B6zL0,OFDJTgEKLbE,Peh-G_M6Two,4MwZ2_iTkoo,5Z8mhCgGkcE)
 
 + [lec 2.1 - Describing Categorical Data - Frquency Distributions](https://www.youtube.com/watch?v=0-PO41B6zL0)
-+ [lec 2.2 - Describing Categorical Data - Charts of Categorical Data]](https://www.youtube.com/watch?v=OFDJTgEKLbE)
++ [lec 2.2 - Describing Categorical Data - Charts of Categorical Data](https://www.youtube.com/watch?v=OFDJTgEKLbE)
 + [lec 2.3 - Describing Categorical Data - Best practices while graphing data](https://www.youtube.com/watch?v=Peh-G_M6Two)
 + [lec 2.4 - Describing Categorical Data - Best practices while graphing data](https://www.youtube.com/watch?v=4MwZ2_iTkoo)
 + [lec 2.5 - Describing Categorical Data - Mode and Median](https://www.youtube.com/watch?v=5Z8mhCgGkcE)
