@@ -1,3 +1,4 @@
+<link href="/styles/home.css" rel="stylesheet"></link>
 <?php
 
 $aging = 0;
