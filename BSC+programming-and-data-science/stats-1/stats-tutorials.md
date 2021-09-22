@@ -14,15 +14,8 @@
 + Bar
 + Pie
 + Scatter
-
-#outlier
-> values that are
->>	+ <Q1-IQR  \
->> or \
->> + >Q3+IQR
-
-## Box Plot CandleStick Summary
-+ Five Number Summary Rep
-+ make a I cursor marking min/max.
-+ make a box on the cursor showing the IQR
-+ mark Q2 with a slicing line on the box
++ Box Plot CandleStick Summary
+	+ Five Number Summary Rep
+	+ make a I cursor marking min/max.
+	+ make a box on the cursor showing the IQR
+	+ mark Q2 with a slicing line on the box

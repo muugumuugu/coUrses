@@ -339,7 +339,11 @@ ___
 1. Direction : Is there a pattern trend up, down or both?
 2. Curvature: Does the pattern appear linear, or appear to follow some curve?
 3. Variation: Are the points tightly clustered or variable?
-4. Outliers: Are some points way off the majority pattern?
+4. Outliers: Are some points way off the majority pattern.
+	> values that are
+	>> + < Q1-IQR  \
+	>> or \
+	>> + > Q3+IQR
 
 ## Lec 4.6 - Association between two numerical variables - Covariance
 
