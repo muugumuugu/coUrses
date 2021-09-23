@@ -1,11 +1,6 @@
-const m=6;
-const p=7;
-const ch=8;
 function preload(){
-  marks=loadStrings('marks.csv');
-  pos=loadStrings('pos.txt')
-  words=loadStrings('words.txt');
-  lc=loadStrings('lc.txt')
+  marks=loadTable('marks.csv','csv', 'header');
+  words=loadTable("words.txt","csv","header");
 }
 function setup() {
   noCanvas();
