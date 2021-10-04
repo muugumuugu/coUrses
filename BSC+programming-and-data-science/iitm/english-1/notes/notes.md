@@ -1,7 +1,8 @@
 # WEEK 1
 > [yt-playlist](http://www.youtube.com/watch_videos?video_ids=DgKYu1pi3qg,xcc0U_U4xhg,MMBrfQC0V9A,fC-UbX3MsGs,7tesanmUjFo,VSwUcHGAMcE,asMh3flE47E)
 
-## Lec 01 - Learning English
+------
+ ## Lec 01 - Learning English
 >[yt - lec](https://youtu.be/DgKYu1pi3qg)
 
 ### how language works.
@@ -19,7 +20,8 @@
 + As adults
  manipulating the already set vocal cords and articultors also takes extra effort.
 
-## Lec 02 - Sounds and Writing Symbols in English
+------
+ ## Lec 02 - Sounds and Writing Symbols in English
 >[yt - lec](https://youtu.be/xcc0U_U4xhg)
 
 ### Symbols in English - Two Sets
@@ -95,7 +97,8 @@
 
 
 
-## Lec 03 - Speech sounds in English
+------
+ ## Lec 03 - Speech sounds in English
 >[yt - lec](https://youtu.be/MMBrfQC0V9A)
 
 ### Vowel v/s Consonants
@@ -117,7 +120,8 @@
 |Labial|p|ph|b|bh|m
 
 
-## Lec 04 - Articulation of Vowel and Consonant sounds
+------
+ ## Lec 04 - Articulation of Vowel and Consonant sounds
 >[yt - lec](https://youtu.be/fC-UbX3MsGs)
 
 ### English doesn't have all consonant sounds, only 24.
@@ -135,31 +139,37 @@
 
 [vowel chart](https://en.wikipedia.org/wiki/IPA_vowel_chart_with_audio)
 
-## Lec 05 - How to Improve your Language Skills
+------
+ ## Lec 05 - How to Improve your Language Skills
 > [yt - lec](https://youtu.be/7tesanmUjFo)
 
 ### More input --> Better Output.
 > Read from context, and do try applying rules from known Languages when the grammer seems alien.
 
-## Lec 06 - Telephone English
+------
+ ## Lec 06 - Telephone English
 >[yt - lec](https://youtu.be/VSwUcHGAMcE)
 
 ### Sequence of Conversation
 
 Greet->Purpose->Availibility Check.
 
-## Lec 07 - Language Learning and Use
+------
+ ## Lec 07 - Language Learning and Use
 > [yt - lec](https://youtu.be/asMh3flE47E)
 |E-Language|Internal Language|
 |---|---|
 |External language, finite input from environment.|Universal Grammer picked up in formative years, and paterns extended from it.|
 
+------------------------------------
+------------------------------------
 
 # WEEK 2
 
 > [yt-playlist](http://www.youtube.com/watch_videos?video_ids=Hpmh-iv6e4I,BR7dQgD8qlk,RAFLD5HY6Jc,A2eI-Ttmd7I,pHkc23_0ULI,b8Wq_9P7uqI)
 
-## Lec 01 - Consonant Clusters in English Words
+------
+ ## Lec 01 - Consonant Clusters in English Words
 [yt - lec](https://youtu.be/Hpmh-iv6e4I)
 
 ### Vowel Builds the Word.
@@ -180,7 +190,8 @@ Greet->Purpose->Availibility Check.
 + inbuilt vowel gets reduced for all but last consonant to form a multi consonant syllable
 
 
-## Lec 02 - Three Consonants in Clusters in English Vowel
+------
+ ## Lec 02 - Three Consonants in Clusters in English Vowel
 
 >[yt - lec](https://youtu.be/BR7dQgD8qlk)
 
@@ -193,15 +204,81 @@ Greet->Purpose->Availibility Check.
 + third one is l/r
 + first is s.
 
-## Lec 03 - Syllables And Words.
++ clusters are specific to consonant
+
++ words are not random sounds
+   + there are specific underlying patterns
+
++ When the first consonant in a CC pair loses its inbuilt vowel,
+   + becomes a cluster
+
++ 2-Clusters can appear anywhere in the word.
+
+> Excercise -- 20 Words - phonetic rep
+
+> Exercise -- Write the CV pattern of these words
+
+> Exercise -- Identify Clusters in these words.
+
+
++ Number of words where patterns other than CV/VC alternation are used, like 2-clusters, or 3-clusters, is very very less, since consonants cannot be easily spoken in sequence
+   + because consonants are not free flow of air.
+
+
+### 3 - cluster words
++ inbuilt vowel removed from both first 2 consonants of the triplet.
+
+#### Pattern for 3-clusters
+1. S
+2. p/t/k
+3. r/l
+
+------
+ ## Lec 03 - Syllables And Words.
 
 >[yt - lec](https://youtu.be/RAFLD5HY6Jc)
 
 ### POS -- > Classes of Words.
 
-### Sub/Verb/Obj --> Grammatical Relations within a Sentence
+### Syllables and Words
 
-###Syllables
+>Words
+>>distinct meaningful element of speech or writing.
+
++ POS is defined for a word
++ Sub/Ver/Obj - relations of a word to other words in the sentence in which it is used.
+
+>Syllable:
+>> Parts of words.
+
+>> Unit of organization for sequence of speech components.
+
+>> The pieces which when joined with pauses form the word from which they are extracted.
+
+
++ Each syllable has *at least one vowel* called its **nucleus**
++ Onsent : a consonant or consonant clusters
++ Rhyme : splits word into nucleus and coda.
+
+
+### examples
+#### 3-syllables
++ e-nar-jii
++ he-ri-tej
++ kae-pi-tal
++ saf-far-ing
+
+#### 4-syllable words
++ in-vi-si-ble
++ e-du-ke-shan
++ a-qua-rii-am
++ in-fi-ni-tii
+
+> We stress more on one specific syllable in multisyllabic words
+
+#### Sub/Verb/Obj --> Grammatical Relations within a Sentence
+
+#### Syllables
 
 + Parts of a Sound, split by Pauses in the pronounciation.
 + Every Syllable has a Vowel - called the nucleus.
@@ -211,17 +288,211 @@ Greet->Purpose->Availibility Check.
 ---
 + Multi Syllabic words have a stress pattern to highlight one vowel.
 
-## Lec 04 - What is Good Vocabulary? Part -1.
+------
+ ## Lec 04 - What is Good Vocabulary? Part -1.
 
 > [yt - lec](https://youtu.be/A2eI-Ttmd7I)
 
-## Lec 05 - What is Good Vocabulary? Part -2.
+------
+ ## Lec 05 - What is Good Vocabulary? Part -2.
 
 > [yt - lec](https://youtu.be/pHkc23_0ULI)
 
-## Lec 06 - What is Good Vocabulary? Part -3.
+------
+ ## Lec 06 - What is Good Vocabulary? Part -3.
 
 > [yt - lec](https://youtu.be/b8Wq_9P7uqI)
 
+------------------------------------
+------------------------------------
+# WEEK 3
+
+> [yt-playlist](http://www.youtube.com/watch_videos?video_ids=8gud9XJsL6k,42hufxqiOAk,mbE_MAhkj_A,htFNZapzHr8,BQDrv4mQHFE,LdteKj-oE5I,TMfBbpmCfdI)
+
+---
+
+## Lec 01 - Stress in Words
+
+> [yt - lec](https://youtu.be/8gud9XJsL6k)
+
+> Stress is the difference in artiulation that creates a prominent feature to the word.
+>> Syllabification, and stress patterns are intutive things.\
+
+### General Patterns for Stress Syllable
+1. If **noun** stems from monosyllabic word --> root word
+2. Disallybic **verb** --> 2nd Syllables (differentiates verb form from noun form)
+3. Compounf **noun** --> 1st part
+4. Ending in *shion*  / *ic* sound --> on the syllable before this suffix
+5. ending in *ee* / *oo* --> on the suffix itself.
+
+
+----
+
+## Lec 02 - Plurality in English#
+
+> [yt - lec](https://youtu.be/42hufxqiOAk)
+
+## Pluralization
+ + generally using suffixes
+   + /z/ or /s/
+ + Dog*s*, Babi*es*
+ + exceptions
+  + relics of old english
+  +  children,teeth,..
+
+## Pattern - Plural Markers (sound)
+
++ /p/,/t/,/k/  --> /s/
++ else --> /z/
+
+-----
+## Lec 03 - Aspiration in English Words - 1
+
+> [yt - lec](https://youtu.be/mbE_MAhkj_A)
+
++ p,t,k are voiceless stop sounds.
+	+ aspirated if they are at the initial position  of the stress syllables.
+
+---
+
+## Lec 04 - Aspiration in English Words - 2
+
+> [yt - lec](https://youtu.be/htFNZapzHr8)
+
+---
+
+## Lec 05 - Syllables and Stress in Words
+
+> [yt - lec](https://youtu.be/BQDrv4mQHFE)
+
+### Syllabification
+> Jaw Drop Test:
+>> # syllables = # times jaw drops to pronounce word.
+
+### Identifying Stress Syllable
+#### Suffix Rules
+1. er, or, ly, y, consonant.
+	+ 1st syllable
+2. able, ary, cian, ely, graphy, ial, ian, ible, ic, ial, ics, ion, ity, ium, imum, logy, tal
+	+ syllable before suffix
+3. ee, ese, ique, oo, ette
+	+ suffix itself
+#### Compound Words
+1. Noun
+	+ 1st Part's stress syllable
+2. Adjective
+	+ 2nd Part's stress syllable
+3. Phrasal Verb (verb + preposition , eg wornout, backup)
+	+ 2nd part
+4. Reflexive pronoun ( eg - myself)
+	+ 2nd part
+
+### Typesetting Stress
+> preceeded by an apostrophe
+
+
+---
+
+## Lec 06 - Aspiration, Stress and Syllabification
+
+> [yt - lec](https://youtu.be/LdteKj-oE5I)
+
+### 3 - clusters at final position :
++ ado*pts*
++ Ha*nds*
++ So*lves*
+
+---
+
+## Lec 07 - Fundamentals of Learning English#
+
+> [yt - lec](https://youtu.be/TMfBbpmCfdI)
+
+> summary lecture.
+------------------------------------
+------------------------------------
+
+# WEEK 4
+
+> [yt-playlist](http://www.youtube.com/watch_videos?video_ids=_mD9iGMD73g,9ZWNeEQEdSI,tGch4v-bKsU,XfbkqslFsTA,M0jkrPkUbTg,7KIPtso75t4)
+
+-------
+## Lec 01 - Spoken English Preliminaries
+
+> [yt - lec](https://youtu.be/_mD9iGMD73g)
+
++ English is a *Slow Tempo Language*.
++ Vowels are either very long & prominent or very short.
+
+----
+## Lec 02 - Speak Slowly
+
+> [yt - lec](https://youtu.be/9ZWNeEQEdSI)
+
++ slow speaking helps clear communication.
++ english has pauses after each clause to indicate a unit of words.
+
+
+----
+## Lec 03 - Phrasal Pause
+
+> [yt - lec](https://youtu.be/tGch4v-bKsU)
+
+> Phrase
+>> Group of words behaving as independant unit of sentence.
+
+> Pause
+>> Spoken Punctuation
+
+### Recomended Pauses
+1. after a word of addressal ( calling someone out / pointing to something)
+2. after small chunk of numbers in a long string of numbers
+3. after ralational / conditional indicators
+	+ so
+	+ therefore
+	+ but
+	+ thus
+	+ of course
+	+ indeed
+	+ by all means
+
+
+----
+## Lec 04 - Do You Have Something To Say?
+
+> [yt - lec](https://youtu.be/XfbkqslFsTA)
+
+> Gandhi
+>> eye for an eye...
+
+> Mandela
+>>... fell down and got back up
+
+> Alexander Pope
+>> ... let newton be, and all was light ...
+
+
+----
+## Lec 05 - Effective Presentations
+
+> [yt - lec](https://youtu.be/M0jkrPkUbTg)
+
++ eye contact
++ short slides
++ stage demeanour
++ visual medium more potent
++ hand gestures
+
+
+
+----
+## Lec 06 - Structure of Spoken Word
+
+> [yt - lec](https://youtu.be/7KIPtso75t4)
+
+> one syllable has only one spoken vowel
+
+-------------------
+--------------------
 
 <!---------------------->

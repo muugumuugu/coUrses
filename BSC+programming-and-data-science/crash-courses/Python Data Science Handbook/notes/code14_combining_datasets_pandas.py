@@ -91,6 +91,72 @@ print(df3)
 #one of the  key columns contains duplicate entries
 df4 = pd.DataFrame({'group': ['Accounting', 'Engineering', 'HR'], 'supervisor': ['Carly', 'Guido', 'Steve']})
 print(pd.merge(df3,df4)) # preserve those duplicate entries as appropriate
+#many to many
+#the key column in both the left and right array contains duplicates
+#==========================================================
+# specifying the merge keys
+print(pd.merge(df1, df2, on='employee')) # on --> primary key
+df3 = pd.DataFrame({'name': ['Bob', 'Jake', 'Lisa', 'Sue'], 'salary': [70000, 80000, 120000, 90000]})
+print(pd.merge(df1, df3, left_on="employee", right_on="name").drop('name', axis=1))# specyify the key which may be labelled differently in the two sets
+#===========================
+print('-'*100)
+# merging on an index
+df1a = df1.set_index('employee')
+df2a = df2.set_index('employee')
+print(pd.merge(df1a, df2a, left_index=True, right_index=True)) # equivalent to df1a.join(df2a)
+#=================================================================
+# merge is default inner join (intersection), change using "how" parameter , and join concate is outer join
+df6 = pd.DataFrame({'name': ['Peter', 'Paul', 'Mary'],'food': ['fish', 'beans', 'bread']},  columns=['name', 'food'])
+df7 = pd.DataFrame({'name': ['Mary', 'Joseph'],  'drink': ['wine', 'beer']},columns=['name', 'drink'])
+print(pd.merge(df6, df7, how='left')
+)
+#===========================================================================
+print('-'*100)
+df8 = pd.DataFrame({'name': ['Bob', 'Jake', 'Lisa', 'Sue'], 'rank': [1, 2, 3, 4]})
+df9 = pd.DataFrame({'name': ['Bob', 'Jake', 'Lisa', 'Sue'],'rank': [3, 1, 4, 2]})
+# handling conflicting column names
+pd.merge(df8, df9, on="name", suffixes=["_L", "_R"]))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

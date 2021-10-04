@@ -1,31 +1,56 @@
-# WEEK 3
+# WEEK 5
 
-> [yt-playlist](http://www.youtube.com/watch_videos?video_ids=8gud9XJsL6k,42hufxqiOAk,mbE_MAhkj_A,htFNZapzHr8,BQDrv4mQHFE,LdteKj-oE5I,TMfBbpmCfdI)
+> [yt-playlist](http://www.youtube.com/watch_videos?video_ids=on8KaQZFzOQ,Cs1WRMEt10o,iCx2F6E_nGg,Ct_FZPjzkZM)
 
-## Lec 01 - Stress in Words#
 
-> [yt - lec](https://youtu.be/8gud9XJsL6k)
+-----
+## Lec 01 - Words and Phrases in English
 
-## Lec 02 - Plurality in English#
+> [yt - lec](https://youtu.be/on8KaQZFzOQ)
 
-> [yt - lec](https://youtu.be/42hufxqiOAk)
+1. Determiner + Noun
+	1. indefinite = a/ an to maintain cvcv pattern
+	2. definite = the
+	> Determiner always preceedes a noun / partial noun phrase
+2. Adjective + Noun
+	> description of noun as identification
 
-## Lec 03 - Aspiration in English Words - 1
 
-> [yt - lec](https://youtu.be/mbE_MAhkj_A)
+---
+## Lec 02 - Sentences in English
 
-## Lec 04 - Aspiration in English Words - 2
+> [yt - lec](https://youtu.be/Cs1WRMEt10o)
 
-> [yt - lec](https://youtu.be/htFNZapzHr8)
+> Subject (nucleus) + Predicate
 
-## Lec 05 - Syllables and Stress in Words
+### Word Order
+> English
+>> subject-phrase **verb-phrase** object-phrase adverbial-phrase
 
-> [yt - lec](https://youtu.be/BQDrv4mQHFE)
 
-## Lec 06 - Aspiration, Stress and Syllabification
+> Indian Languages
+>> subject-phrase adverbial-phrase object-phrase **verb**
 
-> [yt - lec](https://youtu.be/LdteKj-oE5I)
+---
+## Lec 03 - Command or Request?
 
-## Lec 07 - Fundamentals of Learning English#
+> [yt - lec](https://youtu.be/iCx2F6E_nGg)
 
-> [yt - lec](https://youtu.be/TMfBbpmCfdI)
+## imperetive sentences
+
+> Classified based on intention.
+
+> have hidden implied subject = **YOU**
+
+---
+## Lec 04 - Agreement in English Sentences
+
+> [yt - lec](https://youtu.be/Ct_FZPjzkZM)
+
+> Verb agrees with subject noun, and is marked acccordingly
+
+### Agreement Fields:
+1. Person : 1st,2nd or 3rd --> ( I , you, they)
+2. Count : Singular / Plural
+
+> Gender Irrelavant -- different from most indian languages, where verb is gender marked also.

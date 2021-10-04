@@ -61,15 +61,14 @@ I'll be adapting it from the ever amazing Derek Banas: https://www.youtube.com/w
 > So imagine reddit was just done with regular html. This page would be an html file, but when I post this comment, it'd have to delete the html file and create a new one with my comment added. And it'd have to do the same thing when I upvote it. The biggest problem would be, what happens if someone clicks on a link to the page after you delete it but before you write the new one? And then how to you keep track of the order of things for stuff like what gets in the front page? It'd be way too complicated.
 >
 > Now imagine reddit is done with PHP and mySQL (no idea if it is, but it's something similar). To display this page, you have a php file that's like a fill in the blanks. Think of the php for the top of this reddit page like this:
->
-> ```
-> <title>
-> submitted <time> ago by <username>
-> <text>
-> <number> comments
->
-> ```
->
+
+```
+<title>
+submitted <time> ago by <username>
+<text>
+<number> comments
+```
+
 > And so on. PHP gets executed by the server before it sends the html to your browser, and it will have hooks in it to a MySQL database, to go and look up the info to fill in the blanks. It would look up other info like the number of up and down votes, the number of comments, figure out how to display the comments all nifty and threaded like it does, and stuff like that. (r/eli5)
 
 Additionally, you can use PHP to push and pull from a MySQL database, as well as pair it with forms! WordPress also uses PHP in its 'content generation loop'.

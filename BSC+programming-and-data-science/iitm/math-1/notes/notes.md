@@ -223,7 +223,6 @@ d=√∑(x<sub>i<sub>1</sub></sub>-x<sub>i<sub>2</sub></sub>)<sup>2</sup>
 + vertex co-ors by setting slope
 + Surface Of Revolution.
 
-# WEEK 5
 
 ## Lec 27 - Soln of QE using factorization
 
@@ -265,3 +264,25 @@ d=√∑(x<sub>i<sub>1</sub></sub>-x<sub>i<sub>2</sub></sub>)<sup>2</sup>
 > the curve of polynomials is always smooth( continous without sharp corners).
 
 ## Lec 37 - Zeroes of Polynomial Functions
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# WEEK 5

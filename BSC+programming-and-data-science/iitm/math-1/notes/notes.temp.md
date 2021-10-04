@@ -1,4 +1,6 @@
 ## Lec 37 - Zeroes of Polynomial Functions
+
+> values where the function cuts the x axis, that is x ∋ f(x)=0
 ## Lec 38 - Graphs of Polynomials - Multiplicities
 ## Lec 39 - Graphs of Polynomials - Behavior at X-intercepts
 ## Lec 40 - Graphs of Polynomials - End behavior

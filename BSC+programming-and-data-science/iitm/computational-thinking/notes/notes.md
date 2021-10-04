@@ -174,4 +174,6 @@ while (set.length>0){
 
 ## lec 4.6 Procedure to resolve pronoun with its equivalent matching noun
 
++ Backtracing
+
 ## lec 4.7 Summary of contents introduced in week 1 to 4
