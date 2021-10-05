@@ -1,10 +1,13 @@
 <script src="/styles/syntaxhighlighter.js"></script>
 <script>hljs.highlightAll();</script>
 
+---
 # WEEK 1
 ## Downloading Data, Intro to Statistics
-___
+---
 
+
+---
 ## Lec 1.1 - Introduction and Types of Data - Basic Definitions
 
 >The art of learning from data
@@ -25,6 +28,8 @@ ___
 	+ a good sample has good representation.
 >inference from sample can be extended to be true, upto some error, for the population
 
+
+---
 ## Lec 1.2 - Introduction and Types of Data - Understanding Data
 
 ### Data
@@ -51,6 +56,8 @@ ___
 + each variable must have its own column, and same type of value/measurement unit across the units to be consistent and comparable
 + each case has its own unique row, with values ( could be NA ) for each variable.
 
+
+---
 ## Lec 1.3 - Introduction and Types of Data - Classification of Data
 
 ### Numerical Data
@@ -73,6 +80,8 @@ ___
 ### Cross Sectional Data
 > data recorded at a point of time
 
+
+---
 ## Lec 1.4 - Introduction and Types of Data - Scales of Measurement
 
 ## Categorical Data
@@ -110,10 +119,13 @@ ___
 + example
 	+ height
 
+---
 # WEEK 2
 ## Describing Categorical Data - one variable
-___
+---
 
+
+---
 ## Lec 2.1 - Describing Categorical Data - Frquency Distributions
 > Frequency Table - Listing of diistinct values of a Catgerical Value and their counts in the cases.
 >> One Tally Mark for each occurence of the value.
@@ -122,6 +134,8 @@ Select data Cells ⇾ Format Menu ⇾ Data ⇾ Pivot Table ⇾ Add rows and Data
 
 > Relative Frequency - a standard for comparison. Ratio of frequency to Total Count.
 
+
+---
 ## Lec 2.2 - Describing Categorical Data - Charts of Categorical Data
 
 ### graphs
@@ -135,10 +149,14 @@ Select data Cells ⇾ Format Menu ⇾ Data ⇾ Pivot Table ⇾ Add rows and Data
 	+ display y=the portions
 	+ Suitable for representing relative frquencies.
 
+
+---
 ## Lec 2.3 - Describe Categorical Data - BestPractices-1
 
 > Annotate Data in Charts with both labels of the Categorical Value, and with the frequency/relative frequency.
 
+
+---
 ## Lec 2.4 - Describing Categorical Data - Best Practices - 2
 
 > Area Principle:
@@ -150,6 +168,8 @@ Select data Cells ⇾ Format Menu ⇾ Data ⇾ Pivot Table ⇾ Add rows and Data
 >>> + incorrect represa=entation in terms of proportions.
 >>if needed Y axis breaks should be marked.
 
+
+---
 ## Lec 2.5 - Describing Categorical Data - Mode and Median
 > Central Tendency  Measures.
 
@@ -159,10 +179,15 @@ Select data Cells ⇾ Format Menu ⇾ Data ⇾ Pivot Table ⇾ Add rows and Data
 > Median (for ordinal data only)
 >> mid value of sorted  values.
 
+---
+
 # WEEK 3
 ## Describing Numerical Data - one variable
-___
 
+---
+
+
+---
 ## Lec 3.1 - Describing Numerical Data - Frequency Tables for Numerical Data
 
 >Group the discrete variables (counts) into bins, if the number of values is small, they can themself be considered as categories.
@@ -197,6 +222,8 @@ ___
 		|3|1,6|
 		|4|5|
 
+
+---
 ## Lec 3.2 - Describing Numerical Data - Mean
 
 ### Numerical Summaries.
@@ -217,11 +244,15 @@ ___
 
 > x is the class-mark.
 
+
+---
 ## Lec 3.3 - Describing Numerical Data - Median and Mode
 
 > Median : Middle Value in a ***Ordered*** Dataset.
 > Mode : Most frquently occuring value.
 
+
+---
 ## Lec 3.4 - Describing Numerical Data - Measures of dispersion- Range
 
 >Range:
@@ -258,6 +289,8 @@ return S/(N-1)
 >>To maintain units of dispersion measure and data-points
 
 
+
+---
 ## Lec 3.5 - Describing Numerical Data - Percentiles, Quartiles, and Interquartile Range
 
 > Percentiles are right-closed - left-open
@@ -292,12 +325,18 @@ return S/(N-1)
 >IQR
 >>Q<sub>3</sub>-Q<sub>1</sub>
 
+---
+
 # WEEK 4
 ## Assosiation between Two Variables
-___
 
+---
+
+---
 ## Lec 4.1 - Association between two variables - Review of course
 
+
+---
 ## Lec 4.2 - Association between two categorical variables - Introduction
 
 + Contigency Table : Two-way Table for bivariate categorical data.
@@ -309,6 +348,8 @@ ___
 		+ --> Colums --> click on second catgeorical variable
 		+ --> Values --> click on either variable and then click on COUNTA under "summarize by" tab.
 
+
+---
 ## Lec 4.3 - Association between two categorical variables - Relative frequencies
 
 + Row Relative Frequency --> Divide each Cell Frequency by its row total frequency
@@ -322,6 +363,8 @@ ___
 >Select Data for Contingency Table --> Insert Chart -->Stacked Column Chart.
 >> If Stacking is ```Standard``` type, then the numbers show COunt, and ```100%``` Stacking shows relative frequency.
 
+
+---
 ## Lec 4.4 - Association between two numerical variables - Scatterplot
 > A graph that displays pairs of values as points on a 2D Plane.
 >> For interpretting association of two *numerical* variables.
@@ -333,6 +376,8 @@ ___
 3. Under X-Axis Tab , choose the explanatory variable.
 4. Under Series Tab , choose the response variable.
 
+
+---
 ## Lec 4.5 - Association between two numerical variables - Describing association
 
 ### The 4 key Qs.
@@ -345,6 +390,8 @@ ___
 	>> or \
 	>> + > Q3+IQR
 
+
+---
 ## Lec 4.6 - Association between two numerical variables - Covariance
 
 ### Quantyfying (Linear) Assosiation b/w numerical values.
@@ -355,11 +402,15 @@ ___
 + Correlation
 
 
+
+---
 ## Lec 4.7 - Association between two numerical variables - Correlation
 
 + Pearson correlation Coefficient
 	+ ρ<sub>xy</sub>= Cov(x,y)/(√(σ<sub>x</sub>σ<sub>y</sub>))
 
+
+---
 ## Lec 4.8 - Association between two numerical variables - Fitting a line
 
 > Summarizing the linear association using a line on ℝ<sup>2</sup>
@@ -367,6 +418,8 @@ ___
 >>Using Google Sheets
 >>> In scatter Plot --> Customize--> Series -->Trend Line. -->Label -->Use Equation.
 
+
+---
 ## Lec 4.9 - Association between categorical and numerical variables
 
 >Point Bi-Serial Correlation Coefficient
@@ -378,7 +431,67 @@ ___
 
 >> r<sub>pb</sub>=(ȳ<sub>0</sub> - ȳ<sub>1</sub>.)*√(p<sub>0</sub>p<sub>1</sub>)/s<sub>x</sub>
 
+---
 
+# WEEK 5
+
+-----
+
+
+---
+## Lec 5.1 - Permutations and Combinations - Basic Principles of counting
+
++  Addition Principal of counting
+	+ event A **or** B
+	+ #A **+** #B
++  Multiplication Principal of Counting
+	+ event A **and** B
+	+ #A **X** #B
+
+
+---
+## Lec 5.2 - Permutations and Combinations - Factorials
+
+>Factorial:
+>> Simpler Way to represent 1x2x3...xn = *n!*
+
+>Recursive definition:
+>> n!=n*(n-1)! ; 0!=1
+
+
+
+---
+## Lec 5.3 - Permutations and Combinations - Permutations: Distinct objects.
+
+> Permutation:
+>> ordered arrangement
+
++ <sup>n</sup>P<sub>r</sub>=n!/(n-r)! --> for N distinct objects, without repetation
++ with repetation allowed,  <sup>n</sup>P'<sub>r</sub> = n<sup>r</sup>
+
+
+---
+## Lec 5.4 - Permutations and Combinations - Permutations : Objects not distinct
+
++ For non distinct objects each n-ordering occurs p<sub>i</sub> times if an element is present in p<sub>i</sub> duplicates.
+	+ so, <sup>n</sup>P<sub>n</sub>=n!/π(p<sub>i</sub>!) where p<sub>i</sub> is the number of copies of the repeating element.
+
++ For circular arrangements, the order of chosing the first elements position is irrelevant, hence
+	+ <sup>n</sup>P<sub>n</sub>=(n-1)!
+	+ if AC/CLockwise are not distinct, the number gets divided by 2.
+
+
+---
+## Lec 5.5 - Permutations and Combinations - Combinations
+	+ <sup>n</sup>C<sub>r</sub>=<sup>n</sup>P<sub>r</sub>/r! =<sup>n</sup>C<sub>n-r</sub>
+	+ <sup>n</sup>C<sub>r</sub>=<sup>n-1</sup>C<sub>r-1</sub>+<sup>n-1</sup>C<sub>r</sub>
+		+ that is it is the sum of the two entries above it in the pascal's triangle
+
+
+
+---
+## Lec 5.6 - Permutations and Combinations - Applications
+	+ summary lecture
 
 
 

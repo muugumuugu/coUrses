@@ -1,4 +1,10 @@
+---
+
 # WEEK 1
+
+---
+
+---
 
 ## Lec 01 - Natural Numbers and their Operations
 
@@ -19,10 +25,14 @@
 + Sieve of Erothenes
 + Unique Factorization Th.
 
+---
+
 ## Lec 02 - Rational Numbers
 
 + GCD
 + Density of ℚ
+
+---
 
 ## Lec 03 - Real Numbers
 
@@ -33,6 +43,8 @@
 + Trancendental
 	+ π
 	+ e
+
+---
 
 ## Lec 04 - Set Theory
 
@@ -48,6 +60,8 @@
 
 + φ --> Empty Set . Subset of All Sets Vacously.
 + ℙ(X) --> Set Of all Subsets of X.
+
+---
 
 ## Lec 05 - Construction of Sets and Set Operations
 
@@ -65,6 +79,8 @@
 >> Set Difference\
 >> Complementation relative to a Universal Sets
 
+---
+
 ## Lec 06 - Relations
 
 > A filtered subset of a Cartesion Product b/w sets.
@@ -79,6 +95,8 @@
 ###equivalence relations
 + partitions the set in question (mutually disjoint partitions, with covering union.)
 + is reflexive , symetric and transitive.
+
+---
 
 ## Lec 07 - Functions
 
@@ -97,16 +115,22 @@
 ?????????/
 
 
+---
+
 ## Lec 08 - Prime Numbers
 
 + Euclid's Infinity of Primes.
 + π(x) = # of primes < x
 + Prime Number Th. - π(x)--> x/ln(x) as x-->∞
 
+---
+
 ## Lec 09 - Why is a Number Irrational?
 
 >The Real line is continous but some points on the line like √2, obtained from the pythogorean unit right triangle, cannot be represented as a ratio,
 hence the need for irrational.
+
+---
 
 ## Lec 10 - Sets V/S Collections
 
@@ -125,6 +149,8 @@ hence the need for irrational.
 
 > In general call any unsuitable collection a ***Class***.
 
+---
+
 ## Lec 11 - Degrees of Infinity
 
 >Enumaration - ***bijection*** with ℕ
@@ -139,27 +165,43 @@ hence the need for irrational.
 > Is there a set with cardinality between that of ℕ  and ℝ?
 >> *Independent of Set Theory Axioms*, the existence of such a set cannot be proved or disproved.
 
+---
+
 # WEEK 2
+
+---
+
+---
 
 ## Lec 12 - Rectangular Co-Ordinate System
 
 > Based on assosciating ***ℝ*** with a ***2d grid of perpendicular lines*** (axes)
 
+---
+
 ## Lec 13 - Distance Formula
 
 d=√∑(x<sub>i<sub>1</sub></sub>-x<sub>i<sub>2</sub></sub>)<sup>2</sup>
+
+---
 
 ## Lec 14 - Section Formula
 
 (m<sub>2</sub>x⃗<sub>1</sub>+ m<sub>1</sub>x⃗<sub>2</sub>)/(m<sub>1</sub>+m<sub>2</sub>)
 
+---
+
 ## Lec 15 - Area of a Triangle
+
+---
 
 ## Lec 16 - Slope of a Line
 
 > Gradient or Inclination with +ve X Axis
 
 >***m***= <i>tan</i>(θ) , θ measured from left to right between + ve X-axis and line
+
+---
 
 ## Lec 17 - Parallel and Perpendicular Lines
 
@@ -170,6 +212,8 @@ d=√∑(x<sub>i<sub>1</sub></sub>-x<sub>i<sub>2</sub></sub>)<sup>2</sup>
 
 > θ = (m<sub>1</sub>-m<sub>2</sub>)/(1+ m<sub>1</sub>m<sub>2</sub>)
 
+---
+
 ## Lec 18 - Represantation of a Line-1
 
 + Point on a Lines
@@ -177,25 +221,41 @@ d=√∑(x<sub>i<sub>1</sub></sub>-x<sub>i<sub>2</sub></sub>)<sup>2</sup>
 + Point-Slope Form
 + Two-Point Form
 
+---
+
 ## Lec 19 - Representation of a Line-2 and Applications of Rectangular Co-ordinated.
 
 + Slope-intercept form
 + XY- intercept frm
 
+---
+
 # WEEK 3
+
+---
+
+---
 
 ## Lec 20 - General Equation of a Line
 
 > a<sub>i</sub>x +b<sub>i</sub>x+c<sub>i</sub>=d
+
+---
 
 ## Lec 21 - Equation of Perpendicular & Parallel Lines in General Form
 
 + parallel : a<sub>1</sub>/a<sub>2</sub>=b<sub>1/</sub>/b<sub>2</sub>
 + perpendicular a<sub>1</sub>a<sub>2</sub>+b<sub>1/</sub>b<sub>2</sub>=0
 
+---
+
 ## Lec 22 - Eqn of line Perpendicular to another line through a given Point
 
+---
+
 ## Lec 23 - Distance of Point from Line
+
+---
 
 ## Lec 24 - Straight Line Fit
 
@@ -203,7 +263,13 @@ d=√∑(x<sub>i<sub>1</sub></sub>-x<sub>i<sub>2</sub></sub>)<sup>2</sup>
 >Sum of Squares of Errors
 >>∑(xᵢ - X)²
 
+---
+
 # WEEK 4
+
+---
+
+---
 
 ## Lec 25 - Quadratic Functions ,examples of QF, SLope of a QF
 
@@ -215,6 +281,8 @@ d=√∑(x<sub>i<sub>1</sub></sub>-x<sub>i<sub>2</sub></sub>)<sup>2</sup>
 
 
 
+---
+
 ## Lec 26 - Solution of a QE using Graph, Slope -> Line & Parabola
 
 + use zeroes of QF to get roots of QE.
@@ -224,6 +292,8 @@ d=√∑(x<sub>i<sub>1</sub></sub>-x<sub>i<sub>2</sub></sub>)<sup>2</sup>
 + Surface Of Revolution.
 
 
+---
+
 ## Lec 27 - Soln of QE using factorization
 
 + intercept form
@@ -232,40 +302,86 @@ d=√∑(x<sub>i<sub>1</sub></sub>-x<sub>i<sub>2</sub></sub>)<sup>2</sup>
 	+ firstouterinnerlast
 	+ sum/product method
 
+---
+
 ## Lec 28 - Soln of QE using square method.
 
 > complete the square.
 
+---
+
 ## Lec 29 - Quadratic Formula
 
 (-b ± √(b²-4ac))/2a
+
+---
 
 ## Lec 30 - Polynomials
 
 >∑ a<sub>i</sub>x<sub>i</sub><sup>p<sub>i</sub></sup>
 >> p<sub>i</sub> ∈ ℤ
 
+---
+
 ## Lec 31 - Degree of polynomial
 
 > degree of zero polynomial is undefined
 
+---
+
 ## Lec 32 - Algebra of polynomials --> + & -
+
+---
 
 ## Lec 33 - Algebra of polynomials --> *
 
+---
+
 ## Lec 34 - Algebra of polynomials --> /
+
+---
 
 ## Lec 35 - division algorithm
 
 > Rational Functions
 
+---
+
 ## Lec 36 - Graphs of Polynomials - > Identification/ Characteriztion
 
 > the curve of polynomials is always smooth( continous without sharp corners).
 
+---
+
 ## Lec 37 - Zeroes of Polynomial Functions
 
+> values where the function cuts the x axis, that is x ∋ f(x)=0
+## Lec 38 - Graphs of Polynomials - Multiplicities
 
++ even multiplicity of root --> bounces off of x-Axis.
++ odd multiplicity of root --> crosses X axis
+
+---
+
+## Lec 39 - Graphs of Polynomials - Behavior at X-intercepts
+
+---
+
+## Lec 40 - Graphs of Polynomials - End behavior
+
++ for even degree polynomials both -∞ and +∞ have symetrical asymptotes, either both +∞ or both -∞
++ for odd degree polynomials both -∞ and +∞ have mirroring asymptotes, one +∞ and the other -∞
++ the sign depends on the sign of the coefficient of the highest power term's coeffficient's sign.
+
+---
+
+## Lec 41 - Graphs of Polynomials - Turning points
+>Turning Point
+>> Point at which graph changes Direction
+
+> Max num of turning points of  a polynomial of degree n
+>> **n-1**
+>>> proof using calculas, intuition: can have max n roots, and has to change direction to attain same value=0 again and again.
 
 
 

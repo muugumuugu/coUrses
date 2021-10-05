@@ -16,19 +16,19 @@ TOC
 |2.7|[Max in a single iteration without using info and Application of Frequency Count.](notes.md#lec-27---max-in-a-single-iteration-without-using-info-and-application-of-frequency-count)|
 |2.8|[Intro to PseudoCode](notes.md#lec-28---intro-to-pseudocode)|
 |2.9|[PseudoCode for Iteration with Filtering](notes.md#lec-29---pseudocode-for-iteration-with-filtering)|
-|3.1|[resentation of datasets in Forms of Tables](notes.md#lec-31-presentation-of-datasets-in-forms-of-tables)|
-|3.2|[elow Average Students in Two Iterations](notes.md#lec-32-below-average-students-in-two-iterations)|
-|3.3|[ystematic process of Hypothesis verification](notes.md#lec-33-systematic-process-of-hypothesis-verification)|
-|3.4|[hree Prizes Problem](notes.md#lec-34-three-prizes-problem)|
-|3.5|[ntroduction to procedures and Paramaters](notes.md#lec-35-introduction-to-procedures-and-paramaters)|
-|3.6|[seudoCode for procedures and Paramaters-1](notes.md#lec-36-pseudocode-for-procedures-and-paramaters-1)|
-|3.7|[seudoCode for procedures and Paramaters-2](notes.md#lec-37-pseudocode-for-procedures-and-paramaters-2)|
-|3.8|[seudoCode for three prizes problem](notes.md#lec-38-pseudocode-for-three-prizes-problem)|
-|3.9|[ide Effects of Procedure](notes.md#lec-39-side-effects-of-procedure)|
-|4.1|[oncept of nested iterations using the birthday paradox Naive approaach & Using binning](notes.md#lec-41-concept-of-nested-iterations-using-the-birthday-paradox-naive-approaach-&-using-binning)|
-|4.2|[mportance of binning to reduce number of comparisons in nested iterations](notes.md#lec-42-importance-of-binning-to-reduce-number-of-comparisons-in-nested-iterations)|
-|4.3|[oncept of binning to avoid the complexity of nested iterations](notes.md#lec-43-concept-of-binning-to-avoid-the-complexity-of-nested-iterations)|
-|4.4|[oncept of Fair Teams](notes.md#lec-44-concept-of-fair-teams)|
-|4.5|[rocedure to find same date of birth for different students](notes.md#lec-45-procedure-to-find-same-date-of-birth-for-different-students)|
-|4.6|[rocedure to resolve pronoun with its equivalent matching noun](notes.md#lec-46-procedure-to-resolve-pronoun-with-its-equivalent-matching-noun)|
-|4.7|[ummary of contents introduced in week 1 to 4](notes.md#lec-47-summary-of-contents-introduced-in-week-1-to-4)|
+|3.1|[Presentation of datasets in Forms of Tables](notes.md#lec-31---presentation-of-datasets-in-forms-of-tables)|
+|3.2|[Below Average Students in Two Iterations](notes.md#lec-32---below-average-students-in-two-iterations)|
+|3.3|[Systematic process of Hypothesis verification](notes.md#lec-33---systematic-process-of-hypothesis-verification)|
+|3.4|[Three Prizes Problem](notes.md#lec-34---three-prizes-problem)|
+|3.5|[Introduction to procedures and Paramaters](notes.md#lec-35---introduction-to-procedures-and-paramaters)|
+|3.6|[PseudoCode for procedures and Paramaters-1](notes.md#lec-36---pseudocode-for-procedures-and-paramaters-1)|
+|3.7|[PseudoCode for procedures and Paramaters-2](notes.md#lec-37---pseudocode-for-procedures-and-paramaters-2)|
+|3.8|[PseudoCode for three prizes problem](notes.md#lec-38---pseudocode-for-three-prizes-problem)|
+|3.9|[Side Effects of Procedure](notes.md#lec-39---side-effects-of-procedure)|
+|4.1|[Concept of nested iterations using the birthday paradox Naive approaach & Using binning](notes.md#lec-41---concept-of-nested-iterations-using-the-birthday-paradox-naive-approaach-&-using-binning)|
+|4.2|[Importance of binning to reduce number of comparisons in nested iterations](notes.md#lec-42---importance-of-binning-to-reduce-number-of-comparisons-in-nested-iterations)|
+|4.3|[Concept of binning to avoid the complexity of nested iterations](notes.md#lec-43---concept-of-binning-to-avoid-the-complexity-of-nested-iterations)|
+|4.4|[Concept of Fair Teams](notes.md#lec-44---concept-of-fair-teams)|
+|4.5|[Procedure to find same date of birth for different students](notes.md#lec-45---procedure-to-find-same-date-of-birth-for-different-students)|
+|4.6|[Procedure to resolve pronoun with its equivalent matching noun](notes.md#lec-46---procedure-to-resolve-pronoun-with-its-equivalent-matching-noun)|
+|4.7|[Summary of contents introduced in week 1 to 4](notes.md#lec-47---summary-of-contents-introduced-in-week-1-to-4)|

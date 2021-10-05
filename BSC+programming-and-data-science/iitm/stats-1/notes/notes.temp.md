@@ -1,11 +1,4 @@
-# WEEK 5
 
-## Lec 5.1 - Permutations and Combinations - Basic Principles of counting
-## Lec 5.2 - Permutations and Combinations - Factorials
-## Lec 5.3 - Permutations and Combinations - Permutations: Distinct objects
-## Lec 5.4 - Permutations and Combinations - Permutations : Objects not distinct
-## Lec 5.5 - Permutations and Combinations - Combinations
-## Lec 5.6 - Permutations and Combinations - Applications
 
 # WEEK 6
 

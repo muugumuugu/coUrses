@@ -1,11 +1,11 @@
-## Lec 37 - Zeroes of Polynomial Functions
 
-> values where the function cuts the x axis, that is x ∋ f(x)=0
-## Lec 38 - Graphs of Polynomials - Multiplicities
-## Lec 39 - Graphs of Polynomials - Behavior at X-intercepts
-## Lec 40 - Graphs of Polynomials - End behavior
-## Lec 41 - Graphs of Polynomials - Turning points
+---
+
 ## Lec 42 - Graphs of Polynomials - Graphing & Polynomial creation
+
+
+
+--- <!-- WEEK 5-->
 ## Lec 43 - One-to-One Function - Definition & Tests
 ## Lec 44 - One-to-One Function - Examples & Theorems
 ## Lec 45 - Exponential Functions - Definitions
@@ -15,6 +15,8 @@
 ## Lec 49 - Composite Functions - Examples
 ## Lec 50 - Composite Functions - Domain
 ## Lec 51 - Inverse functions
+
+---
 ## Lec 52 - Logarithmic Functions
 ## Lec 53 - Logarithmic Functions - Graphs
 ## Lec 54 - Solving Exponential Equations

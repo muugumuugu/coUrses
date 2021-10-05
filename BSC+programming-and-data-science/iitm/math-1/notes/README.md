@@ -39,3 +39,7 @@ TOC
 |35|[division algorithm](notes.md#lec-35---division-algorithm)|
 |36|[Graphs of Polynomials - > Identification/ Characteriztion](notes.md#lec-36---graphs-of-polynomials--->-identification/-characteriztion)|
 |37|[Zeroes of Polynomial Functions](notes.md#lec-37---zeroes-of-polynomial-functions)|
+|38|[Graphs of Polynomials - Multiplicities](notes.md#lec-38---graphs-of-polynomials---multiplicities)|
+|39|[Graphs of Polynomials - Behavior at X-intercepts](notes.md#lec-39---graphs-of-polynomials---behavior-at-x-intercepts)|
+|40|[Graphs of Polynomials - End behavior](notes.md#lec-40---graphs-of-polynomials---end-behavior)|
+|41|[Graphs of Polynomials - Turning points](notes.md#lec-41---graphs-of-polynomials---turning-points)|

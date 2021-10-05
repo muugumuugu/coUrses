@@ -2,7 +2,7 @@
 > [yt-playlist](http://www.youtube.com/watch_videos?video_ids=DgKYu1pi3qg,xcc0U_U4xhg,MMBrfQC0V9A,fC-UbX3MsGs,7tesanmUjFo,VSwUcHGAMcE,asMh3flE47E)
 
 ------
- ## Lec 01 - Learning English
+## Lec 01 - Learning English
 >[yt - lec](https://youtu.be/DgKYu1pi3qg)
 
 ### how language works.
@@ -21,7 +21,7 @@
  manipulating the already set vocal cords and articultors also takes extra effort.
 
 ------
- ## Lec 02 - Sounds and Writing Symbols in English
+## Lec 02 - Sounds and Writing Symbols in English
 >[yt - lec](https://youtu.be/xcc0U_U4xhg)
 
 ### Symbols in English - Two Sets
@@ -98,7 +98,7 @@
 
 
 ------
- ## Lec 03 - Speech sounds in English
+## Lec 03 - Speech sounds in English
 >[yt - lec](https://youtu.be/MMBrfQC0V9A)
 
 ### Vowel v/s Consonants
@@ -121,7 +121,7 @@
 
 
 ------
- ## Lec 04 - Articulation of Vowel and Consonant sounds
+## Lec 04 - Articulation of Vowel and Consonant sounds
 >[yt - lec](https://youtu.be/fC-UbX3MsGs)
 
 ### English doesn't have all consonant sounds, only 24.
@@ -140,14 +140,14 @@
 [vowel chart](https://en.wikipedia.org/wiki/IPA_vowel_chart_with_audio)
 
 ------
- ## Lec 05 - How to Improve your Language Skills
+## Lec 05 - How to Improve your Language Skills
 > [yt - lec](https://youtu.be/7tesanmUjFo)
 
 ### More input --> Better Output.
 > Read from context, and do try applying rules from known Languages when the grammer seems alien.
 
 ------
- ## Lec 06 - Telephone English
+## Lec 06 - Telephone English
 >[yt - lec](https://youtu.be/VSwUcHGAMcE)
 
 ### Sequence of Conversation
@@ -155,7 +155,7 @@
 Greet->Purpose->Availibility Check.
 
 ------
- ## Lec 07 - Language Learning and Use
+## Lec 07 - Language Learning and Use
 > [yt - lec](https://youtu.be/asMh3flE47E)
 |E-Language|Internal Language|
 |---|---|
@@ -169,7 +169,7 @@ Greet->Purpose->Availibility Check.
 > [yt-playlist](http://www.youtube.com/watch_videos?video_ids=Hpmh-iv6e4I,BR7dQgD8qlk,RAFLD5HY6Jc,A2eI-Ttmd7I,pHkc23_0ULI,b8Wq_9P7uqI)
 
 ------
- ## Lec 01 - Consonant Clusters in English Words
+## Lec 01 - Consonant Clusters in English Words
 [yt - lec](https://youtu.be/Hpmh-iv6e4I)
 
 ### Vowel Builds the Word.
@@ -191,7 +191,7 @@ Greet->Purpose->Availibility Check.
 
 
 ------
- ## Lec 02 - Three Consonants in Clusters in English Vowel
+## Lec 02 - Three Consonants in Clusters in English Vowel
 
 >[yt - lec](https://youtu.be/BR7dQgD8qlk)
 
@@ -234,7 +234,7 @@ Greet->Purpose->Availibility Check.
 3. r/l
 
 ------
- ## Lec 03 - Syllables And Words.
+## Lec 03 - Syllables And Words.
 
 >[yt - lec](https://youtu.be/RAFLD5HY6Jc)
 
@@ -289,17 +289,17 @@ Greet->Purpose->Availibility Check.
 + Multi Syllabic words have a stress pattern to highlight one vowel.
 
 ------
- ## Lec 04 - What is Good Vocabulary? Part -1.
+## Lec 04 - What is Good Vocabulary? Part -1.
 
 > [yt - lec](https://youtu.be/A2eI-Ttmd7I)
 
 ------
- ## Lec 05 - What is Good Vocabulary? Part -2.
+## Lec 05 - What is Good Vocabulary? Part -2.
 
 > [yt - lec](https://youtu.be/pHkc23_0ULI)
 
 ------
- ## Lec 06 - What is Good Vocabulary? Part -3.
+## Lec 06 - What is Good Vocabulary? Part -3.
 
 > [yt - lec](https://youtu.be/b8Wq_9P7uqI)
 
@@ -494,5 +494,72 @@ Greet->Purpose->Availibility Check.
 
 -------------------
 --------------------
+
+# WEEK 5
+
+> [yt-playlist](http://www.youtube.com/watch_videos?video_ids=on8KaQZFzOQ,Cs1WRMEt10o,iCx2F6E_nGg,Ct_FZPjzkZM)
+
+
+-----
+## Lec 01 - Words and Phrases in English
+
+> [yt - lec](https://youtu.be/on8KaQZFzOQ)
+
+1. Determiner + Noun
+	1. indefinite = a/ an to maintain cvcv pattern
+	2. definite = the
+	> Determiner always preceedes a noun / partial noun phrase
+2. Adjective + Noun
+	> description of noun as identification
+3. Preposition + Noun Phrase
+
+### Subject
+> nucleus of a phrase.
+
+### Shuffling
+> all non subject phrases can be shuffled as long as they follow the subject's noun phrase.
+
+---
+## Lec 02 - Sentences in English
+
+> [yt - lec](https://youtu.be/Cs1WRMEt10o)
+
+> Subject (nucleus) + Predicate
+
+### Word Order
+> English
+>> subject-phrase **verb-phrase** object-phrase adverbial-phrase
+
+
+> Indian Languages
+>> subject-phrase adverbial-phrase object-phrase **verb**
+
+---
+## Lec 03 - Command or Request?
+
+> [yt - lec](https://youtu.be/iCx2F6E_nGg)
+
+### imperetive sentences
+
+> Classified based on intention.
+
+> have hidden implied subject = **YOU**
+
+---
+## Lec 04 - Agreement in English Sentences
+
+> [yt - lec](https://youtu.be/Ct_FZPjzkZM)
+
+> Verb agrees with subject noun, and is marked acccordingly
+
+### Agreement Fields:
+1. Person : 1st,2nd or 3rd --> ( I , you, they)
+2. Count : Singular / Plural
+
+> Gender Irrelavant -- different from most indian languages, where verb is gender marked also.
+
+
+----------
+-------------
 
 <!---------------------->
