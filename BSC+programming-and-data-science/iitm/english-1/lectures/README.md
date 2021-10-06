@@ -1,5 +1,5 @@
 ## The Qualifier Course.
-+ [Lectures](https://www.youtube.com/watch?v=hImZsXxKTcE&list=TLGGRv4UzvIpursxODA5MjAyMQ)
++ [Lectures](https://www.youtube.com/watch?v=hImZsXxKTcE&list=TLGGhG5o1cAK0WowNjEwMjAyMQ)
 
 # Week 0
 
@@ -41,4 +41,4 @@
 + [yt -Fundamentals of Learning English](https://youtu.be/TMfBbpmCfdI)
 
 ## UNDER CONSTUCTION playlists
-+ [W: 0-3- Lec](http://www.youtube.com/watch_videos?video_ids=hImZsXxKTcE,DgKYu1pi3qg,xcc0U_U4xhg,MMBrfQC0V9A,fC-UbX3MsGs,7tesanmUjFo,VSwUcHGAMcE,asMh3flE47E,Hpmh-iv6e4I,BR7dQgD8qlk,RAFLD5HY6Jc,A2eI-Ttmd7I,pHkc23_0ULI,b8Wq_9P7uqI,8gud9XJsL6k,42hufxqiOAk,mbE_MAhkj_A,htFNZapzHr8,BQDrv4mQHFE,LdteKj-oE5I,TMfBbpmCfdI)
++ [W: 0-3- Lec](http://www.youtube.com/watch_videos?video_ids=hImZsXxKTcE,DgKYu1pi3qg,xcc0U_U4xhg,MMBrfQC0V9A,fC-UbX3MsGs,7tesanmUjFo,VSwUcHGAMcE,asMh3flE47E,Hpmh-iv6e4I,BR7dQgD8qlk,RAFLD5HY6Jc,A2eI-Ttmd7I,pHkc23_0ULI,b8Wq_9P7uqI,8gud9XJsL6k,42hufxqiOAk,mbE_MAhkj_A,htFNZapzHr8,BQDrv4mQHFE,LdteKj-oE5I,TMfBbpmCfdI,_mD9iGMD73g,9ZWNeEQEdSI,tGch4v-bKsU,XfbkqslFsTA,M0jkrPkUbTg,7KIPtso75t4)
