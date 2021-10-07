@@ -1,0 +1,125 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/triangledistance/triangledistance.htm">distance to triangle - 2014</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<h3>Intro</h3><hr>
+<br>
+Computing the distance to a triangle in 3D is not difficult, but often I've seen too convoluted code, with too many square roots and branches. Here goes my implementation, which I like and have used in raymarching experiments in Shadertoy.<br>
+<br>
+<center><img class="myPicture" src="gfx00.png"/><br><i>Raymarched triangle, with the analytic distance computation</i></center>
+<br>
+<br>
+The distance is computed as the distance to the edges of the triangle or the distance to the plane of the triangle, depending where the point of evaluation lays with respect to the triangle. If the point is inside the prism you get from extruding the triangle across the direction of its normal, then the closest distance from the point to the triangle is the distance to the plane where the triangle exists. Otherwise, if the point is outside, the closest distance will be the distance to the closest of the three edges.<br>
+<br>
+Computing the distance to a plane is easy, it's just the dot product of the point minus a corner of the triangle and the normal of the plane (normalized). Like d = dot(p-v1,nor)/length(nor), if v1, v2 and v3 were the vertices of the triangle (nor would be the cross product of two edges, as usual, for example v2-v1 and v1-v3).<br>
+<br>
+The distance to the edges can be computed by simply projecting the point relative to a vertex in the edge into the edge itself, and making sure the projection never goes below the first vertex or beyond the second. For example, for the edge going from vertex v1 to vertex v2, the distance to our point p would be d = length( p - v1 - v21*clamp( dot(p-v1,v2-v1)/dot(v2-v1,v2-v1), 0, 1 ) ).<br>
+<br>
+Before we can put both expressions together, we need to determine if out point is inside or outside of the triangle's extruded prism. We can do that by seeing if the point is in the inside or outside half space of each edge. The sign of the dot(cross(v2-v1,nor),p2-v1)) will for example measure this (you can think of this as a determinant or volume, or as the comparison between the direction of the normal and the cross product of our point-to-vertex and edge). If the three comparisons give a positive number, then we are inside the triangle. If any of the comparisons has negative sign, we are not.<br>
+<br>
+A way to quickly check that the three comparisons are positive without having to do three comparisons, is to add the three results first. If all results are negative, the sum will be -3. If one is positive, the sum will be -1. If two are positive, the sum will be 1. And if all three are positive, the sum will be 3. So comparing the sum agains 2 will separate our two cases - all inside or not.<br>
+<br>
+Will all this information, we can now compute our distance to a triangle in a more or less optimized way:<br>
+<br>
+<br>
+
+<div class="code">float dot2( in vec3 v ) { return dot(v,v); }
+
+float udTriangle( in vec3 v1, in vec3 v2, in vec3 v3, in vec3 p )
+{
+    <span class="codeComment">// prepare data</span>    
+    vec3 v21 = v2 - v1; vec3 p1 = p - v1;
+    vec3 v32 = v3 - v2; vec3 p2 = p - v2;
+    vec3 v13 = v1 - v3; vec3 p3 = p - v3;
+    vec3 nor = cross( v21, v13 );
+
+    return sqrt( <span class="codeComment">// inside/outside test</span>    
+                 (sign(dot(cross(v21,nor),p1)) + 
+                  sign(dot(cross(v32,nor),p2)) + 
+                  sign(dot(cross(v13,nor),p3))<2.0) 
+                  ?
+                  <span class="codeComment">// 3 edges</span>    
+                  min( min( 
+                  dot2(v21*clamp(dot(v21,p1)/dot2(v21),0.0,1.0)-p1), 
+                  dot2(v32*clamp(dot(v32,p2)/dot2(v32),0.0,1.0)-p2) ), 
+                  dot2(v13*clamp(dot(v13,p3)/dot2(v13),0.0,1.0)-p3) )
+                  :
+                  <span class="codeComment">// 1 face</span>    
+                  dot(nor,p1)*dot(nor,p1)/dot2(nor) );
+}</div>
+<br>
+Note that much of this data could be precomputed if needed such as v21, v32, v12, nor, cross(v21,nor), cross(v32,nor), cross(v13,nor), 1.0/dot2(v21), 1.0/dot2(v32), 1.0/dot2(v13) and 1.0/dot2(nor).<br>
+<br>
+Also, note that I moved the square root needed for the edge distances outside of the branch. This has the advantage that if we were computing the distance to a mesh, which is made of many triangles, we could move the square root to an even more global scope and iterate all the triangles involved without square roots, take the minimum of the squared distance, and perform the square root only once at the very end.<br>
+<br>
+This same code is listed in the page for <a class="regular" href="../distfunctions/distfunctions.htm">distance functions<a> in this web site.<br>
+<br>
+Also, there's a live example in Shadertoy of this code: <a class ="regular" href="https://www.shadertoy.com/view/4sXXRN">https://www.shadertoy.com/view/4sXXRN</a><br>
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

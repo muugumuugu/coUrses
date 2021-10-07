@@ -1,0 +1,166 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/sphereproj/sphereproj.htm">sphere projection - 2014</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<h3>Motivation</h3><hr>
+
+In computer graphics very often you want to know how big an object looks in screen, probably measured in pixels. Or at least you want to have an upper bound of the pixel coverage, because that allows you to perform intelligent Level of Detail (LOD) for that object. For example, if a character or a tree are not but a couple of pixels in screen, you probably want to render them with less detail (as in stochastic pruning of leaves for example).<br>
+<br>
+One easy way to get an upper bound of the pixel coverage is to embed your object in a bounding box or sphere, the rasterize the sphere or box and count the amount of pixels. This requires complexity in your engine, and probably some delayed processing as the result of that rasterization won't be immedaitely ready. Modern hardware allows for conditional rendering, but still, the technique can only be applied in some cases. For example, it would be cool if a tessellation shader or a geometry shader would be able to tessellate or kill geometry (tree leaves) on the fly based on the pixel coverage of the object, just immediately.<br>
+<br>
+Well, luckily for us there is a solution! The pixel coverage of a (bounding) sphere happens to have analytic expression can be solved with no more than one square root, it is very compact. I'm not sure why this is not used more often and is not more documented, because it is super helpful, or so I find it for my demos. This article is about this analytical and fast bounding sphere screen coverage calculation. Enjoy!<br>
+<br>
+<center>
+<img src="gfx00.jpg" style="width:100%;height:auto;max-width:590px"/><br><i>Exact pixel coverage computed analytically without rasterization/sampling</i>
+</center>
+<br>
+<br>
+<h3>The maths</h3><hr>
+Without any loss of generality, we are going to work in camera space (origin is at the camera position, and the <b>z</b> axis points in the view direction). All the points <b>x</b> of a sphere or radius <b>r</b> centered at the position <b><i>o</i></b> is described by<br>
+<br>
+<img class="formula" src="for00.png"/><br>
+<br>
+and all the points in a ray going through our pinhole camera and passing by a point <b>(x, y)</b> in the view plane get described by<br>
+<br>
+<img class="formula" src="for01.png"/><br>
+<br>
+where <b>fl</b> is the focal length, and where we have already made sure that the ray is normalized such that <b>|d|=1</b>. A point in the view plane is covered by the projection of the sphere if the ray intersects with the sphere. This can be computed by substituting <b>x</b> for the ray in the equation of the sphere above, which results in the classic quadratic equation in <b>t</b><br>
+<br>
+<img class="formula" src="for02.png"/><br>
+<br>
+The quadratic has real solutions when the discriminant is positive, <img class="formula" valign="top" src="for03.png"/> where <img class="formula" valign="top" src="for04.png"/> with<br>
+<br>
+<img class="formula" src="for05.png"/><br>
+<br>
+Expanding all the terms, the resulting inequality is<br>
+<br>
+<img class="formula" src="for06.png"/><br>
+<br>
+which can be rearranged by grouping the terms in x&#178;, y&#178;, xy, x, y and 1:<br>
+<br>
+<img class="formula" src="for08.png"/><br>
+<br>
+<img class="formula" src="for07.png"/><br>
+<br>
+This is nothing but the implicit definition of an ellipse, since<br>
+<img class="formula" src="for09.png"/><br>
+<br>
+and this is a quantity always smaller than zero as long as the sphere doesn't contain the origin/camera, and as long the Z component of the sphere origin and eye point are separated by at least the sphere radius. So this inequality flags all the points in the plane (pixels in the screen if you want) that will get a projection (will get rasterized) by the sphere. Now we have to find a way to count those pixels!<br>
+<br>
+<br>
+<h3>Area counting</h3><hr>
+Luckily for us we can compute the area of ellipses easily if we know their geometric properties. Computing the center of the ellipse can be obtained in many ways, for example by making sure the derivatives of the implicit equal zero:<br>
+<br>
+<img class="formula" src="for12.png"/><br>
+which gives<br>
+<br>
+<img class="formula" src="for13.png"/><br>
+<br>
+Once we replace the coefficients with the proper geometrical values, we get:
+<br>
+<img class="formula" src="for14.png"/><br>
+<br>
+which is pretty compact. Once the center is obtained, one can translate the whole implicit function to the origin by a change of variable. Then, a rotation needs to be performed. The axis of the ellipse are going to be aligned to the <b>(x,y)</b> and <b>(-y,x)</b> directions respectively (or <b>(d,e)</b> and <b>(-e,d)</b> if you want. One can normalize these vectors by dividing by<br>
+ <br>
+ <img class="formula" src="for15.png"/><br>
+ <br>
+ Once the rotation is performed, and once the axis of the ellipse align with the coordinate system, meaning the ellipse conforms to the standard form, one can proceed to compute the length of the axis and the area as usual. In
+ the way there quite a few nice simplifications that happen, but I leave that as exercise to the reader ... (or look up the code in the Shadertoy link at the bottom of the article).
+ <br>
+ <br>
+ <br>
+
+ <h3>Implementation</h3><hr>
+ The code is pretty small after all the simplifications:<b><i>o-c</i></b>:<br>
+ <div class="code">
+float projectSphere( in vec4 sph,  <span class="codeComment">// sphere in world space</span>
+                     in mat4 cam,  <span class="codeComment">// camera matrix (world to camera)</span>
+                     in float fl ) <span class="codeComment">// projection (focal length)</span>
+{
+    <span class="codeComment">// transform to camera space</span>
+    vec3  o = (cam*vec4(sph.xyz,1.0)).xyz;
+
+    float r2 = sph.w*sph.w;
+    float z2 = o.z*o.z;
+    float l2 = dot(o,o);
+
+    return -3.14159*fl*fl*r2*sqrt(abs((l2-r2)/(r2-z2)))/(r2-z2);
+}</div>
+<br>
+A realtime interactive implementation of the code above. Move the mouse or press "play". Click in the title to navgiate to the source code.<br>
+<br>
+<br>
+<br>
+
+<div class="iframeCenter" style="max-width:800px;"><div>
+<iframe width="800" height="450" frameborder="0" src="https://www.shadertoy.com/embed/XdBGzd" allowfullscreen></iframe>
+</div></div>
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

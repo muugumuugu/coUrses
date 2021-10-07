@@ -1,0 +1,132 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/fourier/fourier.htm">fourier series - 2008</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<h3>Motivation</h3><hr>
+I was introduced to the Fourier transform and series at the age of 19, and the first thing I thought was, "hey, this can be used for the 3d camera movements in my demos". Originally I was more into regular demo making instead of procedural generation and compression, so at that time I wanted to use the new toy of Fourier for key frame interpolation, I didn't think of compression. Despite my enthusiasm, my teacher didn't show much interest about the topic of interpolation. Still I programmed it (results down there) but never used it in any demo because splines were cooler then. Anyways, here it goes (much blah blah and little code this time, sorry, I wrote this back then).<br>
+<br>
+<center><img class="formula" src="gfx02.png"/><br>38 data points interpolated with Fourier transform</center>
+<br>
+<br>
+
+<h3>The maths</h3><hr>
+You might remember from algebra courses the following idea: take a vector (or function or signal) <b><i>f</i></b>, and a set of axes
+<img class="formula" src="for00.png" align="middle"/> (or "coordinate system" or "basis"), and rewrite <b><i>f</i></b> as a linear combination of those axes such that<br>
+<br>
+<img class="formula" src="for01.png"/><br>
+<br>
+where the values <img class="formula" src="for04.png" align="middle"/> are called the "coordinates" of the vector <b><i>f</i></b> in the new system.<br>
+<br>
+We could choose any coordinate system (Legendre polynomials or simple powers like in Taylor series, you name it). Instead, we take care to choose our axes such that they are orthogonal to each other. Also, we seek for a coordinate system where axes have more and more detail as <b><i>n</i></b> increases. There is in fact a very popular coordinate system that fulfills these requirements: the trigonometric family of functions (ie, sinus and cosinus series, that I will write as complex exponentials for a more compact representation) given by<br>
+<br>
+<img class="formula" src="for07.png"/><br>
+<br>
+These are the Fourier series (that you probably know already, like many of their cousins - DFT, DCT, Spherical Harmonics, Laplace, etc). Every axis <img class="formula" src="for00.png" align="middle"/> is perpendicular to each other as can be manually checked by dot-producting any two of the axes:
+<img class="formula" src="for03.png" align="middle"/><br>
+<br>
+Now, to get the coordinates <img class="formula" src="for04.png" align="middle"/> (called "Fourier Coefficients" when using the basis), we just have to do:<br>
+<br>
+<img class="formula" src="for05.png" align="middle" />, and since we our axes are perpendicular to each other, then we can say <img class="formula" src="for06.png" align="middle" /><br>
+<br>
+So, computing the coordinates <img class="formula" src="for04.png" align="middle"/> of <b><i>f</i></b> is as simple as doing a dot product between the vector and the axes of the new coordouinate system (well, their conjugate if they are complex). Just as in regular geometric vector spaces (ie, we are just applying a rotation matrix to
+our vector <b><i>f</i></b>).<br>
+<br>
+<br>
+<br>
+
+<h3>The concept</h3><hr>
+Memory refreshed? Ok, let's go on.<br>
+<br>
+Now, by rotating the vector <b><i>f</i></b> by the matrix <img class="formula" src="for09.png" align="middle" /> we have transformed its representation, ie, now it's <img class="formula" src="for04.png" align="middle"/> what we have to store in our demo, not <b><i>f</i></b> anymore. As we said, the higher order axes <img class="formula" src="for00.png" align="middle"/> represent the detail structure of  <b><i>f</i></b>, while the global structure of <b><i>f</i></b> gets mostly projected into the lower order axes. Assuming <b><i>f</i></b> will represent real world data, like camera movements or shapes, it will probably be quite ok if we only pay attention to its global shape, and we discard the rest of the information (for efficient storage and compression purposes). That means we only need to store few of the coordinates <img class="formula" src="for04.png" align="middle"/>. That's what JPJ images or MP3 music do, so it should work for our camera paths too.
+<br>
+<br>
+<br>
+
+<h3>The experiments</h3><hr>
+So I quickly coded a proof of concept. I generated a random two dimensional set of 50 points. Then I computed two Fourier series, one for the <b><i>x</i></b> coordinate and another for the <b><i>y</i></b>. Each of the Fourier series gives 50 coefficients <img class="formula" src="for04.png" align="middle"/> of course. When using all of them to reconstruct a signal the resulting path exactly passes through the 50 points. Perfect! That's a good way to do camera interpolation (think of the 50 points as key frames).<br>
+<br>
+Next the experiment was to start removing coefficients and see what happened. This in an image using only 80% of the coefficients (40):<br>
+<br>
+<center><img class="formula" src="gfx00.png"/></center><br>
+<br>
+and this is what happens when using just 20% of the data (10 coefficients):<br>
+<br>
+<center><img class="formula" src="gfx01.png"/></center><br>
+<br>
+<br>
+Results are not as bad as you would expect, because even the full set of 50 coefficients is very easily compressible, much more than the original description of <b><i>f</i></b>. For example, since we know that the last coordinates <img class="formula" src="for04.png" align="middle"/> are going to be smaller than the first, you can actually use less bits for those. Well, there many such tricks, just have a look to the JPEG specification for more inspiration.<br>
+<br>
+
+<h3>The code</h3><hr>
+This live example in Shadertoy shows the approximation of a shape by an increasing number of Fourier coefficients: <a class="regular" href="https://www.shadertoy.com/view/ltKSWD">https://www.shadertoy.com/view/ltKSWDM</a>.<br>
+<br>
+And this one shows the interpolation in action: <a class="regular" href="https://www.shadertoy.com/view/4lGSDw">https://www.shadertoy.com/view/4lGSDw</a>
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

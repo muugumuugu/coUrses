@@ -1,0 +1,240 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/sincos/sincos.htm">a sin/cos trick - 2010</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+    <!-- --------------------------------------------------------------------------------- -->
+
+    <div class="partsB">
+        <div class="part60">
+            You probably remember this identity from school:<br>
+            <br>
+            <span class="formulaText">sin(&alpha;+&beta;)=sin &alpha; &sdot; cos &beta; + cos &alpha; &sdot; sin &beta;</span><br>
+            <span class="formulaText">cos(&alpha;+&beta;)=cos &alpha; &sdot; cos &beta; - sin &alpha; &sdot; sin &beta;</span><br>
+            <br>
+            When you are kid and are first introduced to it your first feeling is the pain of having to memorize it. That's too
+            bad, because in fact you don't need to memorize anthing - this formula arises naturally when you draw the rotation
+            of a triangle on a piece of paper. In fact, that's exactly what I do when I need to write this formula down. This
+            interpretation will be obvious by the time we are half way down this tutorial. But for now, to keep the things fun
+            and delay the <i>eureka</i> moment, let's first think why we would care about this formula at all.<br><br>
+        </div>
+        <div class="part"><img class="formula" src="gfx00.jpg" /> </div>
+    </div>
+
+
+    <br>
+    <h3>Intro</h3><hr>
+    <br>
+    The <b><i>sin</i></b> and <b><i>cos</i></b> trigonometric functions are probably the functions that most frequently appear in computer graphics, for they are the basics to describe any circular shape in a parametric way. Among their uses, we have the generation of circles or 3D revolution objects, when computation of a fourier transform, procedural waves for a water plane, generators for a software sound synthesizer, etc etc. In all these cases, <b><i>sin</i></b>, <b><i>cos</i></b> or both are repeatedly called inside a loop, similar to this:<br>
+    <br>
+    <div class="code">for( int n=0; n < num; n++ )
+{
+    const float t = 2.0f*PI*(float)n/(float)num;
+    const float s = sinf(t);
+    const float c = cosf(t);
+
+    <span class="codeComment">// do something with s and c
+    ...</span>
+}</div>
+    <br>
+    We start by rewriting our loop in an incremental way (see code on the left), so that it easier to see that given an iteration <i>n</i> of the loop which has phase <i>t</i>, the next iteration <i>n+1</i> is gonna compute the <b><i>sin</i></b> and <b><i>cos</i></b> of <i>t+f</i>. In other words, given that we just computed <i>sin(t)</i> and <i>cos(t)</i>, we now have to compute <i>sin(t+f)</i> and <i>cos(t+f)</i>:<br>
+    <br>
+    <div class="code">const float f = 2.0f*PI/(float)num;
+const float t = 0.0f;
+for( int n=0; n < num; n++ )
+{
+    const float s = sinf(t);
+    const float c = cosf(t);
+
+    <span class="codeComment">// do something with s and c
+    ...</span>
+    t += f;
+}</div>
+    <br>
+    For the point of this articles the exact way "t" is computed doesn't matter, neither does the range of values it takes (0 to 2PI in this example above). The only thing we are concerned with is that there is a
+    loop repeatedly calling <b><i>sin</i></b> and <b><i>cos</i></b> with a parameter that increments in constant steps (2·PI/num, in this example). This article is about how to optimize this code, for speed,
+    such that the same computations can be performed without using the <b><i>sin</i></b> or <b><i>cos</i></b> functions at all (in the inner loop), not even the faster <b><i>sincos()</i></b> function.<br>
+    <br>
+    But looking to the first formula in this article, the one we memorized a kids, we see that if we set <i>f</i> to be alpha, <i>t</i> to be beta, we can rewrite this as<br>
+    <br>
+    sin(t+f) = sin(f)·cos(t) + cos(f)·sin(t)<br>
+    cos(t+f) = cos(f)·cos(t) - sin(f)·sin(t)<br>
+    <br>
+    or in other words:<br>
+    <br>
+    new_s = sin(f)·old_c + cos(f)·old_s<br>
+    new_c = cos(f)·old_c - sin(f)·old_s<br>
+    <br>
+    Since <i>f</i> is a constant, so are <i>cos(f)</i> and <i>sin(f)</i>. Let's call them <i>a</i> and <i>b</i>:<br>
+    <br>
+    new_s = b·old_c + a·old_s<br>
+    new_c = a·old_c - b·old_s<br>
+    <br>
+    This expression can be directly used in our code, resulting in a loop that hasn't any expensive trigonometric function at all!<br>
+    <br>
+    <div class="code">const float f = 2.0f*PI/(float)num;
+const float a = cosf(f);
+const float b = sinf(f);
+float s = 0.0f;
+float c = 1.0f;
+for( int n=0; n < num; n++ )
+{
+    <span class="codeComment">// do something with s and c
+    ...</span>
+
+    const float ns = b*c + a*s;
+    const float nc = a*c - b*s;
+    c = nc;
+    s = ns;
+}</div>
+    <br>
+    <br>
+    <h3>The interpretation</h3><hr>
+    <br>
+    So far we have blindly played with a math identity without really <i>seeing</i> what we were doing. Let's first rewrite the inner loop this way:<br>
+    <br>
+    <span class="formulaText">s<sub>n+1</sub> = s<sub>n</sub> &sdot; a + c<sub>n</sub>&sdot;b</span><br>
+    <span class="formulaText">c<sub>n+1</sub> = c<sub>n</sub> &sdot; a - s<sub>n</sub>&sdot;b</span><br>
+    <br>
+    Some of you might have already noticed that this is nothing but the formula for a 2D rotation. If you didn't recognize it yet, perhaps the matricial form of it might help:<br>
+    <br>
+    <img class="formula" src="for02.png"><br>
+    <br>
+    Indeed, <i>sin(t)</i> and <i>cos(t)</i> can be grouped as a vector of length one (and plotted as a dot in the screen). Let's call it <i>x</i>:<br>
+    <br>
+    <span class="formulaText">x = { sin &beta;, cos &beta; }</span><br>
+    <br>
+    Then, the vectorial form of the expression above looks like<br>
+    <br>
+    <span class="formulaText">x<sub>n+1</sub> = R &sdot; x<sub>n</sub></span><br>
+    <br>
+    with <i>R being</i>, of course, the <i>{a, b, -b, a}</i> 2x2 matrix. So, we see that out loop is performing a little 2D rotation in each iteration, such that <i>x</i> rotates in a circle during the execution of the loop. Every iteration <i>x</i> rotates by an angle of 2&pi;/num radians.
+    <br>
+    So, basically<br>
+    <br>
+    <span class="formulaText">sin(&alpha;+&beta;)=sin &alpha; &sdot; cos &beta; + cos &alpha; &sdot; sin &beta;</span><br>
+    <span class="formulaText">cos(&alpha;+&beta;)=cos &alpha; &sdot; cos &beta; - sin &alpha; &sdot; sin &beta;</span><br>
+    <br>
+    is a 2D rotation formula of a point <i>x = {cos(alpha), sin(alpha)}</i> in the circle by an angle of beta radians. To do so, we first construct
+    one of the two axes of the rotation, ie, <span class="formulaText">u = { cos(beta), sin(beta) }</span>. The first component of the rotation is gonna be the projection of <i>x</i> into <i>u</i>. Cause both <i>x</i> and <i>u</i> have length 1, the projection is just their dot product. Therefore:<br>
+    <br>
+    <span class="formulaText">s = &lt;x,u&gt; = sin &alpha; &sdot; cos &beta; + cos &alpha;&sdot; sin &beta;</span><br>
+    <br>
+    and of course, the second component is it's antiprojection, which we can do by projecting in a perpendicular axis, <i>v</i>. We can construct this vector by reversing the coordinates of <i>u</i> and negating one of them:<br>
+    <br>
+    <span class="formulaText">c = &lt;x,v&gt; = cos &alpha; &sdot; cos &beta; - sin&alpha;&sdot; sin &beta;</span><br>
+    <br>
+    <br>
+    <br>
+    <h3>Some notes</h3><hr>
+    <br>
+    Normally you should be able to perform this tiny rotations over and over again. Indeed,<br>
+    <br>
+    <img class="formula" src="for04.png"><br>
+    <br>
+    what means that <i>R</i> is not shrinking nor expanding the space as it is applied, or in other words, it means that <i>x</i> will move in a perfect circle. However due to numerical precision issues, <i>x</i> move in a spiral and fall into the origin. I never had this issue in my applications, but I'm guessing that for very big values of <i>num</i>, ie, little rotation angles, one can get some problems.<br>
+    <br>
+    <br>
+    <br>
+    <h3>An example</h3><hr>
+    <br>
+    In <a class="regular" href="../../../prods/index.htm#kindercrasher">Kindercrasher</a>, a realtime 4 kilobytes demo from 2008, a group of spheres do pulsate to the music. For that I computed the Fourier transform of the sound. Fast algorithms exist to do so in realtime, like the FFT. However, given
+    that my code had to fit in no more that few hundred bytes, I decided to do it in a different way. Instead of implementing the FFT, I implemented the Discrete Fourier Transform from it's very basic definition. You can check it on the wikipedia.<br>
+    <br>
+    <img class="formula" src="for09.png"><br>
+    <br>
+    My function takes an stereo 16bit sound buffer, <i>x</i>, and returns the first 128 frequencies in the sound spectrum of the sound in <i>y</i>. Note how the inner loop, that one iterating 4096 times, has no <b><i>sin</i></b> or <b><i>cos</i></b> calls, as the naive implementation would.<br>
+    <br>
+    <div class="code">#include &lt;math.h&gt;
+void iqDFT12( float *y, const short *x )
+{
+    for( int i=0; i&lt;128; i++ )
+    {
+        const float wi = (float)i*(2.0f*3.1415927f/4096.0f);
+        const float sii = sinf( wi );
+        const float coi = cosf( wi );
+
+        float co = 1.0f;
+        float si = 0.0f;
+        float acco = 0.0f;
+        float acsi = 0.0f;
+        for( int j=0; j&lt;4096; j++ )
+        {
+            const float f = (float)(x[2*j+0]+x[2*j+1]);
+            const float oco = co;
+            acco += co*f; co = co*coi -  si*sii;
+            acsi += si*f; si = si*coi + oco*sii;
+        }
+        y[i] = sqrtf(acco*acco+acsi*acsi)*(1.0f/32767.0f);
+    }
+}</div>
+
+
+    <!-- -------------------------------------------------------------------------------------------- -->
+
+    <br>
+    <br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

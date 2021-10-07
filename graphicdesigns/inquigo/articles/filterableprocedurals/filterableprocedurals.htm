@@ -1,0 +1,169 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/filterableprocedurals/filterableprocedurals.htm">filterable procedurals</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<h3>Intro</h3><hr>
+As described in <a href="../checkerfiltering/checkerfiltering.htm">this article</a>, checkerboard patterns can be filterable analytically, which makes them a great candiadate for quality procedural texturing. Many other patterns accept simple analytic integrals and can therefore be filterable (antialiased) analytically. This article is a short collection of them. You can find live demos of these and some others here: <a href="https://www.shadertoy.com/playlist/l3KXR1">https://www.shadertoy.com/playlist/l3KXR1</a>. Generalizations are pretty easy, for example getting a variery of dot/line patterns is straightforward, so I have only documented the basic ones for you to combine on your one:<br>
+<br>
+<br>
+<h3>The List</h3><hr>
+<br>
+
+<div class="partsB">
+<div class="part">
+Box filtered checkerboard (<a href="https://www.shadertoy.com/view/XlcSz2">https://www.shadertoy.com/view/XlcSz2</a>)<br>
+<br>
+<div class="code">float filteredCheckers( in vec2 p, in vec2 dpdx, in vec2 dpdy )
+{
+    vec2 w = max(abs(dpdx), abs(dpdy));
+    vec2 i = 2.0*(abs(fract((p-0.5*w)*0.5)-0.5)-
+                  abs(fract((p+0.5*w)*0.5)-0.5))/w;
+    return 0.5 - 0.5*i.x*i.y;                  
+}</div>
+</div>
+<div class="part"><img src="gfx00.png"/></div>
+</div>
+
+<div class="partsB">
+<div class="part">
+Box filtered grid (<a href="https://www.shadertoy.com/view/XtBfzz">https://www.shadertoy.com/view/XtBfzz</a>)<br>
+<br>
+<div class="code">float filteredGrid( in vec2 p, in vec2 dpdx, in vec2 dpdy )
+{
+    const float N = 10.0;
+    vec2 w = max(abs(dpdx), abs(dpdy));
+    vec2 a = p + 0.5*w;                        
+    vec2 b = p - 0.5*w;           
+    vec2 i = (floor(a)+min(fract(a)*N,1.0)-
+              floor(b)-min(fract(b)*N,1.0))/(N*w);
+    return (1.0-i.x)*(1.0-i.y);
+}</div>
+</div>
+<div class="part"><img src="gfx01.png"/></div>
+</div>
+
+<div class="partsB">
+<div class="part">
+Box filtered squares<br>
+<br>
+<div class="code">float filteredSquares( in vec2 p, in vec2 dpdx, in vec2 dpdy )
+{
+    const float N = 3.0;
+    vec2 w = max(abs(dpdx), abs(dpdy));
+    vec2 a = p + 0.5*w;                        
+    vec2 b = p - 0.5*w;           
+    vec2 i = (floor(a)+min(fract(a)*N,1.0)-
+              floor(b)-min(fract(b)*N,1.0))/(N*w);
+    return 1.0-i.x*i.y;
+}</div>
+</div>
+<div class="part"><img src="gfx02.png"/></div>
+</div>
+
+<div class="partsB">
+<div class="part">Box filtered crosses<br>
+<br>
+<div class="code">float filteredCrosses( in vec2 p, in vec2 dpdx, in vec2 dpdy )
+{
+    const float N = 3.0;
+    vec2 w = max(abs(dpdx), abs(dpdy));
+    vec2 a = p + 0.5*w;                        
+    vec2 b = p - 0.5*w;           
+    vec2 i = (floor(a)+min(fract(a)*N,1.0)-
+              floor(b)-min(fract(b)*N,1.0))/(N*w);
+    return 1.0-i.x-i.y+2.0*i.x*i.y;
+}</div>
+</div>
+<div class="part"><img src="gfx03.png"/></div>
+</div>
+
+<div class="partsB">
+<div class="part">
+Box filtered XOR pattern (<a href="https://www.shadertoy.com/view/tdBXRW">https://www.shadertoy.com/view/tdBXRW</a>)<br>
+<br>
+<div class="code">float filteredXor( in vec2 p, in vec2 dpdx, in vec2 dpdy )
+{
+    float xor = 0.0;
+    for( int i=0; i&lt;8; i++ )
+    {
+        vec2 w = max(abs(dpdx), abs(dpdy)) + 0.01;  
+        vec2 f = 2.0*(abs(fract((p-0.5*w)/2.0)-0.5)-
+		              abs(fract((p+0.5*w)/2.0)-0.5))/w;
+        xor += 0.5 - 0.5*f.x*f.y;
+        
+        dpdx *= 0.5;
+        dpdy *= 0.5;
+        p    *= 0.5;
+        xor  *= 0.5;
+    }
+    return xor;
+}</div>
+</div>
+<div class="part"><img src="gfx06.png"/></div>
+</div>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

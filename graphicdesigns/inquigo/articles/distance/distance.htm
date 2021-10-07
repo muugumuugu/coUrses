@@ -1,0 +1,229 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/distance/distance.htm">distance estimation - 2011</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<h3>Intro</h3><hr>
+
+Very often you find yourself in the need to compute the distance to an isosurface that is defined through an implicit scalar field <i>f(x)</i>. This happens in just too many situations, like in raymarching <a class="regular" href="../mandelbulb/mandelbulb.htm">mandelbulbs</a> or <a class="regular" href="../juliasets3d/juliasets3d.htm">julia sets</a> or any sort of regular <a class="regular" href="../raymarchingdf/raymarchingdf.htm">distance fields</a>, rasterizing functions or rendering <a class="regular" href="../distancefractals/distancefractals.htm">2d fractals</a>, just to mention a few. In this article I'm going to explain the usual way to estimate a distance to the isosurface, and how that can help avoid one particular annoying issue that often arises when rendering procedural graphics - the compression and shrinking of your pattern.<br>
+
+<br>
+<br>
+<h3>The problem</h3><hr>
+
+<p>
+Say you are using some random implicit function, and imagine we are using this function to draw some shape (defined by it's <i>f = 0</i> isosurface). Let's take one simple formula as an example:<br>
+<br>
+<span class="formulaText">f(r,a) = r - 1 + sin(3a+2r<sup>2</sup>)/2</span><br>
+<br>
+where, as usual, r = sqrt(x<sup>2</sup>+y<sup>2</sup>) and a = atan(y,x), meaning <i>f</i> is in the end of the day a function of regular <i>x</i> and <i>y</i> cartesian coordinates. This formula produces a simple 3-lobe fan shape, and it could easily be one of the many elements making a bigger procedural image/texture or something.
+</p>
+<p>
+Now, if you were to do nothing special but just assign a color to each pixel based on the value of <i>f</i>, your first instinct would probably to thresholding the function with a smoothstep function:
+</p>
+<div class="code">float color( in vec2 x )
+{
+    float v = abs(f(x));
+    float eps = <span class="codeComment">/*size_of_a_pixel*/</span>;
+    return smoothstep( 1.0*eps, 2.0*eps, v );
+}</div>
+<p>
+This code produces an interesting image (see image to the left), but it's probably not what you want. You are probably looking for a constant thickness of the shape.
+</p>
+
+<div class="partsC">
+   <div class="part"><img class="formula" src="gfx04.jpg"/><br><i>color(x) = ramp( f(x) )</i></div>
+   <div class="part"><img class="formula" src="gfx03.jpg"/><br><i>color(x) = ramp( distanceEstimation( f(x) )</i></div>
+</div>
+<p>
+Perhaps you would be more interested in a constant thickness outline image, probably based on a more homogeneous scalar field. In fact, if you could compute some sort of distance to the zero-isoline of <i>f</i>, that would be great, wouldn't it? (now you probably see how this is related to doing distance based raymarching and you try to find intersections with the zero-isosurface). Perhaps, you would be interested in being able to compute an image like the one on the right. Let's see how we can achieve this!
+</p>
+
+<br>
+<br>
+<h3>The maths</h3><hr>
+
+<p>
+Let's do some maths in order to understand the technique. The implementation is going to be terribly simple and you can skip this paragraph and go straight there, although I always think it's a good idea to understand what's going on behind the code.
+</p>
+<p>
+So, we start by having a look to the distance field of our example function <i>f</i>. The image to the right of this text shows it in grey scale, on which I have mapped the values of <i>f</i> to a shade of grey such that <i>f = 0</i> is represented in black and <i>|f| > 0</i> shows a brighter color, through a pow() function for the purpose of making the <i>f = 0</i> isoline more pronounced. Of course, in the interior of the shape <i>f < 0</i> and in the exterior <i>f > 0</i>
+</p>
+<p>
+Now, we are interested to compute the distance to our <i>f = 0</i> shape at a given point in space <i>x</i>, which is represented by the yellow dot. The distance to the isoline is the distance to the red point, which is the closest point in the isoline to the yellow point. Let's call that closest red point <i>x+e</i>, such that <i>e</i> is the vector going from the yellow to the red one. What we are after here is <i>|e|</i>, the length of <i>e</i>, which is the distance from the <i>x</i> to the isoline/isosurface. In this setup, since <i>x+e</i> is in the 0-isoline, we clearly have
+</p>
+<br>
+<span class="formulaText">f(x+&epsilon;)=0</span><br>
+<br>
+Let's assume we are pretty close to the shape, meaning, that <i>|e|</i> is small. Then, we can expand <i>f(x+e)</i> in its Taylor's decomposition<br>
+<br>
+<span class="formulaText">f(x+&epsilon;) = f(x) + &nabla; f(x)&sdot; &epsilon; + O(|e|<sup>2</sup>)</span><br>
+<br>
+where the dot (&sdot;) means dot product, as usual (remember that both the gradient and <i>e</i> are vectors here). If we were close enough, indeed, then we could just use this linear approximation of <i>f</i> and say that<br>
+<br>
+<img class="formula" src="for03.png"/><br>
+<br>
+meaning that<br>
+<br>
+<img class="formula" src="for04.png"/><br>
+<br>
+the first inequality being due to the triangle inequality, and the second one to the basic properties of dot product. From there, we could isolate<br>
+<br>
+<img class="formula" src="for05.png"/><br>
+<p>
+which gives us an upper bound to the estimated distance from <i>x</i> to the zero-isosurface of <i>f</i>.
+</p>
+<p>
+Another way to arrive to the same results would be to construct a plane tangent to the surface at <i>x+e</i>, defined by the gradient/normal of the surface, and intersect a line going through <i>x</i> that is parallel to the gradient/normal with the plane.
+</p>
+<br>
+<img class="myPicture" src="gfx05.jpg" /><br>
+<span class="imgFooter">Distance field for <span class="formulaText">f(r,a) = r - 1 + sin(3a+2r<sup>2</sup>)/2</span></span><br>
+<br>
+Note the dark spiral that leaves from the 3 spikes of the main shape, that explains their elongation when <i>f()</i> was rendered by direct color mapping in the first image in the header of the articles.
+<br>
+<br>
+<br>
+
+<h3>The implementation</h3><hr>
+
+<p>
+All we need is the gradient of <b>f(x)</b>. In the case of the function in the example above, we'd have the following code:<br>
+
+<div class="code">
+float f(vec2 x)                                 
+{
+    float r = length(x);
+    float a = atan(x.y,x.x);
+    return r - 1.0 + 0.5*sin(3.0*a+2.0*r*r);
+}                                                   
+
+vec2 grad( vec2 x )												 
+{
+    float r = length(x);
+    float a = atan(x.y,x.x);
+    vec2 da = vec2(x.y,-x.x)/(r*r);
+    return (x/r) + (1.5*da+2.0*x)*cos(3.0*a+2.0*r*r);
+}</div>
+<br>
+which you could combine in a single function in order to reuse some of the terms.<br>
+</br>
+However, in most of the times we won't have an analytical gradient vector of our function <b>f</b>, so we are forced to do a numerical approximation with the regular central differences method
+</p>
+<div class="code">vec2 grad( in vec2 x )
+{
+    vec2 h = vec2( 0.01, 0.0 );
+    return vec2( f(x+h.xy) - f(x-h.xy),
+                 f(x+h.yx) - f(x-h.yx) )/(2.0*h.x);
+}</div>
+<p>
+(which can be done with three samples only or using dFdx(x) and dFdy(x) if you don't care about precision too much) and then use the formula above to compute the distance estimation (<i>de</i> in the code) to compute the color as before:
+</p>
+
+<div class="code">float color( in vec2 x )
+{
+    float v = f( x );
+    vec2  g = grad( x );
+    float de = abs(v)/length(g);
+    float eps = <span class="codeComment">/*size_of_a_pixel*/</span>;
+    return smoothstep( 1.0*eps, 2.0*eps, de );
+}</div>
+
+<p>
+This method evaluates <i>f</i> four extra times, which makes it more expensive. Besides, choosing the right value for <i>h</i> might be difficult sometimes. But more often than not, it simply works pretty well. When analytical gradients can be computed, it is strongly recommended to use them instead, like when rasterizing <a class="regular" href="../distancefractals/distancefractals.htm"> 2D fractals</a> or raymarching <a class="regular" href="../mandelbulb/mandelbulb.htm">mandelbulbs</a> or <a class="regular" href="../juliasets3d/juliasets3d.htm">julia sets.</a>
+ </p>
+<p>
+This method shines for computing distances to 1D functions. In fact, the gradient of <i>f</i> is perpendicular to its tangent/derivative, so it simplifies to (1, f'), making the distance estimation even simpler:
+</p>
+<img class="formula" src="for06.png"/><br>
+<p>
+This is particularly nice to graph 1D functions in tools which scan the xy plane and compute a color from <i>x</i> and <i>y</i></a>.
+</p>
+<br>
+<img class="formula" src="gfx00.png"/><br>
+Using |f(x)-y|. note how some parts of the graph go so thin that become hardly visible<br><br>
+<img class="formula" src="gfx01.png"/><br>
+Using a scaled |f(x)-y|. some parts are still too thin, and others got too thick<br><br>
+<img class="formula" src="gfx02.png"/><br>
+Using |f(x)-y| / sqrt(1+f'(x)<sup>2</sup>) solves the problem and produces a much more uniform curve<br><br>
+
+<br>
+
+<h3>The example</h3><hr>
+
+<br>
+This is a shader with source code available (click in the title bar) with the implementation of this idea.<br>
+<br>
+<div class="iframeCenter" style="max-width:800px;"><div>
+<iframe frameborder="0" src="https://www.shadertoy.com/embed/MdfGWn?gui=true&t=10&paused=false" allowfullscreen></iframe>
+</div></div>
+<!-- -------------------------------------------------------------------------------------------- -->
+
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

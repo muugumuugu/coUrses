@@ -1,0 +1,194 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/mandelbulb/mandelbulb.htm">mandelbulb - 2009</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+In 2009 the Mandelbulb became the fractal of the year in some informal way, it became really populat. I was one of the people that pioneered a bit the field in terms of optimizations and rendering shadows for it, but the original idea of the fractal itself wasn't mine at all. Here is below what I wrote back then, and a video I made soon after:<br>
+<br>
+<br>
+
+<div class="iframeCenter" style="max-width:800px;"><div>
+<iframe width="853" height="480" src="https://www.youtube.com/embed/K9YAAS0cZ_w?rel=0&amp;controls=0&amp;showinfo=0" frameborder="0" allowfullscreen></iframe>
+</div><i>A Mandelbulb fractal rendered in realtime over mobile phone footage</i></div>
+
+<br>
+<br>
+<h3>The idea</h3><hr>
+<br>
+The idea of the Mandelbulb fractal came to be through yet another attempt at creating a 3D fractal that is as iconic as the traditional 2D Mandelbrot set is. Unlike <a class="regular" href="../juliasets3d/juliasets3d.htm">4D Julia sets</a> which naturally arise from simply generalizing the 2D complex Julia sets to quaternions, all efforts to produce an universal and intersting 4D Mandelbrot set been futile, and to this day (2020) nobody has found a satisfactory fractal. But, the Mandelbulb was one of those attempts.<br> 
+<br>
+While usually Quaternions, hypercomplex numbers and all other sort of (often inconsistent) algebras had been used in previous attempts, the construction of the Mandelbulb takes a different approach. Instead of thinking in algebra and in the usual iteration formula <i>w->w^2+c</i>, this time we think on the classic 2D set as the result of a geometric process of iterating points by squaring their distance to the origin, rotating them by an angle equal to the current angle with the positive x axis, and then translating by c. Now it's possible to try to extend this geometric process to three dimensions regardless of any algebraic correctness. And in fact the Mandelbulb formula is completely wrong and incoherent in terms its algebra, but it produces beautiful images, which is in itself a sign that, perhaps, algebraic correctness is not what we always want. In fact, most of the proto-Mandelbulb images shown <a class="regular" href="http://www.fractalforums.com/3d-fractal-generation/true-3d-mandlebrot-type-fractal">in the forums</a>
+were produced with buggy code that implemented the geometric transformations completely wrong, with incorrect derivatives calculation for the distance estimation, etc, yet the images were looking just right. The lesson learnt with this is that there is something about duplicating lengths and angles that for some reason makes sense, not only regardless of algebraic correctness of meaning, but even regardless of any geometric interpretation. This idea is reinforced by the fact that when breaking the rule of equal length exponentiation to equal angle multiplication, the structure of the set is broken.<br>
+<br>
+<br>
+
+<h3>The algorithm</h3><hr>
+<br>
+Because in the end any formula that follows the equal-length-exponentiation-to-equal-angle-multiplication will do, I will choose the one that is geometrically correct, unlike what's documented elsewhere. If you are unsure if the code you read in other forums or websites is correct, follow the one here.<br>
+<br>
+The basic formulation of the Mandelbulb is derived from extracting the polar coordinates of a 3D point and doubling its angles and squaring its length. The idea of duplicating can be generalized to triplicating, or more popularly multiplying by eight. We will in fact choose the arbitrary value of eight, because for higher powers the asymptotic behaviour of the formulas tends to produce more symmetric shapes. So, let's call <b>w</b> to our 3D point, then choose eight as our polynomial degree for our Mandelbrot, and so multiply the polar angles of our 3D point by eight and expand it's modulo by a power of eight:<br>
+<br>
+<div class="partsB">
+    <div class="part60">
+    <div class="code">    <span class="codeComment">// extract polar coordinates</span>
+    float wr = sqrt(dot(w,w));
+    float wo = acos(w.y/wr);
+    float wi = atan(w.x,w.z);
+
+    <span class="codeComment">// scale and rotate the point</span>
+    wr = pow( wr, 8.0 );"
+    wo = wo * 8.0;"
+    wi = wi * 8.0;"
+
+    <span class="codeComment">// convert back to cartesian coordinates</span>
+    w.x = wr * sin(wo)*sin(wi);
+    w.y = wr * cos(wo);
+    w.z = wr * sin(wo)*cos(wi);</div>
+    <br>
+    We only have to add <b>c</b> to <b>w</b> now and iterate it in the regular way. You can pretty much then take the code and insert it in your favourite raymarching engine (like <a class="regular" href="../juliasets3d/juliasets3d.htm">this very old but simple one</a>), unless you care about rendering speed.<br>
+    <br></div>
+
+    <div class="part"><img class="myPicture" src="gfx01.jpg"/></div>
+</div>
+
+<h3>Optimizing</h3><hr>
+<br>
+The above code is mathematically correct, and even fast enough to run in realtime in modern hardware. However, one can still gain a 5x speed factor when rendering in some cases (like when rendering in the CPU in pure C or C++).<br>
+<br>
+The first thing to do is, as usual, to get rid of all those transcendental functions (the trigonometric ones) which not only are slow but also introduce unnecessary errors in the computations. By using the basic trigonometric identities of the cosine and sine of a doubled angle, one can replace the 8-times angle computations by repeatedly applying the identities (three times). The result is a polynomial which has no trigonometric functions and runs much faster:<br>
+<br>
+
+<div class="code">    float x = w.x; float x2 = x*x; float x4 = x2*x2;
+    float y = w.y; float y2 = y*y; float y4 = y2*y2;
+    float z = w.z; float z2 = z*z; float z4 = z2*z2;
+
+    float k3 = x2 + z2;
+    float k2 = inversesqrt( k3*k3*k3*k3*k3*k3*k3 );
+    float k1 = x4 + y4 + z4 - 6.0*y2*z2 - 6.0*x2*y2 + 2.0*z2*x2;
+    float k4 = x2 - y2 + z2;
+
+    w.x =  64.0*x*y*z*(x2-z2)*k4*(x4-6.0*x2*z2+z4)*k1*k2;
+    w.y = -16.0*y2*k3*k4*k4 + k1*k1;
+    w.z = -8.0*y*k4*(x4*x4 - 28.0*x4*x2*z2 + 70.0*x4*z4 - 28.0*x2*z2*z4 + z4*z4)*k1*k2;</div>
+
+<br>
+You can find a realtime implementation of this here: <a class="regular" href="https://www.shadertoy.com/view/ltfSWn">https://www.shadertoy.com/view/ltfSWn</a><br>
+<br>
+<br>
+
+<h3>Coloring</h3><hr>
+<br>
+<div class="partsB">
+    <div class="part50">When it comes to rendering, the Mandelbulb can be colored just as any other 3D fractal. Surprisingly nobody that I know out there are coloring 3D fractals so far. Most of them either use a constant color, use the normal to pick a color, or use a random perlin noise pattern to assign a different color to every point in the surface of the set.<br>
+    <br>
+    In my experiments I opted for using the old <a class="regular" href="../ftrapsgeometric/ftrapsgeometric.htm">orbit traps</a> method <a class="regular" href="../orbittraps3d/orbittraps3d.htm">applied in 3D<a> but using the results to assign a color. What I did is to compute four orbit traps. One of the traps was the origin, and the other three traps were the x=0, y=0 and z=0 planes. The last three traps were used to mix the basic surface color with three other colors. The point trap in the origin was used as a multiplicative factor to the color, which simulated some ambient occlusion.<br>
+    <br>
+    The improvement from the other rudimentary coloring methods is that because the behaviour of the orbit traps follows the fractal structure of the set, so do the colors, and therefore we get meaningful color patterns emerging in the surface as opposed to generic perlin noise based coloring.<br>
+    <br></div>
+    <div class="part"><a href="gfx02.htm" class="image"><img class="myPicture" src="gfx02_p.jpg"/></a><br><i>Detail of the Mandelbulb. Click to enlarge</i></div>
+</div>
+
+
+<h3>Rendering</h3><hr>
+<br>
+<div class="partsB">
+    <div class="part50">Rendering happens as usual, like for any <a class="regular" href="../juliasets3d/juliasets3d.htm">other 3D fractal</a>. My implementation of the Mandelbulb runs realtime in modern GPUs for moderate screen resolutions (say, 720p) with shadows but no antialiasing. It takes a couple of seconds to render in the CPU. To get this speed one has to use <a class=
+	"regular" href="../raymarchingdf/raymarchingdf.htm">distance field based raymarching</a>. In order to generate an SDF out of the fractal, we need a way to approximate the distance to it. At the time when the Mandelbulb was being researched all authors I was aware of were using the wrong distance computation, so I applied first principles and made my own derivations based on the Hubbard-Douady potential theory. Then I applied <a class="regular" href="../distance/distance.htm">the usual technique</a> to extract an approximated distance to the surface<br>
+    <br>
+    <img class="formula" src="for00.png"/><br>
+    <br>
+    where G(c) is the Hubbard-Douady potential for our polynomial of degree 8:<br>
+    <br>
+    <img class="formula" src="for01.png"/><br>
+    <br>
+    G'(c)</b> is the gradient of the potential, and can be computer analytically as usual as part of the iteration loop. It can be used also as shading normal once the intersection of the ray with the set is found. This leads to<br>
+    <br>
+    <img class="formula" src="for02.png"/><br>
+    <br>
+	You can find more information about this derivation and how to apply it in the <a class="regular" href="../distancefractals/distancefractals.htm">article about distance to fractals</a>.	
+    </div>
+    <div class="part"><img class="myPicture" src="gfx03_p.jpg"/><br>Orbit trap for coloring. Note that there are no lighting computations of any sort going on</i></div>
+</div>
+
+<h3>Experiments</h3><hr>
+<br>
+The first video is a close zoom to the surface of the fractal object, and the second one is a morphing of the associated Julia sets of the Mandelbulb set.<br>
+<br>
+<br>
+
+<div class="iframeCenter" style="max-width:800px;"><div><iframe src="https://www.youtube.com/embed/eKUh4nkmQbc?rel=0&amp;controls=0&amp;showinfo=0" frameborder="0" allowfullscreen></iframe></div></div>
+<br>
+<div class="iframeCenter" style="max-width:800px;"><div><iframe src="https://www.youtube.com/embed/iWr5kSZQ7jk?rel=0&amp;controls=0&amp;showinfo=0" frameborder="0" allowfullscreen></iframe></div></div>
+<br>
+<div class="iframeCenter" style="max-width:800px;"><div><iframe src="https://www.youtube.com/embed/erS6SKqtXLY?rel=0&amp;controls=0&amp;showinfo=0" frameborder="0" allowfullscreen></iframe></div></div>
+<br>
+<center><a href="gfx05.htm" class="image"><img class="myPicture" src="gfx05_p.jpg"/></a><br><i>Click image to enlarge<i></center>
+<!-- -------------------------------------------------------------------------------------------- -->
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

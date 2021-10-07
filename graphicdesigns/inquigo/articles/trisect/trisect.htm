@@ -1,0 +1,197 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/trisect/trisect.htm">fast trisect in GLSL - 2020</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<h3>Intro</h3><hr>
+There are multiple problems in computer graphics that involve cubic or quartic equations. From <a class="regular" href="https://www.shadertoy.com/view/MsSBRh">inverting a smoothstep function</a>, <a class="regular" href="https://www.shadertoy.com/view/ws3GD7">computing distances to a parabola</a>, <a class="regular" href="https://www.shadertoy.com/view/MlKcDD">rendering quadratic beziers</a>, or <a class="regular" href="https://www.shadertoy.com/view/3lj3DW">computing intersections with quartic surfaces</a>, including that of a <a class="regular" href="https://www.shadertoy.com/view/4sBGDy">torus</a>.<br>
+<br>
+However many developers avoid solving these problems analyticaly, I believe because creating cubic and quartic equation solvers that are robust is not easy. There are two things one can do that help alleviate this problem:<br>
+<br>
+First, in many cases one can bound the roots easily, say by reducing it to the bbox of the primitive at hand. Often times that’s all you need in order to numerically stabilize the solver. Ideally you do it also with quadratic solvers, although it’s usually not so critical to do so..<br>
+<br>
+Secondly, you can specialize the solver for the problem at hand. Some geometry problems only accept a single real root and never three, so whole parts of the generic Cardano’s solver can be chopped out. Some other times, given the configuration of the shapes, three real roots are guaranteed to exist in all cases, which leads to comparable simplifications. Similarly, often times the coefficients of the cubic come with the numbers {1, 3, 3, 1} premultiplied in them (third row in Pascal’s triangle), making many of the intermediate operations in the solver simplify away, which simplifies things further.<br>
+<br>
+Both approaches hint at the same fact -- never use a generic solver, always specialize it to the specific problem at hand. This applies to good old quadratic equations as well. I believe that doing so not only creates a more stable and efficient code, but often also highlights beautiful relationships between the quantities and objects involved. This in turn helps you grow intuitions about the problem, which you otherwise don't when employing a generic solver that obscures the geometric relationships.<br>
+<br>
+Anyway, after all reductions and simplified and optimized, at the center of each cubic usually lays the following operation:<br>
+<br>
+<br>
+<span class="formulaText">y = cos(acos(x)/3))</span><br>
+<br>
+<br>
+which is reminiscent to me of a Chebyshev polynomial with a fractional index of 1/3. Anywyas, I consider this operation the core of the cubic equation. The operation basically trisects an angle, which is needed to compute the cubic root of unity, which is the heart of the problem. This operation plays the same role than the square root in the resolution of quadratics, which bisects an angle (think of what the square root does to the argument of a complex number).<br>
+<br>
+Assuming we agreed there are cubic problems in computer graphics that we want to solve, it seems natural to wonder if one should give cos(acos(x)/3)) a name, and more importantly, should we puruse a hardware implementation of it; or at least an standarized and efficient implementation in software for our shading languages. So, first, let’s just call this function “trisect(x)”, and quickly move on to the second question, which is interesting and motivated this article - let’s think about a direct GLSL implementation.<br>
+<br>
+<br>
+<br>
+<h3>A Closer Look</h3>
+<hr>
+<br>
+We know cos(x) is one of the fastest operations that you can run in a GPU - it’s so fast that any attempt to “optimize” through polynomial approximations or triangle/quadratic replacements turn to be slower always, which often gets newbies and old-school coders alike by surprise.<br>
+<br>
+On the other hand, acos(x) is a totally different beast. It is usually implemented in software through a polynomial approximation, making it very slow. This function is actually provided for convenience since it is rarely used in rendering tasks, which the GPUs are designed for. As <a class="regular" href="https://fgiesen.wordpress.com/2010/10/21/finish-your-derivations-please/">so many people</a> 
+<a class="regular" href="http://www.humus.name/Articles/Persson_LowlevelShaderOptimization.pdf">have said in the past</a>, <a class="regular" href="../noacos/noacos.htm">my self included</a>, if you encounter an inverse trigonometric function deep in the internals of your renderer, you are probably doing something wrong. And while this is true and therefore GPUs have therefore never had an incentive to have a fast hardware implementation of acos(x), it is also a pity.<br>
+<br>
+So, let’s put our focus on the software implementation of trisect(x) = cos(acos(x)/3)) again. We are saying cos(x) has a fast implementation, but acos(x) doesn’t and it’s implemented in software. That got me thinking - since here we are doing an accurate transformation (cos(x)) of an inaccurate approximation (acos(x)), we might just as well implement the whole trisect(x) in a single polynomial approximation... maybe?<br>
+<br>
+It turns out we can, with quite positive results.<br>
+<br>
+<br>
+<br>
+<h3>Manual Play</h3>
+<hr>
+<br>
+The first step was to look at the rough shape of the function. The function takes values from -1 to 1, just like acos(), and produces values in the ½ to 1 range. Under a plot, it looks quite like a shifted and biased square root:<br>
+<br>
+
+<figure>
+<img class="myPicture" style="mix-blend-mode:screen;" src="gfx00.png"/>
+<figcaption>Yellow: trusect(x), Blue: g<sub>1</sub>(x) = ½+½&sdot;sqrt(½+½x)</figcaption>
+</figure>
+
+<br>
+And that was my starting point. I decided to replace the offset and bias in the output of the square root, which is a linear transformation, by a quadratic, cubic and quartic, see if I could bend the curve towards the target trisect(x). Let’s call these quadratic, cubic and quartic approximations g<sub>2</sub>(x), g<sub>3</sub>(x) and g<sub>4</sub>(x), and the direct GLSL implementation of trisect(x) through cos(x) and acos(x), just f(x).<br>
+<br>
+The first thing I did before trying to find the optimal coefficients for these polynomial approximations was to measure their performane with random coefficients. They turned out to run between 2.2 and 1.6 times faster than the reference GLSL implementation f(x). These being great figures, I decided to proceed to find good polynomials and see how accurate results I could get.<br>
+<br>
+Since I wanted to make sure the approximations match trisect(x) exactly at the domain boundaries I needed g<sub>i</sub>(-1)=½ and g<sub>i</sub>(1)=1. That already reduced the search space. In the case of the quadratic it reduced it to a single parameter, so I could quickly find a good value for it manually in Shadertoy itself, by visually matching g<sub>2</sub>(x) to f(x). Actually, the curves matched so well and so easily that it was difficult to say which one was the optimal value for the coefficient. This together with the fact that I wanted to explore the quartic approximation g<sub>4</sub>(x) and get it as close to the accuracy of the reference implementation made me take a more serious approach to the exercise.<br>
+<br>
+<br>
+<br>
+<br>
+<h3>Parameter Optimization</h3>
+<hr>
+<br>
+The first thing I did was to take the reference GLSL implementation f(x)=cos(acos(x)/3) and compare its accuracy to a full double precision CPU implementation of trisect(x). I did this by evaluating f(x) at one million equally spaced points (well, 1024x1024 points), copying the floating point results into a buffer and computing both the maximum absolute error and the MSE (Mean Square Error) relative to the float64 CPU implementation. This gave me <br>
+<br>
+GLSL Reference:   Err 1.15e-05,    MSE 3.25e-11<br>
+<br>
+Then I modified the code to perform the same measurements on any given of my g<sub>i</sub>(x) approximations, starting with a random set of coefficients. I then used vanila gradient descent for refining the coefficients. I made sure to randomize things enough, and to explore big areas of the parameter space. I am aware there are analytic ways to create the optimal polynomial approximation to a given function, but in this case it was just quicker for me to code that do re-learn Mathematica...<br>
+<br>
+So, after a few hours of gradient descending from randomly chosen starting points, I quickly converged to a set of coefficients with following results:<br>
+<br>
+<table cellpadding="8px" border="1">
+<tr><td></td><td>Err</td><td>MSE</td><td>Perf.</td><td>Implementation</td></tr>
+<tr><td>f(x)</td><td>1.14e-05</td><td>3.26e-11</td><td>1.0</td><td>1 COS + 1 DIV + 1 ACOS(?)</td></tr>
+<tr><td>g<sub>4</sub>(x)</td><td>1.10e-05</td><td>5.64e-11</td><td>1.6</td><td>1 SQRT + 5 FMA</td></tr>
+<tr><td>g<sub>3</sub>(x)</td><td>9.65e-05</td><td>4.72e-09</td><td>1.6</td><td>1 SQRT + 5 FMA</td></tr>
+<tr><td>g<sub>2</sub>(x)</td><td>1.03e-03</td><td>4.15e-07</td><td>1.8</td><td>1 SQRT + 4 FMA</td></tr>
+<tr><td>g<sub>1</sub>(x)</td><td>1.62e-02</td><td>1.33e-04</td><td>2.2</td><td>1 SQRT + 3 FMA</td></tr>
+<tr><td>sqrt(x)</td><td>n/a</td><td>n/a</td><td>3.1</td><td>1 SQRT</td></tr>
+</table>
+<br>
+<br>
+I added sqrt(x) in the table not because it’s a valid approximation, but because it gives us the “Speed of Light” in a universe where trisect(x) would be implemented in hardware and happened to be as fast as sqrt() is. The measurements were taken in OpenGL 4.5 and GLSL shaders with #version 450. Using precision qualifiers in the shader or optimization pragmas did not change the results.<br>
+<br>
+As we can see, g<sub>4</sub>(x) is a pretty good approximation and is already 1.6 times faster than f(x). Even g<sub>2</sub>(x) is probably good enough for many applications at almost twice the performance of the GLSL implementation f(x).<br>
+<br>
+The complete implementation (without fma() instructions which doesn’t exist in WebGL) is live in Shadertoy at <a class="regular" href="https://www.shadertoy.com/view/WltSD7">https://www.shadertoy.com/view/WltSD7</a>, but I copy it here for convenience:<br>
+<br>
+
+<div class="code">
+float f( in float x )
+{
+    return cos(acos(x)/3.0);
+}
+
+float g1( in float x )
+{
+    x = sqrt(0.5+0.5*x);
+    return x*0.5+0.5;
+}
+
+float g2( in float x )
+{
+    x = sqrt(0.5+0.5*x);
+    return x*(-0.064913*x+0.564913)+0.5;
+}
+
+float g3( in float x )
+{
+    x = sqrt(0.5+0.5*x);
+    return x*(x*(x*0.021338-0.096562)+0.575223)+0.5;
+}
+
+float g4( in float x )
+{
+    x = sqrt(0.5+0.5*x);
+    return x*(x*(x*(x*-0.008978+0.039075)-0.107071)+0.576974)+0.5; 
+}
+</div>
+<br>
+<br>
+<br>
+<h3>Caveats</h3>
+<hr>
+<br>
+The coefficients I found are probably not the optimal. However, I feel that even if they were, they might need to be tweaked for each GPU model/architecture out there, since different GPUs implement sqrt(x), which all of my approximations g<sub>i</sub>(x) are based on, to different levels of accuracy. I think sqrt() is usually computed as 1/inversesqrt(x) or x*inversesqrt(x), and I think (but I'm not sure) that as a result of it one can expect around only 2ULP precision. If that' so, my gradient descent search surely noticed it and found the best coefficients to work around that fact. However different GPU models with better or worse implementations of sqrt(x) might need a different set of coefficients. So, if trisect(x) was to be implemented by the GLSL layer, it’d be great if the driver implementators could provide an implementation of g<sub>4</sub>(x) with the best coefficients for any particular GPU model.
+<br>
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

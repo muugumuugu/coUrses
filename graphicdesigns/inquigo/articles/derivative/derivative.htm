@@ -1,0 +1,155 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/derivative/derivative.htm">directional derivative - 2013</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<h3>Intro</h3><hr>
+At school we are all taught that gradients are the idea, concept, object and tool to be used for everything. Probably because it is a generic description of the local change of a function. Because of that, directional derivatives are regarded only as an intermediate concept to arrive to that of a gradient, and they are set aside for their lack of generality. And while there are good reasons to do so, we shouldn't forget that sometimes we don't want the general solution or implementation, but the specialized and optimized one. Like when you are painting some clouds.<br>
+<br>
+<br>
+<center><img src="gfx00.jpg"/><i><br>Fast (realtime) dynamic lighting on volumetric clouds with directional derivatives</i></center>
+<br>
+<br>
+Say you are doing some realtime rendering of volumetric clouds, and that you need to do some lighting and shaping without scattering and self shadowing computations. You need to go cheap, but even extracting the gradient or normal from the cloud volume  that you need to do your regular lambertian lighting is already expensive. You are probably evaluate your gradient by taking 4 or 6 samples of the volume, depending your implementation, only to then dot it with the light direction. Which works, but is very slow becaue evaluating your (possibly procedural) volumetric field 4 or 6 times is your bottleneck.<br>
+<br>
+
+<br>
+<h3>The idea</h3><hr>
+So now forget what your teacher told you about gradients and have a look to <a class="regular" href="http://en.wikipedia.org/wiki/Directional_derivative">this article</a> on the directional derivatives in the Wikipedia.
+In particular, look at this formula:<br>
+<br>
+<center><img class="formula" src="gfx01.png"/></center><br>
+
+
+Now, if <b>x</b> was the point in space we are shading/lighting, and <b>f</b> was the volumetric field, then <b>f(x)</b> would be the density at that point we are shading, and <b>&#x2207;f(x)</b> the gradient (or 'normal'). At the same time, if <b>v</b> was the light direction, then the right side of the equation <b>&#x2207;f(x)&#8901;v/|v|</b> would be nothing but our regular N&#8901;L lambertian lighting... which according to the equation is equal to the directional derivative of the field taken in the direction of the light (left side of the equation)!<br>
+<br>
+So basically, instead of extracting a general derivative in all possible directions and dot with the one direction of interest, you can measure the change (derivative) directly in that direction of interest. Or in other words, rather than taking 4 or 6 samples to extract a generic derivative or gradient, and then dot it with the light direction to do our lighting, we could simply sample the field no more than 2 times, at the current point and at a point a small distance away in the direction of the light (and divide by that distance of course). So, something that is 4 or 6 evaluations can be reduce to one. Since one evaluations has been already done for computing 
+the opacity of the volume, we are now really doing two evaluations rather than 5 ot 7. Which is a massive speedup.<br>
+<br>
+<br>
+<br>
+<h3>The code</h3><hr>
+
+To the left you can see the traditional way of doing your volumetric lighting based on gradients, which involves 7 evaluations per point. To the right you can see the new way of performing lighting which involves only 2 evaluations per point:<br>
+<br>
+<div class="partsC">
+<div class="part">
+<div class="code"><span class="codeComment">// function : R3->R1 is the volumetric density function
+// eps is the diferential unit, based on the current LOD</span>
+vec3 calcNormal( in vec3 x, in float eps )
+{
+    vec2 e = vec2( eps, 0.0 );
+    return normalize( vec3( function(x+e.xyy) - function(x-e.xyy),
+                            function(x+e.yxy) - function(x-e.yxy),
+                            function(x+e.yyx) - function(x-e.yyx) ) );
+}
+
+void render( void )
+{
+    <span class="codeComment">// ...</span>
+    float den = function( pos );
+    vec3  nor = calcNormal( pos, eps );
+    float dif = clamp( dot(nor,light), 0.0, 1.0 );
+    <span class="codeComment">// ...</span>
+}</div>
+</div>
+<div class="part">
+<div class="code"><span class="codeComment">// function : R3->R1 is the volumetric density function
+// eps is the diferential unit, based on the current LOD</span>
+void render( void )
+{
+    <span class="codeComment">// ...</span>
+    float den = function( pos );
+    float dif = clamp( (function(pos+eps*light)-den)/eps, 0.0, 1.0 );
+    <span class="codeComment">// ...</span>
+}</div>
+</div>
+</div>
+The code not only is 3.5 times faster, but also smaller, which is great if you are doing some size-coding based demo or shader.<br>
+<br>
+Of course, the drawback is that this only an advantage for a small number of  light sources. Usually you'll want 2 light sources for clouds (the sun, and the sky dome). If you have 3 light sources or more, doing the traditional gradient-based lighting is more efficient again.<br>
+<br>
+Here are some pictures that show the new directional derivative based lighting versus the gradient based, and also to no lighting at all, for comparison.<br>
+<br>
+No lighting:<br>
+<img src="gfx02.jpg"/><br>
+<br>
+Traditional gradient based lighting:<br>
+<img src="gfx03.jpg"/><br>
+<br>
+Directional derivative based lighting (3.5 times faster):<br>
+<img src="gfx04.jpg"/>
+<br>
+<br>
+Lastly, the technique can be used as well for solid surfaces of course, as long as they are defined by a volumetric funtion. As an example, the following interactive demo shows how to use this technique to get some lighting in a few bytes of code (click in the title to access the code):<br>
+<br>
+<center><iframe width="640" height="360" frameborder="0" src="https://www.shadertoy.com/embed/MsfGzM?gui=true&t=10&paused=true" allowfullscreen></iframe></center>
+<!-- -------------------------------------------------------------------------------------------- -->
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

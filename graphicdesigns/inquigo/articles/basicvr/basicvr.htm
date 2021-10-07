@@ -1,0 +1,158 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/basicvr/basicvr.htm">how to render in VR - 2016</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<h3>Intro</h3><hr>
+<br>
+Over the years I've written a few demos and engines that work in VR (mostly in the mid 2000s and again now in the mid 2010s). Since it's a hot topic again, I have had to explain to different people in different emails to different degrees of detail how I design my VR demos/engine. So, I thought it might be a good idea to stop doing so and instead drop here some basic advices and psuedocode that makes the points I usually try to get across. Now, this is how <b>_I_</b> do VR, not necesarily how my employer or anybody else than me recommends it to be done. Also, I won't be discusing advanced topics such as multi GPU and multi context (obsolete since the death of SGI), late latching or foveated rendering.<br>
+<br>
+Now, lets start!<br>
+<br>
+<br>
+<h3>Basics</h3><hr>
+<br>
+Before I describe my engine design, some basic things you should take into account that you might miss if you come from a traditional engine design:<br>
+<br>
+
+<ul>
+<li><b>Camera != Eye</b>. Usually shaders do computations based on eye/camera position (such as speculars, fresnel, LOD, etc). In VR, camera and eye are two different concepts, and you should not fuse them, but expose them as two separate pieces of data in your uniforms. The eye position is the apex of your projection frustum, and that's what you use for doing speculars, fresnets, etc. The camera is where your viewer's head is in space, and it's what you use to do Level of Detail (LOD), geographical computations, viewer based fades, etc.</li>
+<br>
+<li><b>Do not mess with scales</b>. Do not modify the scale of the world, do not amplify the camera movements. If you are not having good VR it means (a) you are not modeling your world after real units (b) you got the VR math wrong. If you start hacking scenes or head scales, you are going to be in an ugly mess very quickly. For the same reason ad-hock shading models have been replaced by Physically Based Shading and Materials, you want your VR to be Physically Based, not random-scale-factors-based.<br>
+<br>A good indication that your VR is wrong is when you put a halg a meter cube spinning at one meter in front of you and people cannot tell you, unambiguously, how big and how far the cube is. If they cannot put their hands exactly where it is you are most probably doing VR wrong (or they are stereo blind, which happens every now and then)</li>
+<br>
+<li><b>VR != Stereo</b>. Don't assume you have only two render passes which have overlapping frustums. In the past VR was done with multiple projections walls, and perhaps one day in the future headsets will have peripheral displays (perhaps at lowers resolution than the central ones, perhaps mono rendered instead of stereo - and this is a pure uninformed fantasy of mine, but it costs little to plan for this).
+</li>
+<br>
+<li><b>Context</b>. Soon enough you'll see that in VR you have variables that are constant across the demo/game, across the frame, across the display, and across the eye-render. Decide which uniforms belong to each refresh-group and create uniform blocks for each. I like not puting them all in one single block for clarity, especially when writing shaders, where you need to decide from which context you are going to pull a transformation matrix for example.
+</li>
+
+</ul>
+<br>
+
+<br>
+<h3>Design</h3><hr>
+<br>
+Ok, now we are ready to have a look to how I have been organizing my VR engines and demos so far:<br>
+<br>
+<div class="code">ComputeFrame( k )
+{
+    DoProcessFrame( k );                     <span class="codeComment">// Compute animation, sound, LOD computation, simulations</span>
+
+    DoRenderFrame( k );                      <span class="codeComment">// Render reflection maps, clouds layers, LUTs, global shadow maps</span>
+
+    for( int j=0; j < numDisplays; j++ )     <span class="codeComment">// numDisplays = 5 for a CAVE, 1 for HMD (RIFT, Vive)</span>
+    {
+        DoProcessEye( k, j );                <span class="codeComment">// Do frustum culling, compile draw command/indirect buffers</span>
+
+        DoRenderEyeCommon( k, j );           <span class="codeComment">// Render eye-shared shadow maps, and distant geometry with no parallax</span>
+
+        for( int i=0; i < 2; i++ )           <span class="codeComment">// stereo</span>
+        {
+            DoRenderEye( k, j, i );          <span class="codeComment">// Render regular geometry and postpro effects with parallax</span>
+        }
+    }    
+}</div>
+
+This is the basic structure. The three contexts (frame, display and eye) are represented by <b>k</b>, <b>j</b> and <b>i</b>. The tasks that happen in each one of them is not totally rigid, and it depends on the specifics of the target configuration. For example, in VR based on Head Mounted Devices, LOD or Frustum culling can be done at frame granularity, while in a CAVE or systems with multiple displays (disjoing frustums) it might be worth doing it at a per display level. Also, depending on your engine, you might decide to do your culling in the GPU rather than the CPU. But overall, the structure of the pseudocode above is pretty useful.<br>
+<br>
+<br>
+<ul>
+<li>At <b>frame</b> level (k), you do your constant computations. That includes posing the worlds animated characters, but also some rendering related tasks such as computing global shadow maps, reflection maps, sky animated textures and other things you might need later that are view orientation independent. You might want to first collect all of the frustums that will eventually be used for rendering, make a union operation, and cull objects in the scene to that volume before doing these rendering. That list of objects can be passed down the pipeline too. In the case of domestic VR based on a modern Head Mounted Device, this global frustum is simply the union of your left and right eye frustums. Most APIs will give you these in the form of 4 clipping planes per eye. In more advanced VR settups the frustums can be as many as 12 and it might not be useful to do any culling.<br>
+<br>
+Things you want to put in your "Frame (k)" uniform/constant buffer for shaders to use later down the pipe include the camera position (remember, not the same as the eye position), the time, the delta time, etc.<br>
+</li>
+<br>
+<br>
+<li>At <b>display</b> level (j), you do your usual frustum culling. This is the context right before the stereo rendering, so both eye's frustum are going to overlap a lot, which is great. You might want to collect the objects that pass the test and compile here your indirect render calls or command buffers, so you don't have to submit render calls twice or use fancy extensions.<br>
+<br>
+You can also do rendering work than can be shared across left and right eye but not across displays. For example, the local shadow maps. For the main render, you can also render all the distant objects into a texture that you can composite later in the stereo renders. Objets that are so far that have sub-pixel parallax are good candidates, and can help you safe lots of rendering time.<br>
+<br>
+Things you can put in your "Display (j)" shader uniform block are the display projection matrix and position, the display resolution (do not put it in the Frame context just in case you have displays with varying resolutions - remember peripheral displays), etc.
+</li>
+<br>
+<br>
+<li>At <b>eye</b> level (i) you do the rendering of the objects close to the viewer that need parallax. This is what resembles your old-school rendering code the most, so go wild with your fancy demo.<br>
+<br>
+This time in the "Eye (i)" shader constant block you can put the actual eye camera matrix and projection so you can do correct lighting and shading.<br>
+</li>
+</ul>
+<br>
+<br>
+You might be thinking that rendering objects at the Display (j) level and Eye (i) level might create one extra doubling of shader permutations since they might have to pull data from different uniform blocks (one to get the camera position for the display - somewhere near the center of both eye - and the other from the actual eye) to do proper lighting. You can solve this maybe with an extra uniform block that aliases one or the other somehow.<br>
+
+<br>
+<h3>Conclusions</h3><hr>
+<br>
+I cannot go in much more detail in this article, but if you want to see lower level implementation details to make this work fast, check <a class="regular" href="../stereo/stereo.htm">this article on fast stereo rendering</a>. Otherwise, hopefully you still got a big picture idea of the changes you might need to apply to your old mono-single-display-non-vr-boring-2d engine :)
+
+<!-- -------------------------------------------------------------------------------------------- -->
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

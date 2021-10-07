@@ -1,0 +1,181 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/rmshadows/rmshadows.htm">soft shadows in raymarched SDFs - 2010</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<h3>Intro</h3><hr>
+<p>
+One of the many advantages of <a class="regular" href="../distfunctions/distfunctions.htm">distance fields</a>, is that they naturally provide global information. This means that when shading a point, one can easily explore the surrounding geometry by simply querying the distance function. Unlike in a classic rasterizer (REYES or scaline based), where one has to bake the global data somehow as a preprocess for later consumption (in a shadowmap, depthmap, pointcloud...), or in a raytracer where finding global information must be done by sampling the geometry by raycasting, in a distance field the information is ready for use at shading time, pretty much for free ("free" with many quotes of course). This means that many of the more realistic shading and illumination techniques are easy to implement with distance fields. And this is even more true when sampling/rendering distance fields with a raymarcher. In this article we are going to exploit this nice properties to render soft shadows with penumbra, for free, when doing raymarching based rendering.
+</p>
+
+<div class="partsC">
+<div class="part"><img class="myPicture" src="gfx03.png"/><br><i>soft shadow and penumbra computed for free</i></div>
+<div class="part"><img class="myPicture" src="gfx02.png"/><br><i>classic shadow raycasting</i></div>
+</div>
+
+<br>
+<br>
+<h3>The trick</h3><hr>
+So, let's assume you have a distance field encoded in function <b>float map(vec3 p)</b>. You can see how to construct some basic distance functions <a class="regular" href="../distfunctions/distfunctions.htm">here</a>. Just let's assume, for simplicity, that this <b>map()</b> function contains all of the world you are rendering, and that all objects are allowed to cast shadows in all other objects. Then, the easy way to compute shadowing information at a shading point, is to raymarch along the light vector, as far as the distance from the light to the shading point is, until an intersection is found. You can probably do that with some code like this:<br>
+<br>
+<div class="code">float shadow( in vec3 ro, in vec3 rd, float mint, float maxt )
+{
+    for( float t=mint; t&lt;maxt; )
+    {
+        float h = map(ro + rd*t);
+        if( h&lt;0.001 )
+            return 0.0;
+        t += h;
+    }
+    return 1.0;
+}</div>
+<br>
+This code works beautifully, and produces nice and accurate sharp shadows, as seen in the top-rightmost image in the articles. Now, we can add only one line of code and make this look much better. The trick is to think about what happens when a shadow ray doesn't hit any object, but is just pretty close to do so. Then, perhaps, you want to put that point you are shading under penumbra. Probably, the closest your point was to hit an object, the darker you want to make it. Also, the closest this happened from the point you are shading, the darker too. Well, it happens that as we raymarched our shadow ray, both these distances where available to us! Of course the first one is <b>h</b> in the code above, and the second one is <b>t</b>. So, we can simply compute a penumbra factor for every step point in our marching process and take the darkest of all penumbras.<br>
+<br>
+<div class="code">float softshadow( in vec3 ro, in vec3 rd, float mint, float maxt, float k )
+{
+    float res = 1.0;
+    for( float t=mint; t&lt;maxt; )
+    {
+        float h = map(ro + rd*t);
+        if( h&lt;0.001 )
+            return 0.0;
+        res = min( res, k*h/t );
+        t += h;
+    }
+    return res;
+}</div>
+<br>
+
+<div class="partsC">
+<div class="part"><img src="gfx06.png"/><br><i>k = 2</i></div>
+<div class="part"><img src="gfx08.png"/><br><i>k = 8</i></div>
+<div class="part"><img src="gfx10.png"/><br><i>k = 32</i></div>
+<div class="part"><img src="gfx12.png"/><br><i>k = 128</i></div>
+</div>
+
+This simple modification is enough to generate the much nicer left image in the beginning of this page. As you can see, the improvement is massive: not only you get soft shadows, but they even behave realistically as when shadows are sharp next to occluder and occluder contact (see where the bridge touches the floor) and much softer penumbras when the occluder is far from the occluded point. This, at the cost of one division per marching point, which represents a zero cost relative to the evaluation of <b>map()</b>. Of course, the <b>k</b> parameter in the function controls how hard/soft the shadows are. See images on the right of this text to compare the same shadow rendered with different values of <b>k</b>.<br>
+<br>
+So, basically, if you can do classic raymarched shadows, you can do soft shadows with penumbras too. For free!<br>
+<br>
+The image below shows an example of the technique in action, in a raymarched procedural distance field:<br>
+<br>
+<img class="myPicture" src="gfx04.jpg"/><br><i>soft penumbra shadows in action</i><br>
+<br>
+and you can see a lot more examples of this technique in action in the <a class="regular" href="../raymarchingdf/raymarchingdf.htm">raymarching with signed distance fields</a> article.
+
+<br>
+<br>
+<h3>An improvement</h3><hr>
+7 years after the publication of this technique, Sebastian Aaltonen published an improvement at his GDC presentation, that helps some of the banding artifacts you can get from this technique, especially for shadows from caster with sharp corners.<br>
+<br>
+Beware that for this algorithm to be stable, we should be searching for penumbras exhaustively along the ray. However since we are marching, chances are we miss the point along the ray that produces the darkest penumbra. That can manifest as light leaking in patterns that match the marching steps. In particular, sharp corners in the shadow casters are a usual source of missed darkes penumbras. Sebastian's technique helps with the situation by computing the penumbra as <b>h/t</b> not just at the ray marching sampling positions, but at an estimation of the closest point from the surface to the marched ray at each iteration. Or in other words, by using the current sampling point and the previous one, his technique computes a closest distance estimation by triangulating the information. The picture below shows the geometry of the situation:<br>
+<br>
+<img class="myPicture formula" src="gfx14.png"/>
+<br>
+The white arrow is the ray we are marching. The green dot is the current position along the ray, and the red dot is the previous position. The green and red circles represent the current and previous SDF unbounding spheres. One can estimate that the closest surface will be at a point close to where these two spheres meet (yellow line and pair of dots). The closest point along the ray will be the intersection of that yellow area with the actual ray (yellow dot in the center).<br>
+<br>
+Let's call <b>y</b> the distance from the current point (green) to that closest point along the ray (yellow), and <b>d</b> the distance from that point to the estimated closest distance (half the length of the yellow line in the diagram above). Then, the code to compute these two quantities is pretty easy:<br>
+<br>
+<div class="code">float y = r2*r2/(2.0*r1);
+float d = sqrt(r2*r2-y*y);</div>
+<br>
+where <b>r1</b> and <b>r2</b> are the radius of the red and green sphere, or in other words, the SDFs evaluation at the previous and current raymarch points. From these two quantities, we can improve our penumbra shadow estimation by doing:<br>
+<br>
+<div class="code">float softshadow( in vec3 ro, in vec3 rd, float mint, float maxt, float k )
+{
+    float res = 1.0;
+    float ph = 1e20;
+    for( float t=mint; t&lt;maxt; )
+    {
+        float h = map(ro + rd*t);
+        if( h&lt;0.001 )
+            return 0.0;
+        float y = h*h/(2.0*ph);
+        float d = sqrt(h*h-y*y);
+        res = min( res, k*d/max(0.0,t-y) );
+        ph = h;
+        t += h;
+    }
+    return res;
+}</div>
+<br>
+This produces better shadows in difficult cases, as can be seen in the comparison below:<br>
+<div class="partsC">
+<div class="part"><img class="myPicture" src="gfx15.png"/><br>Original method</div>
+<div class="part"><img class="myPicture" src="gfx16.png"/><br>Improved method</div>
+</div>
+<br>
+You can find reference implementation for the improved method here: <a class="regular" href="https://www.shadertoy.com/view/lsKcDD">https://www.shadertoy.com/view/lsKcDD</a>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

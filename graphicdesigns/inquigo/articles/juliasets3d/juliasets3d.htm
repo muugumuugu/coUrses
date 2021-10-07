@@ -1,0 +1,262 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/juliasets3d/juliasets3d.htm">3D Julia sets - 2001</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<!-- --------------------------------------------------------------------------------- -->
+
+<div id="content">
+
+	When I first saw images of quaternionic Julia back in 1999 the topic was already a decade old in the literature (check <a class="regular" href="https://www.evl.uic.edu/hypercomplex/html/book/rtqjs.pdf">this paper by Hart, Sandin, Kauffman</a>). But like many aficionados of fractals and 3D rendering, I gave it a go of my own. In the process I reinvented the wheel somehow, by defining my own hacky 3D number system which eventually boiled down to be a super simplified and special case of quaternions. I think reinventing the wheel is really an important part of learning. Some other things about rendering Julia sets I learnt from <a class="regular" href="https://www.cs.cmu.edu/~kmcrane/Projects/QuaternionJulia/paper.pdf">Keenan Crane</a>, and some other things I learnt or discovered on my own. I'll write about those mostly here. Although I consider this article a complement to my article on <a class="regular" href="../distancefractals/distancefractals.htm">computing the distance to a Julia set</a>, which I think you should read first. Anyways, for this one I'll assume you are already more or less familiar with the maths of rendering complex Julia and Mandelbrot sets, and with raymarching.<br>
+	<br>
+	<center><img class="myPicture" src="gfx00.jpg"/><br>A raymarched Julia set, cut in half (<a class="regular" href="https://www.youtube.com/watch?v=rQ2bnU4dkso">video</a>)</center>
+	<br>
+	<br>
+	<br>
+
+
+    <div class="partsB">
+        <div class="part60">
+			<h3>Intersection</h3><hr>
+			<br>
+			So, unlike rendering in the complex plane (in 2D) which is easy and direct, when rendering quaternionic (4D) fractals in 3D we have to give up some nice things. First, since we are going to be rendering in 3D, we need to decide which three of the four components of the quaternion plane H we'll be using for display purposes. This is an easy decision - just pick any three. We could use some fancy perspective of stereographics projection and use the four of them, but for now we can make our lives easier and just pick three.<br>
+			<br>
+			The real loss when rendering in 3D is that (not always, but generally) we are going to be rendering only the edge/surface/border of the filled Julia set, or in other words, the actual real Julia set. We won't have fancy exterior coloring, and we will likely see very little of the inner parts of the set, since in 3D we cannot see through surfaces. Of course clipping planes can help us explore the interior, but let's ignore that for now.<br>
+			<br>
+			So, our problem is now that of raycasting in search for an intersection point between 3D rays and our Julia set. As with all raycasting of shapes with no direct closed form intersection function, we can employ <a class="regular" href="../raymarchingdf/raymarchingdf.htm">raymarching of SDFs</a>. This is a powerful technique, provided we have an SDF, ie, a Signed Distance Function, to the object we are trying to raycast. Naturally you can perform an <a class="regular" href="../intersectors/intersectors.htm">analytic intersection test</a> first with the fractal's bounding box or sphere to quickly discard rays that miss the fractal, but also to speed things up by limiting the raymarching to the segment between the entry and exit points of the ray inside the bounding volume.<br>
+			<br>
+			Luckily for us, Julia set of polynomial equations, including the classic f(q) = q<sup>2</sup>+c of course, do have a simple way to compute <a class="regular" href="../distancefractals/distancefractals.htm">the distance</a> to a point (provided we aren't too far from it), namely:<br>
+			<br>
+			<img class="formula" src="for00.png"/><br>
+			<br>
+			The derivation of this SDF itself is based on the Boettcher mapping of the exterior of the set and its Green function or Hubbard-Douady potential. Read the article to learn more about that part.<br>
+			<br>
+			Once the intersection has been found between the ray and the fractal, it's time to compute a surface normal for lighting purposes. Knowing that our shape is a fractal it is a bit weird to talk about surface normals, since the surface is generally not differentiable (nor smooth). But, in the end of the day we are setting a resolution or threshold or sampling rate that is effectively band limiting the detail of the shape, so a normal can be effectively computed.<br> 
+			<br>
+			<br>
+			<h3>Surface normals, method 1 : gradient of d(q<sub>0</sub>)</h3><hr>
+			<br>
+			The simplest way to get a normal is through <a class="regular" href="../normalsSDF/normalsSDF.htm">the gradient of the SDF</a>. This is our typical numerical differentiation method applied directly to the SDF d(q<sub>0</sub>). We know this works and not much can go wrong with it. An implementation of this method for a traditional Julia set f(q)=q<sup>2</sup>+c is below and also at <a class="regular" href="https://www.shadertoy.com/view/MsfGRr">https://www.shadertoy.com/view/MsfGRr</a> as METHOD 0:<br>
+			<br>
+			<div class="code">vec3 calcNormal( in vec3 q, in vec4 c )
+{
+    const vec2 e = vec2(0.001,0.0);
+    vec4 qa=vec4(q+e.xyy,0.0); float mq2a=qlength2(qa), md2a=1.0;
+    vec4 qb=vec4(q-e.xyy,0.0); float mq2b=qlength2(qb), md2b=1.0;
+    vec4 qc=vec4(q+e.yxy,0.0); float mq2c=qlength2(qc), md2c=1.0;
+    vec4 qd=vec4(q-e.yxy,0.0); float mq2d=qlength2(qd), md2d=1.0;
+    vec4 qe=vec4(q+e.yyx,0.0); float mq2e=qlength2(qe), md2e=1.0;
+    vec4 qf=vec4(q-e.yyx,0.0); float mq2f=qlength2(qf), md2f=1.0;
+    for(int i=0; i&lt;numIterations; i++)
+    {
+        md2a *= mq2a; qa = qsqr(qa) + c; mq2a = qlength2(qa);
+        md2b *= mq2b; qb = qsqr(qb) + c; mq2b = qlength2(qb);
+        md2c *= mq2c; qc = qsqr(qc) + c; mq2c = qlength2(qc);
+        md2d *= mq2d; qd = qsqr(qd) + c; mq2d = qlength2(qd);
+        md2e *= mq2e; qe = qsqr(qe) + c; mq2e = qlength2(qe);
+        md2f *= mq2f; qf = qsqr(qf) + c; mq2f = qlength2(qf);
+    }
+    float da = sqrt(mq2a/md2a)*log2(mq2a);
+    float db = sqrt(mq2b/md2b)*log2(mq2b);
+    float dc = sqrt(mq2c/md2c)*log2(mq2c);
+    float dd = sqrt(mq2d/md2d)*log2(mq2d);
+    float de = sqrt(mq2e/md2e)*log2(mq2e);
+    float df = sqrt(mq2f/md2f)*log2(mq2f);
+    
+    return normalize( vec3(da-db,dc-dd,de-df) );
+}</div>
+			<br>			
+			But maybe we can do better.<br>
+			<br>
+			<br>
+			<h3>Surface normals, method 2 : gradient of G(q<sub>0</sub>)</h3><hr>
+			<br>
+			Instead of evaluating the gradient of d(q<sub>0</sub>) numerically, we can try doing it analytically. That results in the following (removing the dependency on q<sub>0</sub> now for clarity):<br>
+			<br>
+			<img class="formula" src="for02.png"/><br>
+			<br>
+			which is a bit of a monster. However we are only interested in evaluating it at the surface of the set, where we know that G=0. There, the expression simplifies to<br>
+			<br>
+			<img class="formula" src="for03.png"/><br>
+			<br>
+			Or in other words, we can compute the surface normal as the normalize gradient of the Douady-Hubbard potential, G(q<sub>0</sub>). If anything, we can compute that one numerically. An implementation of this method for a traditional Julia set f(q)=q<sup>2</sup>+c is below and also at <a class="regular" href="https://www.shadertoy.com/view/MsfGRr">https://www.shadertoy.com/view/MsfGRr</a> as METHOD 1:<br>
+			<br>
+			<div class="code">vec3 calcNormal( in vec3 q, in vec4 c )
+{
+    const vec2 e = vec2(0.001,0.0);
+    vec4 qa = vec4(q+e.xyy,0.0);
+    vec4 qb = vec4(q-e.xyy,0.0);
+    vec4 qc = vec4(q+e.yxy,0.0);
+    vec4 qd = vec4(q-e.yxy,0.0);
+    vec4 qe = vec4(q+e.yyx,0.0);
+    vec4 qf = vec4(q-e.yyx,0.0);
+
+    for(int i=0; i&lt;numIterations; i++)
+    {
+        qa = qsqr(qa) + c; 
+        qb = qsqr(qb) + c; 
+        qc = qsqr(qc) + c; 
+        qd = qsqr(qd) + c; 
+        qe = qsqr(qe) + c; 
+        qf = qsqr(qf) + c; 
+    }
+    return normalize( vec3(log2(qlength2(qa))-log2(qlength2(qb)),
+                           log2(qlength2(qc))-log2(qlength2(qd)),
+                           log2(qlength2(qe))-log2(qlength2(qf))) );
+}</div>
+			<br>
+			This is already more efficient. But perhaps we can do even better.<br>
+			<br>
+			<br>
+			<h3>Surface normals, method 3 : analytical gradient of G(q<sub>0</sub>)</h3><hr>
+			<br>
+			The idea now is consider that G(q<sub>0</sub>) is actually<br>
+			<br>
+			<img class="formula" src="for01.png"/><br>
+			<br>
+			where q<sub>n</sub> is of course a huge polynomial of q<sub>0</sub> of degree p<sub>n</sub>. If we split a quaternion into its four components q = x + i&sdot;y + j&sdot;z + k&sdot;w and we take the derivatives of G with respect to the four coordinates of our spave q<sub>0</sub>, then<br>
+			<br>
+			<img class="formula" src="for04.png"/><br>
+			<br>
+			or in short:<br>
+			<br>
+			<img class="formula" src="for05.png"/><br>
+			<br>
+			Now, the fraction in front of the matrix we can ignore it, since we'll need to normalize our gradient vector anyways in order to perform lighting. The big matrix in the middle is the Jacobian of q<sub>n</sub> with respect to q<sub>0</sub>, which we can compute iteratively together with q<sub>n</sub> itself, though the chain rule. For example, for a traditional Julia set of f(q)=q<sup>2</sup>+c, we'd get<br>
+			<br>
+			<img class="formula" src="for06.png"/><br>
+			<br>
+			with J<sub>o</sub> = I, the identity matrix. Note that the 2 in front of the matrix can be discarded for the computation as well since the final gradient will be normalized afterwards. The code for this method can be found again at <a class="regular" href="https://www.shadertoy.com/view/MsfGRr">https://www.shadertoy.com/view/MsfGRr</a> under METHOD 2:<br>
+			<br>
+			<div class="code">vec3 calcNormal( in vec3 qo, in vec4 c )
+{
+    vec4 q = vec4(qo,0.0);
+    mat4x4 J = identity_4x4();
+    for(int i=0; i&lt;numIterations; i++)
+    {
+        J = J*mat4x4(q.x, -q.y, -q.z, -q.w, 
+                     q.y,  q.x,  0.0,  0.0,
+                     q.z,  0.0,  q.x,  0.0, 
+                     q.w,  0.0,  0.0,  q.x);
+        q = qsqr(q) + c; 
+    }
+    return normalize( (J*q).xyz );
+}</div>
+	<br>
+    <br>
+	Now, something beautiful happens when the above formula is specialized to complex numbers (for regular 2D Julia sets): the Jacobian matrix, which is a 2x2 matrix, becomes of the form<br>
+	<br>
+	<img class="formula" src="for07.png"/><br>
+	<br>
+	and given that the <a class="regular" href="https://en.wikipedia.org/wiki/Cauchy%E2%80%93Riemann_equations">Cauchy-Riemann equations</a> of holomorphic functions, it means that we can just keep track of the complex derivative of q<sub>n</sub> with respect to q<sub>0</sub> and get rid of the Jacobians, which makes it twice as fast:<br>
+	<br>
+	<img class="formula" src="for08.png"/><br>
+	<br>
+	or in code,<br>
+	<br>
+	<div class="code">vec3 calcNormal( in vec3 zo, in vec4 c )
+{
+    vec4 z = vec4(zo,0.0);
+    vec2 d = vec2(1.0,0.0);
+    for(int i=0; i&lt;numIterations; i++)
+    {
+        d = cmul(z,d);
+        z = csqr(z) + c; 
+    }
+    return normalize( cmul(z,cconj(dz)) );
+}</div>	
+	<br>
+	Unfortunately, although the Jacobian for the quaternion version also has lots of symmetries in it, I haven't been able to simplify it to an equivalent q<sub>n</sub> &sdot; q<sub>n</sub>'<sup>*</sup> form. I think this is due to the fact that I believe the equivalent of the Cauchy-Riemann equations for quaternions basically don't exist or don't work in that they make the meaning of a derivative useless.
+	
+        </div>
+        <div class="part">
+			<br><br><br>
+			<img class="myPicture" src="gfx01.jpg" /><br>A raymarched Julia set - 2001<br>
+			<br><br><br>
+			
+			<video width="460px" class="myPicture" muted loop poster="gfx03.jpg" onmouseover="this.play();" onmouseleave="this.pause();">
+              <source src="vid03.mp4" type="video/mp4">
+              <source src="vid03.webm" type="video/webm">
+            </video><br>A raymarched Julia set - 2005 (hover mouse to play)<br>
+			<br><br><br>
+			<img class="myPicture" src="gfx06.jpg" /><br>A raymarched cubic Julia set - 2005 (<a class="regular" href="https://www.youtube.com/watch?v=5Qzgh9EUoxo">video</a>)<br>
+			<br><br><br>					
+			<img class="myPicture" src="gfx02.jpg" /><br>A raymarched Julia set (realtime) - 2007 (<a class="regular" href="https://www.youtube.com/watch?v=sT7p-naMKOg">video</a>)<br>
+			<br><br><br>					
+			<img class="myPicture" src="gfx04.jpg" /><br>A raymarched cubic Julia set (realtime) - 2013 (<a class="regular" href="https://www.shadertoy.com/view/lsl3W2">code</a>)<br>
+			<br><br><br>
+			<img class="myPicture" src="gfx08.jpg" /><br>A raymarched cubic Julia set (realtime)- 2020 (<a class="regular" href="https://www.shadertoy.com/view/3tsyzl">code</a>)<br>
+			<br><br><br>
+			<img class="myPicture" src="gfx05.jpg" /><br>A raymarched cubic Julia set - 2020<br>
+			<br><br><br>
+			<img class="myPicture" src="gfx07.jpg" /><br>A raymarched cubic Julia set - 2020<br>
+			<br><br><br>
+	    </div>
+    </div>
+    <br>
+    <br>
+    <br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

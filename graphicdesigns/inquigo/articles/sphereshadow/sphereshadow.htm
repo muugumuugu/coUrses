@@ -1,0 +1,166 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/sphereshadow/sphereshadow.htm">sphere soft shadow - 2014</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<h3>Motivation</h3><hr>
+<br>
+<div class="partsC">
+	<div class="part60">
+	Spheres are awesome in may ways. One of them is that they allow for analytical solution to many problems, such as that of computing approximated but plausible soft shadows. Having a closed form for the soft shadow computation rather than having to resort to sampling (of a shadowmap or the scene though raycasting) is convenient. It is fast and noise free, and it is stable. The interest of spherical shapes might seem limited, but there's a lot spheres can approximate shape wise. I have successfully used this in real film production. And of course, they are also natural bounding volumes for more complex geometry, so having fast analytical ways to compute properties is actually very valuable.<br>
+	</div>
+	
+	<div class="part">
+	<img class="myPicture" src="gfx00.jpg"/><br>Analytical soft shadows in action<br><a class="regular" href="https://www.shadertoy.com/view/XdjXWK">https://www.shadertoy.com/view/XdjXWK</a>
+	</div>
+</div>
+
+<!-- ----------------------------------- -->
+
+<br>
+<br>
+<h3>The idea</h3><hr>
+<br>
+<div class="partsC">
+	<div class="part60">
+	The idea is simple. For a given point being shaded, a sphere in space and a directional light source (not an area light), see if the ray travelling from the point in question <b>ro</b> in the light direction <b>rd</b> does hit the sphere or misses it, and if it misses it, by how much. The closer the ray was to hit the sphere the darker the shadow will be (the penumbra). There's an observation though: the farther this point of closest approximation is form the receiving point <b>ro</b>, the less intense the shadow will be. In other words, in this simplistic model the darkness of the shadow depends on two parameters: the closest distance from the ray to the sphere's surface (which is perpendicular to the ray direction <b>rd</b>) and the distance from <b>ro</b> at which this closest distance event happens. If we call these <b>d</b> and <b>t</b>, then the soft shadow will be proportional to their ratio <b>d/t</b>. See diagram to the right of this text. This method will create sharp shadows near the contact between occluder and ocludee and softer shadows as this distance increases (hence the "plausible" attribute in the technique).<br>
+	</div>
+	
+	<div class="part">
+	<img class="myPicture" src="gfx01.jpg"/><br>Configuration for our plausible soft shadow<br>
+	</div>
+</div>
+
+<!-- ----------------------------------- -->
+
+<br>
+<br>
+<h3>Implementation</h3><hr>
+<br>
+<div class="partsC">
+	<div class="part60">
+	All we need to do is computing <b>d</b> and <b>t</b>. Clearly <b>d</b> is simply the distance from the ray to the sphere's center minus the the radius of the sphere. Getting the closest distance between a ray (line segment) and a point is as easy as projecting the point into the line and seeing how far it landed, and <b>t</b> is the distance from that point to the origin <b>ro</b>.<br>
+	<br>
+	Interestingly, this can be rewritten in terms of the parameters needed to solve the <a class="regular" href="../spheredensity/spheredensity.htm">usual ray-sphere intersection</a>, <b>b</b>, <b>c</b> and the discriminant <b>h</b>. The code below is an implementation of this technique:
+	<br>
+	<br>
+<div class="code">float sphSoftShadow( in vec3 ro, in vec3 rd, in vec4 sph, in float k )
+{
+	vec3 oc = ro - sph.xyz;
+	float b = dot( oc, rd );
+	float c = dot( oc, oc ) - sph.w*sph.w;
+	float h = b*b - c;
+	
+	float d = -sph.w + sqrt( max(0.0,sph.w*sph.w-h));
+	float t = -b     - sqrt( max(0.0,h) );
+	return (t&lt;0.0) ? 1.0 : smoothstep( 0.0, 1.0, k*d/t );
+}</div>
+	<br>    
+	<br>
+	In this case the parameter <b>k</b> controls the sharpness of the shadow penumbra. Higher values make it sharper. The smoothstep() function is there just to smoothen then transition between light and shadow.<br>
+	</div>
+	
+	<div class="part">
+	<img class="myPicture" src="gfx02.jpg"/><br>Resulting analytical soft shadow<br><br><br>
+	<img class="myPicture" src="gfx03.jpg"/><br>Alternative formula for soft shadow<br>
+	</div>
+</div>
+
+<!-- ----------------------------------- -->
+
+<br>
+<br>
+<h3>Alternative formula</h3><hr>
+<br>
+<div class="partsC">
+	<div class="part60">
+	The above code is super efficient if you compare it to stocastic raycasting. However somtimes "super efficient" is not efficient enough. One way to make the code above faster is removing the square roots. I created the alternative approximation below which produces less physically correct shadows, but still plausible as in the sharpness of the shadows depend on the distance between the object producing the shadow and that receiving it.  <br>
+	<br>
+<div class="code">float sphSoftShadow( in vec3 ro, in vec3 rd, in vec4 sph, in float k )
+{
+	vec3 oc = ro - sph.xyz;
+	float b = dot( oc, rd );
+	float c = dot( oc, oc ) - sph.w*sph.w;
+	float h = b*b - c;
+	
+	return (b&gt;0.0) ? step(-0.0001,c) : smoothstep( 0.0, 1.0, h*k/b );
+}</div>    
+
+	</div>
+	
+	<div class="part">
+	<img class="myPicture" src="gfx04.jpg"/><br>Another example of analytical soft shadows<br><a class="regular" href="https://www.shadertoy.com/view/lsSSWV">https://www.shadertoy.com/view/lsSSWV</a>
+	</div>
+</div>
+<br>
+<br>
+Here's a link to the two versions of the soft shadows above in action running live: <a class="regular" href="https://www.shadertoy.com/view/4d2XWV">https://www.shadertoy.com/view/4d2XWV</a><br>
+
+
+<!-- -------------------------------------------------------------------------------------------- -->
+<br>
+<br>
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

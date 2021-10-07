@@ -1,0 +1,180 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/ifsfractals/ifsfractals.htm">ifs fractals - 2002</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<h3>Intro</h3><hr>
+
+IFS (Iterated Function Systems) produce some of the best known fractal images, like the famous <a href="https://en.wikipedia.org/wiki/Barnsley_fern">Berensley fern</a>. They have been used for image compression, but more frequently especially in the 90s, as a method to create nerdy posters and wallpapers.<br>
+<br>
+I made my first IFS images back in 1998 in basic, but later on I wrote a simple C program that could render high resolution images, like these ones below, that were in fact computed at 6000x9000 pixels with 2x2 antialias (12000x18000 effective sampling points). One of them made it into the finals of a fractal image contest, and the other
+one was used as background for a cover of a book, but that's another story.<br>
+<br>
+<br>
+<div class="partsC">
+	<div class="part"><img class="myPicture" src="ifs_00_p.jpg" /></div>
+	<div class="part"><img class="myPicture" src="ifs_13_p.jpg" /></div>
+</div>
+
+<br>
+Really understanding the maths of IFS is not necessarily easy, but implementing it is amazingly simple. The images are the attractors of the actual iteration of functions. The functions are just linear functions, affine transformation <b><i>T</i></b> if you want, that take a point <b><i>p</i></b> and transform it into <b><i>p'</i></b> with rotation, skew and scale factor A and a translation B:<br>
+<br>
+
+<span class="formulaText">T(p) = A&sdot;p + B</span><br>
+<br>
+that can also be written as<br>
+<br>
+<img class="formula" src="eq02.png" /><br>
+<br>
+When applying <b><i>T</i></b> to all the points of a plane (an image if you want) this gets expanded or contracted, and that contraction factor is just the determinant of A (since the transformations are linear), as usual.<br>
+<br>
+<span class="formulaText">contraction = |A| = ad - bc</span><br>
+<br>
+For rendering all the IFS images in this site I only used four such transformations, but you can choose any number. We will be applying these transformations to points in the plane, and assuming the overall transformation is contracting, the iterative process will make the complete plane converge to a given set, the final image. The geometry of this set, the attractor of the IFS, is usually fractal, even if the transformations are linear, but that's out of the scope of this little article.<br>
+<br>
+The iterations happened like this: pick a random point in the plane, one of the four transformations at random, and apply it. This gives a new point. Now, pick again one of the four transformations at random, and apply it again. Repeat, few thousand millions of times.<br>
+<br>
+<span class="formulaText">p<sub>n+1</sub> = T(p<sub>n</sub>)</span><br>
+<br>
+This will give an "orbit" for that very first starting point we chose. The chaos game theory ensures that if the average contraction factor is less than that one, we will get not a random point cloud neither an exploding orbit, but an well defined shape, the attractor.<br>
+<br>
+Well, for this to be true, chaos theory and symbolic dynamic mathematics say that you must randomly choose the transformation from the transformation set of the IFS. This way, the orbit densely overlaps the attractor. In the other hand, to help the chaos game converge faster, it is better not to randomly select a transformation from the transformation set of the IFS, but with a probability proportional to the area covered by this transformation over the total area of all the transformations:<br>
+<br>
+<img class="formula" src="eq05.png" /><br>
+<br>
+To make things more interesting, it is also possible not to only record the attractor, but also the density of the attractor. This can be interpreted as the probability of the iteration to step at a given point across the orbit. After selecting the probabilities according to the equation above, this density over the attractor should be quite smooth.<br>
+<br>
+<br>
+<h3>IFS, "Flames" style</h3><hr>
+A variation of the IFS fractals became popular in the 90s through the software called "Flames", which added a non-linear deformation to the regular IFS method and added colors to the IFS plots. This is an example of a random IFS of four transformations rendered with a nonlinear transformation and color in the "Flames" style:<br>
+<br>
+
+<center>
+<video width="960" height="540" autoplay muted loop controls poster="vid_00.png">
+  <source src="vid_00.mp4" type="video/mp4">
+  <source src="vid_00.webm" type="video/webm">
+</video>
+<br>
+Source code: <a href="https://www.shadertoy.com/view/4dXGWS">https://www.shadertoy.com/view/4dXGWS</a>
+</center>
+
+<br>
+<br>
+So, the technique is based on applying a nonlinear transformation after the affine map, before accumulating the orbit on the plane. It is important to note that to keep the convergence of the orbit unaltered, the space compression/expansion produced by these nonlinear transformations should be taken into account at the time of computing the probabilities assigned to each of the functions in the IFS. However, unlike affine maps which are linear and have constant derivatives/Jacobian (equal to their determinant), the nonlinear transformations Jacobian (space deformation compression/expansion rates) are functions of <b>p</b> themselves, so they cannot be precomputed. That means we can no longer pre-compute probabilities before starting the IFS iterations. So usually, rather than recomputing such probabilities in each iteration of the orbit, we simply ignore it. Meaning, we do not take the non-linear transformations into account when computing our IFS probabilities. And that is okey in many cases, although not optimal.<br>
+<br>
+Anyways, coming back to talking of less technical things, in order to create the images at the top of the article, the nonlinear transformation was a rotation in which the rotating angle was proportional to the signed horizontal distance from the point to the origin.<br>
+<br>
+<img class="formula" src="eq06.png" /><br>
+<br>
+Additionally, a sinusoidal component was added to this angle that changed each iteration.<br>
+<br>
+<span class="formulaText">&phi;(p<sub>n</sub>) = |p<sub>n</sub>| + sin(&omega;&sdot;n)</span><br>
+<br>
+I call this deformation "Twist". Adjusting the frequency and amplitude of this sinusoidal component, the thickness and intensity of the "arcs" on the picture can be adjusted. Without this variation, the arcs would become just "threads".<br>
+<br>
+But any other transformation will work too. For the video above with the red IFS animation, an plane inversion was used, where<br>
+<br>
+<span class="formulaText">F<sub>(p)</sub> = p/|p|<sup>2</sup></span><br>
+<br>
+And the following images below were created around 2001 by randomly choosing affine maps and using the simple twist nonlinear transform. Because it was 2001 though, this was implemented in the CPU and took a few hours to render. You can click on them to see a higher resolution version:
+<br>
+<br>
+<br>
+<div style="display:flex;flex-wrap:wrap;">
+	<div style="padding:8px;"><a href="ifs_gfx01.htm" class="image"><img src="ifs_01_p.jpg" /></a></div>
+	<div style="padding:8px;"><a href="ifs_gfx02.htm" class="image"><img src="ifs_02_p.jpg" /></a></div>
+	<div style="padding:8px;"><a href="ifs_gfx03.htm" class="image"><img src="ifs_03_p.jpg" /></a></div>
+	<div style="padding:8px;"><a href="ifs_gfx04.htm" class="image"><img src="ifs_04_p.jpg" /></a></div>
+	<div style="padding:8px;"><a href="ifs_gfx05.htm" class="image"><img src="ifs_05_p.jpg" /></a></div>
+	<div style="padding:8px;"><a href="ifs_gfx06.htm" class="image"><img src="ifs_06_p.jpg" /></a></div>
+	<div style="padding:8px;"><a href="ifs_gfx07.htm" class="image"><img src="ifs_07_p.jpg" /></a></div>
+	<div style="padding:8px;"><a href="ifs_gfx08.htm" class="image"><img src="ifs_08_p.jpg" /></a></div>
+	<div style="padding:8px;"><a href="ifs_gfx09.htm" class="image"><img src="ifs_09_p.jpg" /></a></div>
+	<div style="padding:8px;"><a href="ifs_gfx10.htm" class="image"><img src="ifs_10_p.jpg" /></a></div>
+	<div style="padding:8px;"><a href="ifs_gfx11.htm" class="image"><img src="ifs_11_p.jpg" /></a></div>
+	<div style="padding:8px;"><a href="ifs_gfx12.htm" class="image"><img src="ifs_12_p.jpg" /></a></div>
+</div>
+<br>
+<br>
+I wrote a small application that randomly created thousands of IFS images. To quickly discard those transformations creating disperse attractors, the application only used those random transformations with a contracting coefficient smaller than 1.5. These images were, of course, low-resolution and low quality (low number of iterations). The very first two images in this page were created by choosing from this collection of random images.<br>
+<br>
+For example, to make the first image, I chose one of the random images I liked, and worked on it. It's color was decomposed in the hue and its intensity. As explained, the iterative process does not just show the attractor, but its density. So, for the color intensity, the density of the attractor was chosen. In fact, it is the square root of the density normalized to the maximum/minimum value over the image. The square root was not chosen for any mathematical reason; it was just used to adjust the contrast of the image in the image-synthesis part (where the colors are kept in floating point), to avoid crappy manipulation in Photoshop using 8 bit precision.<br>
+<br>
+The color was a bit more complicated to create. Actually, it stores important information about the dynamics happening on the attractor: each point in the attractor is accessed from another given point of the attractor by the application of one of the transformations used, his "preimage" (if these transformations overlap, there is more than one preimages exist). In other words, each point in the attractor can be identified by the symbolic sequence of transformations used to get that point from the original one. This sequence is called the "address". This address, expressed in the correct base (four in my case, because I selected four transformations), defines a number between 0 and 1. The coloring of these images was done based on that number. Each new point on the orbit generated a color based on his actual address, and then accumulated on the plane.<br>
+<br>
+To get a color based on the address of a point, a sinusoidal function was used for each color component (red, green and blue), for example the following one, although any other will for just fine, as explained <a href="../palettes/palettes.htm">in this article</a>.<br>
+<br>
+<div class="code">color = vec3(0.4,0.6,0.7) + 0.25*sin( address + vec3(0.5,0.9,1.3) )</div>
+<br>
+Finally, a "glowing" postprocess effect was done to enrich the visual quality. This effect is responsible for the light emission effect on some parts of the image (the brighter ones). To get it, the image was low-pass filtered (a gaussian filter) and added back to the original image in a 50% proportion.<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>
+

@@ -1,0 +1,147 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/texture/texture.htm">improved texture interpolation - 2009</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<h3>Intro</h3><hr>
+Current graphics cards are very powerful, but only because they do "simple" things. In other words, GPUs only have fast implementations for those things that are expected to make a game look great. No complain about that of course. But when something else is needed, and that something else is a little bit out of the usual requirements for a game, things do not go that well anymore. For example, texture filtering is one of those things that look great in games, but in reality the quality of current implementations is quite poor for other purposes. This article is about how to improve the linear filtering implemented in hardware. <br>
+<br>
+<br>
+<br>
+<h3>The Thing</h3><hr>
+<br>
+Linear interpolation is of course much better than the simpler nearest-rounding way of sampling a texture. However, the linear interpolation is only a first order polynomial interpolation, and therefore the slope/derivative of the resampled texture is piecewise constant. That means that when using a linearly interpolated heightmap texture to generate some normal/bump map or emboss filter one gets discontinuities (cause a normal/bump map or an emboss filter are differential operators). The effect is visible on the image below, where the left image clearly shows a cell pattern which matches the underlaying texel arrangement of the original texture (see in the bottom of the articles for the texture to which the emboss was applied). The right image shows the result of applying the technique described here. Note the artifacts happen when the texture is magnified.
+<br>
+<br>
+<br>
+
+<div class="partsC">
+<div class="part"><img src="gfx07.jpg"/><br><i>Regular hardware texturing, plus emboss/bump-map filter</i></div>
+<div class="part"><img src="gfx06.jpg"/><br><i>The improved texturing technique, plus emboss/bump-map filter</i></div>
+</div>
+
+<br>
+Usually one should use bicubic interpolation (or even higher order interpolators) to get smooth results. But that requires extra hardware, and more importantly, a lot more bandwidth, because not only four texels must be accessed each time as in linear interpolation, but sixteen. Today GPUs are pretty much limited by the memory access times, so multiplying by four the amount of bandwidth required for one texture fetch doesn't sound like a good idea (you can have a look to cubic interpolation in <a href="http://en.wikipedia.org/wiki/Bicubic_interpolation" class="regular">wikipedia article</a>). So, what we are doing to do is to live with the bilinear filtering provided by the GPUs:<br>
+<br>
+<div class="code">vec4 getTexel( vec2 p )
+{
+    return texture2D( myTex, p );
+}</div>
+<br>
+There is however a trick that is quite known to shader writers, and that's the one of using smoothstep() as a intermediate step when doing linear interpolations(not in the context of texels this time). Smoothstep is usually applied to fade the interpolation parameter before feeding mix() or lerp(). And because it's a smooth varying curve, it removes the sharp edges of the linear interpolation. Indeed, derivatives of smoothstep-ed functions are fixed (zero in this case) at the interpolation boundaries, since<br>
+<br>
+<span class="formulaText">sm(x) = x<sup>2</sup>(3-2x)</span><br>
+<br>
+and therefore<br>
+<br>
+<span class="formulaText">sm'(x) = 6x(1-x)</span><br>
+<br>
+which gets value 0 both for<b> <i>x=0</i></b> and <b><i>x=1</i></b>, which are the extrema of the usual interpolation range (0..1). Therefore, we could potentially apply the same smoothstep() technique to texture interpolation if we had a way to trick the hardware about the interpolation factor, which is of course computed deep in the hardware's texture units. We can of course not access this part of the hardware (not yet at least), but we can artificially modify the texture coordinates passed to texture2D() to get the same effect. Let's see how.<br>
+<br>
+When the hardware receives a texture coordinate <b><i>p</i></b> thru the <i>texture2D()</i></b> function, it first computes the texel in which the sampling point falls. That will most often be <i>in-between</i> texels, and that's where the interpolation comes into the game. The four closest texels
+are chosen based on the integer part <b><i>i</i></b> of <b><i>p</i></b>, and based in the proximity to each of the texels, the four colors are blended to give a final color. The proximity is directly extracted from the fractional part <b><i>f</i></b> of the sampling position (<b><i>p = i + f</i></b>), and it's that direct relationship what the linearity represents, and it's that what we want to cheat. We would like the influence of the four texels to smoothly fade out as the sampling point is further, but not in a linear manner. So we have to pre-distort the fractional part with a fade curve, and that's where the smoothstep can help. Other curves than smoothstep can be used of course. I prefer to use a quintic degree curve which not only has null derivatives on the interpolation extrema, but also has second order derivatives that get zero there. That ensures than the lighting (which depends on normals) looks smooth all the time.<br>
+<br>
+<span class="formulaText">sm(x) = x<sup>3</sup>(6x<sup>2</sup> - 15x + 10)</span><br>
+<br>
+The code to implement the trick must extract the integer and fractional parts of the texture coordinate, tweak the fractional part with a fade curve, and assemble again the integer and fractional parts to recompose the new texture coordinate. It looks like this:<br>
+<br>
+<div class="code">vec4 getTexel( vec2 p )
+{
+    p = p*myTexResolution + 0.5;
+
+    vec2 i = floor(p);
+    vec2 f = p - i;
+    f = f*f*f*(f*(f*6.0-15.0)+10.0);
+    p = i + f;
+
+    p = (p - 0.5)/myTexResolution;
+    return texture2D( myTex, p );
+}</div>
+<br>
+It is of course much more expensive than a regular <i>texture2D()</i> call, but there are situations where there is no other solution to the problem, and in the end it only makes one texture fetch. As GPUs before more and more faster on computations but slower and slower on memory accesses, this code will not be that much of a problem for future GPU families.<br>
+<br>
+The differences in texture quality and lighting are enormous. First row shows the described technique in action, while bottom row show the regular GPU texture interpolation:<br>
+<br>
+<div class="parts">
+<div class="part"><img class="myPicture" src="gfx04.jpg"/><br><i>Quintic fade curve applied to hardware interpolation</i></div>
+<div class="part"><img class="myPicture" src="gfx05.jpg"/><br><i>Emboss/bump-map filter applied to left texture</i></div>
+<div class="part"><img class="myPicture" src="gfx00.jpg"/><br><i>Regular linear interpolation of current hardware</i></div>
+<div class="part"><img class="myPicture" src="gfx01.jpg"/><br><i>Emboss/bump-map filter applied to left texture</i></div>
+</div>
+<br>
+A live full implementation of the technique can be found here:<br>
+<br>
+<br>
+<div class="iframeCenter" style="max-width:800px;"><div>
+<iframe frameborder="0" src="https://www.shadertoy.com/embed/XsfGDn" allowfullscreen></iframe>
+</div></div>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

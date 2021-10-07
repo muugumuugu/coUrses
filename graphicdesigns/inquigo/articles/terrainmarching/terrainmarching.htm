@@ -1,0 +1,257 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iÃ±igo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/terrainmarching/terrainmarching.htm">raymarching terrains - 2002</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+    <h3>Intro</h3><hr>
+
+    Arround 2002 I made my first attempts to visualize fractal mountains and test procedural texturing. At that time I was not able to raytrace polygons and my rasterization engine was really bad. So I chose to do a "raymarcher" to create some pictures cause it's a really simple technique. What I implemented was a quite brute force thing and was very slow. But it was very simple to code, something I could afford, and allowed me to do some nice images, with reflections and some participating media too.<br>
+    <br>
+    That's in fact the beauty of the technique - an incredibly simple code that produces interesting images. It's perfect for small size demos, that's why it has been used so much (think in <i>Hymalaya/TBC</i> or <i>Ixaleno/rgba</i> - the image below this text, which is created from a 4 kilobytes executable). In fact you can code a basic prototype in few minutes (<i>Ixaleno</i> was pretty much done in one day, coded from scratch during 2007 Christmas; then of course I had to spend some extra days tunning the colors etc, but that's another story. The purpose of this article is not to generate interesting terrains or landscapes (see articles like the one on <a href="../morenoise/morenoise.htm" class="regular">advanced value noise</a>), but how to render those with the simple raymarching algorithm.<br>
+    <br>
+
+    <div class="partsC">
+        <div class="part">
+            <a href="ray_gfx05.htm"><img class="myPicture" src="ray_05_p.jpg" /></a><br>
+            <i>Made in 2008 for Breakpoint's 4k procedural graphics compo (see <a class="regular" href="../../../prods/index.htm#ixaleno">here</a>)</i>
+        </div>
+        <div class="part">
+            <a href="ray_gfx03.htm"><img class="myPicture" src="gfx_03_p.jpg" /></a><br>
+            <i>Made in 2016 for Shadertoy (see <a class="regular" href="https://www.shadertoy.com/view/4ttSWf">here</a>)</i>
+        </div>
+    </div>
+
+    <br>
+    <br>
+    <h3>The concept</h3><hr>
+    The basic idea is to have a height function <b><i>y = f(x,z)</i></b> that defines for each 2d point in the plane <b><i>(x,z)</i></b> the height of the terain at that point.<br>
+    <br>
+    <div class="partsC">
+        <div class="part"><img src="gfx01.jpg"/></a><br><b><i>f(x,z) = 2</i></b></div>
+        <div class="part"><img src="gfx00.jpg"/></a><br><b><i>f(x,z) = sin(x)·sin(z)</i></b></div>
+    </div>
+    <br>
+    Once you have such a function <b><i>f(x,z)</i></b>, the goal is to use a raytracing setup to render the image and do other effects as shadows or reflections. That means that for a given ray with some starting point in space (like the camera position) and a direction (like the view direction) we want to compute the intersection of the ray and the terrain <b><i>f</i></b>. The simplest approach is to slowly advance in the ray direction in small steps, and at each stepping point determine if we are above of below the terrain level. The image below shows the process. We start at some point in the ray close to the camera (the leftmost blue point in the image). We evaluate the terrain function <b><i>f</i></b> at the current <b><i>x</i></b> and <b><i>z</i></b> coordinates to get the altitude of the terrain <b><i>h</i></b>:<b><i>h = f(x,z)</i></b>. Now we compare the altitude of the blue sampling point <b><i>y</i></b> with <b><i>h</i></b>, and we realize that <b><i>y > h</i></b>, or in other words, that the blue point is above the mountains. So, we step to the next blue point in the ray, and we repeat the process. At some point, perhapse, one of the sampling point will fall below the terrain, like the yellow point in the image. When that happens, <b><i>y < h</i></b>, and we know our ray crossed the terrain surface. We can just stop here and mark the current yellow point as the intersection point (even if we know it's slightly further than the real intersection point), or perhaps take the last blue point as interesection point (slightly closer than the real intersection) or the average of the last blue and yellow points.<br>
+    <br>
+    <br>
+
+<div class="partsL">
+<div class="part">
+<div class="code">bool castRay( const vec3 & ro, const vec3 & rd, float & resT )
+{
+    const float dt = 0.01f;
+    const float mint = 0.001f;
+    const float maxt = 10.0f;
+    for( float t = mint; t &lt; maxt; t += dt )
+    {
+        const vec3 p = ro + rd*t;
+        if( p.y &lt; f( p.x, p.z ) )
+        {
+            resT = t - 0.5f*dt;
+            return true;
+        }
+    }
+    return false;
+}</div>
+</div>
+<div class="part">
+<img src="gfx02.png"/>
+</div>
+</div>
+
+    The <b><i>mint</i></b>, <b><i>maxt</i></b> and <b><i>dt</i></b> constants should be adapted for every scene. The first one is the distance to the near clipping plane, you can set it to zero. The second one is the maximun distance the ray is allowed to travel, ie, the visibility distance. The third one is the step size, and it directly influences the rendering speed and the quality of the image. The bigger it is, the faster of course, but the lower the terrain sampling quality will be.<br>
+    <br>
+    As you can see the code is terribly simple. There are many optimizations and improvements possible of course. For example, the accuracy of the intersection can be done more accurately by doing a linear approximation of the terrain altitudes between the blue and yellow points and compute the analytical intersection between the ray and the idealized terrain.<br>
+    <br>
+    The other optimization is to note that as the marching moves the potential intersection point further and further (the bigger <b><i>t</i></b> becomes), the less important the error becomes, as geometric details get smaller in screen space as they get further from the camera. In fact, details decay inverse-linearly with the distance, so we can make our error or accuracy <b><i>dt</i></b> linear to the distance. This saves lot of rendering time and gives more uniform artifactas than the naive approach. This trick is described in several places, for example in the "Texturing And Modeling - A Procedural Approach" book.<br>
+    <br />
+    <div class="partsC">
+    <div class="part">
+    <div class="code">bool castRay( const vec3 & ro, const vec3 & rd, float & resT )
+{
+    const float dt = 0.01f;
+    const float mint = 0.001f;
+    const float maxt = 10.0f;
+    float lh = 0.0f;
+    float ly = 0.0f;
+    for( float t = mint; t &lt; maxt; t += dt )
+    {
+        const vec3  p = ro + rd*t;
+        const float h = f( p.xz );
+        if( p.y &lt; h )
+        {
+            <span class="codeComment">// interpolate the intersection distance</span>
+            resT = t - dt + dt*(lh-ly)/(p.y-ly-h+lh);
+            return true;
+        }
+        lh = h;
+        ly = p.y;
+        }
+    return false;
+}</div>
+    <br>
+    <i>Variation of the basic code to suport linear interpolation of the terrain</i>
+    </div>
+
+
+    <div class="part">
+    <div class="code">bool castRay( const vec3 & ro, const vec3 & rd, float & resT )
+{
+    float dt = 0.01f;
+    const float mint = 0.001f;
+    const float maxt = 10.0f;
+    float lh = 0.0f;
+    float ly = 0.0f;
+    for( float t = mint; t &lt; maxt; t += dt )
+    {
+        const vec3  p = ro + rd*t;
+        const float h = f( p.xz );
+        if( p.y &lt; h )
+        {
+            <span class="codeComment">// interpolate the intersection distance</span>
+            resT = t - dt + dt*(lh-ly)/(p.y-ly-h+lh);
+            return true;
+        }
+        <span class="codeComment">// allow the error to be proportinal to the distance</span>
+        dt = 0.01f*t;
+        lh = h;
+        ly = p.y;
+    }
+    return false;
+}</div>
+<br>
+<i>Variation of the basic code to suport linear interpolation of the terrain and adaptive error</i>
+</div>
+</div>
+
+
+<br>
+So the complete algorithm to build an image is simple. For every pixel of the screen construct a ray that starts at the camera position that passes through the pixel location as if the screen was right in front of the viewer, and cast the ray. Once the intersection point is found, the color of the terrain must be gathered, the shaded, and a color must be returned. That's what the <i>terrainColor()</i> functions must do. If there is no intersection with the terrain, then the right color must be computed for the sky. So, the main code looks like this:<br>
+<br>
+
+<div class="partsB">
+<div class="part">
+<div class="code">void renderImage( vec3 *image )
+{
+    for( int j=0; j < yres; j++ )
+    for( int i=0; i < xres; i++ )
+    {
+        Ray ray = generateRayForPixel( i, j );
+
+        float t;
+
+        if( castRay( ray.origin, ray.direction, t ) )
+        {
+            image[xres*j+i] = terrainColor( ray, t );
+        }
+        else
+        {
+            image[xres*j+i] = skyColor();
+        }
+    }
+}</div>
+</div>
+<div class="padrt"><a href="ray_gfx04.htm"><img class="myPicture" src="ray_04_p.jpg"/></a><br>
+<i>An image rendered with the algorithm in the left. Click to enlarge</i></div>
+</div>
+
+<br>
+Usually <i>terrainColor()</i> will need to compute first the intersection point <b><i>p</i></b>, then compute the normal to the surface <b><i>n</i></b>, do some lighting/shading <b><i>s</i></b>  based on that normal (even cast some shadow ray by using the <i>castRay()</i> function for doing some shadows), decide the color of the terrain surface <b><i>m</i></b> at the intersection point, combine the shading information with it, and probably do some fog calculations. Something like this:<br>
+<br>
+<div class="code">vec3 terrainColor( const Ray & ray, float t )
+{
+    const vec3 p = ray.origin + ray.direction * t;
+    const vec3 n = getNormal( p );
+    const vec3 s = getShading( p, n );
+    const vec3 m = getMaterial( p, n );
+    return applyFog( m * s, t );
+}</div>
+<br />  
+The normal can be computed as usual with the central differences method:
+
+<div class="code">vec3 getNormal( const vec3 & p )
+{
+    return normalize( vec3( f(p.x-eps,p.z) - f(p.x+eps,p.z),
+                            2.0f*eps,
+                            f(p.x,p.z-eps) - f(p.x,p.z+eps) ) );
+}</div>
+<br>
+The getShading() function will probably need to compute some diffuse lighting from a powerfull yellowish directional light that simulates the sun, and a dimmer bluish area light simulating the sky dome (some sort of ambient occlusion). Doing shadows in a terrain is interesting since many optimizations can be done. One such trick is to compute soft shadows for free by computing how depth the shadow ray went into the terrain. By <i>smoothstep()</i>-ing this amount one can control the penumbra of the mountains.<br>
+<br>
+To get the material of the surface, usually the altitude and slope of the mountains and the point <b><i>p</i></b> is taken into account. For example, at high altitudes you can return a white color and at low altitudes some brown or grayish. The transition can be controled again with some <i>smoothstep()</i> functions. Just remember to randomize (with perlin noise) all the parameters so the transitions are not constant and so it all looks more natural. It's a good idea to take the slope of the terrain into account also, since snow and grass usually only stay on flat surfaces. So, if the normal is very horizontal (ie, <b><i>n.y</i></b> is small) it's a good idea to blend with some grey or brown color, to remove snow or grass. That makes the textures naturally fit the terrain, and the image gets richer.<br>
+<br>
+
+  <div class="partsC">
+  <div class="part"><a href="ray_gfx02.htm"><img class="myPicture" src="ray_02_p.jpg"/></a><br><i>And old image, made in 2002. Click to enlarge</i></div>
+  <div class="part"><a href="ray_gfx01.htm"><img class="myPicture" src="ray_01_p.jpg"/></a><br><i>And old image, made in 2002. Click to enlarge</i></div>
+  </div>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

@@ -1,0 +1,207 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/filteringrm/filteringrm.htm">ray differentias and texturing - 2015</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<h3>Motivation</h3><br>
+<a class="regular" href="../raymarchingdf/raymarchingdf.htm">Raymarching distance fields</a> is becoming a popular technique to get procedural graphics rendered in a cheap way (without having to go the marching-cubes or surface-nets route). From fractals to terrains to arbitrarily complex shapes and objects, it is easy to render interesting images with just a few lines of code. However, just like any pixel tracing based technique (raytracing, pathtracing, etc) the technique comes with some drawbacks. One of them is the artifacts one gets when doing surfacing operations that need partial derivatives. For example texturing objects with the hardware texture mapper in a naitve way, which uses dFdx() and dFdy() to extract texel footprints in screen space, will produce artifacts in the edges of the objects where UV continuity breaks. Any other operation that requires derivatives will suffer too, such us LOD techniques that tweak surface roughness. But let's focus on texturing only here, within the context of a SDF raymarcher:<br>
+<br>
+In the simplest implementation, rendering a distance field by raymarching is comprised of the following steps: constructing a ray passing through a given pixel, the actual raymarching to find an intersection, the normal computation ad the intersection point, the shading/surfacing, the lighting and the color correction. The artifact we are discussing in this article happens in the surfacing/texturing step.<br>
+<br>
+The problem is that, unlike in polygon rasterization, when in the classic raymarching setup described above, the texture unit in the GPU is no longer guaranteed to be looking up from the same local surface when we request a mipmap-filtered texture sample. As we know, current GPUs do shading (and hence texturing) in groups of 2x2 pixels. This guarantees that each texture lookup will have neighbors to perform texture-coordinate differences. With those differences the GPU knows many texels will fall into the current pixel, and therefore can infer which mip level is best for sampling the texture without aliasing (ie, having more than two texels per pixel).<br>
+<br>
+Of course, with the raymarching setup we are considering, this pixel differentiation method doesn't work because the whole assumption of surface locality is broken. For example, while one pixel can belong to a tree, the neighboring pixel can belong to a different branch of the tree, or even to a completely different object, such as a rock. This never happens with polygon rasterization because objects are rasterized one at a time and because polygons shading is extended to cover 1 extra pixel in each of the x and y directions when needed (when the polygon is too small or we are shading its edge). But in our raymarcher this pixel locality isn't guaranteed, the pixel differences no longer measure texture-coordinate derivatives in all cases, and therefore texture filtering is broken at surface (depth) discontinuities. What usually happens is that at those discontinuities the derivatives are overestimated (for there are big differences in texture-coordinates) and texels are brought from the smallest mip level of the texture, creating a visible edge of different color, as seen in the image below.<br>
+<br>
+<br>
+<center><img class="myPicture" src="gfx00.gif"/><br><i>The problem of raymarching textured objects, and the proposed solution.<br>Note the dark pixel at the object silhouettes and in the background</i></center>
+<br>
+<br>
+<br>
+<h3>The solution</h3><br>
+The solution is easy: since the hardware cannot compute correct derivatives in all cases, lets do it ourselves. In the case of our classic raymarcher, at the time we are constructing our pixel ray,
+we can also compute the rays going through the two neighboring pixels (that to the right and that above or below the current one). The difference between the ray direction and these two extra rays are called "ray differentials", and basically they encode the footprint of your pixel in world space (it's size and orientation). Then as we raymarch and traverse the scene this difference becomes larger and proportional to the traveled distance, quite like in a cone tracer. So, as long as we keep this ray differentials around, we'll be able to estimate the footprint of the pixel being rendered at the intersection point in world space, and then so estimate the texture coordinates at the corners of this pixel footprint. That will tell us how many texels we'll need to consider for proper filtering.<br>
+<br>
+<br>
+<h3>Implementation</h3><br>
+Let's assume we have the following classic raymarcher, which I have over simplified to setting up a ray for a given pixel, raymarching, surfacing and lighting:<br>
+<br>
+<div class="code">void raymarch( out vec4 color, in vec2 pixel )
+{
+    <span class="codeComment">// setup</span>
+    vec3 ro = calcRayOrigin();
+    vec3 rd = calcRayDirection( pixel );
+	
+    <span class="codeComment">// raymarch: return distance and object id</span>
+    float (t,oid) = raymarch( ro, rd );
+	
+    <span class="codeComment">// prepare for surfacing</span>
+    vec3 pos = ro + t*rd;
+    vec3 nor = calcNormal( pos, t );
+
+    <span class="codeComment">// surfacing</span>
+    vec2 uv = textureMapping( pos, oid );
+    vec3 sur = texture( sampler, uv );
+	
+    <span class="codeComment">// lighting</span>
+    vec3 lig = calcLighting( pos, nor, t );
+	
+    <span class="codeComment">// point color</span>
+    return calcSurfaceColor( sur, lig, t );
+}</div><br>    
+	
+As said, the problem is that both <b>t</b> and <b>oid</b> (the id of the intersected object ) are discontinuous at many pixels (even within the same object). Hence everything downstream in the computations is discontinuous too (<b>pos</b>, <b>nor</b> and the texture coordinates <b>uv</b>).<br>
+<br>
+The proposed solution is to approximate the surface of the object <b>oid</b> with a plane tangent to it at the position of the intersection, given the normal that we have. Then, we can take the two rays passing through the neighboring pixels and intersect them analytically with this tangent plane. This is very cheap (free compared to the expensive raymarch we just performed). The difference in the intersection points will give us our pixel world space footprint:<br>
+<br>
+<div class="code">void raymarch( out vec4 color, in vec2 pixel )
+{
+    <span class="codeComment">// setup</span>
+    vec3 ro  = calcRayOrigin();
+    vec3 rd  = calcRayDirection( pixel );
+    vec3 rdx = calcRayDirection( pixel + vec2(1,0) );
+    vec3 rdy = calcRayDirection( pixel + vec2(0,1) );
+	
+    <span class="codeComment">// raymarch: return distance and object id</span>
+    float (t,oid) = raymarch( ro, rd );
+	
+    <span class="codeComment">// prepare for surfacing</span>
+    vec3 pos = ro + t*rd;
+    vec3 nor = calcNormal( pos, t );
+    vec3 (dposdx, dposdy) = calcDpDxy( ro, rd, rdx, rdy, t, nor );	
+
+    <span class="codeComment">// surfacing</span>
+    vec2 (uv,duvdx,duvdy) = textureMapping( pos, dposdx, dposdy, oid );
+    vec3 sur = textureGrad( sampler, uv, dudvx, dudvy );
+	
+    <span class="codeComment">// lighting</span>
+    vec3 lig = calcLighting( pos, nor, t );
+	
+    <span class="codeComment">// point color</span>
+    return calcSurfaceColor( sur, lig, t );
+}</div><br>    
+
+The algorithm hasn't changed a lot. First we compute the neighbor rays (offset by 1 pixel horizontal and vertically). Then we perform the regular raymarch as usual, Then we compute the intersection of the neighbor rays and the planar approximation of the scene at the current intersection point (a plane that passes through it and is tangent to the surface). And lastly we compute the difference in world space positions between these intersections and the actual intersection found for this ray. We do that in <b>calcDpDxy()</b>, which after some simplification reduces to:<br>
+<br>
+<div class="code"><span class="codeComment">// compute screen space derivatives of positions analytically without dPdx()</span>
+void calcDpDxy( in vec3 ro, in vec3 rd, in vec3 rdx, in vec3 rdy, in float t, in vec3 nor, 
+                out vec3 dpdx, out vec3 dpdy )
+{
+    dpdx = t*(rdx*dot(rd,nor)/dot(rdx,nor) - rd);
+    dpdy = t*(rdy*dot(rd,nor)/dot(rdy,nor) - rd);
+}</div><br>    
+It is worth noting that by not returning the absolute intersection positions but only the differences we can avoid floating point precision problems.<br>
+<br>
+Once we have those differences in world space we need to propagate them though the world-space-to-texture-coordinate transform. This can be done with the <a class="regular" href="https://en.wikipedia.org/wiki/Chain_rule">Chain Rule</a>. For planar texture mapping projections this is as simple as a simple linear transform (more of this later).<br>
+<br>
+Lastly, we replace the <b>texture()</b> calls for fetching filtered texels from our texture with invocations to <b>textureGrad()</b> (this might be called differently depending on the dialect of your shading language in use). This function gets explicit texture-coordinate derivatives ("gradients") and uses them to select the appropriate mip level, rather than resorting to the automatic pixel differencing. The whole point of this technique was of course to reach this <b>textureGrad()</b> call prepared with the right information for it to consume.<br>
+<br>
+<br>
+<br>
+<h3>Details</h3><br>
+I just explained the basic idea but skipped over the "textureMapping()" function. As I said, whatever transform you apply to your world (or object) intersection position in order to deduce texture coordinates, a related transformation will need to be applied to the position derivatives in order to compute the texture coordinate derivatives. A bit of calculus will help you here, and if you are into Jacobians this will be an easy ride for you. But in general the Chain Rule will serve you well. This is a case by case homework to do though, but in the case of a planar projection the results are very easy:<br>
+<br>
+If you were texture mapping your objects with a vertical projection of the form<br>
+<br>
+vec2 uv = pos.xz*vec2(0.03,0.07);<br>
+<br>
+then the differences in <b>uv</b> are<br>
+<br>
+vec2 duvdx = dposdx.xz*vec2(0.03,0.07);<br>
+vec2 duvdy = dposdy.xz*vec2(0.03,0.07);<br>
+<br>
+If you are using some basic tri-planar mapping (called "rounded box mapping" by some), then you can change your old<br>
+<br>
+<div class="code">vec4 texcube( sampler2D sam, in vec3 p, in vec3 n, in float k, in vec3 gx, in vec3 gy )
+{
+    vec3 m = pow( abs( n ), vec3(k) );
+    vec4 x = texture( sam, p.yz );
+    vec4 y = texture( sam, p.zx );
+    vec4 z = texture( sam, p.xy );
+    return (x*m.x + y*m.y + z*m.z) / (m.x + m.y + m.z);
+}</div>
+to<br>
+<br>
+<div class="code">vec4 texcube( sampler2D sam, in vec3 p, in vec3 n, in float k, in vec3 gx, in vec3 gy )
+{
+    vec3 m = pow( abs( n ), vec3(k) );
+    vec4 x = texture2rad( sam, p.yz, gx.yz, gy.yz );
+    vec4 y = texture2rad( sam, p.zx, gx.zx, gy.zx );
+    vec4 z = texture2rad( sam, p.xy, gx.xy, gy.xy );
+    return (x*m.x + y*m.y + z*m.z) / (m.x + m.y + m.z);
+}</div><br>    
+
+Here's a link to this technique running live in a raymarcher: <a class="regular" href="https://www.shadertoy.com/view/4dtGWM">https://www.shadertoy.com/view/4dtGWM</a><br>
+<br>
+This is one more comparison of the broken behavior versus the correct one as implemented in this article:<br>
+<br>
+<center><img class="myPicture" src="gfx01.gif"/><br><i>The problem of raymarching textured objects, and the proposed solution</i></center>
+
+
+<!-- -------------------------------------------------------------------------------------------- -->
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

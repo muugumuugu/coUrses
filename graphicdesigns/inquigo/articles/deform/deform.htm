@@ -1,0 +1,235 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/deform/deform.htm">plane deformations - 1999</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+One of the nicest oldschool effects are the 2D LUT deformations and tunnels. These were very fast to compute in realtime, in software (without GPUs), and very spectacular too, so they were very common back in the late 1990s when I first learnt about them. The idea is to deform a textuer by some mathematical function. But because evaluating mathematical functions for every pixel in the screen was impossible back then, a texture was used instead as a LUT (Look Up Table). That way it was possible to create animated flowers, fake 3d landscapes, tunnels, whirlpools, holes, etc. As I said, I used them a lot during 1999 and 2000 myself, you can see them in action in demos like <a href="../../../prods/index.htm">Rare or Storm</a>.<br>
+<br>
+
+<div class="partsB">
+	<div class="part"><a href="gfx11.htm"><img src="gfx11_p.jpg" /></a></div>
+	<div class="part"><a href="gfx10.htm"><img src="gfx10_p.jpg" /></a></div>
+	<div class="part"><a href="gfx09.htm"><img src="gfx09_p.jpg" /></a></div>
+	<div class="part"><a href="gfx08.htm"><img src="gfx08_p.jpg" /></a></div>
+	<div class="part"><a href="gfx07.htm"><img src="gfx07_p.jpg" /></a></div>
+	<div class="part"><a href="gfx06.htm"><img src="gfx06_p.jpg" /></a></div>
+	<div class="part"><a href="gfx05.htm"><img src="gfx05_p.jpg" /></a></div>
+	<div class="part"><a href="gfx04.htm"><img src="gfx04_p.jpg" /></a></div>
+	<div class="part"><a href="gfx03.htm"><img src="gfx03_p.jpg" /></a></div>
+	<div class="part"><a href="gfx02.htm"><img src="gfx02_p.jpg" /></a></div>
+	<div class="part"><a href="gfx01.htm"><img src="gfx01_p.jpg" /></a></div>
+	<div class="part"><a href="gfx00.htm"><img src="gfx00_p.jpg" /></a></div>
+</div>
+
+
+Today you can do the same effect very easily by using pixel shaders, and with much less effort at the same quality, since the GPU will do lot of mipmapping and
+bilinear filtering, that otherwise you have to do manually.<br>
+<br>
+In either case the idea is to take the screen buffer, and map a texture to it. For example, a trivial way to display such a texture would be to do something like this:<br>
+<br>
+<div class="code">void renderDeformation( int *buffer, float time )
+{
+  for( int j=0; j&lt;mYres; j++ )
+  for( int i=0; i&lt;mXres; i++ )
+	buffer[mXres*j+i] = mTexture[ 512*(j&511) + (i&511) ];
+}</div>
+<br>
+where I assume the texture is of 512 x 512 pixels, and the screen is mXres x mYres pixels. The texture will repeat over the screen as needed, thank to the AND operations.
+This code just copies one texel to one pixel. The same code in a pixel shader (GLSL) would look like this:<br>
+<br>
+<div class="code">uniform sampler2D texCol;
+void main( void )
+{
+  gl_FragColor = texture2D( texCol, gl_TexCoord[0].xy );
+}</div>
+<br>
+Now that we have our texture displayed on screen we can start coding the real effect. The trick is to modify the texture coordinates (i,j) in the software rendering version or gl_TexCoord[0].xy in the GLSL version with crazy formulas to get nice deformations. Instead of adding lots of calculations to our code, we will precompute the formulas in some look up table (LUT). That means that we will input the coordinates to the LUT and the LUT will give us some new coordinates back. Something like this:<br>
+<br>
+<div class="code">void renderDeformation( int *buffer, float time )
+{
+  const int itime = (int)(10.0f*time);
+  for( int j=0; j&lt;mYres; j++ )
+  for( int i=0; i&lt;mXres; i++ )
+  {
+    const int o = xres*j + i;
+    const int u = mLUT[ 2*o+0 ] + itime;
+    const int v = mLUT[ 2*o+1 ] + itime;
+    buffer[mXres*j+i] = mTexture[ 512*(v&511) + (u&511) ];
+  }
+}</div>
+<br>
+for software rendering, and like this for GLSL:<br>
+<br>
+<div class="code">uniform float     time;
+uniform sampler2D texCol;
+uniform sampler2D texLUT;
+void main( void )
+{
+  vec4 uv = texture2D( texLUT, gl_TexCoord[0].xy );
+  vec4 co = texture2D( texCol, uv.xy + vec2(time) );
+  gl_FragColor = co;
+}</div>
+<br>
+Adding a time factor to the texture coordinates is done so that the texture moves. It's now up to us to be imaginative and fill the LUT with interesting things. For example,<br>
+<br>
+<div class="code">void createLUT( void )
+{
+  int k = 0;
+  for( int j=0; j&lt;mYres; j++ )
+  for( int i=0; i&lt;mXres; i++ )
+  {
+	const float x = -1.00f + 2.00f*(float)i/(float)mXres;
+	const float y = -1.00f + 2.00f*(float)j/(float)mYres;
+	const float d = sqrtf( x*x + y*y );
+	const float a = atan2f( y, x );
+
+	<span class="codeComment">// magic formulas here</span>
+	float u = cosf( a )/d;
+	float v = sinf( a )/d;
+
+	mLUT[k++] = ((int)(512.0f*u)) & 511;
+	mLUT[k++] = ((int)(512.0f*v)) & 511;
+  }
+}</div>
+<br>
+will produce an interesting deformation for the software rendering version. As shown in the code the LUT stores 16 bit integer values per channel. If we were implementing the effect in GLSL, we better use a floating point texture for the LUT (float16 is more than enough, we don't need a full 32 bit floating point precision), and the code to fill the texture would be<br>
+<br>
+<div class="code">void createLUT( float *lutTexture )
+{
+  for( int j=0; j&lt;mYres; j++ )
+  for( int i=0; i&lt;mXres; i++ )
+  {
+    const float x = -1.00f + 2.00f*(float)i/(float)mXres;
+    const float y = -1.00f + 2.00f*(float)j/(float)mYres;
+    const float d = sqrtf( x*x + y*y );
+    const float a = atan2f( y, x );
+
+    <span class="codeComment">// magic formulas here</span>
+    float u = cosf( a )/d;
+    float v = sinf( a )/d;
+
+    *lutTexture++ = fmodf( u, 1.0f );
+    *lutTexture++ = fmodf( v, 1.0f );
+  }
+}</div>
+<br>
+It's lots of fun to invent as many formulas as you can. All the images on this article were made with this simple algorithm, by using the following formulas:<br>
+<br>
+<div class="partsL">
+	<div class="part">
+		u = x*cos(2*r) - y*sin(2*r)<br>
+		v = y*cos(2*r) + x*sin(2*r)
+	</div>
+	<div class="part">
+		u = 0.3/(r+0.5*x)<br>
+		v = 3*a/pi<br>
+	</div>
+	<div class="part">
+		u = 0.02*y+0.03*cos(a*3)/r<br>
+		v = 0.02*x+0.03*sin(a*3)/r
+	</div>
+	<div class="part">
+		u = 0.1*x/(0.11+r*0.5)<br>
+		v = 0.1*y/(0.11+r*0.5)
+	</div>
+	<div class="part">
+		u = 0.5*a/pi<br>
+		v = sin(7*r)
+	</div>
+	<div class="part">
+		u = r*cos(a+r)<br>
+		v = r*sin(a+r)
+	</div>
+	<div class="part">
+		u = 1/(r+0.5+0.5*sin(5*a))<br>
+		v = a*3/pi
+	</div>
+	<div class="part">
+		u = x/abs(y)<br>
+		v = 1/abs(y)
+	</div>
+
+</div>
+<br>
+
+Note that GPU shaders are very powerful these days, and you don't actually need LUTs anymore, you can do all the calculations per pixel and include the time factor really inside the formulas. In fact, you can see some of the formulas above implemented as realtime shaders here:<br>
+<br>
+<a class="regular" href="https://www.shadertoy.com/view/Ms2SWW">https://www.shadertoy.com/view/Ms2SWW</a><br>
+<a class="regular" href="https://www.shadertoy.com/view/Xsf3Rn">https://www.shadertoy.com/view/Xsf3Rn</a><br>
+<a class="regular" href="https://www.shadertoy.com/view/XdXGzn">https://www.shadertoy.com/view/XdXGzn</a><br>
+<a class="regular" href="https://www.shadertoy.com/view/Xdf3Rn">https://www.shadertoy.com/view/Xdf3Rn</a><br>
+<a class="regular" href="https://www.shadertoy.com/view/4sXGzn">https://www.shadertoy.com/view/4sXGzn</a><br>
+<a class="regular" href="https://www.shadertoy.com/view/4sXGRn">https://www.shadertoy.com/view/4sXGRn</a><br>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>
+

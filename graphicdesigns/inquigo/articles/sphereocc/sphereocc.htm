@@ -1,0 +1,156 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/sphereocc/sphereocc.htm">sphere visibility - 2008</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+    <h3>Motivation</h3><hr>
+    It seems that I'm working a lot on spheres recently... or that someone close to me does so ;) Well, thing is I recently got some new equations for a neat trick that you can add to your toolbox too. Say you have a planet, or in other words, a sphere (where you most probably grow some procedural mountains or whatever). Now, say you have objects both at planetary surface level as well as in the sky or space. Given a camera position (both in surface or space), you want to know what objects are for sure NOT visible because of planet occlusion. Objects in the other side of the planet will not be visible of course, but many others will also not be because of the curvature of the planet, and that can count for a BIG amount of geometry when you are at surface level ("objects" includes "mountains" also of course).<br>
+    <br>
+    The trick presented here can be seen at a kind of horizon mapping, and it gives analytical micropixel perfect occlusion results, for a spherical occluder(the planet) and spherical objects. Now, you can use spheres around every node of your octree to quickly discard complete subtrees of geometry on your planet :)<br>
+
+    <br>
+    <br>
+    <h3>The maths</h3><hr>
+
+    We start with the following construction (shown on the left of this text). Let <b><i>c</i></b> be the camera position (we assume it's not inside any of the two spheres). The big sphere with center position <b><i>o</i></b> and radious <b><i>R</i></b> is the occluder (our planet). The small sphere with at position <b><i>o'</i></b> and radious <b><i>R'</i></b> is the bounding sphere of the object that we are testing occlusion for.<br>
+    <br>
+    <img class="formula" src="gfx00.png" /><br>
+    <br>
+    The key observation is that the small sphere will be visible or partially visible as long as<br>
+    <br>
+    <span class="formulaText">&gamma; > &alpha; + &beta;</span><br>
+    <br>
+    Of course this doesn't take into account the case where the little sphere is between the camera and the planet, but that case we will handle separately later on. Working with angles is always a bad idea, not only it involves expensive inverse trigonometric functions, but also they are error prone because of angle value wrappings at 2&pi; and so on. It's much more desirable to work just with vectors (vectors never lie!). So, we convert the previous condition by taking cosines in both sides (cosines are always dot products of vectors!):<br>
+    <br>
+    <span class="formulaText">cos(&gamma;) < cos(&alpha;+&beta;) = cos(&alpha;)&sdot;cos(&beta;) - sin(&alpha;)&sdot;sin(&beta;)</span><br>
+    <br>
+    Note that the direction of the comparison changed of course. Now we have to identify all these sines and cosines. Looking to the image above, we get:<br>
+    <br>
+    <img class="formula" src="for03.png" /><br>
+    <br>
+    where<br>
+    <br><img class="formula" src="for04.png" /><br>
+
+    <br>
+    <br>
+    Let's call &nbsp;<span class="formulaText">k = cos(&gamma;)</span>&nbsp; and put it all together to get:<br>
+    <br>
+    <img class="formula" src="for06.png" /><br>
+    <br>
+    <br>
+    This is much nicer already than the angle nightmare. However we can do better and get rid of the square root. Note that we want to flag objects as visible when the inequality holds. If the left part of the inequality is negative, the object will be this visible for sure. If it's positive, we have to compute the complete thing. Before going on, let's introduce<br>
+    <br>
+    <img class="formula" src="for07.png" /><br>
+    <br>
+    and see that we can check for the sign of the left part by<br>
+    <br>
+    <span class="formulaText">k > k<sub>1</sub>&sdot; k<sub>2</sub></span><br>
+    <br>
+    Now, the complete equation can be simplified by taking squares in both sides. The resulting inequality is:<br>
+    <br>
+    <span class="formulaText">k<sub>1</sub><sup>2</sup> + k<sub>2</sub><sup>2</sup> < 1 - k<sup>2</sup> + 2k&sdot; k<sub>1</sub>&sdot; k<sub>2</sub></span><br>
+    <br>
+    what is quite cool (simple and fast to compute, ie, elegant!) You can reinterpret it as<br>
+    <br>
+    <img class="formula" src="for10.png" /><br>
+    <br>
+    what looks like the a kind of cosine law btw :)
+    <br>
+    <br>
+    <br>
+    <br>
+
+    <h3>Implementation</h3><hr>
+    The implementation is straightforward. However, one can realize that we can get rid of the two inverse square roots and have a totally divisions and square root free! That makes it extremelly efficient:<br>
+    <br><div class="code">int sphereVisibility( in vec3 ca, in float ra, in vec3 cb, float rb, in vec3 c )
+{
+    float aa = dot(ca-c,ca-c);
+    float bb = dot(cb-c,cb-c);
+    float ab = dot(ca-c,cb-c);
+
+    float s = ab*ab + ra*ra*bb + rb*rb*aa - aa*bb;
+    float t = 2.0*ab*ra*rb;
+
+    if( s + t &lt; 0.0 ) return 1;
+    else if( s - t &lt; 0.0 ) return 2;
+    return 3;
+}</div>
+    <br>
+    Note that this method is a kind of 2D overlap test, it will report occlusion when the object is the "shadow" of the planet but still in front of it. The case can be easily fixed by adding a plane test. The plane is formed by the circular cap where the cone formed by the planet the the camera (being the later the apex) intersects the sphere (a disk). The center of the disk can be computed as in <a class="regular" href="../sphereao/sphereao.htm" class="regular">this article</a>, and then a dot product will tell you if your object is between that plane and the camera.<br>
+    <br>
+
+    A realtime interactive implementation of the code above can be found here (click in the title to navigate to the source code, or simply move the mouse along the image to change the position of the spheres. You can find code here: <a class="regular" href="https://www.shadertoy.com/view/XdS3Rt">https://www.shadertoy.com/view/XdS3Rt</a>.<br>
+    <br>
+    <div class="iframeCenter" style="max-width:800px;">
+        <div>
+            <iframe frameborder="0" src="https://www.shadertoy.com/embed/XdS3Rt" allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <br>
+    <br>
+    <br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

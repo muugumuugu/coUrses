@@ -1,0 +1,149 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/ftrapsgeometric/ftrapsgeometric.htm">geometric orbit traps - 1999</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<!-- --------------------------------------------------------------------------------- -->
+
+Coloring by <i>orbit traps</i> is probably the most common method to make traditional fractal images more interesting. Even back in the Fractint era (1989) the so-called "epsilon cross" rendering mode was nothing else than an orbit trap. The idea behind it is really simple, but the amount of possibilities it provides to create structures and color patterns are infinite. Today, the orbit traps formulas are widely used in all sort of fractal image generation applications.<br>
+<br>
+<br>
+
+<center>
+<a href="geo_gfx_00.htm"><img class="myPicture" src="gfx00.jpg"/></a><br>
+<i>A combination of line and point orbit traps, done in 2000 - Click image to enlarge</i>
+</center>
+
+<br>
+<br>
+<h3>The idea</h3><hr>
+Even though the technique can be easily extended to higher dimensions (like <a class="regular" href="../orbittraps3d/orbittraps3d.htm">3D orbit traps</a>), we will stick to two dimensions for now. Therefore, we are working with complex numbers in a complex plane, either the C plane (parameter plane) for the Mandelbrot set of the Z plane (dynamic plane) for Julia sets. In the old escape method coloring technique the amount of iterations needed to escape a bailout radius is used as index into a color palette (procedural or LUT-based). What we want is to find an alternative way to assign a color index to that point or pixel.<br>
+<br>
+For that, we are going to analyze all the sequence of points that was generated during the iteration process. That set of points is usually referred to as "the orbit". For the Mandelbrot set, the orbit would therefore be the sequence { 0, c, c<sup>2</sup>+c, c<sup>4</sup>+2c<sup>3</sup>+c<sup>2</sup>+c, ... }, and for a Julia set {z, z<sup>2</sup>+c, ... }, etc. Of course, any dynamical system that produces a series of points after repeated iteration is a candidate for this technique, it's not restricted to Mandelbrot or Julia sets. But let's continue assuming we are working with the Mandelbrot set.<br>
+<br>
+So, given an orbit orbit(c) = { 0, c, c<sup>2</sup>+c, ... } we can decide to study how this orbit looks like when plotted in the plane. Since iterating the fractal is applying a well defined transformation to each point, a scale and rotation by 2 and a small offset <i>c</i>, we know that the orbit will be some sort of spiral. If the point <i>c</i> is inside the Mandelbrot set, then it will spiral inwards into a single point or a finite set of points in an oscillatory dynamic, depending in which bulb or component of the set the starting point was. If the point is ourside the set, it will spiral outwards towards infinity, and the closer <i>c</i> is to the set border, the longer this orbit will be and the longer it will joyfully move around the set until it eventually takes off forever. What we are seeking for is to analyze <i>somehow</i> this orbit and extract a different color for each.<br>
+<br>
+<br>
+
+<div class="partsB">
+    <div class="part50">
+        <h3>Trapping the orbit</h3><hr>
+        It's up to us to define that <i>somehow</i>, but the simplest things is probably to look for which is the closest distance from any point in the orbit to the origin of the plane, or any other arbitrary (user defined) point in the plane. This is called "point trapping". Something like:<br>
+        <br>
+        <div class="code">float iterate( complex c )
+{
+    float dist = 1e20f;
+    Complex z = Complex( 0.0f );
+    for( int i=0; i&lt;maxIterations; i++ )
+    {
+        z = z*z + c;
+        if( |z|&gt;2.0f ) return 0.0f;
+        dist = min( dist, lengthSquared(z-point) );
+    }
+    return sqrtf( dist );
+}</div>
+        <br>
+        This produces some nice bubbles all over the plane, that follow the fractal structure of the image. For example, if there is an spiral somewhere in the image, the bubbles will concentrate on the sides of the spiral and follow it ad infinitum.<br>
+        <br>
+        In this first example we were using the distance to a point <i>|z-point|</i> as trapping criteria, but we could decide to index the colors not based on this distance, but in the argument of the point in the orbit whose distance was the minimum to the user define point. We can also generalize the method by computing the closest distance not to a point, but to a line. Then, we are speaking of "line traps". Depending on the origin and orientation of the line, different patterns will emerge in the fractal image, although they always follow the fractal structure as in the case of point traps.<br>
+        <br>
+        <br>
+        <h3>Extensions</h3><hr>
+        At this point nothing stops us from introducing even more geometric figures beyond points and lines and compute distances to then. Ellipses, rings, hyperbolas, rectangles, stars, etc. It's really up to our imagination. You can even <a class="regular" href="../ftrapsprocedural/ftrapsprocedural.htm">use fractals or procedural functions</a> as traps, or even <a class="regular" href="../ftrapsbitmap/ftrapsbitmap.htm">use pictures</a> as orbit traps. The posibilities are endless.<br>
+        <br>
+        We can also distort these shapes with arbitrary mappings like sin deformations, cartesian-to-polar change of variables, etc.<br>
+        <br>
+        Another interesting extension is to make the trap change as the orbit progresses, like the position of the point or the inclination of the line. The distortion parameters can also be changed during the iteration process. Possibilities are truly endless.<br>
+        <br>
+        It's also possible to keep track of the relation of the orbit to more than one trap, and then combine the results to give a single color index. Possibilities can be the min or the max distance of all the traps.<br>
+        <br>
+        It's also interesting sometimes to collect other more complex statistical values than the minimum distance. Average distance or the standard deviation of the distances from every point in the orbit result in pleasing images too.
+        <br>
+        <br>
+    </div>
+    <div class="part">
+        <a href="geo_gfx_01.htm" class="image"><img class="myPicture" src="gfx01.jpg" /></a><br><i>A combination of line orbit traps, done in 2001. Click image to enlarge</i><br>
+        <br>
+        <br>
+        <img class="myPicture" src="gfx03.jpg" /><br><i>A combination of line orbit traps - done in 2001</i><br>
+        <br>
+        <br>
+        <a href="geo_gfx_04.htm"><img class="myPicture" src="gfx04.jpg" /></a><br><i>Line traps, done in 2001 - Click image to enlarge</i>
+    </div>
+</div>
+
+<h3>Layering</h3><hr>
+With such a huge amount of possibilities to choose from it seems natural to extend the palette indexing method for coloring a pixel to a multilayer system. For example, we could compute some colors using a given certain orbit trap and palette settings, do the same thing with another orbit trap and palette, and then combine the color results. This can be done with as many of these "layers" as needed and with any blending mode we can think of, for every layer (see your favourite image processing program). This is pretty much what programs like Ultrafractal do, and it was the main technique used around the years 1998 to 2002.<br>
+<br>
+Another example is the <a class="regular" href="../../../prods/index.htm#jslide">Julia Slide</a> 4k intro I made in 2001.<br>
+<br>
+<br>
+  
+<!-- -------------------------------------------------------------------------------------------- -->
+
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

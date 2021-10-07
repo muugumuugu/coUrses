@@ -1,0 +1,159 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/sfrand/sfrand.htm">float, small and random - 2005</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+While creating the <i>195/95/256</i> 64 kilobyte demo me and my colleages learnt something very important: never underestimate how slow a "int 2 float / float 2 int" data conversion can be. The problem came when debugging the software synthetizer made by Marc (aka Gortu). After several tests and profile sessions, we found something really atonishing: one of the bottlenecks of the synth was the noise generator. Our noise generator was basically creating an integer pseudo-random number (using the same congruent generator as VC implements for stdlib), then casting it to float and finally scaling it down to the [-1, 1] range. Here goes the original code:<br>
+<br>
+<div class="code">float sfrand( int *seed )
+{
+    seed[0] = 0x00269ec3 + seed[0]*0x000343fd;
+    int a = (seed[0] >> 16) & 32767;
+    return( -1.0f + (2.0f/32767.0f)*(float)a );
+}</div>
+
+<br>
+First of all, note how the function takes a seed as parameter. As you probably know the regular Ansi C rand() function doesn't take any argument, which really sucks a lot, cause you cannot use the function in a multithreaded environment, like a raytracer or a demo where both sound synthetizer and renderer need random numbers at the same time. So, I usually pass the seed as parameter. You can think of it as a "context" for the function: you should keep one for each thread, probably on the stack. Anyway.<br>
+<br>
+Seems like the code is already quite simple and should run fast, right? However, as I said, the cast from int to float was simply killing performance. It's quite well known that the fild</span> instrucction is quite slow, but we never expected it to be a boottleneck! That's the reason I started to experiment on creating a random number generator able to directly give random floats within the range of -1 to 1. The idea was really simple, and worked quite well: the first step was to create a 32 bit random bits integer (because a float is made of 32 bits also). Since the original algorithm of VC only gives 15 random bits, I made a fast investigation on the net to find that<br>
+<br>
+<div class="code">
+seed[0] *= 16807;</div>
+<br>
+was not only doing the job a lot better than<br>
+<br>
+<div class="code">seed[0] = 0x00269ec3 + seed[0]*0x000343fd
+</div>
+<br>
+but also faster. I just had to take care not to initalize the seed "mirand" to 0. In fact, the (16807,0) pair of values for the congruential random generator creates 32 random bits. So, the only thing I had to do was to interpret those 32 bit as a floating point value, and I should get a random float value, with no conversion at all!<br>
+<br>
+But still a small issue remained - how to make sure that the floating point value would be in the [-1, 1] range? I tried tweaking the appropriate bits in the exponent of my float (according to IEEE 754 standard, that is used in PCs and Macintosh machines, have a look at
+<a href="http://en.wikipedia.org/wiki/IEEE_floating-point_standard" class="regular">http://en.wikipedia.org/wiki/IEEE_floating-point_standard</a>).
+So I carefully selected the bits to be modified. Have a look below to the layout of the bits on the floating point format:<br>
+<br>
+<div class="code">   33        22                          0
+   10        32                          0
+   seee eeee efff ffff ffff ffff ffff ffff</div>
+<br>
+where<br>
+<br>
+s = sign bit<br>
+e = exponent<br>
+f = fractional part of the mantisa<br>
+<br>
+value = s * 2^(e-127) * m,   where m = 1.f, and thus  1&lt;=m&lt;2<br>
+<br>
+The main idea is to realize that we already have a random fractional part, what means we have a random mantisa between 1 and 2. We could just fix our exponent to 127 and the sign bit to zero. That way I would get a random floating point number between 1 and 2. I could afterwards scale (by 2.0) and offset it (by -3.0) to make it fit in the segment [-1,1). But, I realized it can be done a bit better and avoid the scaling if I could directly generat a float random number between 2 and 4. For that to be happen, the only thing to do is to force the exponent to be 128, so that the output value is<br>
+<br>
+value = s * 2 * m<br>
+<br>
+That belongs to the range [2,4). So, first operation to do to the 32 randon bits is to mask the sign and exponent bits with<br>
+<br>
+<div class="code">
+   seee eeee efff ffff ffff ffff ffff ffff
+   0000 0000 0111 1111 1111 1111 1111 1111
+</div>
+<br>
+or 0x007fffff in hexadecimal. Then just the exponent is set to 128
+(10000000 in binary), with the next bit pattern<br>
+<br>
+<div class="code">   seee eeee efff ffff ffff ffff ffff ffff
+   0100 0000 0000 0000 0000 0000 0000 0000
+</div>
+<br>
+or 0x40000000 in hexadecimal. So, finally, the complete signed floating point random generator looks like:<br>
+<br>
+<div class="code">float sfrand( int *seed )
+{
+    float res;
+    seed[0] *= 16807;
+    *((unsigned int *) &res) = ( ((unsigned int)seed[0])>>9 ) | 0x40000000;
+    return( res-3.0f );
+}</div>
+<br>
+Some compilers might complain about creating a pointer to an int data that points to a location reserved for a float. If that's the case, you can workaround it by using a union (thx Reinder Nijhoff for the suggestion). The code for a function that returns a random number between 0 and 1 would then look like this:
+<br>
+<br>
+<div class="code">float frand( int *seed )
+{
+    union
+    {
+        float fres;
+        unsigned int ires;
+    };
+
+    seed[0] *= 16807;
+    ires = ((((unsigned int)seed[0])>>9 ) | 0x3f800000);
+    return fres - 1.0f;
+}</div>
+<br>
+These two versions cannot be simpler and faster, perfect for a 4k or 64k intro! (well, some tricks can be done to this when translating to assembler, of course). I made some measures to test performance, and I got 4 times the performance of the old generator. Regarding the quality, this generator beats a normal integer random value with rand() and then scaling it as the original function shown here does. Remember this one generates 23 random bits instead of 15. I also checked the density distribution, and in fact I found it to be perfectly uniform, and quite better than the old version. So, what else can we ask to our improved random number generator?
+<!-- -------------------------------------------------------------------------------------------- -->
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

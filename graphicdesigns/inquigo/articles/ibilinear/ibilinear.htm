@@ -1,0 +1,176 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/ibilinear/ibilinear.htm">inverse bilinear interpolation - 2010</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<h3>Intro</h3><hr>
+
+<div class="partsB">
+ <div class="part70">You have probably done bilinear interpolation in a quadrilateral more than once already. Say you have a random quadrilateral with vertices <b>A</b>, <b>B</b>, <b>C</b> and <b>D</b>, in any number of dimensions. Then any point <b>X</b> inside the quadrilateral can be defined by a couple of coordinates <i>u</i> and <i>v</i> such that the first interpolates across any two opposite edges of the quad to produce two points <b>P</b> and <b>Q</b>, and such that the second one linearly interpolates again across the line that joins <b>P</b> and <b>Q</b>. The nice thing is that the same rules that are used to arrive to <b>X</b> can be used for the any data stored in the vertices (say, texture coordinates or colors) so that one gets the bilinearly interpolated data values at the point <b>X</b>.<br><br></div>
+ <div class="part"><img class="formula" src="gfx00.png" /> </div>
+</div>
+
+<h3>The math</h3><hr>
+The formula that tells us how to get <b>X</b> is very simple:<br>
+<br>
+<b>P</b> is the linear interpolation of <b>A</b> and <b>B</b> in <i>u</i>: P = A + (B-A)&sdot;u<br>
+<b>Q</b> is the linear interpolation of <b>D</b> and <b>C</b> in <i>u</i>: Q = D + (C-D)&sdot;u<br>
+<b>X</b> is the linear interpolation of <b>P</b> and <b>Q</b> in <i>v</i>: X = P + (Q-P)&sdot;v<br>
+<br>
+therefore<br>
+<br>
+<b>X</b>(u,v) = <b>A</b> + (<b>B</b>-<b>A</b>)&sdot;<i>u</i> + (<b>D</b>-<b>A</b>)&sdot;<i>v</i> + (<b>A</b>-<b>B</b>+<b>C</b>-<b>D</b>)&sdot;<i>u</i>&sdot;<i>v</i><br>
+<br>
+with <i>u</i> and <i>v</i> running in the [0..1] interval obviously. So far so good. This is old news, really. However, what happens if we now had our quad, we knew the point <b>X</b> and wanted to extract what are the bilinear parameters <i>u</i> and <i>v</i>?<br>
+<br>
+Well, the easy answer is that we simply have to solve this equation and isolate our parameters <i>u</i> and <i>v</i>. "One equation and two unknowns!", you might protest. Remember that the equation above actually applies to all the coordinates of the system, meaning that the vertices <b>A</b> to <b>D</b>
+are in fact pairs or triplets of numbers (or vectors in general), so in fact we have lots of equations, as many as dimensions we are working on, for only two unknowns. So the systems is very solvable, and the easy answer happens to be the right one.<br>
+<br>
+To make things easier, let's introduce some intermediate variables, such that:<br>
+<br>
+<b>E</b> = <b>B</b>-<b>A</b><br>
+<b>F</b> = <b>D</b>-<b>A</b><br>
+<b>G</b> = <b>A</b>-<b>B</b>+<b>C</b>-<b>D</b><br>
+<b>H</b> = <b>X</b>-<b>A</b><br>
+<br>
+so that the bilinear interpolation equation becomes<br>
+<br>
+<b>H</b> = <b>E</b>&sdot;<i>u</i> + <b>F</b>&sdot;<i>v</i> + <b>G</b>&sdot;<i>u</i>&sdot;<i>v</i><br>
+<br>
+Now, we choose any two coordinates for our computations. Probably the best choice is to use the 2D plane for which our quad has bigger surface area under orthographic projection. Say we choose axes <i>i</i> and <i>j</i> anyways ( {i,j} can be {x,y}, {z,x}, {y,z}, ...). Then<br>
+<br>
+<i>u</i> = (<b>H</b>i - <b>F</b>i&sdot;v)/(<b>E</b>i + <b>G</b>i&sdot;v)<br>
+<br>
+and therefore we can plug it back into the equation to get<br>
+<br>
+<b>H</b>j&sdot;<b>E</b>i + <b>H</b>j&sdot;<b>G</b>i&sdot;v = <b>E</b>j&sdot;<b>H</b>i - <b>E</b>j&sdot;<b>F</b>i&sdot;v + <b>F</b>j&sdot;<b>E</b>i&sdot;v + <b>F</b>j&sdot;<b>G</b>i&sdot;<i>v</i><sup>2</sup> + <b>G</b>j&sdot;<b>H</b>i&sdot;v - <b>G</b>j&sdot;<b>F</b>i&sdot;<i>v</i><sup>2</sup></i><br>
+<br>
+This is a quadratic equation k<sub>2</sub>&sdot;v<sup>2</sup> + k<sub>1</sub>&sdot;v + k<sub>2</sub> = 0 on v, with coefficients:<br>
+<br>
+k<sub>2</sub> = <b>G</b>i&sdot;<b>F</b>j - <b>G</b>j&sdot;<b>F</b>i<br>
+k<sub>1</sub> = <b>E</b>i&sdot;<b>F</b>j - <b>E</b>j&sdot;<b>F</b>i + <b>H</b>i&sdot;<b>G</b>j - <b>H</b>j&sdot;<b>G</b>i<br>
+k<sub>0</sub> = <b>H</b>i&sdot;<b>E</b>j - <b>H</b>j&sdot;<b>E</b>i<br>
+<br>
+which are pretty much some surface areas (kind of 2D cross products) of different paris of edges. The solution is the usual formula for the quadratic equation, where the discriminant k<sub>1</sub><sup>2</sup>-4&sdot;k<sub>0</sub>&sdot;k<sub>2</sub> is always positive if <b>X</b> is inside the quadrilateral <b>ABCD</b>. Then, one has to take the positive or negative square root such that <i>v</i> is in the interval [0..1]. Once we have <i>v</i>, <i>u</i> can be computed with the expression used in the first variable isolation step.<br>
+<br>
+Care must be taken in the cases where the quad is actually a perfect rectangle. Then <b>AB</b> and <b>CD</b> are parallel, and therefore <b>G</b> = 0, and it follows k2 = 0 as well. So the equation is basically not a quadratic equation anymore but a simple linear equation of the form k0 + k1&sdot;<i>v</i> = 0 for which we simply get <i>v</i> = -k0/k1
+<br>
+<br>
+<h3>The code</h3><hr>
+Here goes some code for the maths above, specialized for 2d:<br>
+<br>
+<div class="code">float cross( in vec2 a, in vec2 b ) { return a.x*b.y - a.y*b.x; }
+
+vec2 invBilinear( in vec2 p, in vec2 a, in vec2 b, in vec2 c, in vec2 d )
+{
+    vec2 res = vec2(-1.0);
+
+    vec2 e = b-a;
+    vec2 f = d-a;
+    vec2 g = a-b+c-d;
+    vec2 h = p-a;
+        
+    float k2 = cross2d( g, f );
+    float k1 = cross2d( e, f ) + cross2d( h, g );
+    float k0 = cross2d( h, e );
+    
+    <span class="codeComment">// if edges are parallel, this is a linear equation</span>
+    if( abs(k2)&lt;0.001 )
+    {
+        res = vec2( (h.x*k1+f.x*k0)/(e.x*k1-g.x*k0), -k0/k1 );
+    }
+    <span class="codeComment">// otherwise, it's a quadratic</span>
+    else
+    {
+        float w = k1*k1 - 4.0*k0*k2;
+        if( w&lt;0.0 ) return vec2(-1.0);
+        w = sqrt( w );
+
+        float ik2 = 0.5/k2;
+        float v = (-k1 - w)*ik2;
+        float u = (h.x - f.x*v)/(e.x + g.x*v);
+        
+        if( u&lt;0.0 || u&gt;1.0 || v&lt;0.0 || v&gt;1.0 )
+        {
+           v = (-k1 + w)*ik2;
+           u = (h.x - f.x*v)/(e.x + g.x*v);
+        }
+        res = vec2( u, v );
+    }
+    
+    return res;
+}</div>
+<br>
+And here's a realtime running implementation (embedded from <a href="https://www.shadertoy.com/view/lsBSDm">https://www.shadertoy.com/view/lsBSDm</a>):<br>
+<br>
+<div class="iframeCenter" style="max-width:800px;"><div>
+<iframe width="640" height="360" frameborder="0" src="https://www.shadertoy.com/embed/lsBSDm?gui=true&t=10&paused=false" allowfullscreen></iframe>
+</div></div>
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

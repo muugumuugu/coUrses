@@ -1,0 +1,183 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/ellipses/ellipses.htm">working with ellipses - 2006</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+Planar ellipses (I add "planar" to make it clear it's not a 3D ellipsoid) are constructed by a 3D position <i><b>c</b></i> in space and two perpendicular orientation vectors <i><b>u</b></i> and <i><b>v</b></i> that define both the plane where the ellipse lays and the size of the axes. So you can store a 3D ellipse in 9 floats (8, if you are careful). In the case of the ellipse being degenerated to a disk, then a single orientation vector is needed (perpendicular to the plane containing the disk) and a radious (so, 6 floats). Planar ellipses can become very useful for computer graphics. For example, they appear when you cut a cylinder with a plane. They also appear when rendering point clouds with a splatting algorithm, or when raytracing point clouds. They can also help in realtime ambient occlusion and indirect lighting computations, where occluders can be approximated by a pointcloud.<br>
+<br>
+Here I will show how to do two of the most basic operations on planar ellipses: bounding box calculation and ray intersection (sounds like this is what you need for a fast kd-tree based raytracer, uh?). Let's see the bounding box first:<br>
+<br>
+
+<center><img class="myPicture" src="gfx_17.png"/><br>The Bounding box of an ellipse computer analytically</center>
+
+<br>
+<br>
+<h3>Bounding Box</h3>
+<hr>
+<br>
+<br>
+As we know any point in the ellipse boundary is described by the following parametric equation:<br>
+<br>
+<span class="formulaText">p(&omega;) = c + u&sdot;cos(&omega;) + v&sdot;sin(&omega;)</span><br>
+<br>
+With <b>c</b>, <b>u</b> and <b>v</b> defined as described above and as illustrated below:<br>
+<center><img class="formula" src="gfx_00.png"/></center>
+<br>
+The bounding box of the ellipse has to be tangent to this boundary. This tangential points will be the maximum and minimum <b><i>x</i></b>, <b><i>y</i></b> and <b><i>z</i></b> coordinates of the boundary equation. So, we need find the minima/maxima of the equation. We know that we can get them by finding where the derivative equal zero. So,<br>
+<br>
+<span class="formulaText">p'(&omega;) = -u&sdot;sin(&omega;) + v&sdot;cos(&omega;)</span><br>
+<br>
+must equal zero for each of the three coordinates. Let's rename first &lambda;=cos(&omega;)and solve for the <b><i>x</i></b> coordinate:<br>
+<br>
+<img class="formula" src="gfx_04.png"/><br>
+<br>
+to get<br>
+<br>
+<img class="formula" src="gfx_05.png"/><br>
+<br>
+meaning that<br>
+<br>
+<img class="formula" src="gfx_06.png"/><br>
+<br>
+In summary, we can calculate our bounding box corners like this:<br>
+<br>
+<br>
+<center><img class="myPicture" src="gfx_07.png"/></center><br>
+In (GLSL style) code this would become simply<br>
+<div class="code"><span class="codeComment">// disk :: c:center, u: 1st axis, v: 2nd axis</span>
+bound3 EllipseAABB( in vec3 c, in vec3 u, in vec3 v )
+{
+    vec3 e = sqrt( u*u + v*v );
+    return bound3( c-e, c+e );
+}</div>
+<br>
+You can find the source code and realtime demo using this code here: <a class="regular" href="https://www.shadertoy.com/view/Xtjczw">https://www.shadertoy.com/view/Xtjczw</a><br>
+<br>
+Ready for building your acceleration kd-tree for point clouds?<br>
+
+<br>
+<br>
+<br>
+<h2>Ray-ellipse intersection</h2><hr>
+<br>
+Similarly to the ellipse border, the interior can be defined by<br>
+<br>
+<span class="formulaText">p(&lambda;,&gamma;) = c + u&sdot;&lambda; + v&sdot;&gamma;</span> &nbsp; and &nbsp; <span class="formulaText">&lambda;<sup>2</sup> + &gamma;<sup>2</sup> &#x2264; 1</span><br>
+<br>
+where the equality holds for the border. Now, if we define the ray with the equation<br>
+<br>
+<span class="formulaText">p(t) = r<sub>o</sub> + t&sdot;r<sub>d</sub></span><br>
+<br>
+where <b><i>ro</i></b> is the ray origin and <b><i>rd</i></b> is the (not necessarily normalized) ray direction, then we must make both expressions equal in order to get the intersection point, thus we must solve the equation 
+
+<span class="formulaText">r<sub>o</sub> + t&sdot;r<sub>d</sub> = c + u&sdot;&lambda; + v&sdot;&gamma;</span> that actually is a system of three equations (one for each of the <b><i>x</i></b>, <b><i>y</i></b> and <b><i>z</i></b> coordinates) with three unknowns. Re-arranging these three equations we get the following system:<br>
+<br>
+<img class="formula" src="gfx_12.png"/><br>
+<br>
+We can solve this by Cramer's law:<br>
+<br>
+<table align="center">
+<tr>
+<td><img class="formula" src="gfx_13.png"/></td>
+<td width="16px"></td>
+<td><img class="formula" src="gfx_14.png"/></td>
+<td width="16px"></td>
+<td><img class="formula" src="gfx_15.png"/></td>
+<td width="16px"></td>
+<td><img class="formula" src="gfx_16.png"/></td>
+</tr>
+</table>
+<br>
+Note that <b><i>de</i></b> will be zero when the ray is parallel to the plane containing the ellipse, so that needs special care. Of course, <b><i>t</i></b>
+corresponds to the ray-plane intersection distance. Finally, to test that the intersection point is in the ellipse, check for<br>
+<br>
+<span class="formulaText">&lambda;<sup>2</sup> + &gamma;<sup>2</sup> &#x2264; 1</span><br>
+<br>
+In code, this would mean<br>
+<br>
+<div class="code">float iEllipse( in vec3 ro, in vec3 rd,           <span class="codeComment">// ray: origin, direction</span>
+                in vec3 c, in vec3 u, in vec3 v ) <span class="codeComment">// disk: center, 1st axis, 2nd axis</span>
+{
+    vec3 q = ro - c;
+    vec3 r = vec3(
+        dot( cross(u,v), q ),
+        dot( cross(q,u), rd ),
+        dot( cross(v,q), rd ) ) / 
+        dot( cross(v,u), rd );
+    return (dot(r.yz,r.yz)&lt;1.0) ? r.x : -1.0;
+}</div>
+<br>
+You can find the source code in the same location as the bbox code: <a class="regular" href="https://www.shadertoy.com/view/Xtjczw">https://www.shadertoy.com/view/Xtjczw</a><br>
+<br>
+
+<br>
+I hope all this is helpful for somebody :)
+<!-- -------------------------------------------------------------------------------------------- -->
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

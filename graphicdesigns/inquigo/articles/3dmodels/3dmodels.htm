@@ -1,0 +1,140 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/3dmodels/3dmodels.htm">3D models generation - 2005</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<div class="partsC">
+
+<div class="part60">
+When making a 4 kilobyte or a 64 kilobyte demo one needs to be imaginative in the way geometry is stored. In my experience, in a 4 kilobyte demo as <a href="../../../prods/index.htm#kinderplomber" class="regular">Kinderplomber</a> or <a href="../../../prods/index.htm#stiletto" class="regular">Stiletto</a> one cannot affort more than one kilobyte of geometry. In 64 kilobytes demos I guess something like twelve kilobytes is ok (as in <a href="../../../prods/index.htm#195_95_256" class="regular">195/95/256</a> or <a href="../../../prods/index.htm#paradise" class="regular">Paradise</a>. Of course, you can also use full procedural geometry and spend just few hundred bytes to build your scenes. You can also combine pure geometry with
+procedural techniques, and have the best of both worlds. So, let's quickly have an overview of some of the techniques I used with my colleagues at <a class="regular" href="www.rgba.org">rgba</a> for some of our demos.<br>
+<br>
+<br>
+<b>Primitives</b><br>
+<br>
+The simplest way to display some geometry is to use simple primitives. Like cubes, spheres, cylinders, toruses, planes. Many famous and successfull 4 kilobyte demos are done this way (<i>Atrium</i> and <i>Micropolis</i> being probably the best examples of this practice. Most 3d APIs like OpenGL or DirectX will give you some interface to render such primitives for free, but in any case, generating them is trivial and small.<br>
+<br>
+Personally I have never being in favour of these methodes. It's boring, looks simple and has zero challenge. Also, in our productions, even if it seems we have being using them like the Image 1 taken from <i>195/95/256</i> might sugest, we have never done so. That scene shows a cube, a sphere, a plane, a cylinder and a cone, yet there is no code
+in the demo to generate such primitives. There are other techniques that can be used to generate such shapes without writing one single line of extra code or using any
+external DLL or API. For example, revolution shapes.<br>
+<br>
+<br>
+<b>Revolution shapes</b><br>
+<br>
+Since the very beggining ot my 64 kilobyte demo making experience, like with <i>Weektro</i> and <i>rare</i> back in 1998, I have always used revolution shapes to generate geometry. Revolving geometry is a very cheap way to generate interesting geometry: given a 2d contour made of line segments, a surface is constructed as the 2d profile turns around a given axis. The only thing you need to store is few 2d coordinates for your profile (probably stored as 8 bit numbers) and then a little piece of code to generate triangles based on that data and few sinus and cosinus (around 300 bytes of code). The technique is quite flexible, it allows to build many types of objects, litle columns, cups, mushrooms, tentacles, skydomes... Also, of course, cylinders, cubes and spheres.... So, that's why I never write one single byte of code to generate those primitives - if you have revolution shapes in your geometry engine, you have those ones too.<br>
+<br>
+<br>
+<b>Clone, scale, rotate, bend</b><br>
+<br>
+No need to say that you can get variations of your geometry by instanciating it many times (cloning) and changing the scale, orientation and bending of the clones. For example you can use procedural techinques to do so and build trees or cities, or you can even use more sophisticated algorithms to build something like <i>Atrium</i> or even manual placement of clones to shape a robot.<br>
+<br>
+<br>
+<b>Displacement</b><br>
+<br>
+However the technique I like the most is displacement of geometry. This very easily hides the simplicity of your data, and makes it look rich. We used it a lot both in <i>Paradise</i> and <i>195/95/256</i>. The idea is, once you have a 3d object, say a revolution shape, then process it's vertices one by one and apply some formula to it's vertex coordinates and move them. That way you can achieve scale, rotation and bending for free without any extra code, but also much more complex effects like fractal detail growth, ripples, bumps, etc. For example, in <i>Paradise</i> there are some mountains in the background of one of the scene. Those where not done with some special code for fractal mountains, but it was just a displacement modifier applied to a 2d horizontal plane. Another example are the columns shown on Image 3, taken from <i>195/95/256</i>, where the details of the columns where doing by displacement. Another example is visible in Image 1 - the potatoe in the background is a revolution object (a sphere) where the vertices where displaced with some perlin noise. Image 4 shows another use of displacement, in this case the teeths of the perimeter of the wheel where grown by displacement of vertices too.<br>
+<br>
+<br>
+<b>Subdivision, softeing</b><br>
+<br>
+Of course there are algorithms to tesselate geometry and smooth it. For example, we have used very often the well knwon Catmul Clark subdivision shceme to make surfaces more detailed and smooth. Catmul Clark works best with quadrilaterals; for pure triangular meshes you can try the Loop subdivision shema, although I really recommend Catmul Clark since most artists are used to it (that's what most modeling applications use today).<br>
+<br>
+Also you can smooth a surface without generating more polygons. You can do that by low pass filtering the mesh, or in other words, doing some sort of bluring on the vertices. You can see it like this: for a given vertex, find the vertices that are conected to it (through an edge), and do some averaging on vertex coordinates, and asign it to the coordinates of the current vertex. Just like you blur images.<br>
+<br>
+<br>
+<b>Mesh compression</b><br>
+<br>
+Of course, you can also make your 3d models in any 3d application and then export them to your demo. We have used this a lot in the last 4 and 64 kilobyte demos. Basically you normally want to store a low resolution version of you mesh, with as less polygons as possible, and store it as a C array of data in your demo. Usually vertices are quantified to 8 bits for example, and geometry converted to quad strips for compression. Well, there are many techniques to compress, other articles and presentations in this site explain the techniques in detail. You can easily get down to an average of 2 bytes per triangle in your models. For example, each of the statues in the <i>195/95/256</i> demo, like the one shown in Image 7, was compressed in around 750 bytes.<br>
+<br>
+<br>
+<b>Metaballs</b><br>
+<br>
+Another way to build smooth surfaces, although it's very difficult to control, are metaballs. I still have not seen a single demo where metaball based objects look anything near "not horrible", but hopefully somebody will improve the technique one day or another. The advantage is that once you place the metaprimitives (balls, cylinders, planes, whatever) either by manual placement by an artist or by procedural techniques (like ifs, fractals, or any other), you get a smooth surface without cracks. You can marching cubes or marhching tethaedra for that, the only problem is you will probably need some simplification algorithm to reduce the huge amount of polygons that you will generate.
+</div>
+
+<div class="part">
+
+<img src="gfx00.jpg"/><br><i>Image 1. A shoot from 195/95/256 showing some "primitives"...</i><br>
+<br>
+<img src="gfx01.jpg"/><br><i>Image 2. A shoot from 195/95/256 showing revolution shapes</i><br>
+<br>
+<img src="gfx02.jpg"/><br><i>Image 3. Displacement applied to the geometry of Image 2</i><br>
+<br>
+<img src="gfx03.jpg"/><br><i>Image 4. Displacement used to grow some teeth in a wheel</i><br>
+<br>
+<img src="gfx04.jpg"/><br><i>Image 5. A mesh before and after CC subdivision</i><br>
+<br>
+<img src="gfx05.jpg"/><br><i>Image 6. A compressed mesh</i><br>
+<br>
+<img src="gfx06.jpg"/><br><i>Image 7. A compressed mesh after CC subdivision</i><br>
+</div>
+
+</div>
+
+
+<!-- -------------------------------------------------------------------------------------------- -->
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

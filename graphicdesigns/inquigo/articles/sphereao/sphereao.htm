@@ -1,0 +1,217 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/sphereao/sphereao.htm">sphere ambient occlusion - 2006</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<!-- --------------------------------------------------------------------------------- -->
+
+<style>
+.parts{ display:flex; }
+@media only screen and (max-width: 1280px)
+{
+  .parts { flex-direction:column;}
+}
+</style>
+
+<h3>Intro</h3><hr>
+Beginning of 2006 I got a new graphics card at my workplace. It had a pixel shaders 3.0 capable GPU, and I made few experiments on it. One of them was a shader based raytacer with some spheres and planes. I decided it would be great to add ambient occlusion to all those moving objects. For that I had to find an analytic way to compute the occlusion produced by planes and spheres in each other, since doing a montercarlo approximation was out the question. The occlusion produced by an infinite plane into an sphere is trivial: take the normal to the sphere's surface point, and dot it with the plane normal, add one and divide by two, <i>et voila</i>. Now, the sphere to plane ambient occlusion is something else than a dot, and it would be very nice to know it since we could use if for triangles also... (hm, this sound interesting right?)<br>
+<br>
+So this article is about analytically calculating the occlusion of a sphere to a point on an arbitrary surface. As we will see the result is surprisingly simple.<br>
+<br>
+We start by assuming without any lose of generality that we have a surface point with normal pointing up in the <i><b>y</b></i> direction. We recall that the ambient occlusion means how much light from everywhere in the upper hemisphere centered in the point and with north pole in the normal direction does not arrive to the given point. It's the opposite of the "irradiance". Here we are going to use the blocking version, that is easier to work with. The problem is to find the blocking factor for a sphere of radius <i><b>r</b></i> that is at a distance <i><b>d</b></i> from the point. For now we don't need the angle between the normal and the position of the sphere since the blocking factor is independant of the angle. Later, we will take into account the cosine term of the lighting integral and we will need this angle. But, for now what we have is:<br>
+<br>
+<div class="formulaText">ir(r,d) = 1 - bl(r,d)</div><br>
+<br>
+Now, the blocking factor is the area that the sphere projects into the hemisphere divided by the area of the hemisphere. If the projection (shadow) of the sphere was covering the complete hemisphere we would have both areas equal and thus the blocking factor would be one.<br>
+<br>
+<img class="formula" src="gfx_for_01.png"/><br>
+<br>
+By assuming the hemisphere has radious one, the area of the hemisphere is two times <i><b>pi</b></i>. Working with unit radius is nice because we can exchange the concept of area and solid angle (the area of an object project on a sphere is just its solid angle multiplied by the radius squared of the sphere). The solid angle is given in steradians (even if it is a unit-less measure). The image shows the setup of the problem. The blue sphere is projecting a shadow  into the pink hemisphere through a yellow cone. We have to calculate the solid angle <i><b>w</b></i> of the sphere (the small circle drawn by the intersection of the cone and the hemisphere).
+<br>
+<br>
+
+
+<div class="parts">
+<div class="part">The solid angle of an object is calculated by the formula given below. The integral runs over all the surface <i><b>S</b></i> of the object projecting "the shadow" (the sphere in our case). The idea behind the formula is not that complex: we have to take every surface element (differential) <i><b>dA</b></i> (note that it's a vector with the orientation of the surface and modulo the differential measure of area), and dot it with the position vector. That way parts of the surface pointing to our point will occlude more than those being perpendicular, what makes much sense. The contribution of each of these surface elements is divided by the square of the distance <i><b>r</b></i> (don't mess with the radious of our sphere) to account for the projection of the object into the hemisphere: objects far away of the point have a smaller shadow on the hemisphere, so they occlude less.<br>
+<br>
+<img class="formula" src="gfx_for_02.png"><br>
+<br>
+Well, don't be afraid, we will very quickly convert this ugly integral into something that will make more sense. For that we are going to make a change on the setup. We realize that the shadow casted by the sphere is the same as the one casted by the disk resulting from the intersection of the sphere and the cone. Basically, we can change the integral to run on that disk, and that will make our life easier.
+<br>
+</div>
+<div class="part"><img style="mix-blend-mode:screen;" src="gfx_02_p.jpg"/></div>
+</div>
+
+<br>
+<div class="parts">
+<div class="part">
+So, the first thing to do it to get the dimensions of that disk, based on the dimensions of the sphere. Following the next image bellow, we will call <i><b>R</b></i> (in uppercase) the radious of the disk, and <i><b>D</b></i> the distance from its center to the point of interest. We can quickly find how <i><b>R</b></i> and <i><b>D</b></i> relate to <i><b>r</b></i> and <i><b>d</b></i> by applying Pythagoras theorem twice after noting that the radius of the disk line intersects the sphere position line in ninety degrees. The relations are the ones on the left of the image.<br>
+<br>
+<img class="formula" src="gfx_for_03.png"/>
+</div>
+<div class="part"><img style="mix-blend-mode:screen;" src="gfx_01_p.jpg"/>
+</div>
+</div>
+
+<br>
+
+<div class="parts">
+<div class="part">
+To integrate over the disk we are going to use polar (flat cylindrical) coordinates, that fit very well the geometry of the disk. So, the integral on the surface is going to be done by a double integral, one along a radial axis from the center of the disk until its border, and another one over the complete circumference. Let's call these two coordinates <i>&phi;</i> for the angle and <i>&lambda;</i> for the distance to the center of the disk. Then, given the following picture, we have to identify the symbols in the previous integral.<br>
+<br>
+So first, <i><b>r</b></i> is just the hypotenuse of the triangle with sides <i>&lambda;</i> and <i><b>D</b></i>, so<br>
+<br>
+<img class="formula"  src="gfx_for_04.png"><br>
+<br>
+Next, we have to do the dot product of the numerator of the integral. Because the normal <i><b>n</b></i> has modulus one by definition, we have<br>
+<br>
+<img class="formula" src="gfx_for_05.png"><br>
+<br>
+For the cosine of beta, we just have to note that the angle beta between <i><b>dA</b></i> and <i><b>n</b></i> is the same as the angle formed in the triangle
+<i><b>D</b></i>-<i>&lambda;</i>-<i><b>r</b></i>. So,<br>
+<br>
+<img class="formula" src="gfx_for_06.png"><br>
+<br>
+Finally only <i><b>|dA|</b></i> remains. It is the differential area created when moving the integration point a small amount in the <i>&lambda;</i> direction (<i><b>d</b></i><i>&lambda;</i>) and a small amount in a <i><b>d&phi;</b></i> &nbsp; rotation (this creates a <i>&lambda; &sdot; d&phi;</i> &nbsp; arc). It is the shaded area in the picture on the left. The result is<br>
+<br>
+<span class="formulaText">|dA| = &lambda; &sdot; d&phi; &sdot; d&lambda;</span><br>
+</div>
+<div class="part">
+<img style="mix-blend-mode:screen;" src="gfx_04_p.png"/>
+</div>
+</div>
+
+We have all our ingredients now. The resulting integral is thus:<br>
+<br>
+<img class="formula" src="gfx_for_08_p.png"><br>
+<br>
+By substituting back <i><b>r</b></i> and <i><b>d</b></i> in <i><b>R</b></i> and <i><b>D</b></i> we get our final blocking factor for the sphere:<br>
+<br>
+
+<img class="formula" src="gfx_for_09.png"/>
+<br>
+<br>
+what is pretty simple after all, just a few operations per fragment and we are done. Note how the expression is just a function of <i><b>r/d</b></i> as a hole. This makes a lot of sense, since making a sphere bigger means we have to move it further to have the same projected shadow or occlusion factor. Basically it means that a sphere <i><b>x</b></i> times bigger will project the same shadow if it is <i><b>x</b></i> times further away. <br>
+<br>
+<hr>
+<br>
+
+<div class="parts">
+<div class="part">
+However this result is not physically correct, because we know that light coming from the sides will have less influence in out point that light coming directly from above. So, next step is to fix this. For that we have to include the cosine term into our integral. This will have the effect that if the disk is straight above the point, it will block more light even if the projected area is the same as if it was anywhere else. So now we need to know the position of the disk relative to the normal of the surface point.<br>
+<br>
+
+We have to take care of correctly integrating the disk surface. First note that I called <img src="gfx_sym_02.png"> the angle between the current integration point and the up direction. That is the angle for the lambert cosine term. Then, by reusing what we got in the previous analysis, we have that:<br>
+<br>
+<img class="formula" src="gfx_for_11.png"/><br>
+</div>
+<div class="part">
+</div>
+<img style="mix-blend-mode:screen;" src="gfx_05_p.png"/>
+</div>
+
+
+<br>
+The tricky part is to put <img src="gfx_sym_02.png"> in terms of <i>&phi</i> and <img src="gfx_sym_03.png"> (the angle between the surface vector and the center of the sphere/disk direction). By drawing the thing on paper slowly, one arrives to:<br>
+<br>
+<img class="formula" src="gfx_for_12.png"/><br>
+<br>
+<br>
+so the complete integral is:<br>
+<br>
+<img class="formula" src="gfx_for_13.png"/><br>
+
+<br>
+The second integral evaluates to null, because of the <img class="formula" style="vertical-align:middle" src="gfx_for_14.png"/>, so we get:<br>
+<br>
+<img class="formula" src="gfx_for_15.png"/><br>
+<br>
+meaning that for the disk<br>
+<br>
+<img class="formula" src="gfx_for_16.png"/><br>
+<br>
+And making the final substitution<br>
+<br>
+<img class="formula" src="gfx_for_17.png"/>
+<br>
+<br>
+So the result is amazingly simple (and intuitive!) Just an inversesqrt() (RSQ), a dot product and few muls! The realtime image below (drag with the mouse) shows an example of the formula being applied in a fragment shader to get the AO produced by the sphere (note that I also included the plane occlusions, that are very simple to compute). The nice things are: 1] it's done per pixel, not per vertex, so no tessellation or clashing polygon artifacts  2] it's fully dynamic, so you can move the sphere. The technique is not restricted to planes of course, any 3D mesh can recive the AO of the sphere ;)<br>
+<br>
+
+<div class="iframeCenter" style="max-width:800px;"><div>
+<iframe class="myPicture" frameborder="0" src="https://www.shadertoy.com/embed/4djSDy?gui=true&t=10&paused=true" allowfullscreen></iframe>
+</div>
+<a class="regular" href="https://www.shadertoy.com/view/4djSDy">https://www.shadertoy.com/view/4djSDy</a>
+</div>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

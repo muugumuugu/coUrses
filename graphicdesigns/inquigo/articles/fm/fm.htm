@@ -1,0 +1,148 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/fm/fm.htm">on frequency modulation synthesis - 2008</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+I'm not sound coder or synth architect, however I would like to quickly explain something about a DSP issue that many of us amateurs have faced with at least once while doing this kind of fun programming. It's about frequency modulation - something very easy in conception yet something most people don't really understand, I believe.<br>
+<br>
+<h3>The big misconception</h3><hr>
+<br>
+Let's start with a well known example of a simple cosine of constant frequency, for example 440 hz:<br>
+<br>
+<span class="formulaText">y(t) = cos( 2&pi;*440*t )</span><br>
+<br>
+where <b><i>t</i></b> is normally the "time" and can be expressed for example as <b><i>t=n/fs</i></b> where <b><i>n</i></b> is the current sample number and <b><i>fs</i></b> is the sampling frequency, say 44100 hz.<br>
+<br>
+Now, imagine we want this tone to change frequency with time. Like, we want that after three seconds the frequency has completely decreased to zero hertz, in a linear manner. Then, many people will make the following mistake:<br>
+<br>
+<span class="formulaText">y(t) = cos( 2&pi;*440*t*(1-t/3) )</span><br>
+<br>
+hoping that at <b><i>t=3</i></b> the 440 is cancelled out. <b>Wrong!!!</b> If you listen to it (or draw the graph) you will see that the signal actually has zero frequency at time <b><i>t=1.5</i></b> and that at <b><i>t=3</i></b> is has completely recover its original frequency (although it's vertically mirrored).<br>
+<br>
+Another example, we all have one day tried to do<br>
+<br>
+<span class="formulaText">y(t) = cos( 2&pi;*(440+40*cos(2&pi;*t))*t )</span><br>
+<br>
+in the believe it would create a nice vibrato effect or something. But we get an explosion of beeps instead.<br>
+<br>
+So, what's wrong again?<br>
+<br>
+<br>
+
+<h3>The explanation</h3><hr>
+<br>
+The big misconception is that<br>
+<br>
+<span class="formulaText">y(t) = cos( 2&pi;*440*t )</span><br>
+<br>
+actually sounds at 440 hz because that thing in front of "t" reads "2&pi;*440", and that therefore anything in front of "t" will give the appropriate pitch to our tone, what obviously probes to be false. The truth is that the pitch of a cosine is given by <b>the derivative of its argument</b>.<br>
+<br>
+So, let's write the tone above as<br>
+<br>
+<span class="formulaText">y(t) = cos(p(t)), p(t) = 2&pi;*440*t</span><br>
+<br>
+<b><i>p(t)</i></b> is the argument of the cosine, and its derivative is<br>
+<br>
+<span class="formulaText">dp(t)/dt = p'(t) = 2&pi;*440</span><br>
+<br>
+thus it's sound is 2764.6 radians per second, or 440 cycles per second (hertz). Let's take the example of the fading sound he wanted to achieve: we were using<br>
+<br>
+<span class="formulaText">p(t) = 2&pi;*440*t*(1-t/3)</span><br>
+<br>
+meaning the pitch was<br>
+<br>
+<span class="formulaText">p'(t) = 2&pi;*440*( 1-2*t/3 )</span><br>
+<br>
+so we were clearly starting at a pitch of 440 hz (<b><i>t=0</i></b>), geting 0 at <b><i>t=1.5</i></b> and going back to -440 at <b><i>t=3</i></b>. What we wanted instead was more<br>
+<br>
+<span class="formulaText">p'(t) = 2&pi;*440*(1-t/3), therefore</span><br>
+<br>
+<span class="formulaText">p(t) = 2&pi;*440*(t-t*t/6) = 2&pi;*440*t*(1-t/6),</span><br>
+<br>
+so<br>
+<br>
+<span class="formulaText">y(t) = cos( 2&pi;*440*t*(1-t/6) )</span><br>
+<br>
+For the tremolo effect, we want<br>
+<br>
+<span class="formulaText">p'(t) = 2&pi;*(440 + 40*cos(2pit) )</span><br>
+<br>
+and therefore<br>
+<br>
+<span class="formulaText">p(t) = 2&pi;*( 440*t + 40*sin(2&pi;*t)/2&pi; )</span><br>
+<br>
+and this one does not explode but do what it's supposed to do.<br>
+<br>
+<br>
+<h3>Conclusion</h3><hr>
+<br>
+So, remember, <b>the pitch of a cosine is given by the derivative of its argument</b>, not by the expression in front of "t" of the argument. Some people <i>know</i> this as the famous "additive fm is better than multiplicative fm", what tells me they don't really know what's going on. Here you have the right interpretation of that sentence.<br>
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

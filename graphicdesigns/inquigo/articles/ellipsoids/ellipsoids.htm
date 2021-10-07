@@ -1,0 +1,176 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/ellipsoids/ellipsoids.htm">ellipsoid SDF - 2008</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<h3>Intro</h3><hr>
+<br>
+One of the most <a class="regular" href="../distfunctions/distfunctions.htm">useful primitives</a> when modeling <a class="regular" href="../raymarchingdf/raymarchingdf.htm">organic shapes</a> with SDF us the ellipsoid. However, unlike spheres, cones, boxes and even torii, ellipsoids don't have an analytic distance function that can be evaluated by using roots and/or trigonometric functions. This is bad because that means that in principle one cannot use ellipsoids for modeling, we need to use a numerical method to implement their distance function. That, of course, is pretty slow most (a bisection method would require around 10 to 20 iterations to get good results). So, instead, we need to resort to approximate distance functions. Luckily for us, we CAN find bound functions that at least have a zero iso-surface in the shape on an exact ellipsoid. This means that such bound functions will produce renders of exact ellipsoids, but will report non euclidean distances when queried. That means that a raymarcher will have a harder time finding them and will require more steps until it finds an intersection. It also means occlusion and shadow queries will be wrong for ellipsoids, to different degree based on which bound function we are using. This is an article about two such bound functions.<br>
+<br>
+<center>
+<div class="partsC">
+<div class="part"><img class="myPicture" src="gfx00.png"/><br>Shadows produced by an exact SDF</div>
+<div class="part"><img class="myPicture" src="gfx02.png"/><br>Too large shadows due to a naive bound SDF</div>
+<div class="part"><img class="myPicture" src="gfx01.png"/><br>Improved shadows with improved bound SDF</div>
+</div>
+</center>
+
+<br>
+<br>
+<h3>Disclaimer</h3><hr>
+As a matter of fact, it <b>is</b> possible to compute the exact distance to an ellipsoid in closed from when the ellipsoid is symmetrical in one axis. In that case, the shape cam be evaluated as a 2D ellipse that is revolved along one perpendicular axis in 3D. Since ellipses <a class="regular" href="../ellipsedist/ellipsedist.htm">do have exact solution</a> in the form of a cubic, and since creating <a class="regular" href="../distfunctions/distfunctions.htms">shapes of revolution</a> is trivial and doesn't increase the degree of the polynomials, ellipsoids that are revolved ellipses do have a closed form. All images in this article that compare the two bound techniques use symmetric ellipsoids so I can compare them to the ground truth that I know is exact.<br>
+<br>
+<br>
+<br>
+<h3>First approach</h3><hr>
+<br>
+The simplest approach to bounding the distance to an ellipsoid is stretching the space such that the ellipsoid becomes a sphere, computing the distance to a unit sphere in that space, and then scale the distance back to the original space by the largest of the scale factors. The code would be:<br>
+<div class="code">
+float sdbEllipsoidV1( in vec3 p, in vec3 r )
+{
+    float k1 = length(p/r);
+    return (k1-1.0)*min(min(r.x,r.y),r.z);
+}</div>
+
+<br>
+<br>
+<h3>Second approach</h3><hr>
+<br>
+A simple way to improve the previous bound is to <a class="regular" href="../distance/distance.htm">divide by the length of its gradient</a>. After some math on paper and nice rearrangement, one gets to this:<br>
+<div class="code">
+float sdbEllipsoidV2( in vec3 p, in vec3 r )
+{
+    float k1 = length(p/r);
+    float k2 = length(p/(r*r));
+    return k1*(k1-1.0)/k2;
+}</div>
+<br>
+This involves a second square root (or rather, an inverse-square root, which happens to be faster in that a square root when computed in the GPU). But the extra cost comes with benefits.<br>
+<br>
+<br>
+<h3>Third approach</h3><hr>
+<br>
+Another idea that might pop in your head is to change the first technique a little bit and see if that improves the distance estimate: stretch the space to deform the ellipsoid into a unit sphere, find the closest point in the unit sphere, transform the point back to the source space, and compute the distance there. The technique actually works great in that <b>does</b> produce a better distance estimate. However, it fluctuates between being an underestimate and overestimate, and even with backtracking raymarchers it doesn't seem to work well, and I won't discuss it further in this article, although it can be used for 2D plotting.<br>
+<div class="code">
+float sdaEllipsoidV3( in vec3 p, in vec3 r )
+{
+    float k1 = length(p/r);
+    return length(p)*(1.0-1.0/k1);
+}</div>
+
+<br>
+<br>
+<h3>Frist vs Second techniques</h3><hr>
+<br>
+Let's compare the two proposed techniques to the ground truth distance to an ellipsoid in the context of raymarching.<br>
+<br>
+These images below are a map of the number of steps that the raymarcher needed to find the primary ray intersection in the scene rendered at the beginning of the article. Blue means "few steps", around less than 32, green is "moderate number of steps", around 64, and red means "many steps", around 128.<br>
+<br>
+<center>
+<div class="partsC">
+<div class="part"><img class="myPicture" src="gfx03.png"/><br>Ground Truth</div>
+<div class="part"><img class="myPicture" src="gfx05.png"/><br>First Technique</div>
+<div class="part"><img class="myPicture" src="gfx04.png"/><br>Second 2</div>
+</div>
+</center>
+As you can see, the First Technique does a poor job at bounding the distance to ellipsoid tightly, while the Second Technique does a much better job, resulting in an image that renders faster, or alternatively, has less artifacts for the same render time. Speaking of that, here goes the comparison of actually fixing the number of steps and seeing how well the different techniques do at resolving the surface of the ellipsoid for that fixed compute budget:<br>
+<br>
+<br>
+<center>
+<div class="partsC">
+<div class="part"><img class="myPicture" src="gfx06.png"/><br>Ground Truth</div>
+<div class="part"><img class="myPicture" src="gfx08.png"/><br>First Technique</div>
+<div class="part"><img class="myPicture" src="gfx07.png"/><br>Second Technique</div>
+</div>
+</center>
+Indeed, for a set maximum number of iterations of 90, the First Technique is not able to find the surface of the ellipsoid (although it would for 150 iterations), producing black pixels around the edges of the ellipsoid. The Second Technique works much better.<br>
+<br>
+You can find a real-time animated comparison of the two techniques here: <a class="regular" href="https://www.shadertoy.com/view/tdS3DG">https://www.shadertoy.com/view/tdS3DG</a>.<br>
+<br>
+The most important benefit of the Second Technique over First Technique, however, is not the more efficient raymarching. The main benefit is that it produces a much closer distance estimate to the ground truth, and in particular, it makes it much more euclidean. That means that when combined with other primitives that produce exact euclidean distances, the Second Technique produces values that play along nicely with those produced by the other primitives. That means that one can adjusting shadow softness parameters, occlusion thresholds and many other values globally for the whole SDF and keep consistent results. With the First Technique the ellipsoids always belong in a different distance, such to speak, universe and are difficult to control.<br>
+<br>
+This is an example of using the Second Technique (left image) vs First Technique (right image) - while both produce the same geometry, the shadows produced by the cap, which is made of two ellipsoid one of which is very flat, are pretty broken and difficult to art direct. The Second Technique produces a sensible distance field and plausible shadows:<br>
+<br>
+<br>
+<center>
+<div class="partsC">
+<div class="part"><img class="myPicture" src="gfx09.jpg"/><br>Second Technique</div>
+<div class="part"><img class="myPicture" src="gfx10.jpg"/><br>First Technique</div>
+</div>
+</center>
+
+You can find the real-time animated image and source code that contains the ellipsoid SDF here: <a class="regular" href="https://www.shadertoy.com/view/ldd3DX">https://www.shadertoy.com/view/ldd3DX</a>
+
+
+
+
+ <!-- -------------------------------------------------------------------------------------------- -->
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

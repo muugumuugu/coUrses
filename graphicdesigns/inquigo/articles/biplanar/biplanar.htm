@@ -1,0 +1,282 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/biplanar/biplanar.htm">biplanar mapping - 2020</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<!-- --------------------------------------------------------------------------------- -->
+
+<h3>Intro</h3><hr>
+In this article I'll propose an alternative to "Box mapping", also known as "RoundCube mapping" or "triplanar mapping", which is based on the same three projections but uses only two texture fetches at the cost of some extra arithmetic, which is probably a good trade-off between computation and bandwidth to do these days.<br>
+<br>
+<br>
+
+<center>
+<div class="partsC">
+  <div class="part50"><img class="myPicture" src="gfx00.jpg"/><br>Biplanar mapping - only two texture fetches per pixel</div>
+  <div class="part50"><img class="myPicture" src="gfx01.jpg"/><br>Triplanar mapping - three texture fetches</div>
+</div>
+</center>
+
+
+<br>
+The idea came up during a talk I was giving, when somebody asked whether there exists a method to apply textures to models which don't come with uv-coordinates. This can happen for meshes that haven't been UV-mapped yet, or for 3D objects that are not based on meshes or polygons, such as implicit SDFs functions (like the elephant above). The person asking was in particular interested in some alternative to triplanar texture mapping that would be cheaper in terms of number of texture fetches but that still used regular 2D textures instead of 3D textures (as you'd do in solid texturing). So I proposed exploring a simple modification to the triplanar mapping, which I tried myself right away that same night and happened to work pretty well. This article is about it; but first let's quickly recap what "triplanar mapping" is.<br>
+<br>
+<h3>Box/RoundCube/Triplanar mapping</h3><hr>
+<br>
+This is an old technique but still very useful and simple technique to apply textures to models that aren't or can't be uv-mapped. When the texture to be applied can be described procedurally, such uv-less models are often textured with 3D textures - simply feeding the surface's position coordinates into the procedural texture's input works beautifully. One trick that I think not that many people are aware of however is that these kind of 3D textures DO support model animation easily - all you need to do is use the position of the surface in its reference pose as input to the texture (these reference vertex positions are called "the Pref channel" in Renderman/Pixar for example).<br>
+<br>
+Anyways, when the texture cannot be easily created procedurally by the artists in the team, traditional and easily authored 2D texture bitmaps need to be employed. For some shapes simple things like planar projections, cylindrical projections, spherical projections or octahedral projections will do fine, but except a few models that resemble those base shapes, those projections don't work well for general models and produce stretched textures.<br>
+<br>
+So this is where multi-projections come in. Instead of having a single projection for the whole model, we allow multiple projections to coexist such that they complement each other. This means that where one projection starts to fail because there's too much stretching, another projection can take over.<br>
+<br>
+The easiest way to see this is with planar projections, where they work great for surfaces in the model that are parallel to the projection plane, ie perpendicular to the projection direction, but fail miserably on surfaces that are perpendicular to the projection plane because they create long stripes of color since one of the rate of change of one of the texture coordinates is too small. You've probably seen this in the movie Interstellar, or more probably along the cliffs of a terrain model that you have texture mapped with a simple 2D projection (say using the two non-vertical coordinates of the model vertices as uv coordinates).<br>
+<br>
+One way to assign multiple projections for our model is to define them by hand. Pixar had a tool to do this called Picasso, which was very powerful. But also laborious for the artists. But a comprimise exists where one performs automatic multi-projections at the cost of not being so powerful.<br>
+<br>
+That's why Mitch Prater invented the RoundCube texture mapping in the early 90s. If you are a game developer you might only have heard of it much more recently as "triplanar" mapping. The idea is simple - just fix three projection directions and make them the canonical directions of space, X, Y and Z. Then color blend the result of the three projection mappings based on how parallel the surface is to each one of those projections, in order to smoothly let the best projections (the most parallel one) take over the other three.<br>
+<br>
+This can be done super easily with a dot product of the surface normal and the X, Y, Z axis vectors, which naturally reduces to simply considering the appropriate X, Y or Z component of the normal and using it to determine the weight of the corresponding projection.<br>
+<br>
+The weight is usually this dot product raised to a positive integer power, such that the influence of each projection sticks to the surfaces parallel to them for a longer time. The result is that you get a weighting function that intuitively feels like a rounded cube, hence the "RoundCube" name that Mitch gave to the technique thirty years ago and which still survives to this day in the <a class="regular" href="https://rmanwiki.pixar.com/display/REN/PxrRoundCube">Renderman documentation</a>.
+<br>
+<br>
+The code is naturally super simple and you've seen it many times by now, but just in case, here you can find a live GLSL implementation: <a class="regular" href="https://www.shadertoy.com/view/MtsGWH">https://www.shadertoy.com/view/MtsGWH</a>:<br>
+<br>
+<div class="code"><span class="codeComment">// "p" point being textured
+// "n" surface normal at "p"
+// "k" controls the sharpness of the blending in the transitions areas
+// "s" texture sampler</span>
+vec4 boxmap( in sampler2D s, in vec3 p, in vec3 n, in float k )
+{
+    <span class="codeComment">// project+fetch</span>
+    vec4 x = texture( s, p.yz );
+    vec4 y = texture( s, p.zx );
+    vec4 z = texture( s, p.xy );
+    
+    <span class="codeComment">// blend factors</span>
+    vec3 w = pow( abs(n), vec3(k) );
+    <span class="codeComment">// blend and return</span>
+    return (x*w.x + y*w.y + z*w.z) / (w.x + w.y + w.z);
+}</div>
+<br>
+<h3>Biplanar mapping</h3><hr>
+<br>
+So, returning to the original question - how to make this technique more performant? Since reading textures is very costly relative to performing arithmetic and logic operations, a natural thing to try is to reduce the number of texture fetches from three to two. And the simplest way to accomplish that is to pick the two most relevant of the three canonical projections and work with them while completely disregarding the third one. Let me show you the code first and let's discuss it afterwards because there are a couple of interesting things to unpack in the technique (live GLSL implementation here: <a class="regular" href="https://www.shadertoy.com/view/ws3Bzf">https://www.shadertoy.com/view/ws3Bzf</a>):<br>
+<br>
+<div class="code"><span class="codeComment">// "p" point being textured
+// "n" surface normal at "p"
+// "k" controls the sharpness of the blending in the transitions areas
+// "s" texture sampler</span>
+vec4 biplanar( sampler2D sam, in vec3 p, in vec3 n, in float k )
+{
+    <span class="codeComment">// grab coord derivatives for texturing</span>
+    vec3 dpdx = dFdx(p);
+    vec3 dpdy = dFdy(p);
+    n = abs(n);
+
+    <span class="codeComment">// determine major axis (in x; yz are following axis)</span>
+    ivec3 ma = (n.x&gt;n.y && n.x&gt;n.z) ? ivec3(0,1,2) :
+               (n.y&gt;n.z)            ? ivec3(1,2,0) :
+                                      ivec3(2,0,1) ;
+    <span class="codeComment">// determine minor axis (in x; yz are following axis)</span>
+    ivec3 mi = (n.x&lt;n.y && n.x&lt;n.z) ? ivec3(0,1,2) :
+               (n.y&lt;n.z)            ? ivec3(1,2,0) :
+                                      ivec3(2,0,1) ;
+    <span class="codeComment">// determine median axis (in x;  yz are following axis)</span>
+    ivec3 me = ivec3(3) - mi - ma;
+    
+    <span class="codeComment">// project+fetch</span>
+    vec4 x = textureGrad( sam, vec2(   p[ma.y],   p[ma.z]), 
+                               vec2(dpdx[ma.y],dpdx[ma.z]), 
+                               vec2(dpdy[ma.y],dpdy[ma.z]) );
+    vec4 y = textureGrad( sam, vec2(   p[me.y],   p[me.z]), 
+                               vec2(dpdx[me.y],dpdx[me.z]),
+                               vec2(dpdy[me.y],dpdy[me.z]) );
+    
+    <span class="codeComment">// blend factors</span>
+    vec2 w = vec2(n[ma.x],n[me.x]);
+    <span class="codeComment">// make local support</span>
+    w = clamp( (w-0.5773)/(1.0-0.5773), 0.0, 1.0 );
+    <span class="codeComment">// shape transition</span>
+    w = pow( w, vec2(k/8.0) );
+    <span class="codeComment">// blend and return</span>
+    return (x*w.x + y*w.y) / (w.x + w.y);
+}</div>
+<br>
+So, first of all, the routine is much longer. But don't let that fool you into thinking is more expensive - while there is some ALU work (logic), there are only two texture fetches, and much of the visual complexity comes from the fact that we have to provide texture gradient by hand. But one thing at a time.<br>
+<br>
+The most important thing this function does is to pick which two of the three projections are the most aligned to the surface we are texturing. Finding the most aligned one, what I called the "major axis", is pretty trivial - just compare the X, Y and Z components of the normal to each other, and whichever is the largest (in absolute value) indicates which one of the three projections X, Y or Z is the most parallel to the surface. This can be done easily with just a few comparisons.<br>
+<br>
+<div class="code">    ivec3 ma = (n.x&gt;n.y && n.x&gt;n.z) ? ivec3(0,1,2) :
+               (n.y&gt;n.z)            ? ivec3(1,2,0) :
+                                      ivec3(2,0,1) ;
+</div>
+<br>
+These comparisons are most likely compiled to conditional moves rather than actual branches. I store the index of the largest projection in the first component of the "ma" variable. If ma.x is 0, it means the largest projection is along the X axis, if the value is 1 it references the Y axis and if it's 2 it is the Z axis. The second and third components of the "ma" varible store the "other two" axis which are not major, in lexicographic order, which is important for getting proper planar texturing.<br>
+<br>
+Finding the minor axis, or the worst of the three projections, is equally trivial: finding the smallest of the three coordinates tells us which projection is less parallel to the current surface point that we are texturing. It is stored in the "mi" variable.<br>
+<br>
+<div class="code">    ivec3 mi = (n.x&lt;n.y && n.x&lt;n.z) ? ivec3(0,1,2) :
+               (n.y&lt;n.z)            ? ivec3(1,2,0) :
+                                      ivec3(2,0,1) ;
+</div>
+<br>
+How, how to easily find the median axis, or the second best (or second worst) projection, is maybe not so obvious at first glance. But by excluding the major and minor axis, what we are left with is necessarily the median one, since we only have three. We'll store it in the variable "me", and performing the operation <b>me = 3-ma-mi</b> will give us the desired second best axis. This is because whichever values in {0,1,2} the major and minor axis took, the addition of the three axis indices will be 3, since <b>0+1+2=3</b>. So 3-ma-mi will disclose which axis was the median one. If this doesn't feel terribly intuitive to you, no worries, it takes a minute of pen and paper doodling to see why this works.<br>
+<br>
+<div class="code">    ivec3 me = ivec3(3) - mi - ma;
+</div>
+<br>
+Once the two best projection axis have been determined and stored in the first components of "ma" and "me", together with their following lexicographic axis indices in the second and third components of these variables, all that is left to do is what we have always done in trilinear mapping, but with only two projections rather than three. That is, perform the two texture fetches, and then compute the linear combination of their colors. So let's do those fetches first:<br>
+<br>
+<div class="code">    vec4 x = texture( sam, vec2( p[ma.y], p[ma.z]) );
+    vec4 y = texture( sam, vec2( p[me.y], p[me.z]) );
+</div>
+<br>
+Now, this code above alone can produce artifacts, because the selection of the two closest projections is not a smooth function of the surface normal, but a discontinuos one - it sometimes happens abruptly. Indeed those conditional moves will produce big jumps in the values of "p", and that will confuse the mipmapping algorithm inside the texture sampler. So, we can avoid the discontinuities by taking the gradients of "p" before we do the axis selection, and then pass the appropriate components of those gradients to the texture sampling function.<br>
+<br>
+<div class="code">    vec3 dpdx = dFdx(p);
+    vec3 dpdy = dFdy(p);
+	
+    ...
+
+    vec4 x = textureGrad( sam, vec2(   p[ma.y],   p[ma.z]), 
+                               vec2(dpdx[ma.y],dpdx[ma.z]), 
+                               vec2(dpdy[ma.y],dpdy[ma.z]) );
+    vec4 y = textureGrad( sam, vec2(   p[me.y],   p[me.z]), 
+                               vec2(dpdx[me.y],dpdx[me.z]),
+                               vec2(dpdy[me.y],dpdy[me.z]) );
+</div>
+<br>
+Without providing the gradients manually, the bilinear mapper will produce the typical one-pixel wide line artifacts seen in most bugs related to mipmapping.<br>
+<br> 
+The last bit of code worth mentioning is the construction of the local support through a linear remapping of the weights. If the line<br>
+<br>
+<div class="code">    w = clamp( (w-0.5773)/(1.0-0.5773), 0.0, 1.0 );
+</div>
+<br>
+wasn't implemented, we'd have some (often small) texture discontinuities. These discontinuities would naturally happen in areas where the normal points in one of the eight (&plusmn;1,&plusmn;1,&plusmn;1) directions. This happens because at some point the minor and median projection directions will switch places and one projection will be replaced by another one. In practice with most textures and with most blending shaping coefficients "l", the discontinuity is difficult to see, if at all, but the discontinuity <b>is</b> always there. Luckily it's easy to get rid of it by remapping the weights such that 1/sqrt(3), 0.5773, is mapped to zero.<br>
+<br>
+Now, this height remapping removes the discontinuity but narrows the blending areas considerably, so the look of a biplanar mapper is closer to a triplanar mapping with an aggressive blending factor of "k" equal to 8. Because of that you'll find a division by 8.0 in the code I propose for the biplanar mapper, because that makes the biplanar texture mapper an visually satisfactory replacement for the triplanar mapper.<br>
+<br>
+<center>
+<div class="partsC">
+  <div class="part50"><img class="myPicture" src="gfx02.jpg"/><br>Triplanar, k=1</div>
+  <div class="part50"><img class="myPicture" src="gfx03.jpg"/><br>Biplanar, k=8, no remapping</div>
+  <div class="part50"><img class="myPicture" src="gfx04.jpg"/><br>Biplanar, k=1 with local support (remapping)</div>
+  <div class="part50"><img class="myPicture" src="gfx05.jpg"/><br>Triplanar, k=8</div>
+</div>
+</center>
+
+<br>Note how biplanar and triplanar mapping look very similar, except near the singularities produced when the normal points towards (&plusmn;1,&plusmn;1,&plusmn;1). A couple of them can be clearly seen in the pictures above on the head of the elephant where red, green and blue meet abruptly.<br>
+<br>
+Another alternative to the remapping is to simply skip it but then only use high values of "k", which will reduce the weight of the least relevant projection to zero quickly. For example, with "k"=8, we get 1/sqrt(3)<sup>8</sup> = 0.012 = 1.2%, which is small enough that in practice it will be totally unnoticeable.<br>
+<br>
+<br>
+<h3>Testing it</h3><hr>
+This implementation of biplanar mapping works surprisingly well. I'd definitely use it in situations where fetching textures is a bottleneck for the renderer. It is a direct replacement to the triplanar mapper, so it really costs nothing to give it a try and see how it goes for your application.<br>
+<br>
+Here's a closeup comparison of biplanar vs triplanar mapping, focused in the singularity areas for the elephant model:<br>
+<br>
+<center>
+<img class="myPicture" src="gfx06.gif"/><br>Biplanar vs Triplanar mapping, near singularities
+</center>
+<br>
+<br>
+<br>
+This is a real time demonstration of the biplanar mapping technique in action in Shadertoy (<a class="regular" href="https://www.shadertoy.com/view/ws3Bzf">https://www.shadertoy.com/view/ws3Bzf</a>) - press the Play button to see in animated:<br>
+<br>
+<div class="iframeCenter" style="max-width:800px;"><div>
+<iframe frameborder="0" src="https://www.shadertoy.com/embed/ws3Bzf" allowfullscreen></iframe>
+</div></div>
+<br>
+<br>
+And finally, here's a video that summarizes a bit some of the things we've talked about in this article and a live GLSL implementation at <a class="regular" href="https://www.shadertoy.com/view/3ddfDj">https://www.shadertoy.com/view/3ddfDj</a>):<br>
+<br>
+
+<center>
+<video width="960" height="540" autoplay muted loop controls poster="vid_00.png">
+  <source src="vid_00.mp4" type="video/mp4">
+  <source src="vid_00.webm" type="video/webm">
+</video>
+<br>Biplanar texture mapping video</center>
+
+<br>
+<br>
+<br>
+<h3>Related ideas</h3><hr>
+When I published this article a couple of people shared with me other ideas they had to reduce the cost of triplanar mapping, so I'll share them here too:<br>
+<br>
+Nicholas Brancaccio proposed the stochastic route, which is always a valid route if the variance of your Montercarlo rendered image is coming from somewhere other than the surface textures (and probably is). So, simply get ready to do triplanar texture mapping as usual but pick just one of the three projections at random. Of course you can get the random sample from a distribution that is proportional to the weights of the three projections and skip the blending altogether. This might even work fine in realtime applications if you are already heavily dithering lots of the visual elements of the image and are doing some temporal reprojection to smooth things out.<br>
+<br>
+There's another idea that is almost identical to the one in this article which Chris Green from Valve said was used in the "Half Life 2 Ep 2" game. It's this one: skip the detection of the most important projections, and instead prepare to do regular triplanar mapping. However, apply a weight remapping like the one we have in this article, such that we create a more local support and the least important projection's weight becomes zero. Then, for each one of the three projections check if the weights is above zero, and only if it is do the conditional texture fetch. Most times this will result in only two of the three textures being sampled. The advantage is that it has a bit less ALU involvement, but the disadvantage is that conditionally sampling textures can be a problem in some architectures. On the other hand, the cost of the ALU in the implementation in this article probably is quickly offset in real scenarios by the cost of the multiple texture fetches needed to support albedo, normal map, roughtness, etc.<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>
+
+
+
+

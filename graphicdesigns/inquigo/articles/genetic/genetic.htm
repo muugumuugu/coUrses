@@ -1,0 +1,131 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/genetic/genetic.htm">genetic algorithms - 2010</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<!-- --------------------------------------------------------------------------------- -->
+
+I remember years ago to be toying around with genetic algorithms. After I found a couple of blogs out there that posted on the topic few months ago, I decided to do some experiments again and see how much genetic algorithms could assist in extreme image compression.
+<br>
+<br>
+<h3>The experiment</h3><hr>
+<div class="partsB">
+<div class="part70">
+The idea was to give myself a budget of 1024 colored points/disks and see how they could be best arranged to make an image. I explain: each point had a position, size and color (alpha channel/transparency included). Provided the image is not bigger than 256x256 pixels, then all these 1024 points can be represented in no more than 6 kilobytes of data. Thankfully, as soon as there are some bias from a pure random distribution a good compressor will produce a smaller output than those 6 kilobytes. Anyway, the trick was to chose the right point position, size and colors for every point. And that's of course where the genetic algorithm can help us: given a reference image we let the algorithm find those positions and colors for us.<br>
+<br>
+I'm not gonna explain here what genetic algorithms are, there is a good amount of resources out there that I don't want to duplicate. What probably matters is that my implementation was quite naive, but even so, just after few hours I got my compressed image (see photo in the right side of this text). Not bad. So, the experiment shows that indeed one can use genetic algorithms to help in image compression. This experiment proved that even a simple implementation can produce images that are perhaps good for 64 kilobyte demos. I'm sure that with a bit of work in the mutation strategy and the data layout one can get some nice images with only 4 kilobytes.</td>
+</div>
+<div class="part"><img src="gfx00.jpg"/><br><i>Image encoded in 5 kilobytes</i></div>
+</div>
+<br>
+<h3>The sketch of the implementation</h3><hr>
+The thing was coded in C, but I write it in pseudocode here. <i>data</i> contains the position, size and color of the points, and its layout is optimized for rendering, not for compression. Rendering and image comparison are the slowest steps in the algorithm, so having the data optimized for rendering speed is a good idea. The data is rearranged and optimized for compression only after the best data has been found, and it's done only once. Care should be taken, tho, so the speed optimized and size compressed data both render the same images, otherwise the algorithm could be converging to the wrong fixed point.<br>
+<br>
+<div class="code"><span class="codeComment">// init</span>
+image = loadImage( "image.png" );
+data = randomdata();
+difference = infinite;
+
+<span class="codeComment">// compute</span>
+while( !happy )
+{
+    newdata = randomize( data );
+    newimage = renderImage( newdata );
+    newdifference = computeDifferenceMSE( newimage, image );
+    if(  newdifference < difference )
+    {
+        data = newdata;
+        difference = newdifference;
+
+        <span class="codeComment">// data contains the compressed/encoded image</span>
+        saveToDisk( data );
+    }
+}</div>
+<br>
+The renderImage() function was implemented in OpenGL. However, computeDifference was done in C, but could have been optimized by implementing it in OpenGL too by image differencing and few reduction passes (log(imageResolution)/log(2) passes, to be more precise). For my experiment I use the traditional euclidean distance between the two images, ie, MSE.<br>
+<br>
+<br>
+<br>
+<h3>Some considerations</h3><hr>
+Well, the code seems simple, but the real trick here is to find a nice randomize() function. Usually, such a function randomizes one or a few of the values of <i>data</i> by a small amount, in an attempt to do a random walk towards the minima of the function. Of course, as it often happens with these methods, there is no one but many minimas, which are local minimas but most of the times not the best minima possible. So, from time to time it is a good idea to generate a completely random sequence from scratch, and let the mutation start a new evolutionary line. Well, there is a long theory you could read out there, and learn on mutation strategies. You will end up reading about concepts like ergodicity, methods like metropolis, and stuff. Certainly too much stuff to be described here. The good news is that you don't really need all that to get started and play around a bit - common sense is probably more than enough.<br>
+<br>
+<br>
+<h3>Result</h3><hr>
+This is an example of the algorithm can produce, by using only 1000 points:<br>
+<br>
+<center>
+<video autoplay muted loop>
+  <source src="vid00.mp4" type="video/mp4">
+  <source src="vid00.webm" type="video/webm">
+</video>
+</center>
+
+
+<!-- -------------------------------------------------------------------------------------------- -->
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

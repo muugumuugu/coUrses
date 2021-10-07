@@ -1,0 +1,211 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/checkerfiltering/checkerfiltering.htm">filtering the checkerboard pattern - 2017</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<h3>Intro</h3><hr>
+The checkerboard pattern is often seen in computer graphics tools and papers as a placeholder for more sophisticated patterns or textures. Still, when it is employed, there's no reason to be sloppy about it - users still expect the images to look high quality, naturally including properly antialiased. One way to do so might be so simply store the actual checkerboard pattern in a mipmapped texture, in which case filtering will be performed the usual way. However, for different reasons you might want to avoid using textures for the pattern and do it procedurally. Then this article might interest you, since it explains how to perform filtering of checkerboard patterns analytically (without precomputed textures or mips). This article is heavily inspired by the book "Advanced Renderman" by Anthony A.Apodaca and Larry Gritz (1999) which tackles the filtering of pulse signals (page 273). You can also find a summary of it in the <a class="regular" href="http://weber.itn.liu.se/~stegu/TNM084-2016/RenderMan_20/basicAntialiasing.html">Renderman Shading Language documentation</a>.<br>
+<br>
+
+<div style="width:100%;">
+<figure style="display:table;margin:auto;">
+<img class="myPicture" src="gfx00.png"/>
+<figcaption>Left: naive checkerboard. Right: analytically filtered checkerboard.</figcaption>
+</figure>
+</div>
+
+<br>
+<br>
+<h3>The Starting Point</h3>
+<hr>
+<br>
+We start by having a simple checkerboard patter what will alias under normal circumstances:<br>
+<br>
+<div class="partsC">
+<div class="part">
+<div class="code"><span class="codeComment">// checkers, in mod form</span>
+float checkers( in vec2 p )
+{
+    vec2 q = floor(p);
+    return mod(q.x+q.y,2.);
+}
+</div>
+</div>
+<div class="part">
+<div class="code"><span class="codeComment">// checkers, in xor form</span>
+float checkers( in vec3 p )
+{
+    ivec2 ip = ivec2(round(p+.5));
+    return float((ip.x^ip.y)&1);
+}
+</div>
+</div>
+<div class="part">
+<div class="code"><span class="codeComment">// checkers, in smooth xor form</span>
+float checkers( in vec3 p )
+{
+    vec2 s = sign(fract(p*.5)-.5);
+    return .5 - .5*s.x*s.y;
+}
+</div>
+</div>
+</div>
+These three variations produce the same pattern. But for our purposes, we'll chose the third form, since it is easily extended into a smooth function. To do so,
+not that the <b>s</b> is a square signal oscillating between -1 and 1 in both the <b>x</b> and <b>y</b> coordinates. The multiplication on the second line of code produces the xor pattern since neg*neg=pos, neg*pos=neg, pos*neg=neg, pos*pos=pos. The 0.5 scale and bias brings the value for the pattern from [-1,1] back to [0..1].<br>
+<br>
+Now, the point of picking this expression for the checkers patter is that we can hopefully analytically filter the square signal <b>s</b> and get some filtered checkers pattern.<br>
+<br> 
+<br>
+<br>
+<h3>Filtering</h3>
+<hr>
+<br>
+Filtering for us basically means that where we normally would evaluate/sample the checkers pattern with some particular <b>uv</b> texture coordinates in our pixel shading function, instead we are going to consider all the checkers pattern area covered by the pixels under shading. When considering the whole area, we will do some weighted average of all the content of the area. The size of the area covered by the pixel together with the weights assigned to each point in the area determines the so called <b>kernel</b>. If all weights are the same, we are doing a box filter. Since that's the simplest of all, lets start with that one.<br>
+<br>
+First we need to determine the area (in checkers pattern space) of the pixel under shading. Usually this is compute as an approximation to the true area. For that, most renderers make use of numeric differentiation - they check the <b>uv</b> coordinates of the patter in the the current pixel and subtract that from the <b>uv</b> coordinates at the neighbor pixels. That gives a good enough estimate of how much area of the pattern is compressed into that pixel. If you are using a simple pixel shader in a GPU, you can get that information with <b>dFdx()</b>, <b>ddx() or similar functions. If you are writing your own raytracer, you might want to employ ray differentials to keep track of this information.</b>
+<br>
+In either case, we'll assume such differentials are available and that they are good enough approximation to the shape of the kernel. One we have it, instead of <a class="regular" href="http://localhost/www/articles/filtering/filtering.htm">numerically integrate our pattern</a>, we'll try to do it analytically.<br>
+<br>
+<br>
+<br>
+<h3>Integrating</h3>
+<hr>
+<br>
+As we mentioned earlier, the signal we want to integrate is a periodic square pulse, or a square wave, that oscillates between -1 and 1 along each unity of its domain.<br>
+<br>
+<img class="myPicture" src="gfx01.png"/><br>
+<br>
+Integration is accumulation of values, so as we start at zero and we start scanning the square signal we'll start accumulating values of 1, until we are done with the first square block. Then we'll start subtracting for a whole integer interval to reach zero again. The process will repeat forever, resulting in a signal with the same period as the square signal itself. Since we are integrating constant values, we know that the rate of increase and decreasing will be linear (a ramp). The peak will be the area of each square, which is 1. So with all this information, we can deduce that the integral of the square signal is the following triangular signal, displayed here in red:<br>
+<br>
+<img class="myPicture" src="gfx02.png"/><br>
+<br>
+We can codify such a signal easily, as shown bellow, although it can be sometimes convenient to have access both to the square and the triangular signals together:<br>
+<br>
+<div class="partsC">
+<div class="part">
+<div class="code"><span class="codeComment">// triangular signal</span>
+float tri( in float x )
+{
+    float h = fract(x*.5)-.5;
+    return 1.-2.*abs(h);
+}</div>
+</div>
+<div class="part">
+<div class="code"><span class="codeComment">// square (x) and triangular (y) signals</span>
+vec2 sqr_tri( in float x )
+{
+    float h = fract(x*.5)-.5;
+    return vec2(-sign(h),1.-2.*abs(h));
+}</div>
+</div>
+</div>
+With this at hand, we can now perform the actual integration. Remember that a definite integral of a function <b>f</b> with primitive <b>F</b> between points <b>a</b> and <b>b</b> is computed as F(b)-F(a). So we are ready to put it all together:<br>
+<br>
+1. Compute the kernel size based on our <b>uv</b> differentials, which we can call <b>ddx</b> and <b>ddy</b>: w = max{|ddx|, |ddy|)<br>
+<br>
+2. compute our points <b>a</b> as <b>uv - w/2</b>,  <b>b</b> as <b>uv + w/2</b><br>
+<br>
+3. perform the integration of the <b>x</b> square signal and the <b>y</b> square signal, by using our triangular signal<br>
+<br>
+4. divide it by the size of the kernel <b>w</b> so we get our normalize box filter with height 1/w<br>
+<br>
+5. evaluate our smooth xor function that we defined above to get our smooth checkers pattern<br>
+<br>
+Note that integration (steps 3) is done for <b>x</b> and <b>y</b> independently, and the results is composed (step 5) through the xor pattern formula. In theory we should be integrating the xor pattern across a surface (it should be a double integral), but luckily for us the pattern integral separable:<br>
+<br>
+<img class="formula" src="gfx09.png"/><br>
+<br>
+When we put all together, this is the resulting code:<br>
+<br>
+<div class="code"><span class="codeComment">// square (x) and triangular (y) signals</span>
+float checkersGrad( in vec2 uv, in vec2 ddx, in vec2 ddy )
+{
+    vec2 w = max(abs(ddx), abs(ddy)) + 0.01;    <span class="codeComment">// filter kernel</span>
+    vec2 i = (tri(uv+0.5*w)-tri(uv-0.5*w))/w;   <span class="codeComment">// analytical integral (box filter)</span>
+    return 0.5 - 0.5*i.x*i.y;                   <span class="codeComment">// xor pattern</span>
+}</div>
+<br>
+As you can see, the signature of the function is the same as GLSL's textureGrad(), and it is intended to be used, indeed, in the same way.<br>
+<br>
+The image quality improvement speak by themselves, especially under camera animation:<br>
+<br>
+<br>
+
+<div class="partsC">
+<div class="part"><img class="myPicture" src="gfx03.gif" /><br>Left is unfiltered, naive checkers pattern. Right is filtered as just described</div>
+<div class="part"><img class="myPicture" src="gfx07.png" /><br>Closeup, Unfiltered</div>
+<div class="part"><img class="myPicture" src="gfx08.png" /><br>Closeup, Filtered</div>
+</div>
+<br>
+You can find a reference implementation here: <a class="regular" href="https://www.shadertoy.com/view/XlcSz2">https://www.shadertoy.com/view/XlcSz2</a><br>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

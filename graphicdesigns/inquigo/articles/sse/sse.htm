@@ -1,0 +1,279 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/sse/sse.htm">sse for cpu tracers - 2005</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+This article is about SIMD programming and was written in 2005. Things have changed since then, but this is still here for reference. It explains the super basics of doing SSE2 programing for algorithms that need to take branches and might have divergent flow for the different lanes of execution. This is typically the case in a raytracer or raymarcher for example. The article uses a Mandelbrot set renderer as an example to keep things simple, but the principles apply equally.<br>
+<br>
+So, converting your regular raytracing to a parallel model makes branching difficult many times. There are two approaches that can be taken for that parallelization: data parallelization or code parallelization. In the trivial examples on the net, such as normalizing a 3D vector, normally code parallelization is used because it's easier to implement, and normally doesn't suffer from branching difficulties. But as I said, those examples lack from real usability. In real applications, data parallelizations is used instead, what means you normally have to change the structure of your code, at least in the low level parts of your design. I will try to give a brief explanation about this data parallilization in this tutorial, and give an example on how to handle conditional branching when using SIMD instructions. The technique explained here can be (and has been) successfully used for speeding up many applications as physics engine or raytracing. I expect you to have basic knowledge of what SSE instructions look like, and how the data is stored in this new 128 bit representation. If you don't know that, don't worry, you will master the subject in less that 15 minutes by reading all those other tutorials (especially if you ever programmed in ASM, C or C++) - I'm not going to rewrite the same thing one more time. So, let's go!<br>
+<br>
+<br>
+As you know SSE (or Altivec) technology allows us to compute up to four operations at the same time. This operations normally include arithmetic, logic, memory and comparison operations (plus some other additional special functions). However, in most common cases, you want to use SIMD instructions to make calculations (up to four times) faster. Let's directly go to the example of this tutorial, a 2D Mandelbrot set rendering. Let's use the simplest (and oldest) algorithm used, the well known escape time algorithm. In plain C code, the algorithm looks like this:<br>
+<br>
+<div class="code">void drawMandelbrot( uint32 *buffer, int xres, int yres )
+{
+    const float ixres = 1.0f/(float)xres;
+    const float iyres = 1.0f/(float)yres;
+
+    for( int j=0; j < yres; j++ )
+    for( int i=0; i < xres; i++ )
+    {
+        const float a = -2.25f + 3.00f*(float)i*ixres;
+        cosnt float b =  1.12f - 2.24f*(float)j*iyres;
+
+        *buffer++ = IterateMandelbrot( a, b );
+    }
+}</div>
+<br>
+Where we basically loop over the pixels of the framebuffer, and we call the <i><b>IterateMandelbrot()</b></i> function that will really do the math. That one, could look like this:<br>
+<br>
+<div class="code">uint32 IterateMandelbrot( float a, float b )
+{
+    float x, y, x2, y2;
+
+    x = x2 = 0.0f;
+    y = y2 = 0.0f;
+
+    <span class="codeComment">// iterate f(Z) = Z^2 + C,  Z0 = 0</span>
+    for( int i=0; i&lt;512; i++ )
+    {
+        y = 2.0f*x*y+b;
+        x = x2-y2+a;
+
+        x2 = x*x;
+        y2 = y*y;
+
+        const float m2 = x2+y2;
+        if( m2&gt;4.0f )
+            break;
+    }
+
+    <span class="codeComment">// create color</span>
+    return 0xff000000|(i&lt;&lt;16)|(i&lt;&lt;8)|i;
+}</div>
+
+<br>
+At this point we are in the classical C scalar code. Now, we will try to speed up the computations by using SSE instructions. Instead of using the code parallelism and try to do some of the multiplications in the inner loop in parallel (what is really difficult and also useless), we will use data parallelization: we will compute four pixels of our image all in parallel. This approach is very useful because you almost don't have to change your algorithm's code that much, as we will see. Well, first we have to change slightly our raster double loop in the <i><b>drawMandelbrot( ()</b></i> function. We will advance in each scanline four pixels per iteration, thus calculating four values for the parameter <i><b>a</b></i> (one per pixel). Let's transform our code to something like this:<br>
+<br>
+<div class="code">void drawMandelbrot( uint32 *buffer, int xres, int yres )
+{
+    __m128i *buffer4 = (__m128i*)buffer;
+    const __m128 ixres = _mm_set1_ps( 1.0f/(float)xres );
+    const __m128 iyres = _mm_set1_ps( 1.0f/(float)yres );
+
+    for( int j=0; j < yres; j++ )
+    for( int i=0; i < xres; i+=4 )
+    {
+        __m128  a, b;
+        a = _mm_set_ps( i+3, i+2, i+1, i+0 );
+        a = _mm_mul_ps( a, ixres );
+        a = _mm_mul_ps( a, _mm_set1_ps( 3.00f) );
+        a = _mm_add_ps( a, _mm_set1_ps(-2.25f) );
+
+        b = _mm_set1_ps( (float)j );
+        b = _mm_mul_ps( b, iyres );
+        b = _mm_mul_ps( b, _mm_set1_ps(-2.24f) );
+        b = _mm_add_ps( b, _mm_set1_ps( 1.12f) );
+
+	_mm_store_si128( buffer4++, IterateMandelbrot( a, b ) );
+    }
+}</div>
+<br>
+<i>Note that this code can be optimized to perform only a single addition per inner iteration. However we will leave the code like this for more clear understanding of what the code is doing.</i><br>
+<br>
+Now, we have four different values of <i><b>a</b></i> and <i><b>b</b></i> in those variables. Thus the new <i><b>IterateMandelbrot()</b></i> function will recieve the four values of <i><b>(a,b)</b></i> and output the color for four pixels. Since we are using true color output (32 bit per pixel), the type <i><b>__m128i</b></i> for returning the 4 pixel colors is just perfect (remember that <i><b>__m128</b></i> is used for four floating point values, while <i><b>__m128i</b></i> is used for four 32 bit integer values).<br>
+<br>
+So, the new <i><b>IterateMandelbrot()</b></i> can be easily translated into SSE. For that, we change the normal scalar multiplications with the vectorial version, and same holds for addition and substraction:<br>
+<br>
+<div class="code">__m128i IterateMandelbrot( __m128 a, __m128 b )
+{
+    __m128 x, y, x2, y2, m2;
+    __m128i color;
+
+    const simd4f one = _mm_set1_ps(1.0f);
+    const simd4f th  = _mm_set1_ps(4.0f);
+
+    x   = _mm_setzero_ps();
+    y   = _mm_setzero_ps();
+    x2  = _mm_setzero_ps();
+    y2  = _mm_setzero_ps();
+
+    </span><span class="codeComment">// iterate f(Z) = Z^2 + C,  Z0 = 0</span>
+    for( int i=0; i < 512; i++ )
+    {
+        y  = _mm_mul_ps( x, y );
+        y  = _mm_add_ps( _mm_add_ps(y,y),   b );
+        x  = _mm_add_ps( _mm_sub_ps(x2,y2), a );
+
+        x2 = _mm_mul_ps( x, x );
+        y2 = _mm_mul_ps( y, y );
+
+        m2 = _mm_add_ps(x2,y2);
+
+        </span><span class="codeComment">// conditional sentence comes here
+        // ...</span>
+    }
+
+    </span><span class="codeComment">// create color</span>
+    // color = ...
+    return color;
+}</div>
+<br>
+<br>
+
+Now, how to handle the conditional... Normally, as shown in the original C code, we should skip the iteration loop once the condition <i><b>m2>4.0f</b></i> becomes true. However, in the SIMD version, there is a small issue, because we are iterating four values at the same time. So, the condition could be true for one, two or even three of the values of m2, but not for the others. In that case, we still have to keep on iterating even if results for those values that already fullfilled the condition should not be taken into account. This is a pity, because we will probably waste some computational power for nothing... This is an issue for all SIMD implementation of non-trivial algorithms, but can be aliviated in most cases by preparing the data to the algorithm in such a way that the four data values follow the same path along the conditionals, or at least follow the most similar paths possible. In this our test, it is the case most of the times, since we are iterating together values from the C plane of the Mandelbrot set that are close to each other (the pixels are just contiguous in screen space), thus most of the time the number of iterations before escaping the conditional <i><b>m2>4.0f</b></i> will be the same. That way, we will hopefully be close to the speed up factor of four.<br>
+<br>
+Then, let's see how we implement the conditional, and the redundant-but-not-disturbing execution of code. First, it's obvious that we can exit the loop once the four iterated values make the conditional true. Thus, every iteration not only we have to perform the comparison itself, but we also have to keep memory of the values that already met the condition (note: this step could be ommitted in the case of the Mandelbrot set, since once a value becomes bigger that the escape radious, it will never be smaller again, and thus it will always make the condition be true, but this is not the regular case for other algorithms). Since the comparison instructions in SSE creates a mask of four values (one per compared value) equal to 0 (false) or 0xffffffff (true), we can use a binary <i><b>or</b></i> operation to keep the memory of the comparisons. That way, once one of the four conditionals becomes true, it will stay always to true, while it will stay to false until the condition is true for the first time. So, we initialize a variable to <i><b>false</b></i> (zero), and then, for every iteration, we do the comparison and the <i><b>or</b></i> operation.<br>
+
+<div class="code">
+   <span class="codeComment">// in the begining of the function</span>
+    __m128 co;
+
+   <span class="codeComment">// in initialization (before the loop)</span>
+   co  = _mm_setzero_ps();
+
+   <span class="codeComment">// during iteration</span>
+   co = _mm_or_ps( co, _mm_cmpgt_ps( m2, th ) );
+</div>
+<br>
+Now, we can implement the "optimization" of breaking the loop once all the four values met the condition. We can do that with the <i><b>_mm_movemask_ps()</b></i> instruction:<br>
+<br>
+<div class="code">
+   <span class="codeComment">// during iteration, in the end of the loop</span>
+   if( _mm_movemask_ps( co )==0x0f ) 
+       break;
+</div>
+<br>
+At this point we are almost done. But we still have to solve a small problem. If you carrefully follow the logic of the small algorithm, you will notice that the results from the iterations are not correct, because the last of the four values to fulfill the condition will drive coloring (based on the <i><b>i</b></i> variable). Somehow we should be able to track the last iteration (value of the <i><b>i</b></i> variable) at the time each of the four initial values was still active in the 4-way iteration process. An easy solution for that is to create another variable, initialized to zero, that increments by one en each iteration as long as the conditional is false. We can easily do a conditional increment based on the fact that we have the conditional value, doing something like this:<br>
+<br>
+<div class="code"><span class="codeComment">// in the begining of the function</span>
+   __m128 ite
+
+   <span class="codeComment">// in initialization (before the loop)</span>
+   ite = _mm_setzero_ps();
+
+   <span class="codeComment">// during iteration, in the end of the loop</span>
+   ite = _mm_add_ps( ite, _mm_andnot_ps( co, one ) );
+</div>
+
+Now, when the loop execution finishes, we have the correct number of iterations each of the four values needed to met the condition. Now, we just have to build the four output colors based in these values as we did in the scalar version of the algorithm. Here goes the complete SSE version:<br>
+<br>
+<div class="code">__m128i IterateMandelbrot( __m128 a, __m128 b )
+{
+    __m128  x, y, x2, y2, m2;
+    __m128  co, ite;
+
+    unsigned int i;
+
+    const simd4f one = _mm_set1_ps(1.0f);
+    const simd4f th  = _mm_set1_ps(4.0f);
+
+    x   = _mm_setzero_ps();
+    y   = _mm_setzero_ps();
+    x2  = _mm_setzero_ps();
+    y2  = _mm_setzero_ps();
+    co  = _mm_setzero_ps();
+    ite = _mm_setzero_ps();
+
+    <span class="codeComment">// iterate f(Z) = Z^2 + C,  Z0 = 0</span>
+    for( i=0; i < 512; i++ )
+        {
+        y  = _mm_mul_ps( x, y );
+        y  = _mm_add_ps( _mm_add_ps(y,y),   b );
+        x  = _mm_add_ps( _mm_sub_ps(x2,y2), a );
+
+        x2 = _mm_mul_ps( x, x );
+        y2 = _mm_mul_ps( y, y );
+
+        m2 = _mm_add_ps(x2,y2);
+        co = _mm_or_ps( co, _mm_cmpgt_ps( m2, th ) );
+
+
+        ite = _mm_add_ps( ite, _mm_andnot_ps( co, one ) );
+        if( _mm_movemask_ps( co )==0x0f ) 
+            i=nites;
+        }
+
+    <span class="codeComment">// create color</span>
+    const __m128i bb = _mm_cvtps_epi32( ite );
+    const __m128i gg = _mm_slli_si128( bb, 1 );
+    const __m128i rr = _mm_slli_si128( bb, 2 );
+    const __m128i color = _mm_or_si128( _mm_or_si128(rr,gg),bb );
+
+    return( color );
+}</div>
+<br>
+The result is that by using data parallelizable version of an algorithm, we can increase the performance by a factor of three (if not four) by just slightly modifying the code. For that, additional code has to be written to handle the different paths the algorithm could take for the four data inputs. However, by using inter-coherent data input, this effect can be reduced dramatically in most cases and get close to the theoretical performance speed up announced by CPU vendors.<br>
+<br>
+I used the code above to create <a class="regular" href="http://iquilezles.untergrund.net/www/articles/sse/sseMandel.zip">this executable</a>, that showed a speed up of three compared to the normal C code.
+<!-- -------------------------------------------------------------------------------------------- -->
+
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

@@ -1,0 +1,164 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/frustumcorrect/frustumcorrect.htm">fixing frustum culling - 2013</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<h3>Intro</h3><hr>
+There's not much to be said about view frustum culling. Or, is there? Well, it depends.<br>
+<br>
+Most frustum culling implementations work just fine when the objects you are culling are small compared to the frustum they are being tested with. However, if your objects are big you might realize your engine is not as efficient anymore because, in fact, chances are you are doing frustum culling wrong...<br>
+<br>
+<center><img class="myPicture formula" src="gfx00.png"/><br><i>A frustum defined by 6 planes</i></center>
+
+<br>
+<h3>What most implementations do</h3><hr>
+
+If you are doing frustum culling the regular way (...), you are probably simply checking for your object (say, a bounding box or sphere) to be fully in the "outside" side of any of the 6 planes that define the frustum. If you are culling (bounding) boxes, then the thing will probably look like this:<br>
+<br>
+<div class="code"><span class="codeComment"">// false if fully outside, true if inside or intersects</span>
+bool boxInFrustum( frustum3 const & fru, bound3 const & box )
+{
+    <span class="codeComment">// check box outside/inside of frustum</span>
+    for( int i=0; i&lt;6; i++ )
+    {
+        int out = 0;
+        out += ((dot( fru.mPlane[i], vec4(box.mMinX, box.mMinY, box.mMinZ, 1.0f) ) < 0.0 )?1:0);
+        out += ((dot( fru.mPlane[i], vec4(box.mMaxX, box.mMinY, box.mMinZ, 1.0f) ) < 0.0 )?1:0);
+        out += ((dot( fru.mPlane[i], vec4(box.mMinX, box.mMaxY, box.mMinZ, 1.0f) ) < 0.0 )?1:0);
+        out += ((dot( fru.mPlane[i], vec4(box.mMaxX, box.mMaxY, box.mMinZ, 1.0f) ) < 0.0 )?1:0);
+        out += ((dot( fru.mPlane[i], vec4(box.mMinX, box.mMinY, box.mMaxZ, 1.0f) ) < 0.0 )?1:0);
+        out += ((dot( fru.mPlane[i], vec4(box.mMaxX, box.mMinY, box.mMaxZ, 1.0f) ) < 0.0 )?1:0);
+        out += ((dot( fru.mPlane[i], vec4(box.mMinX, box.mMaxY, box.mMaxZ, 1.0f) ) < 0.0 )?1:0);
+        out += ((dot( fru.mPlane[i], vec4(box.mMaxX, box.mMaxY, box.mMaxZ, 1.0f) ) < 0.0 )?1:0);
+        if( out==8 ) return false;
+    }
+
+    return true;
+}</div><br>
+This code checks that the 8 corners of are to the same (external) side of any of the 6 planes, and if so, early exists indicating that the box does not overlap the frustum, and that it can be omitted from rendering or whatever task we are trying to optimize through the frustum culling process. This code works just fine in many situations, and does not report false negatives (not many, that is), so it is used blindly by many developers. However, if you are having an engine that is handling big scale objects (say huge chuncks of planetary terrain, or huge quadtree nodes, or simply huge terrain meshes) you have probably noticed that this code simply doesn't work.<br>
+<br>
+
+<center>
+<div class="partsC">
+<div class="part"><img class="myPicture formula" src="gfx01.png"/><br><i>Regular frustum culling works just fine when the objects<br>are small (green means the object can be culled,<br>red means it can't)</i></div>
+<div class="part"><img class="myPicture formula" src="gfx02.png"/><br><i>Regular frustum failing to reject the big object behind the<br>camera near plane, because it's so big it does<br>intersect some of the side planes of the frustum.</i></div>
+</div>
+</center>
+
+<br>
+<br>
+<h3>What most implementations forget</h3><hr>
+
+The problem with big is that the changes of them intersecting some of the planes of the frustum are big as well. So even if an object is clearly not visible (see the big rectangle in the picture to the right), if is is big enough it will cross some of the frustum planes and perhaps not be fully in the exterior of any of them, and therefore the code above will fail to discard the object from further processing.<br>
+<br>
+One simple solution to avoid this issue (or to make it less likely to happen) is to do an extra set of tests, by reversing the roles of the object and the frustum. For that, we need our frustum struct/class to contain the 8 corner points as well in addition to the 6 planes that define it. Then we can perform frustum-in-box tests in the exact same way as we did box against frustum: comparing the 8 vertices (of the frustum) against the 6 planes (of the box), and looking for an occurrence of a vertex being fully outside of any of the planes:<br>
+<br>
+<div class="code"><span class="codeComment"">// false if fully outside, true if inside or intersects</span>
+bool boxInFrustum( frustum3 const & fru, bound3 const & box )
+{
+    <span class="codeComment">// check box outside/inside of frustum</span>
+    for( int i=0; i&lt;6; i++ )
+    {
+        int out = 0;
+        out += ((dot( fru.mPlane[i], vec4(box.mMinX, box.mMinY, box.mMinZ, 1.0f) ) < 0.0 )?1:0);
+        out += ((dot( fru.mPlane[i], vec4(box.mMaxX, box.mMinY, box.mMinZ, 1.0f) ) < 0.0 )?1:0);
+        out += ((dot( fru.mPlane[i], vec4(box.mMinX, box.mMaxY, box.mMinZ, 1.0f) ) < 0.0 )?1:0);
+        out += ((dot( fru.mPlane[i], vec4(box.mMaxX, box.mMaxY, box.mMinZ, 1.0f) ) < 0.0 )?1:0);
+        out += ((dot( fru.mPlane[i], vec4(box.mMinX, box.mMinY, box.mMaxZ, 1.0f) ) < 0.0 )?1:0);
+        out += ((dot( fru.mPlane[i], vec4(box.mMaxX, box.mMinY, box.mMaxZ, 1.0f) ) < 0.0 )?1:0);
+        out += ((dot( fru.mPlane[i], vec4(box.mMinX, box.mMaxY, box.mMaxZ, 1.0f) ) < 0.0 )?1:0);
+        out += ((dot( fru.mPlane[i], vec4(box.mMaxX, box.mMaxY, box.mMaxZ, 1.0f) ) < 0.0 )?1:0);
+        if( out==8 ) return false;
+    }
+
+    <span class="codeComment">// check frustum outside/inside box</span>
+    int out;
+    out=0; for( int i=0; i&lt;8; i++ ) out += ((fru.mPoints[i].x > box.mMaxX)?1:0); if( out==8 ) return false;
+    out=0; for( int i=0; i&lt;8; i++ ) out += ((fru.mPoints[i].x < box.mMinX)?1:0); if( out==8 ) return false;
+    out=0; for( int i=0; i&lt;8; i++ ) out += ((fru.mPoints[i].y > box.mMaxY)?1:0); if( out==8 ) return false;
+    out=0; for( int i=0; i&lt;8; i++ ) out += ((fru.mPoints[i].y < box.mMinY)?1:0); if( out==8 ) return false;
+    out=0; for( int i=0; i&lt;8; i++ ) out += ((fru.mPoints[i].z > box.mMaxZ)?1:0); if( out==8 ) return false;
+    out=0; for( int i=0; i&lt;8; i++ ) out += ((fru.mPoints[i].z < box.mMinZ)?1:0); if( out==8 ) return false;
+
+    return true;
+}</div>
+<br>
+
+<center><img class="myPicture formula" src="gfx03.png"/><br><i>Testing the frustum corners against the box planes helps solve the false overlap problem.</i></center>
+<br>
+<br>
+In the picture above, the 8 vertices of the frustum are all in the exterior side (above) of the top plane of the box. Hence the second block in <span class="codigoInText">boxInFrustum()</span> will kick in and successfully report the box as not overlapping with the frustum.<br>
+<br>
+These few extra lines of code, that unfortunately you don't find in most view frustum culling code out there, become crucial when doing rendering of big scale objects (terrains, planet octrees, etc), because such big  objects do usually come with lots of processing for they are, indeed, big (think streaming of the data or procedural content generation associated with it). And for such simple and inexpensive addition to the frustum culling code, there's no excuse to not do it.
+<br>
+<br>
+<h3>But we are not done yet</h3><hr>
+
+Actually, while the above implementation will work correctly for 99% of the use cases of view frustum culling, mathematically speaking there are still cases where the above cull might fail to detect non overalps. In particular, if the frustum is not a view frustum, but some sort of very shallow/truncated frustum, boxes might be classified as intersecting when they aren't. Fortunatelly, this case won't happen since our frustums are usually constructed to be as long as we possibly can render, rather than shallow. Except in the cases of tile renderers where the view frustum culling is chopped in slices across depth and the resulting sub frustums' thickness are comparable to the boxes to be culled. In those cases, more complex frustum to box overlapping algorithms are needed for a mathematically perfect culling.<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

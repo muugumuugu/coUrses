@@ -1,0 +1,271 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/simplegpurt/simplegpurt.htm">simple gpu raytracing - 2005</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+
+<div class="partsB">
+<div class="part60">
+<h3>Prefade</h3><hr>
+When you first try to code for a new platform that provides a pixel buffer that you can write to, there are only two types of "Hello World" applications you can write - either a Mandelbrot set or a small raytracer/raymarcher. Pixel shaders 3.0 was such a platform for me in 2005, cause it was the first shader model that allows for conditional branching. It was still not as flexible as regular CPU programing or current GPU shaders, but it was good enought to try raytracing a few sphere in it. 15 years later, in a workd of abudant shader based raytracers and raymarchers (hello Shadertoy!) this feels obvious, but in 2005 it was all new territory. So, this article might seem terrible simply by today standards, but I leave it here for historical context. The rest of the article will be writen in present tense.<br>
+</div>
+<div class="part"><img class="myPicture" src="gfx00.jpg"/></div>
+</div>
+<br>
+
+<h3>The idea</h3><hr>
+So, it seems GPUs are so fast these days that even a brute force implementations of raytracing runs fast at high screen resolutions. This is perfect for tiny demos (like the 4 kilobyte demos of the Demoscene) where you don't really have room for acceleration structures or anything. After a few months playing with this tech I've finally made a  little demo called <i>Kinderpainter</i> as an experiment on GLSL coding. I decided to implement a simple Whitted raytracer: only local lighting plus one shadow and one perfectly specular reflection. I used two spheres, two cylinders and two planes as scene, and I allowed them to move so I could build two or three virtual different scenes and so I could synchronize the movements to the music too. All the image was synthetized in a quad covering the complete screen to which a pixel shader was attached. The shader was responsible for creating the image, and the CPU was just left with the code to create a desktop window, initialize OpenGL and the shader, move the objects with some trigonometric functions, and render the quad.<br>
+<br>
+As a simple raytracer, what the code does is, for each pixel, cast a ray on the scene to find the closest intersected object. That's done in the <i>calcinter()</i> function on the pixel shader below. The implementation just calles the intersection functions for the six objects in the scene (two spheres, two cylinders and two planes), while it keeps track of the closest intersection at all time.<br>
+<br>
+Then the code calls the shading function <i>calcshade()</i>. The first thing this one does is to compute the normal of the object at the intersection point, by calling <i>calcnor()</i>. Depending on the primitive type, that function executes the necessary computations. Then <i>calcshade()</i> does some basic diffuse and specular lighting calculations. It also calls <i>calcshadow</i> to decide if the point being shaded is in shadow or not. This function is a simplified version of the regular intersection function <i>calcinter()</i> (it's simple cause we don't really need to know the closest interseted object, we just need to know if <i>any</i> object was intersected at all).<br>
+<br>
+Therefore <i>main()</i> function, the one executed for each pixel, just calls <i>calcinter()</i> and <i>calcshade()</i> and returns the result to the hardware so the pixel of the screen is colored. Normally a Whitted raytracer would recursivelly call <i>calcinter()</i> and <i>calcshade()</i> from within the <i>calcshade()</i> function, up to a number of levels, say 4. However, since current GPU shader models don't support recursion yet, I made the trick of doing a nonrecursive version of <i>calcshade()</i>
+and calling <i>calcinter()</i> and <i>calcshade()</i> for a second time from the <i>main()</i> function, with the right reflection ray as argument.<br>
+<br>
+The complete pixel shader is below, and you have a live version online in <a class="regular" href="http://www.iquilezles.org/apps/shadertoy/?p=kinderpainter">Shadertoy</a> Of course, <i>fpar00[]</i> contains all the input to the shader. For example, <i>fpar00[0]</i> contains the information of the first sphere (a position and a radius), <i>fpar00[1]</i> for the second sphere, <i>fpar00[2]</i> and <i>fpar00[3]</i> are the two cylinders, and <i>fpar00[4]</i> and <i>fpar00[5]</i> are the two planes. The colors of the objects are stored from <i>fpar00[6]</i> to <i>fpar00[11]</i>. Also, <i>fpar00[12]</i> contains the camera position, and <i>fpar00[13]</i>,
+<i>fpar00[14]</i> and <i>fpar00[15]</i> contain the camera matrix. The raydirection is partially computed in the vertex shader for the corners of the full screen quad, and interpolated down to the pixel shader by the rasterization hardware, and it arrives to the pixel shader trhu the varying called <i>raydir</i>.<br>
+<br>
+<br>
+<h3>The Code</h3><hr>
+Pixel shader:<br>
+<br>
+<div class="code">uniform vec4 fpar00[16];
+uniform sampler2D tex00;
+varying vec3 raydir;
+
+bool intSphere( in vec4 sp, in vec3 ro, in vec3 rd, in float tm, out float t )
+{
+    bool  r = false;
+    vec3  d = ro - sp.xyz;
+    float b = dot(rd,d);
+    float c = dot(d,d) - sp.w*sp.w;
+    t = b*b-c;
+    if( t > 0.0 )
+    {
+        t = -b-sqrt(t);
+        r = (t > 0.0) && (t < tm);
+    }
+
+    return r;
+}
+
+bool intCylinder( in vec4 sp, in vec3 ro, in vec3 rd, in float tm, out float t )
+{
+    bool  r = false;
+    vec3  d = ro - sp.xyz;
+    float a = dot(rd.xz,rd.xz);
+    float b = dot(rd.xz,d.xz);
+    float c = dot(d.xz,d.xz) - sp.w*sp.w;
+    t = b*b - a*c;
+    if( t > 0.0 )
+    {
+        t = (-b-sqrt(t)*sign(sp.w))/a;
+        r = (t > 0.0) && (t < tm);
+    }
+    return r;
+}
+
+bool intPlane( in vec4 pl, in vec3 ro, in vec3 rd, in float tm, out float t )
+{
+    t = -(dot(pl.xyz,ro)+pl.w)/dot(pl.xyz,rd);
+    return (t > 0.0) && (t < tm);
+}
+
+vec3 calcnor(in vec4 ob,in vec4 ot,in vec3 po,out vec2 uv )
+{
+    vec3 no;
+
+    if(ot.w>2.5)
+    {
+        no.xz = po.xz-ob.xz;
+        no.y = 0.0;
+        no = no/ob.w;
+        uv = vec2(no.x,po.y+fpar00[12].w);
+    }
+    else if(ot.w>1.5)
+    {
+        no = ob.xyz;
+        uv = po.xz*.2;
+    }
+    else
+    {
+        no = po-ob.xyz;
+        no = no/ob.w;
+        uv = no.xy;
+    }
+
+    return no;
+}
+
+
+float calcinter(in vec3 ro,in vec3 rd,out vec4 ob,out vec4 co)
+{
+    float tm=10000.0;
+    float t;
+
+    if( intSphere(  fpar00[0],ro,rd,tm,t) ) { ob = fpar00[0]; co = fpar00[ 6]; tm = t; }
+    if( intSphere(  fpar00[1],ro,rd,tm,t) ) { ob = fpar00[1]; co = fpar00[ 7]; tm = t; }
+    if( intCylinder(fpar00[2],ro,rd,tm,t) ) { ob = fpar00[2]; co = fpar00[ 8]; tm = t; }
+    if( intCylinder(fpar00[3],ro,rd,tm,t) ) { ob = fpar00[3]; co = fpar00[ 9]; tm = t; }
+    if( intPlane(   fpar00[4],ro,rd,tm,t) ) { ob = fpar00[4]; co = fpar00[10]; tm = t; }
+    if( intPlane(   fpar00[5],ro,rd,tm,t) ) { ob = fpar00[5]; co = fpar00[11]; tm = t; }
+
+    return tm;
+}
+
+
+bool calcshadow(in vec3 ro,in vec3 rd,in float l)
+{
+    float t;
+
+    bvec4 ss = bvec4(intSphere(  fpar00[0],ro,rd,l,t),
+                     intSphere(  fpar00[1],ro,rd,l,t),
+                     intCylinder(fpar00[2],ro,rd,l,t),
+                     intCylinder(fpar00[3],ro,rd,l,t));
+    return any(ss);
+}
+
+
+vec4 calcshade(in vec3 po,in vec4 ob,in vec4 co,in vec3 rd,out vec4 re)
+{
+    float di,sp;
+    vec2 uv;
+    vec3 no;
+    vec4 lz;
+
+    lz.xyz = vec3(0.0,1.5,-3.0) - po;
+    lz.w = length(lz.xyz);
+    lz.xyz = lz.xyz/lz.w;
+
+    no = calcnor(ob,co,po,uv);
+
+    di = dot(no,lz.xyz);
+    re.xyz = reflect(rd,no);
+    sp = dot(re.xyz,lz.xyz);
+    sp = max(sp,0.0);
+    sp = sp*sp;
+    sp = sp*sp;
+
+    if( calcshadow(po,lz.xyz,lz.w) )
+        di = 0.0;
+
+    di = max(di,0.0);
+    co = co*texture2D(tex00,uv)*(vec4(.21,.28,.3,1) + .5*vec4(1.0,.9,.65,1.0)*di) + sp;
+
+    di = dot(no,-rd);
+    re.w = di;
+    di = 1.0-di*di;
+    di = di*di;
+
+    return(co+0.6*vec4(di));
+}
+
+void main( void )
+{
+    float tm;
+    vec4 ob,co,co2,re,re2;
+    vec3 no,po;
+    vec3 ro = fpar00[12].xyz;
+    vec3 rd = normalize(raydir);
+
+    tm = calcinter(ro,rd,ob,co);
+
+    po = ro + rd*tm;
+    co = calcshade(po,ob,co,rd,re);
+
+    tm = calcinter(po,re.xyz,ob,co2);
+    po += re.xyz*tm;
+    co2 = calcshade(po,ob,co2,re.xyz,re2);
+    gl_FragColor=mix(co,co2,.5-.5*re.w) + vec4(fpar00[13].w);
+};
+</div>
+<br>
+<br>
+Vertex shader:<br>
+<br>
+<div class="code">
+varying vec3 raydir;
+uniform vec4 fpar00[16];
+
+void main( void )
+{
+    vec3 r;
+
+    gl_Position=gl_Vertex;
+
+    r = gl_Vertex.xyz*vec3(1.3333,1.0,0.0)+vec3(0.0,0.0,-1.0);
+
+    raydir.x=dot(r,fpar00[13].xyz);
+    raydir.y=dot(r,fpar00[14].xyz);
+    raydir.z=dot(r,fpar00[15].xyz);
+};</div>
+<!-- -------------------------------------------------------------------------------------------- -->
+
+
+<br>
+<br>
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

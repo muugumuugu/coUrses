@@ -1,0 +1,222 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/gradientnoise/gradientnoise.htm">gradient noise derivatives - 2017</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<h3>Intro</h3><hr>
+Similar to the <a class="regular" href="../morenoise/morenoise.htm">analytical derivatives of Value Noise</a>, Gradient Noise (the name used for variations and generalizations of Perlin Noise) accept analytic computation of derivatives. Just like with Value Noise derivatives, this allows for much faster lighting computations or any other computation that requires gradients/normals based on the noise since we no longer need to approximate it though numerical methods that involve  taking with multiple samples of the noise.<br>
+<br>
+<br>
+<br>
+<h3>The code</h3>
+<hr>
+<br>
+Assuming we have some standard Gradient Noise implementation like the code on the left, the computation of the derivatives involves only a few more computations, as shown in the right.<br>
+<br>
+<div class="parts">
+<div class="part">
+<div class="code"><span class="codeComment">// returns 3D value noise</span>
+float noise( in vec3 x )
+{
+    <span class="codeComment">// grid</span>
+    vec3 p = floor(x);
+    vec3 w = fract(x);
+    
+    <span class="codeComment">// quintic interpolant</span>
+    vec3 u = w*w*w*(w*(w*6.0-15.0)+10.0);
+
+    
+    <span class="codeComment">// gradients</span>
+    vec3 ga = hash( p+vec3(0.0,0.0,0.0) );
+    vec3 gb = hash( p+vec3(1.0,0.0,0.0) );
+    vec3 gc = hash( p+vec3(0.0,1.0,0.0) );
+    vec3 gd = hash( p+vec3(1.0,1.0,0.0) );
+    vec3 ge = hash( p+vec3(0.0,0.0,1.0) );
+    vec3 gf = hash( p+vec3(1.0,0.0,1.0) );
+    vec3 gg = hash( p+vec3(0.0,1.0,1.0) );
+    vec3 gh = hash( p+vec3(1.0,1.0,1.0) );
+    
+    <span class="codeComment">// projections</span>
+    float va = dot( ga, w-vec3(0.0,0.0,0.0) );
+    float vb = dot( gb, w-vec3(1.0,0.0,0.0) );
+    float vc = dot( gc, w-vec3(0.0,1.0,0.0) );
+    float vd = dot( gd, w-vec3(1.0,1.0,0.0) );
+    float ve = dot( ge, w-vec3(0.0,0.0,1.0) );
+    float vf = dot( gf, w-vec3(1.0,0.0,1.0) );
+    float vg = dot( gg, w-vec3(0.0,1.0,1.0) );
+    float vh = dot( gh, w-vec3(1.0,1.0,1.0) );
+	
+    <span class="codeComment">// interpolation</span>
+    return va + 
+           u.x*(vb-va) + 
+           u.y*(vc-va) + 
+           u.z*(ve-va) + 
+           u.x*u.y*(va-vb-vc+vd) + 
+           u.y*u.z*(va-vc-ve+vg) + 
+           u.z*u.x*(va-vb-ve+vf) + 
+           u.x*u.y*u.z*(-va+vb+vc-vd+ve-vf-vg+vh);
+}</div>
+</div>
+
+<div class="part">
+<div class="code"><span class="codeComment">// returns 3D value noise (in .x)  and its derivatives (in .yzw)</span>
+vec4 noised( in vec3 x )
+{
+    <span class="code``Comment">// grid</span>
+    vec3 p = floor(x);
+    vec3 w = fract(x);
+    
+    <span class="codeComment">// quintic interpolant</span>
+    vec3 u = w*w*w*(w*(w*6.0-15.0)+10.0);
+    vec3 du = 30.0*w*w*(w*(w-2.0)+1.0);
+    
+    <span class="codeComment">// gradients</span>
+    vec3 ga = hash( p+vec3(0.0,0.0,0.0) );
+    vec3 gb = hash( p+vec3(1.0,0.0,0.0) );
+    vec3 gc = hash( p+vec3(0.0,1.0,0.0) );
+    vec3 gd = hash( p+vec3(1.0,1.0,0.0) );
+    vec3 ge = hash( p+vec3(0.0,0.0,1.0) );
+    vec3 gf = hash( p+vec3(1.0,0.0,1.0) );
+    vec3 gg = hash( p+vec3(0.0,1.0,1.0) );
+    vec3 gh = hash( p+vec3(1.0,1.0,1.0) );
+    
+    <span class="codeComment">// projections</span>
+    float va = dot( ga, w-vec3(0.0,0.0,0.0) );
+    float vb = dot( gb, w-vec3(1.0,0.0,0.0) );
+    float vc = dot( gc, w-vec3(0.0,1.0,0.0) );
+    float vd = dot( gd, w-vec3(1.0,1.0,0.0) );
+    float ve = dot( ge, w-vec3(0.0,0.0,1.0) );
+    float vf = dot( gf, w-vec3(1.0,0.0,1.0) );
+    float vg = dot( gg, w-vec3(0.0,1.0,1.0) );
+    float vh = dot( gh, w-vec3(1.0,1.0,1.0) );
+	
+    <span class="codeComment">// interpolation</span>
+    float v = va + 
+              u.x*(vb-va) + 
+              u.y*(vc-va) + 
+              u.z*(ve-va) + 
+              u.x*u.y*(va-vb-vc+vd) + 
+              u.y*u.z*(va-vc-ve+vg) + 
+              u.z*u.x*(va-vb-ve+vf) + 
+              u.x*u.y*u.z*(-va+vb+vc-vd+ve-vf-vg+vh);
+              
+    vec3 d = ga + 
+             u.x*(gb-ga) + 
+             u.y*(gc-ga) + 
+             u.z*(ge-ga) + 
+             u.x*u.y*(ga-gb-gc+gd) + 
+             u.y*u.z*(ga-gc-ge+gg) + 
+             u.z*u.x*(ga-gb-ge+gf) + 
+             u.x*u.y*u.z*(-ga+gb+gc-gd+ge-gf-gg+gh) +   
+             
+             du * (vec3(vb-va,vc-va,ve-va) + 
+                   u.yzx*vec3(va-vb-vc+vd,va-vc-ve+vg,va-vb-ve+vf) + 
+                   u.zxy*vec3(va-vb-ve+vf,va-vb-vc+vd,va-vc-ve+vg) + 
+                   u.yzx*u.zxy*(-va+vb+vc-vd+ve-vf-vg+vh) ));
+                   
+    return vec4( v, d );                   
+}</div>
+</div>
+</div>
+<br>
+You can find a reference implementation here: <a class="regular" href="https://www.shadertoy.com/view/4dffRH">https://www.shadertoy.com/view/4dffRH</a><br>
+<br>
+<br>
+In the case of 2D, the code gets naturally smaller:<br>
+<br>
+<div class="code"><span class="codeComment">// returns 3D value noise (in .x)  and its derivatives (in .yz)</span>
+vec3 noised( in vec2 x )
+{
+    vec2 i = floor( p );
+    vec2 f = fract( p );
+
+    vec2 u = f*f*f*(f*(f*6.0-15.0)+10.0);
+    vec2 du = 30.0*f*f*(f*(f-2.0)+1.0);
+    
+    vec2 ga = hash( i + vec2(0.0,0.0) );
+    vec2 gb = hash( i + vec2(1.0,0.0) );
+    vec2 gc = hash( i + vec2(0.0,1.0) );
+    vec2 gd = hash( i + vec2(1.0,1.0) );
+    
+    float va = dot( ga, f - vec2(0.0,0.0) );
+    float vb = dot( gb, f - vec2(1.0,0.0) );
+    float vc = dot( gc, f - vec2(0.0,1.0) );
+    float vd = dot( gd, f - vec2(1.0,1.0) );
+
+    return vec3( va + u.x*(vb-va) + u.y*(vc-va) + u.x*u.y*(va-vb-vc+vd),   // value
+                 ga + u.x*(gb-ga) + u.y*(gc-ga) + u.x*u.y*(ga-gb-gc+gd) +  // derivatives
+                 du * (u.yx*(va-vb-vc+vd) + vec2(vb,vc) - va));
+}</div>
+<br>
+An implementation can be found here:  <a class="regular" href="https://www.shadertoy.com/view/XdXBRH">https://www.shadertoy.com/view/XdXBRH</a>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

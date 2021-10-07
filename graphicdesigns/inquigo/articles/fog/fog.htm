@@ -1,0 +1,216 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/fog/fog.htm">better fog - 2010</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<h3>Intro</h3><hr>
+
+Fog is very popular element in computer graphics, so popular that in fact we are always introduced to it early in textbooks or tutorials. However these textbooks, tutorials and even APIs only go as far as a simple distance based color blending, and stop there. Even advanced demos, interactive applications and games go no further that the simple color blending. Hopefully one can do much better and introduce some extra beauty and/or realism to the images with very little additional work on top of the basic idea.<br>
+<br>
+<br>
+<h3>Colored fog</h3>
+Traditionally fog is introduced as being the visual element that gives distance cues in an image. And indeed the fog quickly helps us understand the distances and therefore scale of objects, and the world itself.<br>
+<br>
+<div class="partsC">
+<div class="part"><img src="gfx00.jpg"/><br><i>Without fog it's not easy to tell the scale of the terrain</i></div>
+<div class="part"><img src="gfx01.jpg"/><br><i>With fog we immediately understand the size the terrain</i></div>
+</div>
+
+However we should note that fog can also provide more information than that. For example, the color of the fog can tell us about the strengh of the sun. Even more, if we make the color of the fog not constant but orientation dependant we can introduce an extra level of realism to the image. For example, we can change the typical bluish fog color to something yellowish when the view vector aligns with the sun direction. This gives a very natural light dispersion effect. One would argue that sucha an effect shouldn't be called fog but scattering, and I agree, but in the end of the day one simply has to modify a bit the fog equation to get the effect done.<br>
+<br>
+
+<div class="partsC">
+<div class="part">
+<div class="code">
+vec3 applyFog( in vec3  rgb,       <span class="codeComment">// original color of the pixel</span>
+               in float distance ) <span class="codeComment">// camera to point distance</span>
+{
+    float fogAmount = 1.0 - exp( -distance*b );
+    vec3  fogColor  = vec3(0.5,0.6,0.7);
+    return mix( rgb, fogColor, fogAmount );
+}</div>
+</div>
+<div class="part">
+<div class="code">
+vec3 applyFog( in vec3  rgb,      <span class="codeComment">// original color of the pixel</span>
+               in float distance, <span class="codeComment">// camera to point distance</span>
+               in vec3  rayDir,   <span class="codeComment">// camera to point vector</span>
+               in vec3  sunDir )  <span class="codeComment">// sun light direction</span>
+{
+    float fogAmount = 1.0 - exp( -distance*b );
+    float sunAmount = max( dot( rayDir, sunDir ), 0.0 );
+    vec3  fogColor  = mix( vec3(0.5,0.6,0.7), <span class="codeComment">// bluish</span>
+                           vec3(1.0,0.9,0.7), <span class="codeComment">// yellowish</span>
+                           pow(sunAmount,8.0) );
+    return mix( rgb, fogColor, fogAmount );
+}</div>
+</div>
+</div>
+
+The effect can be done much more sophisticated. For example the exponent of the dot product between the sun and view vectors (which of course controls the influence of the directional color gradient) can be varyied with distance too. With the right settings one can fake glowing/blooming and other light scattering effects without actually doing any multipass or render to texture but a simple change to the fog equation. Color can change with altitude too, or any other parameters you might think of.<br>
+<br>
+<br>
+
+<div class="partsC">
+<div class="part">
+<img class="myPicture" src="gfx02.jpg"/><br>
+<i>Note how fog colors tints to yellow in the background mountains near the sun</i>
+</div>
+<div class="part">
+<img class="myPicture" src="gfx03.jpg"/><br>
+<i>Final image (<a class="regular" href="../../../prods/index.htm#elevated">Elevated</a>, 2009)</i>
+</div>
+</div>
+
+<br>
+Another variation of the technique is to split the usual mix() command in its two parts, ie, replace<br>
+<br>
+<div class="code">finalColor = mix( pixelColor, fogColor, exp(-distance*b) );</div><br>
+<br>
+with<br>
+<br>
+<div class="code">finalColor = pixelColor*(1.0-exp(-distance*b)) + fogColor*exp(-distance*b);</div><br>
+<br>
+Now, according to classic CG atmospheric scattering papers, the first term could be interpreted as the absortion of light due to scattering or "extinction", and the second term can be interpreted as the "inscattering". We note that this way of expressing fog is more powerfull, because now we can choose independent fallof parameters <i><b>b</b></i> for the extinction and inscattering. Furthermore, we can have not one or two, but up to six different coefficients - three for the rgb channels of the extintion color and three for the rgb colored version of the inscattering.<br>
+<br>
+<div class="code">vec3 extColor = vec3( exp(-distance*be.x), exp(-distance*be.y) exp(-distance*be.z) );
+vec3 insColor = vec3( exp(-distance*bi.x), exp(-distance*bi.y) exp(-distance*bi.z) );
+finalColor = pixelColor*(1.0-extColor) + fogColor*insColor;</div><br>
+
+This way of doing fog, combined with the sun direction coloring and other tricks can give you a very powerfull and simple fog system, yet very compact and fast. It's also quite intuitive, and you don't have to deal with tons of physics, maths and magic constants for Mie and Rayleight spectral constants and stuff. Simple and controlable is the win.<br>
+<br>
+<br>
+<h3>Non constant density</h3>
+The original and simple fog formula has two parameters: the color and the density (which I called <i><b>b</b></i> in the shader code above). Same way we modified it to have non constant color, we can also modify it so it doesn't have constant density. I'm gonna follow Crytek's trick in this one, but you can play and get some cool results with your own formulas too, although the derivation in that case might be a bit more complex.<br>
+<br>
+Real atmosphere is less dense in the height athmosphere than at the sea level. We can model that density variation with an exponential. The good thing of the exponential function is that the solution to the formulas is analytical. Let's see. We start with this exponential density function, which depends on the height <i><b>y</b></i> of our point:<br>
+<br>
+<span class="formulaText">d(y) = a&sdot;e<sup>-b&sdot;y</sup></span>
+<br>
+<br>
+The parameter <b><i>b</i></b> controls, of course, the fallof of this density. Now, as our ray traverses the atmosphere from the camera to the point, it will be accumulating opacity as it traverses the athmosphere. The amount of fog it gathers in each of these infinite amount of infinitelly little steps is driven by the fog density (that we just defined) at those points. So we have to add them all together. But of course, adding an infinte amount of ridiculosuly small things is called "integral" in maths. So, given our ray<br>
+<br>
+
+<div class="partsL">
+<div class="part">
+<span class="formulaText">r(t) = o<sub>y</sub> + t&sdot;k<sub>y</sub></span><br>
+<br>
+we have that the total amount of fog is<br>
+<br>
+<img class="formula" src="for02.png"/><br>
+<br>
+where <i><b>T</b></i> is the distance from the camera to the point. This integral can be solved analytically, giving<br>
+<br>
+<img class="formula" src="for03.png"/><br>
+<br>
+so that our non-constant-density-fog shader is<br>
+<div class="code">
+vec3 applyFog( in vec3  rgb,      <span class="codeComment">// original color of the pixel</span>
+               in float distance, <span class="codeComment">// camera to point distance</span>
+               in vec3  rayOri,   <span class="codeComment">// camera position</span>
+               in vec3  rayDir )  <span class="codeComment">// camera to point vector</span>
+{
+    float fogAmount = (a/b) * exp(-rayOri.y*b) * (1.0-exp( -distance*rayDir.y*b ))/rayDir.y;
+    vec3  fogColor  = vec3(0.5,0.6,0.7);
+    return mix( rgb, fogColor, fogAmount );
+}</div>
+<br>
+which means that by adding no more than one division to the original formula we can get some cool height based fog (note that the rest of the formula is constant for a given frame).<br>
+
+</div>
+<div class="part">
+<img src="gfx06.png"/><br>
+<i>The integral of the fog density function d(y) over the ray gives the final amount of fog</i>
+</div>
+</div>
+
+<br>
+<br>
+
+<div class="partsC">
+<div class="part">
+<img class="myPicture" src="gfx05.jpg"/><br>
+<i>Note low altitude parts get extra fog</i>
+</div>
+<div class="part">
+<img class="myPicture" src="gfx04.jpg"/><br>
+<i>Without height based fog</i>
+</div>
+</div>
+
+<br>
+Again, there are many variations that one can add to this constanst-vertical-exponential-fallof-density-function shader.
+<br>
+<br>
+<img class="myPicture" src="gfx07.jpg"/><br>
+<i>A raymarched terrain with non constant fog density</i>
+<!-- -------------------------------------------------------------------------------------------- -->
+
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

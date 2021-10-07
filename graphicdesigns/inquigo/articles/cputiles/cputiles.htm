@@ -1,0 +1,241 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/cputiles/cputiles.htm">tracing in tiles - 2008</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<h3>Intro</h3><hr>
+
+Imagine you are writing a software renderer based on a per pixel computation model (like when you render a <a class="regular" href="../sse/sse.htm">fractal</a> or a raytraced image). You obviously want to take advantage of the multicore architecture on your machine, and get all the threads to contribute to the rendering of the image. The easiest way to get the job done is to split the screen in tiles and have the cores work in different tiles in parallel. If you have never done that before, this is the article for you.<br>
+<br>
+<br>
+<h3>How NOT to render</h3><hr>
+So, you have your render algorithm set up such that you can compute the color of a pixel from the pixel coordinates. In the most simplistic case, you have something like this:<br>
+<br>
+<div class="code">vec3 calcPixelColor( ivec2 pixel, ivec2 resolution );</div><br>
+Now you do have a function that needs to generate an image (a buffer of pixels) based on this function. The easiest and worst way to it would be to iterate all the pixels and render the image:<br>
+<br>
+<div class="code"><span class="codeComment">//-----------------------------------------------------
+// render image
+//-----------------------------------------------------</span>
+void renderImage( vec3 *image, ivec2 resolution )
+{
+    <span class="codeComment">// for every pixel in this image, compute color</span>
+    for( int j=0; j&lt;resolution.y; j++ )
+    for( int i=0; i&lt;resolution.x; i++ )
+        image[xres*j+i] = calcPixelColor( ivec2(i, j), resolution );
+}</div>
+
+<br>
+The problem with this code is that the order in which the pixels are computed is most probably not the optimal. There are two reasons for this.<br>
+<br>
+First - your calcPixelColor() is probably accessing memory in order to produce the color. From textures to ray acceleration structures, all the pixels will be requiering access to main memory. Due to the pixels being computed in raster order, all that data and memory will be read for a pixel in a given column in the current line, and will be brought to the memory cache in the hardware. As the following pixels in the scanline require new data, the cache will be keep being filled until it no longer can hold any more data, at which moment the some data in the cache is flushed in order to make room for new incoming data. When the next scanling starts and the pixel immediately below our original pixel gets rendered, the data that the former pixel brought to the cache will be gone already, meaning the data will have to be read again from main memory. This can be a problem when calcPixelColor() is using memory intensive algorithms.<br>
+<br>
+Secondly, even if you weren't reading any memory in order to compute its output, still there would probably be a problem with the current raster order. Chances are that calcPixelColor()</span> is parallelized with some <a class="regular" href="../sse/sse.htm">SEE</a> or some sort of SIMD code (in which case the look above would be incrementing <i>i</i> in bigger steps than 1). In that case, all the pixels that get rendered in parallel will probably take different branches along the code in calcPixelColor()</span>, meaning that probably some of the pixels will have to "wait" for other pixels to finish (in practice that means that all of your "early quit" tests of the form  _mm_movemask_ps( co )==0x0f</span> will evaluate to false), which again can be computed if we had a more physically coherent way to traverse our pixels.<br>
+<br>
+<br>
+<h3>How to render</h3><hr>
+<br>
+In order to get a more coherent memory access and compute patterns, tile rendering can be used. The idea is simple: split the screen in tiles, and render one tile at a time. The tile size should be chosen such that the data required for rendering that tile fits in the caches. In practice, it means that you have to play a little bit with the size until you get the optimal number of pixels per tile. Usually a tile size of 8x8 to 64x64 will do quite well.<br>
+<br>
+The code isn't any complex, but it can bring huge performance gains in memory heavy algorithms like <a class="regular" href="../raytracing/raytracing.htm">real raytracing</a>. Self explanatory code:<br>
+<br>
+<div class="code"><span class="codeComment">//-----------------------------------------------------
+// render image
+//-----------------------------------------------------</span>
+void renderImage( vec3 *image, ivec2 resolution )
+{
+    #define TILESIZE 16
+
+    </span><span class="codeComment">// prep data</span>
+    const int numxtiles = resolution.x/TILESIZE;
+    const int numytiles = resolution.y/TILESIZE;
+    const int numtiles  = numxtiles*numytiles;
+
+    </span><span class="codeComment">// render tiles</span>
+    for( int tile=0; i&#60;numtiles; i++ )
+    {
+        </span><span class="codeComment">// tile offset</span>
+        const int ia = TILESIZE*(tile % numxtiles);
+        const int ja = TILESIZE*(tile / numxtiles);
+
+        </span><span class="codeComment">// for every pixel in this tile, compute color</span>
+        for( int j=0; j&#60;TILESIZE; j++ )
+        for( int i=0; i&#60;TILESIZE; i++ )
+            image[xres*(ja+j)+(ia+i)] = calcPixelColor( ivec2(ia+i, ja+j), resolution );
+    }
+}</div>
+
+
+
+<br>
+<br>
+<h3>How to render FAST</h3><hr>
+The next step is obvious: take our tiles and assign them to the different cores in our CPUs such that they can work in parallel in the image. The trick is the scheduling of which tile gets rendered by which CPU. An easy solution is to have a tile counter that indicates which is the next tile to need to be computed. When a core reads this counter and takes ownership of that tile, the counter is incremented so that next cores that want to process a new tile know which one to go for. Of course, the reading and incrementing of this counter has to be atomic in order to avoid two cores going for the same tile. The InterlockedIncrement()</span> allows you to do exactly that: read a variable and increment it atomically. If the tile counter reaches a number which is equal or biggger than the amount of tiles in the image, the thread can die of course, cause it means there's no more work to be done.<br>
+<br>
+The threads run will run the doRender() in parallel, and they'll access the global data they are operating in (the image buffer and the tile counter, for example) from a pointer to the local stack of the main thread (the one that actually executes renderImage()</span>). In desperate cases of size optimization this could be done through global variables, but of course in real case scenarios that's not an option. The data with this global information is packed in the TData</span> structure.<br>
+<br>
+When this scheduling mechanism is in place, all that is left is to create as many threads as hardware cores the running machine has (which the operative system makes available to you through the GetSystemInfo()</span> function), and let them start consuming tiles. The main thread will of course have to wait until this <i>"working"</i> threads are done. We can use a semaphore for that, which we will have to create prior to the creation of the worker threads, and to which the main thread will have to block by calling WaitForMultipleObjects()</span>.<br>
+<br>
+All of these operations don't actually need a big amount of code. In fact, the code bellow is full functional and can be simply copy and pasted in your projects, it's ready to function:<br>
+<br>
+<div class="parts">
+<div class="part">
+<div class="code">#include &lt;windows.h>
+#include "vecTypes.h"
+
+vec3 calcPixelColor( ivec2 pixel, ivec2 resolution );
+
+typedef struct
+{
+    long    tileID;
+    HANDLE  barrier;
+    vec3   *image;
+    ivec2   resolution;
+}TData;
+
+<span class="codeComment">//-----------------------------------------------------
+// render image
+//-----------------------------------------------------</span>
+void renderImage( vec3 *image, ivec2 resolution )
+{
+    <span class="codeComment">// get number of CPUs available</span>
+    SYSTEM_INFO si;
+    GetSystemInfo( &si );
+    const int numCpus = min( si.dwNumberOfProcessors, 256 );
+
+    <span class="codeComment">// data for worker threads</span>
+    __declspec(align(32)) TData data = {
+        0,                                         <span class="codeComment">// tile id/counter</span>
+        CreateSemaphore( 0, numCpus, numCpus, 0 ), <span class="codeComment">// create barrier</span>
+        image, resolution                          <span class="codeComment">// image</span>
+    };
+
+    <span class="codeComment">// launch worker threads</span>
+    HANDLE th[256];
+    for( int i=0; i&lt;numCpus; i++ )
+        th[i] = CreateThread( 0, 0, doRender, &data, 0, 0 );
+
+    <span class="codeComment">// wait for worker threads to finish</span>
+    WaitForMultipleObjects( numCpus, th, true, INFINITE);
+
+    <span class="codeComment">// destroy threads</span>
+    for( int i=0; i&lt;numCpus; i++ )
+        CloseHandle( th[i] );
+
+    <span class="codeComment">// destroy barrier</span>
+    CloseHandle( data.barrier );
+}</div>
+</div>
+
+<div class="part">
+<div class="code">static unsigned long __stdcall doRender( void *vdata )
+{
+    #define TILESIZE 16
+
+    <span class="codeComment">// prep data</span>
+    TData *data = (TData*)vdata;
+    const ivec2 resolution = data->resolution;
+    const int   numxtiles  = resolution.x/TILESIZE;
+    const int   numytiles  = resolution.y/TILESIZE;
+    const int   numtiles   = numxtiles*numytiles;
+
+    <span class="codeComment">// synch point</span>
+    WaitForSingleObject( data->barrier, 0 );
+
+    <span class="codeComment">// render tiles</span>
+    for(;;)
+    {
+        <span class="codeComment">// get next tile to consume</span>
+        const int tile = InterlockedIncrement( &data->tileID )-1;
+        if( tile >= numtiles ) break;
+
+        <span class="codeComment">// tile offset</span>
+        const int ia = TILESIZE*(tile % numxtiles);
+        const int ja = TILESIZE*(tile / numxtiles);
+
+        <span class="codeComment">// for every pixel in this tile, compute color</span>
+        for( int j=0; j&lt;TILESIZE; j++ )
+        for( int i=0; i&lt;TILESIZE; i++ )
+            data->image[xres*(ja+j)+(ia+i)] = calcPixelColor( 
+                               vec2(ia+i, ja+j), resolution );
+    }
+
+    <span class="codeComment">// synch point</span>
+    ReleaseSemaphore( data->barrier, 1, NULL );
+    return 1;
+}</div>
+</div>
+</div>
+
+<br>
+You also have a smaller version of the code above in the <a class="regular" href="../../material/isystem1k4k/isystem1k4k.htm">1k and 4k demo framework</a> available in this website (which I used for many demoscene productions from 2006 to 2009).
+<!-- -------------------------------------------------------------------------------------------- -->
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>
