@@ -365,6 +365,7 @@ d=√∑(x<sub>i<sub>1</sub></sub>-x<sub>i<sub>2</sub></sub>)<sup>2</sup>
 
 ## Lec 39 - Graphs of Polynomials - Behavior at X-intercepts
 
+> use bounces and crossings to predict factor pattern.
 ---
 
 ## Lec 40 - Graphs of Polynomials - End behavior
@@ -376,29 +377,95 @@ d=√∑(x<sub>i<sub>1</sub></sub>-x<sub>i<sub>2</sub></sub>)<sup>2</sup>
 ---
 
 ## Lec 41 - Graphs of Polynomials - Turning points
+
 >Turning Point
->> Point at which graph changes Direction
+>> Point at which graph changes Direction, that is f'(x) changes sign.
 
 > Max num of turning points of  a polynomial of degree n
 >> **n-1**
 >>> proof using calculas, intuition: can have max n roots, and has to change direction to attain same value=0 again and again.
 
+---
 
+## Lec 42 - Graphs of Polynomials - Graphing & Polynomial creation
 
++ Basic interpolation and solving for zeroes --> graphing
++ Creation --> spot zeroes and resolve factors using intercept behaviours.
 
+---
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+---
 
 # WEEK 5
+
+---
+
+---
+
+## Lec 43 - One-to-One Function - Definition & Tests
+
+> f(x)=f(y)↔x=y
+
++ Vertical Line Test -> check if graph is a function
++ Horizontal Line Test -> check if function is 1-1.
+---
+
+## Lec 44 - One-to-One Function - Examples & Theorems
+
+
++ Proof of HLT
+---
+
+## Lec 45 - Exponential Functions - Definitions
+
++ f(x)=a<sup>x</sup> where a≠1 (gives constant function) & a>0
++ to the power of an irrational is vaild due to convergence of series.
++ Domain = ℝ
+
+---
+
+
+## Lec 46 -  Exponential Functions - Graphing
+
+### End Behaviour
+
+| # | a>1 | 0< a <1|
+| --- | --- | --- |
+|+∞| ∞|0|
+|-∞|0|∞|
+
++ y intercept = 1
++ x -intercept = NILL , asymptotic behaviour --> y=0 : horizontal asymptote
+---
+
+## Lec 47 - Natural Exponential Function
+
+> (1+x/n)<sup>n</sup>-->e<sup>x</sup>
++ continous compounding amount=e<sup>rt</sup>
++ area under the curve `y=1/x` between 1 and e = 1 unit.
+
+
+---
+
+## Lec 48 - Composite Functions
+
+> fog(x)=f(g(x))
+
+---
+
+## Lec 49 - Composite Functions - Examples
+
+---
+
+## Lec 50 - Composite Functions - Domain
+
+> Domain= {x ∋ x ∈ D(g) && g(x) ∈ D(f) }
+
+---
+
+## Lec 51 - Inverse functions
+
++ f<sup>-1</sup>of(x)=fof<sup>-1</sup>(x)=x
++ reflection of  the function about x=y
+
+---

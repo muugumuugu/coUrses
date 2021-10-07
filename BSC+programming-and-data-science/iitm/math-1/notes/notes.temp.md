@@ -1,20 +1,10 @@
 
+
 ---
 
-## Lec 42 - Graphs of Polynomials - Graphing & Polynomial creation
+WEEK 6
 
-
-
---- <!-- WEEK 5-->
-## Lec 43 - One-to-One Function - Definition & Tests
-## Lec 44 - One-to-One Function - Examples & Theorems
-## Lec 45 - Exponential Functions - Definitions
-## Lec 46 -  Exponential Functions - Graphing
-## Lec 47 - Natural Exponential Function
-## Lec 48 - Composite Functions
-## Lec 49 - Composite Functions - Examples
-## Lec 50 - Composite Functions - Domain
-## Lec 51 - Inverse functions
+---
 
 ---
 ## Lec 52 - Logarithmic Functions

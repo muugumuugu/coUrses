@@ -43,3 +43,13 @@ TOC
 |39|[Graphs of Polynomials - Behavior at X-intercepts](notes.md#lec-39---graphs-of-polynomials---behavior-at-x-intercepts)|
 |40|[Graphs of Polynomials - End behavior](notes.md#lec-40---graphs-of-polynomials---end-behavior)|
 |41|[Graphs of Polynomials - Turning points](notes.md#lec-41---graphs-of-polynomials---turning-points)|
+|42|[Graphs of Polynomials - Graphing & Polynomial creation](notes.md#lec-42---graphs-of-polynomials---graphing-&-polynomial-creation)|
+|43|[One-to-One Function - Definition & Tests](notes.md#lec-43---one-to-one-function---definition-&-tests)|
+|44|[One-to-One Function - Examples & Theorems](notes.md#lec-44---one-to-one-function---examples-&-theorems)|
+|45|[Exponential Functions - Definitions](notes.md#lec-45---exponential-functions---definitions)|
+|46|[Exponential Functions - Graphing](notes.md#lec-46----exponential-functions---graphing)|
+|47|[Natural Exponential Function](notes.md#lec-47---natural-exponential-function)|
+|48|[Composite Functions](notes.md#lec-48---composite-functions)|
+|49|[Composite Functions - Examples](notes.md#lec-49---composite-functions---examples)|
+|50|[Composite Functions - Domain](notes.md#lec-50---composite-functions---domain)|
+|51|[Inverse functions](notes.md#lec-51---inverse-functions)|
