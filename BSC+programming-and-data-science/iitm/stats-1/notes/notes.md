@@ -204,8 +204,8 @@ Select data Cells ⇾ Format Menu ⇾ Data ⇾ Pivot Table ⇾ Add rows and Data
 >>Insert -> Chart -> Chart - Editor -> Select Data -> Customize -> Bucket Size : Class-Width.
 
 + Stem -Leaf Plot.
-	+ Stem : All but right-most Digit
-	+ Leaf : rightmost digit.
+	+ Leaf : All but right-most Digit
+	+ Stem : rightmost digit.
 	+ Steps
 		1. Each Obsv := Stem
 		2. Write Stems in Ascending order in a vertical column.
@@ -262,7 +262,7 @@ Select data Cells ⇾ Format Menu ⇾ Data ⇾ Pivot Table ⇾ Add rows and Data
 
 > Variance:
 >> Deviation of value of data points. from central value of a data-set.\
->> σ<sup>2</sup>= ∑(x<sub>i - C)<sup>3</sup>/N
+>> σ<sup>2</sup>= ∑(x<sub>i - x)<sup>2</sup>/N
 >>>for sample means, denominator is kept ```(n-1)``` instead of n. (Statistical Correction)
 
 <blockquote>Welford’s method of computing sample Variance
@@ -386,9 +386,7 @@ return S/(N-1)
 3. Variation: Are the points tightly clustered or variable?
 4. Outliers: Are some points way off the majority pattern.
 	> values that are
-	>> + < Q1-IQR  \
-	>> or \
-	>> + > Q3+IQR
+	>> < Q1-IQR  or  > Q3+IQR
 
 
 ---
