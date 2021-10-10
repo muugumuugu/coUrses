@@ -405,7 +405,7 @@ return S/(N-1)
 ## Lec 4.7 - Association between two numerical variables - Correlation
 
 + Pearson correlation Coefficient
-	+ ρ<sub>xy</sub>= Cov(x,y)/(√(σ<sub>x</sub>σ<sub>y</sub>))
+	+ ρ<sub>xy</sub>= Cov(x,y)/((σ<sub>x</sub>σ<sub>y</sub>))
 
 
 ---
