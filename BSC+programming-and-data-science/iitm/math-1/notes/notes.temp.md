@@ -8,12 +8,41 @@ WEEK 6
 
 ---
 ## Lec 52 - Logarithmic Functions
+
+Inverse of
+>> f(x) = a<sup>x</sup> ; a≠1 , a>0
+>>> log<sub>a</sub>x
+
+### basically
+
+x=a<sup>y</sup> ⇐⇒ y=log<sub>a</sub>(x)
+
+---
+
 ## Lec 53 - Logarithmic Functions - Graphs
+
++ vertical asymptote.
++ no y intercept
++ if a>1 function is increasing
++ if a>1 function is decreasing
+
+---
+
 ## Lec 54 - Solving Exponential Equations
 ## Lec 55 - Logarithmic Functions - Properties  - 1
 ## Lec 56 - Logarithmic Functions - Applications
 ## Lec 57 - Logarithmic Functions -Properties - 2
 ## Lec 58 - Logarithmic Equations
+
+---
+
+WEEK 7
+
+---
+
+---
+
+
 ## Lec 59 - Introduction to Graphs
 ## Lec 60 - Some general graph problems
 ## Lec 61 - Representation of graphs
