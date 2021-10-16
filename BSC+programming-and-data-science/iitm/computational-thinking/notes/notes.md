@@ -1,6 +1,12 @@
+---
+
 # WEEK 1
 
-## lec 1.1 - Introduction to Datasets
+---
+
+
+---
+##lec  1.1 - Introduction to Datasets
 
 -- > make a subset of data from the available set
 ### eg used in course
@@ -9,7 +15,8 @@
 + simplified shopping reciepts
 + words - letters and pos.
 
-## lec 1.2 - Concepts of Variables, Iterators and Filtering
+---
+##lec  1.2 - Concepts of Variables, Iterators and Filtering
 
 + iterator goes across the data set ( or a filtered subset of it. (like case in statistics).
 + variables value is altered according to the value provided by the iterator.
@@ -18,9 +25,11 @@
 + filtering means selecting a susbset of the data based on the value of one of the case-variabled (attribute of that data entry).
 + we can do multiple filters together, and nest the filtering within the iteration also.
 
-## lec 1.3 - Iterations using Combination of Filter conditions
+---
+##lec  1.3 - Iterations using Combination of Filter conditions
 
-## lec 1.4 - Introduction to Flowcharts
+---
+##lec  1.4 - Introduction to Flowcharts
 
 ### Symbols
 + Processs : Process/Activity - Operation that CHanges Vallue
@@ -53,11 +62,13 @@ cond2(no)->cond1
 ================================
 ```
 
-## lec 1.5 - Flowchart for Sum in Filtering
+---
+##lec  1.5 - Flowchart for Sum in Filtering
 
 
 # WEEK 2
-## lec 2.1 - Conditional Termination in Iteration
+---
+##lec  2.1 - Conditional Termination in Iteration
 
 ```js
 while (iterator){
@@ -68,21 +79,28 @@ while (iterator){
 }
 ```
 
-## lec 2.2 - Local Operations & max in single iteration-1.
+---
+##lec  2.2 - Local Operations & max in single iteration-1.
 
 > Keep track of a maximum , and update if exceeded;
 
-## lec 2.3 - Local Operations & max in single iteration-2
+---
+##lec  2.3 - Local Operations & max in single iteration-2
 
-## lec 2.4 - Local Operations & max in single iteration-3
+---
+##lec  2.4 - Local Operations & max in single iteration-3
 
-## lec 2.5 - Local Operations & max in single iteration-4
+---
+##lec  2.5 - Local Operations & max in single iteration-4
 
-## lec 2.6 - Max in single iteration and max in Two iterations (non-nested).
+---
+##lec  2.6 - Max in single iteration and max in Two iterations (non-nested).
 
-## lec 2.7 - Max in a single iteration without using info and Application of Frequency Count.
+---
+##lec  2.7 - Max in a single iteration without using info and Application of Frequency Count.
 
-## lec 2.8 - Intro to PseudoCode
+---
+##lec  2.8 - Intro to PseudoCode
 >flowchart :
 >> pictorial representation of computational process
 ### Node Types
@@ -95,7 +113,8 @@ while (iterator){
 >For Large modules,it is more succint and simple to understand textual descriptions of the flowchart.
 >>PSEUDOCODE.
 
-## lec 2.9 - PseudoCode for Iteration with Filtering
+---
+##lec  2.9 - PseudoCode for Iteration with Filtering
 
 ### Steps
 1.Perform initialization Functions
@@ -123,60 +142,218 @@ while (set.length>0){
 
 # WEEK 3
 
-## lec 3.1 - Presentation of datasets in Forms of Tables
+---
+##lec  3.1 - Presentation of datasets in Forms of Tables
 
-## lec 3.2 - Below Average Students in Two Iterations
+---
+##lec  3.2 - Below Average Students in Two Iterations
 
-## lec 3.3 - Systematic process of Hypothesis verification
+---
+##lec  3.3 - Systematic process of Hypothesis verification
 
-## lec 3.4 - Three Prizes Problem
+---
+##lec  3.4 - Three Prizes Problem
 
-## lec 3.5 - Introduction to procedures and Paramaters
+---
+##lec  3.5 - Introduction to procedures and Paramaters
 
 + compartmentelization of algorithm
 + repetative steps on different variables can be performed by a **procedure** that is defined to take in a **parameter**, on which it operates.
 
-## lec 3.6 - PseudoCode for procedures and Paramaters-1
+---
+##lec  3.6 - PseudoCode for procedures and Paramaters-1
 + Invoke the Procedure with a parameter for the arguments it uses
 + delegation to module/procedure create need for communication b/w procedure's scope to instance's scope --> **return** value facilitates this communication. The result is passed back to where it was called.
 
-## lec 3.7 - PseudoCode for procedures and Paramaters-2
+---
+##lec  3.7 - PseudoCode for procedures and Paramaters-2
 + Parameters fix the context
 + procedures modularize algorithms
 
-## lec 3.8 - PseudoCode for three prizes problem
+---
+##lec  3.8 - PseudoCode for three prizes problem
 
 + Basic Criterion is Total Marks
 + Student must also be in top 3 marks in @ least 1 subject.
 + All three prizes must not be given to students of same Gender.
 
-## lec 3.9 - Side Effects of Procedure
+---
+##lec  3.9 - Side Effects of Procedure
 
 + parameters passed by **refference** are *changed*
 + data integrity is also part of the boundary interface. values that should not be changed are passed by value.
 
 # WEEK 4
 
-## lec 4.1 - Concept of nested iterations using the birthday paradox Naive approaach & Using binning
+---
+##lec  4.1 - Concept of nested iterations using the birthday paradox Naive approaach & Using binning
 
-## lec 4.2 - Importance of binning to reduce number of comparisons in nested iterations
+---
+##lec  4.2 - Importance of binning to reduce number of comparisons in nested iterations
 
 + Factor of reduction = (1-N)/(1 -N/K)
 	+ K := number of bins (bins are equi-sized).
 
-## lec 4.3 - Concept of binning to avoid the complexity of nested iterations
+---
+##lec  4.3 - Concept of binning to avoid the complexity of nested iterations
 
 + number of bins is a trade of between memory/space and time; more bins require more space for processing.
 
-## lec 4.4 - Concept of Fair Teams
+---
+##lec  4.4 - Concept of Fair Teams
 
 > they make study pairs with contrasting mark ratios in two subjects
 + two iterations thru the data
 
-## lec 4.5 - Procedure to find same date of birth for different students
+---
+##lec  4.5 - Procedure to find same date of birth for different students
 
-## lec 4.6 - Procedure to resolve pronoun with its equivalent matching noun
+---
+##lec  4.6 - Procedure to resolve pronoun with its equivalent matching noun
 
 + backtracing
 
-## lec 4.7 - Summary of contents introduced in week 1 to 4
+---
+##lec  4.7 - Summary of contents introduced in week 1 to 4
+* summary lecture
+
+---
+
+WEEK 5
+
+---
+
+---
+
+# lec 5.1 - Introduction to collections and list data structure
+* set pointing to different positions in another ordered set --> indexing list
+	* basically an array of pointers.
+	* demarcate where to find data in a collection that has been flagged.
+
+---
+
+# lec 5.2 - Pseudocode for lists
+* sqr bracket notation
+* concatenation symbol **++**
+* operations
+```
+foreach x in L:
+	process x
+```
+
+---
+
+# lec 5.3 - Operations on the data collected in three prizes problem using lists
+
+* from data of top 3 marks in each subject
+* find if ∃ a student who has scored with top 3 in all subjects.
+
+---
+
+# lec 5.4 - Pseudocode for operations on the data collected in three prizes problem using lists
+
+1. Procedure Top3Marks(Subject): returns thirdmax, which is the cutoff.
+2. make 3 lists of subject wise eleigible students
+3. find the intersection of the lists if it exists.
+
+---
+
+# lec 5.5 - Insertion sort and ordered list
+
+* ordered list makes comparison based and search based operations efficient.
+* insertion sort is based on creating a new sorted array from the given array buy building up, inserting each encountered element into the new array in correct position by comparisons.
+
+---
+
+# lec 5.6 - Pseudocode for insertion sort and ordered list
+
+> invariant = sorted condition of build-up-list.
+
+
+
+--
+
+# lec 5.7 - Systematic process of hypothesis verification to find relation between Mathematics and Physics...
+> correlation fails XD.
+
+# lec 5.8 - Pseudocode for systematic process of hypothesis verification to find relation between Mathematics...
+
+# lec 5.9 - Introduction to train dataset
+
+mutual linked dictionaries
+
+---
+
+WEEK 6
+
+---
+
+
+
+---
+
+# lec 6.1 Relations among customers based on their spending patterns
+
+* calculate an aggregate measure based on which to judge similarity b/w customers
+	* say the aggregate of frequency(quantity) of item-categories in each bill.
+* define a **distance function** between two customers wrt quantities of a category brought.
+	* say the sum of absolute values of category wise difference in quantity bought.
+* build a **similarity matrix** based on these distances.
+	* each entry is the inverse of the distance between ```customer[i]``` & ```customer[j]```
+	* the heighest entry in the matrix would be the most similar customers wrt chosen measure.
+
+
+---
+
+# lec 6.2 - Introduction to dictionary data structure
+
+---
+
+# lec 6.3 - Concept of dictionary to solve birthday paradox problem
+
+---
+
+# lec 6.4 - Resolve pronoun with its equivalent matching noun using dictionary and ordered lists
+
+---
+
+# lec 6.6 - Pseudocode for dictionaries
+
+---
+
+# lec 6.6 - Pseudocodes for real-time examples using dictionaries
+
+
+---
+# lec 6.8 - Dictionary comparison to find common elements in them
+
+---
+
+# lec 6.8 - Procedure to find relations among customers based on their spending patterns
+
+---
+
+# lec 6.9 - Side effects in pseudocodes for lists and dictionaries
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!---------EOF----------------->

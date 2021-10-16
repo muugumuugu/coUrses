@@ -1,30 +1,52 @@
 
-
-# WEEK 6
-
-## Lec 6.1 - Probability - Basic Definitions
-## Lec 6.2 - Probability - Events and basic operations on events
-## Lec 6.3 - Probability - Random experiment, Same Space events
-## Lec 6.4 - Probability - Properties of probability
-## Lec 6.5 - Probability - Equally likely outcomes
-## Lec 6.6 - Probability - Equally likely outcomes
-
-# WEEK 7
-
-## Lec 7.1 - Conditional Probability - contingency tables
-## Lec 7.2 - Conditional Probability - Conditional probability formula
-## Lec 7.3 - Conditional Probability - Multiplication rule
-## Lec 7.4 - Conditional Probability - Independent events
-## Lec 7.5 - Conditional Probability - Independent events: examples
-## Lec 7.6 - Conditional Probability - Independent events: properties
-## Lec 7.7 - Conditional Probability - Bayes' rule
+---
 
 # WEEK 8
 
+---
+
+---
+
 ## Lec 8.1 - Random variables - Introduction
+
+>Random Expeiment
+>> experiment whose outcomes are known but not certain
+> Random Variable
+>> real valued function defined on the sample space of a random experiment/
+>>> example sum of two die roll
+
+---
+
 ## Lec 8.2 - Random variables - Application
+### Discrete random vaqriable
+* can take only countable number of different values.
+
+
+---
+
 ## Lec 8.3 - Random variables - Discrete and continuous random variable
+### Discrete vs Continous variables
+>Discrete
+>> isolated points on the real line
+> Continous
+>> interval along the real number
+
+* apartment complex example
+
+---
+
 ## Lec 8.4 - Discrete random variables - Probability mass function properties
+
+### std deviation of a random variable.
+1. expectation (cx) = cE(x)
+2. SD (cx) = cSD(x)
+3. expectation (x+c) = E(x) +c
+4. SD (x+c) = SD(x)
+
+
+
+---
+
 ## Lec 8.5 - Discrete random variables - Graph of probability mass function
 ## Lec 8.6 - Discrete random variables - Cumulative distribution function
 

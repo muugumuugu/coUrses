@@ -491,7 +491,134 @@ return S/(N-1)
 ## Lec 5.6 - Permutations and Combinations - Applications
 	+ summary lecture
 
+---
 
+# WEEK 6
+
+---
+
+---
+
+## Lec 6.1 - Probability - Basic Definitions
+
+* random experiment
+* Sample Space
+
+---
+
+## Lec 6.2 - Probability - Events and basic operations on events
+
+* event : subset of sample space
+* disjoint events
+* null event
+
+---
+
+## Lec 6.3 - Probability - Random experiment, Same Space events
+* playing cards examples
+* venn diagram represantation of events
+
+---
+
+## Lec 6.4 - Probability - Properties of probability
+
+* classocal/apiori definition:when there are n eqially likely outcomes in the sample space of a random experiment, and event E contains exactly m of those , the probability of event E = ***P(E) = m/n***
+
+* relative/ aposteriori/ emperical : probababiltu of an event in an experiment id the proprtion of times the event occurs in a very long(hteoratically infinite) series of independent repetations of an experiment. P(E)= lim<sub>n→∞</sub> n(E)/n , where n(E) is the number of times E occurs in n repetations of the experiment
+
+* subjective - a person's best belief
+
+### axiomatic theory of probability
+1. 0≤P(E)≤1
+2. P(S)=1
+3. for a countable sequence of mutually disjoint events: P(∪E<sub>i<sub>) = ∑P(E<sub>i</sub>)
+
+* addition rule of probability
+
+---
+
+## Lec 6.5 - Probability - Equally likely outcomes
+>examples
+---
+
+## Lec 6.6 - Probability - Equally likely outcomes
+> examples
+
+
+---
+
+# WEEK 7
+
+---
+
+---
+
+## Lec 7.1 - Conditional Probability - contingency tables
+
+>row relative frequencies gives conditional(marginal) and joint(sum total entries) probabilities.
+--
+
+## Lec 7.2 - Conditional Probability - Conditional probability formula
+
+P(E if F has occured)= **P(E|F)** = P(E∩F)/P(F)
+
+---
+
+## Lec 7.3 - Conditional Probability - Multiplication rule
+### Multiplication Rule
+P(E∩F)=P(E|F) * P(F)
+
+#### Generalized Rule
+
+P(E₁∩E₂∩E₃∩E₄)=P(E₁) * P(E₂|E₁) * P(E₃| E₁∩E₂)....P(Eₙ|E₁∩E₂∩...Eₙ₋₁)
+
+---
+
+## Lec 7.4 - Conditional Probability - Independent events
+P(E∩F)=P(E)XP(F)
+
+---
+## Lec 7.5 - Conditional Probability - Independent events: examples
+
+> dice and cards example
+### independence of more than one events
+* if E is independant of F and also G,
+* it is not necessarily independant of F∩G.
+
+---
+
+## Lec 7.6 - Conditional Probability - Independent events: properties
+
+>If E and F is independent, E and Fᶜ  are also independant
+if E,F and G are independant , all mutual intersection probabilities follow the multiplication rule, and
+P(E∩F∩G)=P(E)XP(F)XP(G)
+
+---
+
+## Lec 7.7 - Conditional Probability - Bayes' rule
+
+### Law of total probabalities
+P(E)=P(F)P(E|f)+P(Fᶜ)P(E|Fᶜ)
+* probability of E is a weighted average of the conditional probability of E  given F happens and doesnt occur
+* weighted by the probability of the event on which it is conditioned.
+
+> Suppose Fᵢ are mutually excliusive and exhaustive then for any event E is a weighted sum = ∑P(E|Fᵢ)P(Fᵢ)
+
+### Bayes Rule
+* P(F|E)=P(F∩E)/P(E) = (P(E|Fᵢ)P(Fᵢ))/∑(P(E|Fᵢ)*P(Fᵢ))
+
+
+
+
+
+
+
+
+
+
+
+
+<!-----------eof-------->
 
 
 
