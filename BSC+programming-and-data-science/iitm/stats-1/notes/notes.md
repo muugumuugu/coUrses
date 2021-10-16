@@ -582,15 +582,15 @@ P(E∩F)=P(E)XP(F)
 
 > dice and cards example
 ### independence of more than one events
-* if E is independant of F and also G,
-* it is not necessarily independant of F∩G.
+* if E is independent of F and also G,
+* it is not necessarily independent of F∩G.
 
 ---
 
 ## Lec 7.6 - Conditional Probability - Independent events: properties
 
->If E and F is independent, E and Fᶜ  are also independant
-if E,F and G are independant , all mutual intersection probabilities follow the multiplication rule, and
+>If E and F is independent, E and Fᶜ  are also independent
+if E,F and G are independent , all mutual intersection probabilities follow the multiplication rule, and
 P(E∩F∩G)=P(E)XP(F)XP(G)
 
 ---
@@ -608,6 +608,310 @@ P(E)=P(F)P(E|f)+P(Fᶜ)P(E|Fᶜ)
 * P(F|E)=P(F∩E)/P(E) = (P(E|Fᵢ)P(Fᵢ))/∑(P(E|Fᵢ)*P(Fᵢ))
 
 
+---
+
+# WEEK 8
+
+---
+
+---
+
+## Lec 8.1 - Random variables - Introduction
+
+>Random Expeiment
+>> experiment whose outcomes are known but not certain
+> Random Variable
+>> real valued function defined on the sample space of a random experiment/
+>>> example sum of two die roll
+
+---
+
+## Lec 8.2 - Random variables - Application
+### Discrete random vaqriable
+* can take only countable number of different values.
+
+
+---
+
+## Lec 8.3 - Random variables - Discrete and continuous random variable
+### Discrete vs Continous variables
+>Discrete
+>> isolated points on the real line
+> Continous
+>> interval along the real number
+
+* apartment complex example
+
+---
+
+## Lec 8.4 - Discrete random variables - Probability mass function properties
+
+### std deviation of a random variable.
+1. expectation (cx) = cE(x)
+2. SD (cx) = cSD(x)
+3. expectation (x+c) = E(x) +c
+4. SD (x+c) = SD(x)
+
+* let X be a random variable with n possible outcomes labelled xᵢ.
+* define PMF p(x) of X :
+	* p(xᵢ)=P(X=xᵢ)
+	* p(xᵢ)≥0
+	* ∑p(xᵢ)=1
+	* p(x) for any x ∉ { xᵢ }
+
+
+
+---
+
+## Lec 8.5 - Discrete random variables - Graph of probability mass function
+> plot P(X=xᵢ) on y-axis, against xᵢ on X axis.
+>> gives the shape of the random distribution.
+
+### distribution shapes
+1. Positive skewed , xᵢ increases pmf decreases
+2. Negative skewed , xᵢ increases pmf decreases
+3. Symetric
+4. Uniform
+
+---
+
+## Lec 8.6 - Discrete random variables - Cumulative distribution function
+>Cumulative distribution Function:
+>> F : ℝ → \[0,1\]
+>>>F(A) = P(X≤a)
+
+* if X is a discrete random variable with values in exact ascending order  --> F of X is a step function
+* size of the step =  probability of X that X assumes at that value.
+
+---
+
+# WEEK 9
+
+---
+
+---
+
+## Lec 9.1 - Discrete random variable - Application
+> summary lecture
+
+---
+
+
+## Lec 9.2 - Expectation of a random variable
+> Expectation
+>> Long run average
+E(X)=∑xᵢP(X=xᵢ)
+
+### Bernoulli random variable.
+* random variable that taes two value 1 or 0
+* takes on the value 1 with probability p
+* expextation=p
+
+### Discrete uniform random variable
+* pmf=1/n for each xᵢ
+* E(x)=(n+1)/2
+
+
+---
+
+## Lec 9.3 - Expectation of a random variable - Properties of expectation
+
+### Expectation of a function of a random variable
+E(*g(x)*)=∑(g(xᵢ)P(X=xᵢ))
+
+### sum of two random variables
+
+E(X+Y)=E(X)+E(Y)
+
+### Hypergeometric random variable
+* The result of each draw (the elements of the population being sampled) can be classified into one of two mutually exclusive categories (e.g. Pass/Fail or Employed/Unemployed).
+* The probability of a success changes on each draw, as each draw decreases the population (sampling without replacement from a finite population).
+* parameters:
+	* N: the population size,
+	* K: the number of success states in the population,
+	* n: the number of draws (i.e. quantity drawn in each trial),
+	* k: the number of observed successes
+* pmf = ᴷCₖ * ᴺ⁻ᴷCₙ₋ₖ / ᴺCₙ
+* expectation = nm/N
+* variance = E*((n-1)(m-1)/(N-1) + 1 - E)
+
+---
+
+## Lec 9.4 - Variance of a random variable - Properties of variance
+
+> Var(X)=E(X-E(X))²
+>> E(X²)-E(X)
+
+### Special cases
+1. Bernoulli:
+	Var(X)=p(p-1)
+2. Discrete Uniform:
+	Var(X)=(n²-1)/12
+
+---
+
+## Lec 9.5 - Variance of a random variable - Properties of variance
+1. Var(cX)=c²Var(X)
+2. Var(c+X)=Var(X)
+
+### independent random variables
+* knowing the value of one doesnt change the expectation of the other.
+* Var(X+Y)=Var(X)+Var(Y)
+
+---
+
+## Lec 9.6 - Standard deviation of a random variable
+
+> sd=sqrt(Variance)
+
+
+---
+
+# WEEK 10
+
+---
+
+---
+
+## Lec 10.1 - Binomial distribution - Bernoulli distribution
+
+### Bernoulli Trial
+> experiment whose outcome sample space can be classified into a binary set =\{ Success,Failure\}
+>> associate success with value 1 and failure with 0
+
+* large variance --> most uncertain.
+
+---
+
+
+## Lec 10.2 - Binomial distribution - IID Bernoulli trials
+
+* for n independent bernoulli trials,
+	* number of diff outcomes that result in i success and hence n-i failures = ⁿCᵢ
+	* P(X=i) = ⁿCᵢ x pⁱ x (1-p)⁽ⁿ⁻ⁱ⁾
+	* probability of i successes in n identically distributed independent bernoulli trials
+
+---
+
+
+## Lec 10.3 - Binomial distribution - Distribution of Binomial random variable
+
+### Binomial Random Variable
+> number of succsess in n independent Bernoulli trials.
+
+### shapes for small n
+* right skewed if BT has p is less than 0.5
+* symetrix if BT has p = 0.5
+* left skewed if BT has p is more than 0.5
+
+### shape for large n
+> distribution approaches symetry
+>> graph may be shifted, bur is shaped symetrically
+
+
+---
+
+## Lec 10.4 - Binomial distribution - Modeling situations as Binomial distribution
+
+> defectives in packs example, mcq exam example
+
+---
+
+## Lec 10.5 - Binomial distribution - Expectation and variance of Binomial random variable
+
+* Expectation: np
+* Variance: np(p-1)
+
+
+
+---
+
+#WEEK 11
+
+---
+
+---
+## Lec 11.1 - Continuous random variable - Introduction
+
+### probability density function
+* every continous random variable has a curve associated with it.
+* this curve is called it's probability density function f(x).
+* area under a pdf = ₐ∫ᵇf(x)dx= P(X∈\[a,b\])
+* 0≤f(x)≤1
+* ᵐᵃˣ∫ₘᵢₙf(x)dx=1
+
+
+---
+
+## Lec 11.2 - Continuous random variable - Uniform distribution
+
+if distribution is uniform f(x) is a constant in the given interval 0 otherwise, and = 1/(max-min)
+
+### std uniform distribution
+> min=0, max=1
+
+### cdf
+F(X)=P(X<\x) = ∫ᵃf(x)dx = 0 if x<\min, (x-min)/(max-min) , 1 if x ≥ max.
+
+### expectation
+E(X)=(min+max)/2
+
+### variance
+V(X)=(max-min)²/12
+
+---
+
+## Lec 11.3 - Continuous random variable - Uniform distribution: applications
+> application problems and solutions
+
+---
+
+## Lec 11.4 - Continuous random variable - Non uniform and triangular distribution
+### triangle distribution
+* has a peak, looks like a triangle, obviously.
+* there it is a function which takes constant positive slope upto the peak, and then a negative slope down to the max
+
+---
+
+## Lec 11.5 - Continuous random variable - Exponential distribution
+> pdf : f(x)=ke⁻ᵏˣ for x>0 , 0 otherwise
+
+### cdf
+* taper of at 1.
+* P(x≤a) = 1- e⁻ᵏᵃ
+
+### expectation
+* E(X)=1/k
+* E(Xⁿ)=nE(X^ⁿ⁻¹)/k
+
+### variance
+* var(X)=1/k²
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -619,16 +923,3 @@ P(E)=P(F)P(E|f)+P(Fᶜ)P(E|Fᶜ)
 
 
 <!-----------eof-------->
-
-
-
-
-
-
-
-
-
-
-
-
-<!-------->
