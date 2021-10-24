@@ -468,4 +468,281 @@ d=√∑(x<sub>i<sub>1</sub></sub>-x<sub>i<sub>2</sub></sub>)<sup>2</sup>
 + f<sup>-1</sup>of(x)=fof<sup>-1</sup>(x)=x
 + reflection of  the function about x=y
 
+
 ---
+
+WEEK 6
+
+---
+
+---
+## Lec 52 - Logarithmic Functions
+
+Inverse of
+>> f(x) = a<sup>x</sup> ; a≠1 , a>0
+>>> log<sub>a</sub>x
+
+### basically
+
+x=a<sup>y</sup> ⇐⇒ y=log<sub>a</sub>(x)
+
+---
+
+## Lec 53 - Logarithmic Functions - Graphs
+
++ vertical asymptote.
++ no y intercept
++ if a>1 function is increasing
++ if a>1 function is decreasing
+
+> ln (x) --> natural base (e base) logarithm
+
+---
+
+## Lec 54 - Solving Exponential Equations
+> computational excercises
+
+---
+
+## Lec 55 - Logarithmic Functions - Properties  - 1
+
+* inverse of the exponential function
+* logₐ1=0
+* logₐa=1
+* logarithmic arithmetic, for any base - slide rule rules ;)
+	* log(MN)=logM+logN
+	* log(M/N)=logM-logN
+	* log(Mʳ)=rlog(M)
+---
+
+## Lec 56 - Logarithmic Functions - Applications
+
+> simple computations
+
+---
+
+## Lec 57 - Logarithmic Functions -Properties - 2
+> Base conversions
+logₐx=logₚx/logₚa
+
+---
+
+## Lec 58 - Logarithmic Equations
+>computational excercises
+---
+
+WEEK 7
+
+---
+
+---
+
+## Lec 59 - Introduction to Graphs
+### Graph = (V,E)
++ V = set of vertices / nodes
++ E = set of edges, is a subset of VxV, that is, it is a binary relation on the nodes
+
+#### Directed Graph
++ (v,v') ∈ E doesnot ⇒ (v',v) ∈ E
+#### Un-Directed Graph
++ eg -freindships
++ (v,v') ∈ E  ⇒ (v',v) ∈ E
++ effectively (v,v') is the same edge as (v',v)
+
+### Path
+* sequence of vertices connected by edges.
+* no vertice is re[eated
+* every adjacent vertice in the seqeunce share an edge
+
+### walk
+* path with freedom of repeating vertices.
+
+
+#### reachable vertex
+* v is reachable from u if there is a path from   u to v.
+
+#### connected graph
+* example flight landings
+* every vertice is reachable from every other vertice
+
+---
+
+## Lec 60 - Some general graph problems
+
+### map coloring
++ example min classroom for overlapping timeslots
+* states that share a border should be different color
+* create a graph
+	* each state = vertex
+	* edge relation = sharing border
+	* problem becomes assigning colors to nodes so that endpoins of an edge have diff colors.
+	* for planar graphs , 4 colors suffice. -- Four color theorem
+
+### vertex covering
+* example= installing cct cameras
+	+ vertices = intersections of coridors
+	+ Edges = corridor segments connecting intersections
+* smallest set of V to cover all the edges
+
+### independent set
+* example group dances
+	* vertices = dances
+	* edges = have common dancers
+	* dances we can have so as to have one dancer perform only once
+* set of vertices such as none of them share an edge
+
+### matching
+* example - class project
+	* group of freinds
+* subset of E of mutually disjoint edges
+* maximal matching, max cardinality matching
+* perfect matching, covers all vertices.
+
+---
+
+## Lec 61 - Representation of graphs
+
+### adjacency matrix
+* map vertex names to integer indices
+* Matrix entry (i,j) = 1 if (vᵢ,vⱼ) is an edge , 0 otherwise
+* columns represent incoming edges
+* rows represent outgoing edges
+* wastes lots of space because typically |E|<< n²
+>degree
+>>d(v)= number of edges incident on i
+
+### adjacency list
+> list of neighbour indices for any vertices
+>> time costly for neighbourhood scanning, etc.
+
+--
+
+## Lec 62 - Breadth-first neighbour search
+
+* do it level by level
+* implement using queue(FIFO)
+* visit closest ( 1-step away) neighbours and mark them for exploration by adding them to the queue.
+* repeat closest neighbour exploration for each item in queue, dequeuing it and flaging it as visited,till queue is empty, adding to queue only unvisited neighbours.
+* necessarily mark each visited node with a flag so as to not loop infinitely.
+* to store and extract path --> store parents, while exploring nearest neighbours, store parent in addition to flagging the neighbour visited.
+* can also store level insted of visited flag --> unvisited =level -1
+* on exploration of each item's nearest neighbours, while adding parent increment level.
+
+---
+
+## Lec 63 - Depth-first search
+* implement using stack (LIFO)
+* explore fully till the end a neighbour to its fring end and then back track to the parent and explore its other neighbours
+* keep backtracking and exploring till u reach back the root, and it has no new neighbours to explore.
+
+### uses
+* find *cut vertices* - vertices which connect the graph, on deleting the graph no longer remains connected.
+* find bridge - edges that connect the graph.
+* cannot find shortest path :(
+
+
+---
+
+## Lec 64 - Applications of BFS and DFS-1
+1. From bfs parent list --> get shortest path of unweighted graph.
+2. finding components of a graph. (mutually unconnected maximal connected subgraphs)
+	a. starts bfs/dfs at vertex 0  -- initialize component number 0 and assign it to each node as u visit it.
+	b. increment component number and start scan on smallest unvisited node.
+2. detecting cycles. - walk that ends on the same vertex, without repeating an edge
+	+ simple cycle - only repeated vertice is the start/end.
+	+ maintain a DFS counter that is incremented both at start and end of exploring a node
+	+ assign nodes these entry and exit numbers
+
+### tree
+1. minimally connected graph.
+2. edges explored by a BFS form one tree per component.
+3. collection of trees= forest.
+4. N vertice tree necessarily has n-1 edges.
+5. acyclic graph.
+
+
+* any non tree edge creates a cycle.
+
+
+
+## Lec 65 - Applications of BFS and DFS-2
+### directed cycles
+### non-tree edges
+1. Forward edges
+2. Backward edges -- form cycles
+3. Cross edged - across branches
+#### classifying using dfs numbers
+1. forward :Interval  \[pre(start),post(start)\] contains \[pre(end),post(end)\]
+2. backward:Interval  \[pre(end),post(end)\] contains \[pre(start),post(start)\]
+3. cross :Intervals  \[pre(start),post(start)\] & \[pre(end),post(end)\] are disjoint.
+### strong connections
+two vertices have both paths from v1 to v2 and v2 to v1.
+#### Strongly Connected Components:
+> directed graph decomposition
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!------------------------------eof-------->

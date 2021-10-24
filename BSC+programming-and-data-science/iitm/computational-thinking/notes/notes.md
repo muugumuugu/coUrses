@@ -225,14 +225,14 @@ WEEK 5
 
 ---
 
-# lec 5.1 - Introduction to collections and list data structure
+## lec 5.1 - Introduction to collections and list data structure
 * set pointing to different positions in another ordered set --> indexing list
 	* basically an array of pointers.
 	* demarcate where to find data in a collection that has been flagged.
 
 ---
 
-# lec 5.2 - Pseudocode for lists
+## lec 5.2 - Pseudocode for lists
 * sqr bracket notation
 * concatenation symbol **++**
 * operations
@@ -243,14 +243,14 @@ foreach x in L:
 
 ---
 
-# lec 5.3 - Operations on the data collected in three prizes problem using lists
+## lec 5.3 - Operations on the data collected in three prizes problem using lists
 
 * from data of top 3 marks in each subject
 * find if ∃ a student who has scored with top 3 in all subjects.
 
 ---
 
-# lec 5.4 - Pseudocode for operations on the data collected in three prizes problem using lists
+## lec 5.4 - Pseudocode for operations on the data collected in three prizes problem using lists
 
 1. Procedure Top3Marks(Subject): returns thirdmax, which is the cutoff.
 2. make 3 lists of subject wise eleigible students
@@ -258,14 +258,14 @@ foreach x in L:
 
 ---
 
-# lec 5.5 - Insertion sort and ordered list
+## lec 5.5 - Insertion sort and ordered list
 
 * ordered list makes comparison based and search based operations efficient.
 * insertion sort is based on creating a new sorted array from the given array buy building up, inserting each encountered element into the new array in correct position by comparisons.
 
 ---
 
-# lec 5.6 - Pseudocode for insertion sort and ordered list
+## lec 5.6 - Pseudocode for insertion sort and ordered list
 
 > invariant = sorted condition of build-up-list.
 
@@ -273,12 +273,12 @@ foreach x in L:
 
 --
 
-# lec 5.7 - Systematic process of hypothesis verification to find relation between Mathematics and Physics...
+## lec 5.7 - Systematic process of hypothesis verification to find relation between Mathematics and Physics...
 > correlation fails XD.
 
-# lec 5.8 - Pseudocode for systematic process of hypothesis verification to find relation between Mathematics...
+## lec 5.8 - Pseudocode for systematic process of hypothesis verification to find relation between Mathematics...
 
-# lec 5.9 - Introduction to train dataset
+## lec 5.9 - Introduction to train dataset
 
 mutual linked dictionaries
 
@@ -292,7 +292,7 @@ WEEK 6
 
 ---
 
-# lec 6.1 Relations among customers based on their spending patterns
+## lec 6.1 Relations among customers based on their spending patterns
 
 * calculate an aggregate measure based on which to judge similarity b/w customers
 	* say the aggregate of frequency(quantity) of item-categories in each bill.
@@ -305,38 +305,81 @@ WEEK 6
 
 ---
 
-# lec 6.2 - Introduction to dictionary data structure
+## lec 6.2 - Introduction to dictionary data structure
 
 ---
 
-# lec 6.3 - Concept of dictionary to solve birthday paradox problem
+## lec 6.3 - Concept of dictionary to solve birthday paradox problem
 
 ---
 
-# lec 6.4 - Resolve pronoun with its equivalent matching noun using dictionary and ordered lists
+## lec 6.4 - Resolve pronoun with its equivalent matching noun using dictionary and ordered lists
 
 ---
 
-# lec 6.6 - Pseudocode for dictionaries
+## lec 6.6 - Pseudocode for dictionaries
 
 ---
 
-# lec 6.6 - Pseudocodes for real-time examples using dictionaries
+## lec 6.6 - Pseudocodes for real-time examples using dictionaries
 
 
 ---
-# lec 6.8 - Dictionary comparison to find common elements in them
+## lec 6.8 - Dictionary comparison to find common elements in them
 
 ---
 
-# lec 6.8 - Procedure to find relations among customers based on their spending patterns
+## lec 6.8 - Procedure to find relations among customers based on their spending patterns
 
 ---
 
-# lec 6.9 - Side effects in pseudocodes for lists and dictionaries
+## lec 6.9 - Side effects in pseudocodes for lists and dictionaries
 
+---
 
+# WEEK 7
+---
 
+---
+
+## lec 7.1 - Introduction to graph data structure
+
+vertexes connected by an edge when they are related.
+
+---
+
+## lec 7.2 - Introduction to matrices and implementation of matrix using nested dictionary
+
++ for random acces use nested dictionaries indexed by integer == using 2d - arrays
+
+---
+
+## lec 7.3 - Undirected graph and cliques
++ clique - all nodes connected to each other and not connected to other nodes in the graph.
+
+---
+
+## lec 7.4 - Concept of popular students using graph
+
++ degree of a vertex
+
+---
+
+## lec 7.5 - Pseudocodes for real-time examples using graphs
+
+--
+
+## lec 7.6 - Concept of connected graph to represent the relationship between different nouns in a paragraph
+
++ making a graph of nouns/pronouns connected by a verb not containging conjections/punctuations in btwn
++ choerence of a paragraph using noun connection graph -- disconnected - disjoint meaning of paragraph.
++ connected graphs
+
+--
+
+## lec 7.7 - Represent direct trains using a graph and find a route using multiple hops
+
++ graph representation of directly connected stations, edge represents a train.
 
 
 
