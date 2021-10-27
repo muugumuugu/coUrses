@@ -1,0 +1,315 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/frustum/frustum.htm">minimal frustum culling - 2010</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<div class="parts">
+<div class="part">
+You probably have done frustum culling in your 3d engine at some point. It's cheap to compute, and it can save the cost of rendering quite a big deal of objects. However, most size-coding demos and intros don't use it because it can involve quite a lot of code to do. As usual, things don't need to get as complex as most tutorials tell you. This article is about how to implement a fully functional simple, clean, with no dependency on external code, and small frustum culling. It can also serve as an example of how a 4 kilobyte demo coder might approach code optimzation.<br>
+<br>
+So, to put things in context, the idea is to precompute some definition of the camera view frustum that will allow quick and inexpensive rejection of objects at rendering time. Let's assume you have a perspective based camera for this article (orthographic frustums are even easier to handle, so I leave that as an exercise to the reader - yay, I always wanted to say this). So, we have a camera defined by a field of view, an aspect ration, a near and far clipping distances. I assume that objects that will get tested against the frustum have bounding spheres (or even boxes) defined in camera space. So out camera is centered at the origin and is looking in the negative <b>z</b> direction (yeah, an OpenGL style coordinate system).<br>
+</div>
+<div class="part">
+<img style="mix-blend-mode:screen;" src="gfx00.png"/>
+<br>
+<i>A frustum</i>
+</div>
+</div>
+
+<br>
+So, what we have to do is to construct the 6 planes that define the frustum. Now, you can do it the hard way, compute a projection matrix based on the OpenGL redbook, then copy from Nehe's tutorials the code to extract the planes from the matrix, and then normalize then. But we will do it another way - we are gonna construct the planes directly, because we perfectly know our frustum definition: the pass thru the origin, they point perpendicular to the field of view (fov) lines, and are parallel to the xyz axes. Besides, we don't need to normalize then, because we are gonna use the frustum only as an in/out/intersect detector for our geometry, so we don't need to know how far an object was from being inside or not, only if it is. So we can for sure avoid all the plane normalization code. Basically, we get this:<br>
+<br>
+<div class="code">void iqFrustumF_CreatePerspective( float *frus, float fovy, float aspect, float znear, float zfar )
+{
+    const float an = fovy * (3.141592653589f/180.0f);
+    const float si = sinf(an);
+    const float co = cosf(an);
+    frus[ 0] =  0.0f; frus[ 1] = -co;      frus[ 2] =  si;        frus[ 3] =  0.0f;
+    frus[ 4] =  0.0f; frus[ 5] =  co;      frus[ 6] =  si;        frus[ 7] =  0.0f;
+    frus[ 8] =  co;   frus[ 9] =  0.0f;    frus[10] =  si*aspect; frus[11] =  0.0f;
+    frus[12] = -co;   frus[13] =  0.0f;    frus[14] =  si*aspect; frus[15] =  0.0f;
+    frus[16] =  0.0f; frus[17] =  0.0f;    frus[18] =  1.0f;      frus[19] =  zfar;
+    frus[20] =  0.0f; frus[21] =  0.0f;    frus[22] = -1.0f;      frus[23] = -znear;
+}</div>
+<br>
+The first line is the first clipping plane, and it's made of 4 flotas, as all 3D planes. It passes thru the origin (third coefficient is 0.0), it's perpendicular to the <b>yz</b> plane, and it points IN the frustum volume (so, it's the top plane). Note that is normal vector is (0, -co, si), which accidentally has length 1 (ooops!), and it makes and angle of atan( si/co ) = atan( sin(an)/cos(an) ) = atan( tan(an) ) = an radians with the z axis, exactly as we want. Similar reasoning goes for the following 3 planes. The last two planes, the near and far clipping planes, are trivial: far clipping plane is defined as <b>z</b>=-zfar (remember, <b>z</b> is negative when looking forward) so the equation is <b>z</b>+zfar=0, ie, (1,0,0,zfar). Same for the near clipping plane (both have unit length normals already, oops!).<br>
+<br>
+The frustum is stored in 24 floats, which can be a local array in the callee function. No need for structs or other stuff.<br>
+<br>
+<br>
+<h3>Another way</h3><hr>
+<br>For the record, one should be able to arrive to this same code/formulas as a simplification process from a more general frustum culling source code. Let's see how. Let's start by a Nehe-style frustum culling code:<br>
+<br>
+<div class="code">void iqFrustumF_CreateFrustum( float *frustum, float fovy, float aspect, float znear, float zfar )
+{
+    <span class="codeComment">// extract corner points</span>
+    const float top    = znear * tanf(fovy * 3.141592653589f/180.0f );
+    const float bottom = -top;
+    const float left   = bottom * aspect;
+    const float right  = top * aspect;
+
+    <span class="codeComment">// construct an OpenGL-style projection matrix</span>
+    float x = (2.0f * znear) / (right - left);
+    float y = (2.0f * znear) / (top - bottom);
+    float a = (right + left) / (right - left);
+    float b = (top + bottom) / (top - bottom);
+    float c = -(zfar + znear) / ( zfar - znear);
+    float d = -(2.0f * zfar * znear) / (zfar - znear);
+
+    float matrix[16];
+    matrix[ 0] = x;     matrix[ 1] = 0.0f;  matrix[ 2] = a;      matrix[ 3] = 0.0f;
+    matrix[ 4] = 0.0f;  matrix[ 5] = y;     matrix[ 6] = b;      matrix[ 7] = 0.0f;
+    matrix[ 8] = 0.0f;  matrix[ 9] = 0.0f;  matrix[10] = c;      matrix[11] = d;
+    matrix[12] = 0.0f;  matrix[13] = 0.0f;  matrix[14] = -1.0f;  matrix[15] = 0.0f;
+
+    <span class="codeComment">// extract planes from the projection matrix</span>
+    frustum[ 0] = matrix[12] - matrix[ 0];
+    frustum[ 1] = matrix[13] - matrix[ 1];
+    frustum[ 2] = matrix[14] - matrix[ 2];
+    frustum[ 3] = matrix[15] - matrix[ 3];
+
+    frustum[ 4] = matrix[12] + matrix[ 0];
+    frustum[ 5] = matrix[13] + matrix[ 1];
+    frustum[ 6] = matrix[14] + matrix[ 2];
+    frustum[ 7] = matrix[15] + matrix[ 3];
+
+    frustum[ 8] = matrix[12] + matrix[ 4];
+    frustum[ 9] = matrix[13] + matrix[ 5];
+    frustum[10] = matrix[14] + matrix[ 6];
+    frustum[11] = matrix[15] + matrix[ 7];
+
+    frustum[12] = matrix[12] - matrix[ 4];
+    frustum[13] = matrix[13] - matrix[ 5];
+    frustum[14] = matrix[14] - matrix[ 6];
+    frustum[15] = matrix[15] - matrix[ 7];
+
+    frustum[16] = matrix[12] - matrix[ 8];
+    frustum[17] = matrix[13] - matrix[ 9];
+    frustum[18] = matrix[14] - matrix[10];
+    frustum[19] = matrix[15] - matrix[11];
+
+    frustum[20] = matrix[12] + matrix[ 8];
+    frustum[21] = matrix[13] + matrix[ 9];
+    frustum[22] = matrix[14] + matrix[10];
+    frustum[23] = matrix[15] + matrix[11];
+
+    <span class="codeComment">// normalize planes</span>
+    for( int i=0; i&lt;6; i++, ptr+=4 )
+    {
+        const float im = 1.0f/sqrtf( frustum[4*i+0]*frustum[4*i+0] +
+                                     frustum[4*i+1]*frustum[4*i+1] +
+                                     frustum[4*i+2]*frustum[4*i+2] );
+        frustum[4*i+0] *= im;
+        frustum[4*i+1] *= im;
+        frustum[4*i+2] *= im;
+        frustum[4*i+3] *= im;
+    }
+}</div>
+<br>
+As said, we don't need to normalize the planes for our purpose, so we can get rid of the last block of code. Next, we directly replace the left/right/top/bottom quantities in the definition of the matrix. Since it's a symmetric frustum and therefore left=-right and bottom=-top, and since znear can be factored out, we get some nice cancelations in the terms:<br>
+<div class="code">
+void iqFrustumF_CreateFrustum( float *frustum, float fovy, float aspect, float znear, float zfar )
+{
+    const float taa = tanf(fovy * 3.141592653589f/180.0f );
+
+    <span class="codeComment">// construct an OpenGL-style projection matrix</span>
+    float y =          1.0f / taa;
+    float x = aspect * 1.0f / taa;
+    float a = 0.0f;
+    float b = 0.0f;
+    float c = -(zfar + znear) / ( zfar - znear);
+    float d = -(2.0f * zfar * znear) / (zfar - znear);
+
+    float matrix[16];
+    matrix[ 0] = x;     matrix[ 1] = 0.0f;  matrix[ 2] = a;      matrix[ 3] = 0.0f;
+    matrix[ 4] = 0.0f;  matrix[ 5] = y;     matrix[ 6] = b;      matrix[ 7] = 0.0f;
+    matrix[ 8] = 0.0f;  matrix[ 9] = 0.0f;  matrix[10] = c;      matrix[11] = d;
+    matrix[12] = 0.0f;  matrix[13] = 0.0f;  matrix[14] = -1.0f;  matrix[15] = 0.0f;
+
+    <span class="codeComment">// extract planes from the projection matrix</span>
+    frustum[ 0] = matrix[12] - matrix[ 0];
+    frustum[ 1] = matrix[13] - matrix[ 1];
+    frustum[ 2] = matrix[14] - matrix[ 2];
+    frustum[ 3] = matrix[15] - matrix[ 3];
+
+    frustum[ 4] = matrix[12] + matrix[ 0];
+    frustum[ 5] = matrix[13] + matrix[ 1];
+    frustum[ 6] = matrix[14] + matrix[ 2];
+    frustum[ 7] = matrix[15] + matrix[ 3];
+
+    frustum[ 8] = matrix[12] + matrix[ 4];
+    frustum[ 9] = matrix[13] + matrix[ 5];
+    frustum[10] = matrix[14] + matrix[ 6];
+    frustum[11] = matrix[15] + matrix[ 7];
+
+    frustum[12] = matrix[12] - matrix[ 4];
+    frustum[13] = matrix[13] - matrix[ 5];
+    frustum[14] = matrix[14] - matrix[ 6];
+    frustum[15] = matrix[15] - matrix[ 7];
+
+    frustum[16] = matrix[12] - matrix[ 8];
+    frustum[17] = matrix[13] - matrix[ 9];
+    frustum[18] = matrix[14] - matrix[10];
+    frustum[19] = matrix[15] - matrix[11];
+
+    frustum[20] = matrix[12] + matrix[ 8];
+    frustum[21] = matrix[13] + matrix[ 9];
+    frustum[22] = matrix[14] + matrix[10];
+    frustum[23] = matrix[15] + matrix[11];
+}</div>
+<br>
+Next, we introduce the terms directly in the plane extraction code, and get:
+<div class="code">void iqFrustumF_CreateFrustum( float *frustum, float fovy, float aspect, float znear, float zfar )
+{
+    const float taa = tanf(fovy * 3.141592653589f/180.0f );
+
+    // construct an OpenGL-style projection matrix
+    float y =          1.0f / taa;
+    float x = aspect * 1.0f / taa;
+    float c = -(zfar + znear) / ( zfar - znear);
+    float d = -(2.0f * zfar * znear) / (zfar - znear);
+
+    // extract planes from the projection matrix
+    frustum[ 0] = x;     frustum[ 1] = 0.0f;   frustum[ 2] =  1.0f;     frustum[ 3] = 0.0f;
+    frustum[ 4] = x;     frustum[ 5] = 0.0f;   frustum[ 6] = -1.0f;     frustum[ 7] = 0.0f;
+    frustum[ 8] = 0.0f;  frustum[ 9] = y;      frustum[10] = -1.0f;     frustum[11] = 0.0f;
+    frustum[12] = 0.0f;  frustum[13] = -y;     frustum[14] = -1.0f;     frustum[15] = 0.0f;
+    frustum[16] = 0.0f;  frustum[17] = 0.0f;   frustum[18] = -1.0f - c; frustum[19] = -d;
+    frustum[20] = 0.0f;  frustum[21] = 0.0f;   frustum[22] = -1.0f + c; frustum[23] = d;
+}</div>
+<br>
+Much better already. Now we apply some algebra to c, d, -1-c, 1+c and all these terms in the 4th and 5th planes. We see that -1-c = 2n/(f-n) and that -1+c = -2f/(f-n). Since
+d = -2fn/(f-n), we can multiply the hole plane equations by (f-n)/2 and get:<br>
+<br>
+<div class="code">void iqFrustumF_CreateFrustum( float *frustum, float fovy, float aspect, float znear, float zfar )
+{
+    const float taa = tanf(fovy * 3.141592653589f/180.0f );
+
+    float y =          1.0f / taa;
+    float x = aspect * 1.0f / taa;
+
+    frustum[ 0] = x;     frustum[ 1] = 0.0f;   frustum[ 2] =  1.0f;     frustum[ 3] = 0.0f;
+    frustum[ 4] = x;     frustum[ 5] = 0.0f;   frustum[ 6] = -1.0f;     frustum[ 7] = 0.0f;
+    frustum[ 8] = 0.0f;  frustum[ 9] = y;      frustum[10] = -1.0f;     frustum[11] = 0.0f;
+    frustum[12] = 0.0f;  frustum[13] = -y;     frustum[14] = -1.0f;     frustum[15] = 0.0f;
+    frustum[16] = 0.0f;  frustum[17] = 0.0f;   frustum[18] = znear;     frustum[19] =  zfar*znear;
+    frustum[20] = 0.0f;  frustum[21] = 0.0f;   frustum[22] = -zfar;     frustum[23] = -zfar*znear;
+}</div>
+<br>
+Next is to realize that tan() = sin()/cos(), therefore x = cos/sin, and similar stuff goes for y, so we can write:<br>
+<br>
+<div class="code">void iqFrustumF_CreateFrustum( float *frustum, float fovy, float aspect, float znear, float zfar )
+{
+    const float an = fovy * (3.141592653589f/180.0f);
+    const float si = sinf(an);
+    const float co = cosf(an);
+
+    frustum[ 0] = aspect*co/si; frustum[ 1] = 0.0f;   frustum[ 2] =  1.0f;     frustum[ 3] = 0.0f;
+    frustum[ 4] = aspect*co/si; frustum[ 5] = 0.0f;   frustum[ 6] = -1.0f;     frustum[ 7] = 0.0f;
+    frustum[ 8] = 0.0f;  frustum[ 9] = co/si;      frustum[10] = -1.0f;     frustum[11] = 0.0f;
+    frustum[12] = 0.0f;  frustum[13] = -co/si;     frustum[14] = -1.0f;     frustum[15] = 0.0f;
+    frustum[16] = 0.0f;  frustum[17] = 0.0f;   frustum[18] = znear;     frustum[19] =  zfar*znear;
+    frustum[20] = 0.0f;  frustum[21] = 0.0f;   frustum[22] = -zfar;     frustum[23] = -zfar*znear;
+}</div>
+<br>
+Last step is to divide the 4th plane by znear, and the 5th by zfar, then to multiply the rest by si, and we pretty much arrive to the final code, which much smaller than the original one, and much more intuitive, as you can see the plane equations directly in the code.<br>
+<br>
+<div class="code">void iqFrustumF_CreatePerspective( float *frus, float fovy, float aspect, float znear, float zfar )
+{
+    const float an = fovy * (3.141592653589f/180.0f);
+    const float si = sinf(an);
+    const float co = cosf(an);
+    frus[ 0] =  0.0f; frus[ 1] = -co;      frus[ 2] =  si;        frus[ 3] =  0.0f;
+    frus[ 4] =  0.0f; frus[ 5] =  co;      frus[ 6] =  si;        frus[ 7] =  0.0f;
+    frus[ 8] =  co;   frus[ 9] =  0.0f;    frus[10] =  si*aspect; frus[11] =  0.0f;
+    frus[12] = -co;   frus[13] =  0.0f;    frus[14] =  si*aspect; frus[15] =  0.0f;
+    frus[16] =  0.0f; frus[17] =  0.0f;    frus[18] =  1.0f;      frus[19] =  zfar;
+    frus[20] =  0.0f; frus[21] =  0.0f;    frus[22] = -1.0f;      frus[23] = -znear;
+}</div>
+<br>
+<h3>How to use it</h3><hr>
+As said, a minimal frustum is just this, 24 floats (6 planes). Therefore, you could use it like this:<br>
+<br>
+<div class="code">float frustum[24];
+iqFrustumF_CreatePerspective( frustum, 50.0f, 1.333f, 0.1f, 1000.0f );
+
+for( int i=0; i < numObjects; i++ )
+{
+    if( iqFrustumF_BoxInside( frustum, box+6*i )!=0 )
+    {
+        addObjectToRenderList( i );
+    }
+}</div>
+<br>
+the <i>iqFrustumF_BoxInside()</i> function intersects a camera aligned bounding box with the frustum. In a real example you would probably want to actually transform the frustum to object space instead (and probably do it through the original frustum construction code - ehem.....) or use bounding spheres instead which are easily transformed to camera space. In a 4k intro (or even 64k demo), you would probably go for the second :)
+<!-- -------------------------------------------------------------------------------------------- -->
+
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

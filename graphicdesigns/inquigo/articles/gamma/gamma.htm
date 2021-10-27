@@ -1,0 +1,119 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/gamma/gamma.htm">gamma correct blurring - 2015</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<!-- --------------------------------------------------------------------------------- -->
+
+One mistake most of us have done at some point is to perform an image blurring downsizing (or other linear pixel operation) on photographs without taking gamma or srgb encoding into account (two different things, but similar enough in practice). Photographs are encoded in srgb color space for best display quality, not in an energy-linear color space. Ideally, your image blurring algorithm should only blur the detail in it and preserve the image brightness intact. Or in other words, if we want the blur kernel to be energy conserving, it will have to operate in linear space rather than srgb or gamma space. So, when blurring a photograph, one should degamma the image pixels before accumulating them, and then probably apply gamma back to the result after averaging for display. This, of course, is something we not always do, because it's a pain and most of the times [retty slow if done by hand (thankfully most GPU hardware these days can do this for you if you choose the correct internal format for your textures).<br>
+<br>
+This observation applies to box blurring, gaussian blurring, image downsampling, sobel filters, and basically anything that is a linear combination of pixel values, but it can probably be best illustrated with this simple box blur pseudocode below.<br>
+<br>
+
+<div class="partsB">
+<div class="part">Wrong way to do a box blur:<br>
+<br><div class="code">vec3 col = vec3(0.0);
+for( int j=-w; j<=w; j++ )
+for( int i=-w; i<=w; i++ )
+{
+    col += src[x+i,y+j];
+}
+dst[x,y] = col / ((2*w+1)*(2*w+1));</div>
+</div>
+<div class="part">Correct way to do a box blur:<br>
+<br><div class="code">vec3 col = vec3(0.0);
+for( int j=-w; j<=w; j++ )
+for( int i=-w; i<=w; i++ )
+{
+    col += DeGamma( src[x+i,y+j] );
+}
+dst[x,y] = Gamma( col / ((2*w+1)*(2*w+1)) );</div>
+</div>
+</div>
+
+<br>
+Here <b>Gamma()</b> and <b>DeGamma()</b> are the gamma correction function and its inverse. These can probably be just approximations, such as Gamma(x) = pow( x, 1.0/2.2 ) and DeGamma(x) = pow( x, 2.2 ), or even Gamma(x) = sqrt(x) and DeGamma(x) = x*x if you really want to save some cycles.<br>
+<br>
+The image below shows on the left side the wrong (and most common) way to blur an image, and the right side shows the result of correct blurring. Note how the correct version does not get darker but retains the original overall intensity after blurring, unlike the one on the left. The effect is pretty obvious in the area where the bus is in the picture. The effect would be even more obvious if the correct and incorrect images were overlapping.<br>
+<br>
+<br>
+<center><img class="myPicture" src="gfx00.gif"/><br><i>Left, gamma unaware blurring (too dark). Right, gamma correct blurring (correct brightness)</i></center><br>
+<br>
+<!--
+<iframe width="640" height="360" frameborder="0" src="https://www.shadertoy.com/embed/XtsSzH?gui=true&t=10&paused=false"></iframe>
+-->
+So, remember. If you are on the GPU, use sRGB for textures that contain photographics material and are ready to be displayed as they are. If you are on the CPU, remember to apply the inverse gamma correction. You probably want to do with a LUT with 256 entries that stores 16 bit integers with the fixed point representation of the de-gammaed value (mapping 8 bit to 8 bit would give you a loss of quality, for that point of storing images in gamma space is exactly to improve perceptual quantification quality).<br>
+<br>
+You can find some reference live code here: <a class="regular" href="https://www.shadertoy.com/view/XtsSzH">https://www.shadertoy.com/view/XtsSzH</a>
+<!-- -------------------------------------------------------------------------------------------- -->
+
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>
+
+

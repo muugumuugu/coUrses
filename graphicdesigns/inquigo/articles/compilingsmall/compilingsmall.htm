@@ -1,0 +1,121 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/compilingsmall/compilingsmall.htm">compiling small - 2002</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+As demosceners know, creating a 64kb demo is a triky thing, that requieres some special settings for compiling the code, but most importantly clever designing of the code. Some people think a 64 kb is a small project. Indeed, it's not a big project, but it's not necessarily just 50 files code. Good design requires good modularity. Often even these little demos used workspaces a dozen projects. This can mean, for example, 600 source code files made of 724 thousand lines (5% of comments). Obviously, not all that code is finally going into the final executable. For example, <a href="../../../prods/index.htm#195_95_256" class="regular">195/95/256</a> was compiled from 137 source files, 30 thousand code lines, 120 thousand data lines, 2% comments. The depth of the file tree structure was about 3 to 4 (only the first level is opened in the picture below).<br>
+<br>
+<br>
+For creating the demo I normally use Visual Studio C++ (Visual Studio Express 2008 today, and Visual C++ 6.0 in the past), and sometimes also an assembler like Nam or Masm for few files of assembly source code. For Linux, Irix and MacOS pure C is used, so everything can be compiled with gcc, Intel Compiler, MipsPro compiler or any other thing able to compile ANSI C code.<br>
+<br>
+All the code of the intro is OS independant, except for the basic functions for opening a window or playing a sound. That code is located in the "sys/" directory, where subdirectories hold the code that implements those functionalities for each OS. That means, that only the "sys/" folder has OS dependant stuff, and the rest of the code can be safely recompiled with 0 warnings in any platform, without need of ugly <b><i>#ifdef</i></b>s in the middle of the rendering or music playing code, for example. In the "sys/" folder there is also the header file defining the correct data types so that the code works both in 32 and 64 bit compilers/machines.<br>
+<br>
+However, all the tricky compiler options used to make the demo be smaller than 64kb are only done to the Windows version. For other OSs, the demo usually takes arround 75 kb. This is mainly because of two reasons. First, the file compressor we use only works on x86/Windows combination (kkrunchy by ryg/fr), and secondly, we only master the Visual C++ compiler and the way code is generated for Windows platform.<br>
+<br>
+Before going into the details for the VC++ 6.0 compilation, you might wonder why we used this compiler and not a newer version of the VC++ family. Well, experimentation with newer compiler didn't succed on creating smaller executable file than with the 6.0 version. We also used Intel Compiler 7.0, that creates faster executable (specially for the soft synthesis), but the resulting executable was 4 to 5 kilobytes bigger.
+<br>
+<br>
+So, let's see the details. First, we created three project configurations. The <b><i>Release</i></b>, the <b><i>Debug</i></b> and the <b><i>ReleaseDebug</i></b>. Except for the files in the "sys/" directory, the three configurations compile the same source files. The <b><i>Release</i></b> configuration contains the settings for the correct creation of small files, and doens't link to any external library - that's the one we use for the final executable. The <b><i>Debug</i></b> one creates a standard Windows executable, with all the debugging symbols and information, that helps during the creation process because allows to set breakpoings, resume execution and so on. It also creates a log file, that helps checking for correct execution. This configuraion, in the other hand, it also uses file caching of all the generated 3D and 2D content, so that the demo can instantly be initialized during debugging phase. The third configuration, <b><i>ReleaseDebug</i></b>, is a combination of the other two, where no external libraries are used, all the optimizations are "on", but file caching is still used to speed up loading times.<br>
+<br>
+So that the <b><i>Release</i></b> creates the smallest possible executable, this compiling options were used:<br>
+<br>
+<table>
+<tr><td width="180"><u><b>Purpose</b></u></td><td><u><b>Flag</b></u></td></tr>
+<tr><td width="180">avoid _ftol()</td><td>/QIfist</td></tr>
+<tr><td width="180">fastCall convention</td><td>/Gr</td></tr>
+<tr><td width="180">no exception Handling</td><td>/GX-</td></tr>
+<tr><td width="180">basics instrinc</td><td>/Oi</td></tr>
+<tr><td width="180">disable stack checks</td><td>/Gs</td></tr>
+</table>
+<br>
+Plus the obvious options for:<br>
+<br>
+<table>
+<tr><td width="180">space optimization</td><td>/Os</td></tr>
+<tr><td width="180">speed optimization</td><td>/Oa /Og</td></tr>
+</table>
+<br>
+<br>
+Many people doesn't use the first optimization, /QIfist, mainly because it's not documented very well. If not used, the C compiler will insert a function call to <b><i>_ftol()</i></b> each time the C code makes a conversion from floating point to integer. That function is responsible for ensuring the correct conversion as defined by the IEEE floating point standard. That is not only a slow process, but also makes your code dependant on the libc. So many people creates his own <b><i>_ftol()</i></b> function. Actually, Paradise was using that approach. But later we discovered that with this compiling option, the function call is not generated at all. Thus, code is saved, and more importantly, speed is gained. This is a very nice trick, specially for those 4k intros made in C/C++.<br>
+<br>
+Second non obvious optimization, is to change the default call convention (__cdecl) so that parameters are not passed to the functions thru the stack, but thru registers when possible. This, again, makes the code faster, and more importantly, smaller. In 195/95/256, we saved up to 2 kilobytes with this trick.<br>
+<br>
+Third optimization. If a programm is well design, there is no need exception handling. Yes. Exception handling is just a workarround for people that incorrectly uses C++ and allocates resources in class constructors (allocations should be done in create() methods, and leave the constructors for their original purpose - initialize class members). So, we discard the exception handling, and let's use correctly defined interfaces to track the possible execution errors.<br>
+<br>
+The fourth option, use of instrincts, allows the compiler to insert a cpu instruction in the code when possible. If not used, a call to <b><i>sqrtf()</i></b> in the C code will generate a call, while with this option the assembly instruction is generated instead. This way, we save writing ourselfs (in assembler) all these functions: <b><i>sinf()</i></b>, <b><i>cosf()</i></b>, <b><i>fabsf()</i></b>, <b><i>memset()</i></b>, <b><i>memcpy()</i></b> and many others. Still, a few functions -as <b><i>fmodf()</i></b>- will have to be done by hand.<br>
+<br>
+Again, if the code is deterministic and well design, no stack checks are needed. So use the /Gs option to skip unnecesary code.<br>
+<br>
+The rest are normal compiler optimizations. But, there is something you can still do in the C code to reduce the code size: use always the <b><i>f</i></b> subscript for the floating point constants, otherwise a double will be stored in the executable, and a innecesary conversion will occur. As the size of a double is two times the size of a float, lot of space can be wasted if not carrefully adding the <b><i>f</i></b> to all the constants. Normally, if you follow the rule, you should be able to parse all the assembly listing code and find zero <b><i>QWORD</i></b>s in the code.<br>
+<br>
+The remaining tricks to keep the executable small are just related to the way programming is done, algorithms are design, code is reutilzed and data-layout. But please, never discard checking for errors as a way to reduce the size of your code, at least not in a 64 kb unless you are really in the limit (say, 200 bytes away from the 64kb limit, and dead-line in ten minutes).
+<!-- -------------------------------------------------------------------------------------------- -->
+
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

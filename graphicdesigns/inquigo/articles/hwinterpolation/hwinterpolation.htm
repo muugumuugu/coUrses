@@ -1,0 +1,147 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/hwinterpolation/hwinterpolation.htm">hardware interpolation - 2013</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<h3>Intro</h3><hr>
+Hardware texture inteporlation of 8 bit textures (RGBA8 and variants) is fast and convenient. It is bilinear (plus mipmapping), and despite <a class="regular" href="../texture/texture.htm">it can be somehow improved</a>, it works great for most cases. Most cases being texture mapping of surfaces with color/albedo, normal and specular textures for low dynamic range or softly lit scenes. Generally these types of textures don't need lots of color fidelity (where "color" means pixel value/content), and therefore the hardware's texture interpolation units implement some simple interpolation based on 24.8 fixed point arithmetic. That's what all GPUs' hardware implements these days. <br>
+<br>
+A 24.8 precision texture interpolator means that there's a maximum of 256 intermediate values possible between two adjacent pixels of a texture. 256 values are a lot for albedo textures for sure, but often in computer graphics textures encode not only surface properties, but they serve as LookUp Tables (LUT), heighfields (for terrain rendering), or who knows what. In those cases, you can find yourself easily lacking more resolution than 256 values between pixels. This article is about why this problem manifests and how it can be easily workarounded. In the image below you can see the difference between a regular GLSL's texture() or texture2D() call which triggers the hardware texture interpolation with its 256 intermediate values and that produces staircase artifacts versus the correct full floating point texture interpolation
+which produces the desired smooth results.<br>
+<br>
+<br>
+<center><img class="myPicture" src="gfx00.gif"/><i><br>Terrain rendered with hardware texture interpolation (producing artifacts) vs manual texture <br>interpolation (soft results) <a class="regular" href="https://www.shadertoy.com/view/MdBGzG">https://www.shadertoy.com/view/MdBGzG</a></i></center>
+<br>
+<br>
+<br>
+<h3>The problem</h3><hr>
+
+As said, the problem comes from the fact that the hardware is using only 8 bits for the fractional part of the texel interpolator. Once the vertex UVs have been converted into texel coordinates, the integer part of the coordinates determine the pixels to be taken into account in the interpolation, and the fractional part feed the interpolation formula. For easier visualization, imagine we were working with a 1024x1 pixels grayscale 1D texture, and that we were reading from it at pixel 53 and pixel 54, at a sampling rate of 500 steps (say we are zooming in it). Imagine pixel 53 contains the pixel value 10 and that the pixel 54 contains the pixel value 11. Then, if we computed the first 5 of the 500 values, we'd expect to get 10.000, 10.002, 10.004, 10.006, 10.008 (the sequence would go increasing all the way to 11.0, in steps of 0.002 = 1/500). That's what the first column represents in the table below. However, because of the 8 bit precission interpolants, the results look very different, as you can see in the second column below:
+<br>
+<br>
+<table cellpadding="12" cellspacing="0">
+<tr><td>Alpha<hr><td><td>Expected<hr></td><td>Real<hr></td></tr>
+<tr><td>0.000<td><td>10*(1.0-0.000)+0.000*11 = <b>10.000</b></td><td>(10*(256-0)+0*11)>>8 = <b>10.000</b></td></tr>
+<tr><td>0.002<td><td>10*(1.0-0.002)+0.002*11 = <b>10.002</b></td><td>(10*(256-1)+1*11)>>8 = <b>10.004</b></td></tr>
+<tr><td>0.004<td><td>10*(1.0-0.004)+0.004*11 = <b>10.004</b></td><td>(10*(256-1)+1*11)>>8 = <b>10.004</b></td></tr>
+<tr><td>0.006<td><td>10*(1.0-0.006)+0.006*11 = <b>10.006</b></td><td>(10*(256-2)+2*11)>>8 = <b>10.008</b></td></tr>
+<tr><td>0.006<td><td>10*(1.0-0.008)+0.008*11 = <b>10.008</b></td><td>(10*(256-2)+2*11)>>8 = <b>10.008</b></td></tr>
+</table><br>
+<br>
+The third column in the table above displays what the hardware texture unit is really returning to us. As you can see, since 8 bits are used for the fixed point interpolation, the 0.002 step size cannot be represented. The smallest granularity of the interpolation is 1/256 = 0.0039, which is bigger. So, the interpolant will repeat itself every few times before it jumps to the next representable value. That means, that the colors the texture unit returns to as are not continuous values between 10.0 and 11.0, but some sort of staircase.<br>
+<br>
+The image below is a screenshot of this shader <a class="regular" href="https://www.shadertoy.com/view/Xsf3Dr">https://www.shadertoy.com/view/Xsf3Dr</a> that you can use to see the effect in your own computer. The image shows in its top half the hardware texture unit in action, interpolating between yellow and blue. The color gradient looks pretty smooth to the eye. However, taking derivatives of the signal highlights the problem. If the values in the gradient were smooth indeed, then derivative of the gradient would be constant (the derivative of a line is a constant with the value of the slope of the line). However, rather than getting a constant color, the derivative (shown in the top part of the image) shows a series of black and white areas. The black areas are the pixels in which the interpolator didn't change values due to the reduced resolution of the 8 bit arithmetic, just as in the numerical table above. The white lines are the pixels at which the interpolant got assigned a new value.<br>
+<br>
+<br>
+<img class="myPicture" src="gfx01.png"/><br>Realtime demonstration of the problem: <a class="regular" href="https://www.shadertoy.com/view/Xsf3Dr">https://www.shadertoy.com/view/Xsf3Dr</a><br>
+<br>
+<br>
+The second half of the image shows the correct linear interpolation of the same two colors, which looks visually very similar to the hardware interpolator. The bottom part of the image shows a constant color, which is the expected
+constant derivative between the blue and yellow colors.
+
+<br>
+<br>
+<h3>How to workaround it</h3><hr>
+The fix to the problem is easy - do not use the hardware interpolator, but do the bilinear filtering by hand. Or in other words, rather than doing:<br><br>
+<div class="code"><span class="codeComment">// regular texture fetching</span>
+vec4 textureBad( sampler2D sam, vec2 uv )
+{
+    return texture( sam, uv );
+}</div>
+<br>
+do this instead:<br>
+<br>
+<div class="code"><span class="codeComment">// improved bilinear interpolated texture fetch</span>
+vec4 textureGood( sampler2D sam, vec2 uv )
+{
+    vec2 res = textureSize( sam );
+
+    vec2 st = uv*res - 0.5;
+
+    vec2 iuv = floor( st );
+    vec2 fuv = fract( st );
+
+    vec4 a = texture( sam, (iuv+vec2(0.5,0.5))/res );
+    vec4 b = texture( sam, (iuv+vec2(1.5,0.5))/res );
+    vec4 c = texture( sam, (iuv+vec2(0.5,1.5))/res );
+    vec4 d = texture( sam, (iuv+vec2(1.5,1.5))/res );
+
+    return mix( mix( a, b, fuv.x),
+                mix( c, d, fuv.x), fuv.y );
+}</div>
+<br>
+Of course the solution requires 4 times the amount of texture fetches, which might or might not be a problem depending on your application. Luckily these are cache friendly, so probably it is not <i>that</i> bad. You might want
+to use texelFetch() or textureGather() to do get the four pixel values instead of texture().<br>
+<br>
+Depending on the application, the visual difference between the default texture interpolation and the improved one can be massive, as seen in the first image of the article which is magnified below. This type of error is even more
+observable under animated cameras.<br>
+<br>
+<img class="myPicture" src="gfx02.gif"/>
+<!-- -------------------------------------------------------------------------------------------- -->
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

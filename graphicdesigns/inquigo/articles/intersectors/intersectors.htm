@@ -1,0 +1,823 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/intersectors/intersectors.htm">intersectors</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<!---------------------------------------------------------------------------->
+
+<h3>Intro</h3><hr>
+This is a collection of ray-surface intersectors for some common primitive types. You can use them to implement a pathtracer, UI clicking, sound propagation, collision detection or anything that requires analytic raycasting. I have derived these myself, and while I have used them professionally, I haven't put them to the most strict of the tests. If you notice precision errors in any of them you can choose to improve these implementations (at some performance cost) or improve how your renderer generally handles precision problems. When possible, I've tried to get the number of operations to a minimum (for example the capped cone and capsule intersectors only check against one of the caps, even though these primitives have two). <br>
+<br>
+Note that all the primitives listed here come with a link to a realtime online demo in Shadertoy. In fact, this public playlist contains all the shadertoy examples: <a href="https://www.shadertoy.com/playlist/l3dXRf">https://www.shadertoy.com/playlist/l3dXRf</a>, so don't miss that out.<br>
+<br>
+<br>
+<h3>Primitives</h3><hr>
+In all the examples below, <b>ro</b> is the ray origin, and <b>rd</b> is the ray direction. The functions always return the distance to the closest intersection, and sometimes some additional information (second intersection, normal or barycentric coordinates). Most primitives are centered at the origin (you'll need to transform the ray origin and direction accordingly), but some of the functions above accept an arbitrary primitive location and orientation when such implementation is faster than performing a ray transformation. Most of these functions only work for a ray with origin outside of the primitive. Fixing that shouldn't be difficult.<br>
+<br>
+<br>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL">
+<div class="part">
+<img class="formula" src="gfx00.png"/><br>
+<b>Sphere</b><br>
+<a href="https://www.shadertoy.com/view/4d2XWV">Shadertoy example</a>
+</div>
+<div class="part">
+<div class="code"><span class="codeComment">// sphere of size ra centered at point ce
+</span>vec2 sphIntersect( in vec3 ro, in vec3 rd, in vec3 ce, float ra )
+{
+    vec3 oc = ro - ce;
+    float b = dot( oc, rd );
+    float c = dot( oc, oc ) - ra*ra;
+    float h = b*b - c;
+    if( h&lt;0.0 ) return vec2(-1.0); <span class="codeComment">// no intersection</span>
+    h = sqrt( h );
+    return vec2( -b-h, -b+h );
+}</div>
+</div>
+</div>
+<br>
+<br>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL">
+<div class="part">
+<img class="formula" src="gfx01.png"/><br>
+<b>Box</b></br>
+<a href="https://www.shadertoy.com/view/ld23DV">Shadertoy example</a>
+</div>
+<div class="part">
+<div class="code"><span class="codeComment">// axis aligned box centered at the origin, with size boxSize
+</span>vec2 boxIntersection( in vec3 ro, in vec3 rd, vec3 boxSize, out vec3 outNormal ) 
+{
+    vec3 m = 1.0/rd; <span class="codeComment">// can precompute if traversing a set of aligned boxes</span>
+    vec3 n = m*ro;   <span class="codeComment">// can precompute if traversing a set of aligned boxes</span>
+    vec3 k = abs(m)*boxSize;
+    vec3 t1 = -n - k;
+    vec3 t2 = -n + k;
+    float tN = max( max( t1.x, t1.y ), t1.z );
+    float tF = min( min( t2.x, t2.y ), t2.z );
+    if( tN&gt;tF || tF&lt;0.0) return vec2(-1.0); <span class="codeComment">// no intersection</span>
+    outNormal = -sign(rd)*step(t1.yzx,t1.xyz)*step(t1.zxy,t1.xyz);
+    return vec2( tN, tF );
+}</div>
+</div>
+</div>
+<br>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL">
+<div class="part">
+<img class="formula" src="gfx16.png"/><br>
+<b>Rounded Box</b></br>
+<a href="https://www.shadertoy.com/view/WlSXRW">Shadertoy example</a>
+</div>
+<div class="part">
+<div class="code"><span class="codeComment">// axis aligned box centered at the origin, with dimensions "size" and extruded by radious "rad"
+</span>float roundedboxIntersect( in vec3 ro, in vec3 rd, in vec3 size, in float rad )
+{
+    <span class="codeComment">// bounding box</span>
+    vec3 m = 1.0/rd;
+    vec3 n = m*ro;
+    vec3 k = abs(m)*(size+rad);
+    vec3 t1 = -n - k;
+    vec3 t2 = -n + k;
+    float tN = max( max( t1.x, t1.y ), t1.z );
+    float tF = min( min( t2.x, t2.y ), t2.z );
+    if( tN&gt;tF || tF&lt;0.0) return -1.0;
+    float t = tN;
+
+    <span class="codeComment">// convert to first octant</span>
+    vec3 pos = ro+t*rd;
+    vec3 s = sign(pos);
+    ro  *= s;
+    rd  *= s;
+    pos *= s;
+        
+    <span class="codeComment">// faces</span>
+    pos -= size;
+    pos = max( pos.xyz, pos.yzx );
+    if( min(min(pos.x,pos.y),pos.z) &lt; 0.0 ) return t;
+
+    <span class="codeComment">// some precomputation</span>
+    vec3 oc = ro - size;
+    vec3 dd = rd*rd;
+    vec3 oo = oc*oc;
+    vec3 od = oc*rd;
+    float ra2 = rad*rad;
+
+    t = 1e20;        
+
+    <span class="codeComment">// corner</span>
+    {
+    float b = od.x + od.y + od.z;
+    float c = oo.x + oo.y + oo.z - ra2;
+    float h = b*b - c;
+    if( h&gt;0.0 ) t = -b-sqrt(h);
+    }
+    <span class="codeComment">// edge X</span>
+    {
+    float a = dd.y + dd.z;
+    float b = od.y + od.z;
+    float c = oo.y + oo.z - ra2;
+    float h = b*b - a*c;
+    if( h&gt;0.0 )
+    {
+        h = (-b-sqrt(h))/a;
+        if( h&gt;0.0 && h&lt;t && abs(ro.x+rd.x*h)&lt;size.x ) t = h;
+    }
+    }
+    <span class="codeComment">// edge Y</span>
+    {
+    float a = dd.z + dd.x;
+    float b = od.z + od.x;
+    float c = oo.z + oo.x - ra2;
+    float h = b*b - a*c;
+    if( h&gt;0.0 )
+    {
+        h = (-b-sqrt(h))/a;
+        if( h&gt;0.0 && h&lt;t && abs(ro.y+rd.y*h)&lt;size.y ) t = h;
+    }
+    }
+    <span class="codeComment">// edge Z</span>
+    {
+    float a = dd.x + dd.y;
+    float b = od.x + od.y;
+    float c = oo.x + oo.y - ra2;
+    float h = b*b - a*c;
+    if( h&gt;0.0 )
+    {
+        h = (-b-sqrt(h))/a;
+        if( h&gt;0.0 && h&lt;t && abs(ro.z+rd.z*h)&lt;size.z ) t = h;
+    }
+    }
+
+    if( t&gt;1e19 ) t=-1.0;
+    
+    return t;
+}
+
+<span class="codeComment">// normal of a rounded box</span>
+vec3 roundedboxNormal( in vec3 pos, in vec3 siz, in float rad )
+{
+    return sign(pos)*normalize(max(abs(pos)-siz,0.0));
+}</div>
+</div>
+</div>
+<br>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL">
+<div class="part">
+<img class="formula" src="gfx10.png"/><br>
+<b>Plane</b>
+</div>
+<div class="part">
+<div class="code"><span class="codeComment">// plane degined by p (p.xyz must be normalized)
+</span>float plaIntersect( in vec3 ro, in vec3 rd, in vec4 p )
+{
+    return -(dot(ro,p.xyz)+p.w)/dot(rd,p.xyz);
+}</div>
+</div>
+</div>
+<br>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL">
+<div class="part">
+<img class="formula" src="gfx19.png"/><br>
+<b>Disk</b></br>
+<a href="https://www.shadertoy.com/view/4tsBD7">Shadertoy example</a>
+</div>
+<div class="part">
+<div class="code"><span class="codeComment">// disk center c, normal n, radius r
+</span>float diskIntersect( in vec3 ro, in vec3 rd, vec3 c, vec3 n, float r )
+{
+    vec3  o = ro - c;
+    float t = -dot(n,o)/dot(rd,n);
+    vec3  q = o + rd*t;
+    return (dot(q,q)&lt;r*r) ? t : -1.0;
+}</div>
+</div>
+</div>
+<br>
+<br><!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL">
+<div class="part">
+<img class="formula" src="gfx18.png"/><br>
+<b>Hexagonal Prism</b><br>
+<a href="https://www.shadertoy.com/view/tljBWy">Shadertoy example</a>
+</div>
+<div class="part">
+<div class="code"><span class="codeComment">// returns t and normal
+</span>vec4 iHexPrism( in vec3  ro, in vec3  rd, in float ra, in float he )
+{
+    const float ks3 = 0.866025;
+
+    <span class="codeComment">// normals</span>
+    const vec3 n1 = vec3( 1.0,0.0,0.0);
+    const vec3 n2 = vec3( 0.5,0.0,ks3);
+    const vec3 n3 = vec3(-0.5,0.0,ks3);
+    const vec3 n4 = vec3( 0.0,1.0,0.0);
+
+    <span class="codeComment">// slabs intersections</span>
+    vec3 t1 = vec3((vec2(ra,-ra)-dot(ro,n1))/dot(rd,n1), 1.0);
+    vec3 t2 = vec3((vec2(ra,-ra)-dot(ro,n2))/dot(rd,n2), 1.0);
+    vec3 t3 = vec3((vec2(ra,-ra)-dot(ro,n3))/dot(rd,n3), 1.0);
+    vec3 t4 = vec3((vec2(he,-he)-dot(ro,n4))/dot(rd,n4), 1.0);
+    
+    <span class="codeComment">// inetsection selection</span>
+    if( t1.y&lt;t1.x ) t1=vec3(t1.yx,-1.0);
+    if( t2.y&lt;t2.x ) t2=vec3(t2.yx,-1.0);
+    if( t3.y&lt;t3.x ) t3=vec3(t3.yx,-1.0);
+    if( t4.y&lt;t4.x ) t4=vec3(t4.yx,-1.0);
+   
+    vec4            tN=vec4(t1.x,t1.z*n1);
+    if( t2.x&gt;tN.x ) tN=vec4(t2.x,t2.z*n2);
+    if( t3.x&gt;tN.x ) tN=vec4(t3.x,t3.z*n3);
+    if( t4.x&gt;tN.x ) tN=vec4(t4.x,t4.z*n4);
+    
+    float tF = min(min(t1.y,t2.y),min(t3.y,t4.y));
+    
+    <span class="codeComment">// no intersection</span>
+    if( tN.x&gt;tF || tF&lt;0.0) return vec4(-1.0);
+
+    return tN;  // return tF too for exit point
+}</div>
+</div>
+</div>
+<br>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL">
+<div class="part">
+<img class="formula" src="gfx13.png"/><br>
+<b>Capsule</b>
+<br>
+<a href="https://www.shadertoy.com/view/Xt3SzX">Shadertoy example</a>
+</div>
+<div class="part">
+<div class="code"><span class="codeComment">// capsule defined by extremes pa and pb, and radious ra
+// Note that only ONE of the two spherical caps is checked for intersections,
+// which is a nice optimization</span>
+float capIntersect( in vec3 ro, in vec3 rd, in vec3 pa, in vec3 pb, in float ra )
+{
+    vec3  ba = pb - pa;
+    vec3  oa = ro - pa;
+    float baba = dot(ba,ba);
+    float bard = dot(ba,rd);
+    float baoa = dot(ba,oa);
+    float rdoa = dot(rd,oa);
+    float oaoa = dot(oa,oa);
+    float a = baba      - bard*bard;
+    float b = baba*rdoa - baoa*bard;
+    float c = baba*oaoa - baoa*baoa - ra*ra*baba;
+    float h = b*b - a*c;
+    if( h >= 0.0 )
+    {
+        float t = (-b-sqrt(h))/a;
+        float y = baoa + t*bard;
+        <span class="codeComment">// body</span>
+        if( y&gt;0.0 && y&lt;baba ) return t;
+        <span class="codeComment">// caps</span>
+        vec3 oc = (y &lt;= 0.0) ? oa : ro - pb;
+        b = dot(rd,oc);
+        c = dot(oc,oc) - ra*ra;
+        h = b*b - c;
+        if( h&gt;0.0 ) return -b - sqrt(h);
+    }
+    return -1.0;
+}</div>
+</div>
+</div>
+<br>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL">
+<div class="part">
+<img class="formula" src="gfx12.png"/><br>
+<b>Capped cylinder</b><br>
+<a href="https://www.shadertoy.com/view/4lcSRn">Shadertoy example</a>
+</div>
+<div class="part">
+<div class="code"><span class="codeComment">// cylinder defined by extremes pa and pb, and radious ra
+</span>vec4 cylIntersect( in vec3 ro, in vec3 rd, in vec3 pa, in vec3 pb, float ra )
+{
+    vec3 ca = pb-pa;
+    vec3 oc = ro-pa;
+    float caca = dot(ca,ca);
+    float card = dot(ca,rd);
+    float caoc = dot(ca,oc);
+    float a = caca - card*card;
+    float b = caca*dot( oc, rd) - caoc*card;
+    float c = caca*dot( oc, oc) - caoc*caoc - ra*ra*caca;
+    float h = b*b - a*c;
+    if( h&lt;0.0 ) return vec4(-1.0); <span class="codeComment">//no intersection</span>
+    h = sqrt(h);
+    float t = (-b-h)/a;
+    <span class="codeComment">// body</span>
+    float y = caoc + t*card;
+    if( y&gt;0.0 && y&lt;caca ) return vec4( t, (oc+t*rd-ca*y/caca)/ra );
+    <span class="codeComment">// caps</span>
+    t = (((y&lt;0.0)?0.0:caca) - caoc)/card;
+    if( abs(b+a*t)&lt;h ) return vec4( t, ca*sign(y)/caca );
+    return vec4(-1.0); <span class="codeComment">//no intersection</span>
+}</div>
+</div>
+</div>
+<br>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL">
+<div class="part">
+<img class="formula" src="gfx04.png"/><br>
+<h3>Cylinder</h3>
+</div>
+<div class="part">
+<div class="code"><span class="codeComment">// infinite cylinder defined by a base point cb, a normalized axis ca and a radious cr
+</span>vec2 cylIntersect( in vec3 ro, in vec3 rd, in vec3 cb, in vec3 ca, float cr )
+{
+    vec3  oc = ro - cb;
+    float card = dot(ca,rd);
+    float caoc = dot(ca,oc);
+    float a = 1.0 - card*card;
+    float b = dot( oc, rd) - caoc*card;
+    float c = dot( oc, oc) - caoc*caoc - cr*cr;
+    float h = b*b - a*c;
+    if( h&lt;0.0 ) return vec2(-1.0); <span class="codeComment">//no intersection</span>
+    h = sqrt(h);
+    return vec2(-b-h,-b+h)/a;
+}</div>
+</div>
+</div>
+<br>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL">
+<div class="part">
+<img class="formula" src="gfx07.png"/><br>
+<b>Capped cone</b><br>
+<a href="https://www.shadertoy.com/view/llcfRf">Shadertoy example</a>
+</div>
+<div class="part">
+<div class="code"><span class="codeComment">// cone defined by extremes pa and pb, and radious ra and rb
+Only one square root and one division is emplyed in the worst case. dot2(v) is dot(v,v)</span>
+vec4 coneIntersect( in vec3  ro, in vec3  rd, in vec3  pa, in vec3  pb, in float ra, in float rb )
+{
+    vec3  ba = pb - pa;
+    vec3  oa = ro - pa;
+    vec3  ob = ro - pb;
+    float m0 = dot(ba,ba);
+    float m1 = dot(oa,ba);
+    float m2 = dot(rd,ba);
+    float m3 = dot(rd,oa);
+    float m5 = dot(oa,oa);
+    float m9 = dot(ob,ba); 
+    
+    <span class="codeComment">// caps</span>
+    if( m1&lt;0.0 )
+    {
+        if( dot2(oa*m2-rd*m1)&lt;(ra*ra*m2*m2) ) <span class="codeComment">// delayed division</span>
+            return vec4(-m1/m2,-ba*inversesqrt(m0));
+    }
+    else if( m9&gt;0.0 )
+    {
+    	float t = -m9/m2;                     <span class="codeComment">// NOT delayed division</span>
+        if( dot2(ob+rd*t)&lt;(rb*rb) )
+            return vec4(t,ba*inversesqrt(m0));
+    }
+    
+    <span class="codeComment">// body</span>
+    float rr = ra - rb;
+    float hy = m0 + rr*rr;
+    float k2 = m0*m0    - m2*m2*hy;
+    float k1 = m0*m0*m3 - m1*m2*hy + m0*ra*(rr*m2*1.0        );
+    float k0 = m0*m0*m5 - m1*m1*hy + m0*ra*(rr*m1*2.0 - m0*ra);
+    float h = k1*k1 - k2*k0;
+    if( h&lt;0.0 ) return vec4(-1.0); <span class="codeComment">//no intersection</span>
+    float t = (-k1-sqrt(h))/k2;
+    float y = m1 + t*m2;
+    if( y&lt;0.0 || y&gt;m0 ) return vec4(-1.0); <span class="codeComment">//no intersection</span>
+    return vec4(t, normalize(m0*(m0*(oa+t*rd)+rr*ba*ra)-ba*hy*y));
+}</div>
+</div>
+</div>
+<br>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL">
+<div class="part">
+<img class="formula" src="gfx17.png"/><br>
+<b>Rounded cone</b><br>
+<a href="https://www.shadertoy.com/view/MlKfzm">Shadertoy example</a>
+</div>
+<div class="part">
+<div class="code"><span class="codeComment">// cone defined by extremes pa and pb, and radious ra and rb.</span>
+vec4 iRoundedCone( in vec3 ro, in vec3 rd, in vec3 pa, in vec3 pb, in float ra, in float rb )
+{
+    vec3  ba = pb - pa;
+    vec3  oa = ro - pa;
+    vec3  ob = ro - pb;
+    float rr = ra - rb;
+    float m0 = dot(ba,ba);
+    float m1 = dot(ba,oa);
+    float m2 = dot(ba,rd);
+    float m3 = dot(rd,oa);
+    float m5 = dot(oa,oa);
+    float m6 = dot(ob,rd);
+    float m7 = dot(ob,ob);
+    
+    <span class="codeComment">// body</span>
+    float d2 = m0-rr*rr;
+    float k2 = d2    - m2*m2;
+    float k1 = d2*m3 - m1*m2 + m2*rr*ra;
+    float k0 = d2*m5 - m1*m1 + m1*rr*ra*2.0 - m0*ra*ra;
+    float h = k1*k1 - k0*k2;
+    if( h&lt;0.0) return vec4(-1.0);
+    float t = (-sqrt(h)-k1)/k2;
+  //if( t&lt;0.0 ) return vec4(-1.0);
+    float y = m1 - ra*rr + t*m2;
+    if( y&gt;0.0 && y&lt;d2 ) return vec4(t, normalize(d2*(oa+t*rd)-ba*y));
+
+    <span class="codeComment">// caps</span>
+    float h1 = m3*m3 - m5 + ra*ra;
+    float h2 = m6*m6 - m7 + rb*rb;
+    if( max(h1,h2)<0.0 ) return vec4(-1.0);
+    vec4 r = vec4(1e20);
+    if( h1&gt;0.0 )
+    {        
+    	t = -m3 - sqrt( h1 );
+        r = vec4( t, (oa+t*rd)/ra );
+    }
+    if( h2&gt;0.0 )
+    {
+    	t = -m6 - sqrt( h2 );
+        if( t&lt;r.x )
+        r = vec4( t, (ob+t*rd)/rb );
+    }
+    return r;
+}</div>
+</div>
+</div>
+<br>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL">
+<div class="part">
+<img class="formula" src="gfx11.png"/><br>
+<b>Ellipsoid</b><br>
+<a href="https://www.shadertoy.com/view/MlsSzn">Shadertoy example</a>
+</div>
+<div class="part">
+<div class="code"><span class="codeComment">// ellipsoid centered at the origin with radii ra</span>
+float eliIntersect( in vec3 ro, in vec3 rd, in vec3 ra )
+{
+    vec3 ocn = ro/ra;
+    vec3 rdn = rd/ra;
+    float a = dot( rdn, rdn );
+    float b = dot( ocn, rdn );
+    float c = dot( ocn, ocn );
+    float h = b*b - a*(c-1.0);
+    if( h&lt;0.0 ) return -1.0; <span class="codeComment">//no intersection</span>
+    h = sqrt(h);
+    return vec2(-b-h,-b+h)/a;
+}
+
+vec3 eliNormal( in vec3 pos, in vec3 ra )
+{
+    return normalize( pos/ra );
+}</div>
+</div>
+</div>
+<br>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL">
+<div class="part">
+<img class="formula" src="gfx09.png"/><br>
+<b>Triangle</b><br>
+<a href="https://www.shadertoy.com/view/MlGcDz">Shadertoy example</a>
+</div>
+<div class="part">
+<div class="code"><span class="codeComment">// triangle degined by vertices v0, v1 and  v2</span>
+vec3 triIntersect( in vec3 ro, in vec3 rd, in vec3 v0, in vec3 v1, in vec3 v2 )
+{
+    vec3 v1v0 = v1 - v0;
+    vec3 v2v0 = v2 - v0;
+    vec3 rov0 = ro - v0;
+    vec3  n = cross( v1v0, v2v0 );
+    vec3  q = cross( rov0, rd );
+    float d = 1.0/dot( rd, n );
+    float u = d*dot( -q, v2v0 );
+    float v = d*dot(  q, v1v0 );
+    float t = d*dot( -n, rov0 );
+    if( u&lt;0.0 || u&gt;1.0 || v&lt;0.0 || (u+v)&gt;1.0 ) t = -1.0;
+    return vec3( t, u, v );
+}</div>
+</div>
+</div>
+<br>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL">
+<div class="part">
+<img class="formula" src="gfx05.png"/><br>
+<b>Ellipse</b><br>
+<a href="https://www.shadertoy.com/view/MlGcDz">Shadertoy example</a>
+</div>
+<div class="part">
+<div class="code"><span class="codeComment">// ellipse defined by its center c and its two radii u and v</span>
+vec3 ellIntersect( in vec3 ro, in vec3 rd, vec3 c, vec3 u, vec3 v )
+{
+    vec3  q = ro - c;
+    vec3  n = cross(u,v);
+    float t = -dot(n,q)/dot(rd,n);
+    float r =  dot(u,q + rd*t);
+    float s =  dot(v,q + rd*t);
+    if( r*r+s*s&gt;1.0 ) return vec3(-1.0); <span class="codeComment">//no intersection</span>
+    return vec3(t,s,r);
+}
+
+vec3 ellNormal( in vec2 u, vec2 v )
+{
+    return normalize( cross(u,v) );
+}</div>
+</div>
+</div>
+<br>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL">
+<div class="part">
+<img class="formula" src="gfx03.png"/><br>
+<b>Torus</b><br>
+<a href="https://www.shadertoy.com/view/4sBGDy">Shadertoy example</a>
+</div>
+<div class="part">
+<div class="code">float torIntersect( in vec3 ro, in vec3 rd, in vec2 tor )
+{
+    float po = 1.0;
+    float Ra2 = tor.x*tor.x;
+    float ra2 = tor.y*tor.y;
+    float m = dot(ro,ro);
+    float n = dot(ro,rd);
+    float k = (m + Ra2 - ra2)/2.0;
+    float k3 = n;
+    float k2 = n*n - Ra2*dot(rd.xy,rd.xy) + k;
+    float k1 = n*k - Ra2*dot(rd.xy,ro.xy);
+    float k0 = k*k - Ra2*dot(ro.xy,ro.xy);
+    
+    if( abs(k3*(k3*k3-k2)+k1) &lt; 0.01 )
+    {
+        po = -1.0;
+        float tmp=k1; k1=k3; k3=tmp;
+        k0 = 1.0/k0;
+        k1 = k1*k0;
+        k2 = k2*k0;
+        k3 = k3*k0;
+    }
+    
+    float c2 = k2*2.0 - 3.0*k3*k3;
+    float c1 = k3*(k3*k3-k2)+k1;
+    float c0 = k3*(k3*(c2+2.0*k2)-8.0*k1)+4.0*k0;
+    c2 /= 3.0;
+    c1 *= 2.0;
+    c0 /= 3.0;
+    float Q = c2*c2 + c0;
+    float R = c2*c2*c2 - 3.0*c2*c0 + c1*c1;
+    float h = R*R - Q*Q*Q;
+    
+    if( h&gt;=0.0 )  
+    {
+        h = sqrt(h);
+        float v = sign(R+h)*pow(abs(R+h),1.0/3.0); // cube root
+        float u = sign(R-h)*pow(abs(R-h),1.0/3.0); // cube root
+        vec2 s = vec2( (v+u)+4.0*c2, (v-u)*sqrt(3.0));
+        float y = sqrt(0.5*(length(s)+s.x));
+        float x = 0.5*s.y/y;
+        float r = 2.0*c1/(x*x+y*y);
+        float t1 =  x - r - k3; t1 = (po&lt;0.0)?2.0/t1:t1;
+        float t2 = -x - r - k3; t2 = (po&lt;0.0)?2.0/t2:t2;
+        float t = 1e20;
+        if( t1&gt;0.0 ) t=t1;
+        if( t2&gt;0.0 ) t=min(t,t2);
+        return t;
+    }
+    
+    float sQ = sqrt(Q);
+    float w = sQ*cos( acos(-R/(sQ*Q)) / 3.0 );
+    float d2 = -(w+c2); if( d2&lt;0.0 ) return -1.0;
+    float d1 = sqrt(d2);
+    float h1 = sqrt(w - 2.0*c2 + c1/d1);
+    float h2 = sqrt(w - 2.0*c2 - c1/d1);
+    float t1 = -d1 - h1 - k3; t1 = (po&lt;0.0)?2.0/t1:t1;
+    float t2 = -d1 + h1 - k3; t2 = (po&lt;0.0)?2.0/t2:t2;
+    float t3 =  d1 - h2 - k3; t3 = (po&lt;0.0)?2.0/t3:t3;
+    float t4 =  d1 + h2 - k3; t4 = (po&lt;0.0)?2.0/t4:t4;
+    float t = 1e20;
+    if( t1&gt;0.0 ) t=t1;
+    if( t2&gt;0.0 ) t=min(t,t2);
+    if( t3&gt;0.0 ) t=min(t,t3);
+    if( t4&gt;0.0 ) t=min(t,t4);
+    return t;
+}
+
+vec3 torNormal( in vec3 pos, vec2 tor )
+{
+    return normalize( pos*(dot(pos,pos)-tor.y*tor.y - tor.x*tor.x*vec3(1.0,1.0,-1.0)));
+}</div>
+</div>
+</div>
+<br>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL">
+<div class="part">
+<img class="formula" src="gfx14.png"/><br>
+<b>Sphere 4</b><br>
+<a href="https://www.shadertoy.com/view/3tj3DW">Shadertoy example</a>
+</div>
+<div class="part">
+<div class="code">float sph4Intersect( in vec3 ro, in vec3 rd, in float ra )
+{
+    float r2 = ra*ra;
+    vec3 d2 = rd*rd; vec3 d3 = d2*rd;
+    vec3 o2 = ro*ro; vec3 o3 = o2*ro;
+    float ka = 1.0/dot(d2,d2);
+    float k3 = ka* dot(ro,d3);
+    float k2 = ka* dot(o2,d2);
+    float k1 = ka* dot(o3,rd);
+    float k0 = ka*(dot(o2,o2) - r2*r2);
+    float c2 = k2 - k3*k3;
+    float c1 = k1 + 2.0*k3*k3*k3 - 3.0*k3*k2;
+    float c0 = k0 - 3.0*k3*k3*k3*k3 + 6.0*k3*k3*k2 - 4.0*k3*k1;
+    float p = c2*c2 + c0/3.0;
+    float q = c2*c2*c2 - c2*c0 + c1*c1;
+    float h = q*q - p*p*p;
+    if( h&lt;0.0 ) return -1.0; <span class="codeComment">//no intersection</span>
+    float sh = sqrt(h);
+    float s = sign(q+sh)*pow(abs(q+sh),1.0/3.0); <span class="codeComment">// cuberoot</span>
+    float t = sign(q-sh)*pow(abs(q-sh),1.0/3.0); <span class="codeComment">// cuberoot</span>
+    vec2  w = vec2( s+t,s-t );
+    vec2  v = vec2( w.x+c2*4.0, w.y*sqrt(3.0) )*0.5;
+    float r = length(v);
+    return -abs(v.y)/sqrt(r+v.x) - c1/r - k3;
+}
+
+vec3 sph4Normal( in vec3 pos )
+{
+    return normalize( pos*pos*pos );
+}</div>
+</div>
+</div>
+<br>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL">
+<div class="part">
+<img class="formula" src="gfx15.png"/><br>
+<b>Goursat</b><br>
+<a href="https://www.shadertoy.com/view/3lj3DW">Shadertoy example</a>
+</div>
+<div class="part">
+<div class="code">float gouIntersect( in vec3 ro, in vec3 rd, in float ka, float kb )
+{
+    float po = 1.0;
+    vec3 rd2 = rd*rd; vec3 rd3 = rd2*rd;
+    vec3 ro2 = ro*ro; vec3 ro3 = ro2*ro;
+    float k4 = dot(rd2,rd2);
+    float k3 = dot(ro ,rd3);
+    float k2 = dot(ro2,rd2) - kb/6.0;
+    float k1 = dot(ro3,rd ) - kb*dot(rd,ro)/2.0;
+    float k0 = dot(ro2,ro2) + ka - kb*dot(ro,ro);
+    k3 /= k4;
+    k2 /= k4;
+    k1 /= k4;
+    k0 /= k4;
+    float c2 = k2 - k3*(k3);
+    float c1 = k1 + k3*(2.0*k3*k3-3.0*k2);
+    float c0 = k0 + k3*(k3*(c2+k2)*3.0-4.0*k1);
+
+    if( abs(c1) &lt; 0.1*abs(c2) )
+    {
+        po = -1.0;
+        float tmp=k1; k1=k3; k3=tmp;
+        k0 = 1.0/k0;
+        k1 = k1*k0;
+        k2 = k2*k0;
+        k3 = k3*k0;
+        c2 = k2 - k3*(k3);
+        c1 = k1 + k3*(2.0*k3*k3-3.0*k2);
+        c0 = k0 + k3*(k3*(c2+k2)*3.0-4.0*k1);
+    }
+
+    c0 /= 3.0;
+    float Q = c2*c2 + c0;
+    float R = c2*c2*c2 - 3.0*c0*c2 + c1*c1;
+    float h = R*R - Q*Q*Q;
+    
+    if( h&gt;0.0 ) <span class="codeComment">// 2 intersections</span>
+    {
+        h = sqrt(h);
+        float s = sign(R+h)*pow(abs(R+h),1.0/3.0); // cube root
+        float u = sign(R-h)*pow(abs(R-h),1.0/3.0); // cube root
+        float x = s+u+4.0*c2;
+        float y = s-u;
+        float ks = x*x + y*y*3.0;
+        float k = sqrt(ks);
+        float t = -0.5*po*abs(y)*sqrt(6.0/(k+x)) - 2.0*c1*(k+x)/(ks+x*k) - k3;
+        return (po&lt;0.0)?1.0/t:t;
+    }
+	
+    <span class="codeComment">// 4 intersections</span>
+    float sQ = sqrt(Q);
+    float w = sQ*cos(acos(-R/(sQ*Q))/3.0);
+    float d2 = -w - c2; 
+    if( d2&lt;0.0 ) return -1.0; <span class="codeComment">//no intersection</span>
+    float d1 = sqrt(d2);
+    float h1 = sqrt(w - 2.0*c2 + c1/d1);
+    float h2 = sqrt(w - 2.0*c2 - c1/d1);
+    float t1 = -d1 - h1 - k3; t1 = (po&lt;0.0)?1.0/t1:t1;
+    float t2 = -d1 + h1 - k3; t2 = (po&lt;0.0)?1.0/t2:t2;
+    float t3 =  d1 - h2 - k3; t3 = (po&lt;0.0)?1.0/t3:t3;
+    float t4 =  d1 + h2 - k3; t4 = (po&lt;0.0)?1.0/t4:t4;
+    float t = 1e20;
+    if( t1&gt;0.0 ) t=t1;
+    if( t2&gt;0.0 ) t=min(t,t2);
+    if( t3&gt;0.0 ) t=min(t,t3);
+    if( t4&gt;0.0 ) t=min(t,t4);
+    return t;
+}
+
+vec3 gouNormal( in vec3 pos, float ka, float kb )
+{
+    return normalize( 4.0*pos*pos*pos - 2.0*pos*kb );
+}</div>
+</div>
+</div>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

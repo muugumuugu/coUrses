@@ -1,0 +1,138 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/areas/areas.htm">normal and areas of n-sided polygons - 2008</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+When doing looking for size optimization it's always a good idea to apply some basic algebra and expand expressions and try to factorize them again in a different way to see if the same result can be expressed in less code (usually at the expense of speed of accuracy). Calculating polygon normals and areas is one of those cases(say, for a mesh).<br>
+<br>
+<br>
+<h3>The triangle</h3><hr>
+<div class="partsB">
+<div class="part70">Let's define a triangle ABC in 2 or 3D, defined by its three vertices <b>A</b>, <b>B</b> and <b>C</b>. We now want to compute its area or normal vector - remember that the area is half the length of its normal. The classic approach to computing it is to first compute the edge vectors <b>B</b>-<b>A</b> and <b>C</b>-<b>A</b> and then cross them:<br>
+<br>
+normal(<b>A</b>,<b>B</b>,<b>C</b>) = (<b>B</b>-<b>A</b>) x (<b>C</b>-<b>A</b>)<br>
+<br>
+and therefore<br>
+<br>
+area(<b>A</b>,<b>B</b>,<b>C</b>) = |normal(<b>A</b>,<b>B</b>,<b>C</b>)|/2<br>
+<br>
+where |v| means the length of v. Now, let's expand the cross products, by distribution:<br>
+<br>
+(<b>B</b>-<b>A</b>) x (<b>C</b>-<b>A</b>) = <b>B</b>x<b>C</b> - <b>B</b>x<b>A</b> - <b>A</b>x<b>C</b> + <b>A</b>x<b>A</b><br>
+<br>
+Since the cross product is anticommutative, <b>B</b>x<b>A</b> = -<b>A</b>x<b>B</b>, and since <b>A</b>x<b>A</b> = 0 (for it defines a zero area triangle), we get that<br>
+<br>
+normal(<b>A</b>,<b>B</b>,<b>C</b>) = <b>A</b>x<b>B</b> + <b>B</b>x<b>C</b> + <b>C</b>x<b>A</b><br>
+<br>
+which is the sum of one cross product per side of the triangle. We can evaluate it by traversing all the vertices in order and cyclically, and doing the cross product with the following vertex. Not only this is interesting as an alternative way to compute triangle normals without edge vectors, but it also hits at some sort of generalization to polygons with more sides.<br>
+<br>
+</div>
+<div class="part"><img class="formula" src="gfx00.png" /></div>
+</div>
+
+
+<br>
+
+<h3>The quad</h3><hr>
+<div class="partsB">
+<div class="part70">
+Let's define a quad ABCD by its four vertices <b>A</b>, <b>B</b>, <b>C</b> and <b>D</b>. We will compute both its surface area and normal as the sum of the aras and normals of two of the triangles it is composed of. This will work just fine for the surface areas, and for the normals too as long as the two triangles are coplanar and do define a real quad. In case they don't, the addition of the two normals will be nothing but the average normal of the quad. In any case, we have that:<br>
+<br>
+normal(<b>A</b>,<b>B</b>,<b>C</b>,<b>D</b>) = normal(<b>A</b>,<b>B</b>,<b>D</b>) + normal(<b>B</b>,<b>C</b>,<b>D</b>) =
+<b>A</b>x<b>B</b> + <b>B</b>x<b>D</b> + <b>D</b>x<b>A</b> + <b>B</b>x<b>C</b> + <b>C</b>x<b>D</b> + <b>D</b>x<b>B</b>.<br>
+<br>
+Again, due to the anticommutativity of the cross product (<b>B</b>x<b>D</b> = -<b>D</b>x<b>B</b>) we get that<br>
+<br>
+normal(<b>A</b>,<b>B</b>,<b>C</b>,<b>D</b>) = <b>A</b>x<b>B</b> + <b>B</b>x<b>C</b> + <b>C</b>x<b>D</b> + <b>D</b>x<b>A</b><br>
+<br>
+which is again a cyclic alphabetically sorted sum of one cross product per side of the polygon. Nice! <br>
+<br>
+Of course, again, area(<b>A</b>,<b>B</b>,<b>C</b>,<b>D</b>) = |normal(<b>A</b>,<b>B</b>,<b>C</b>,<b>D</b>)|/2<br>
+<br>
+Interestingly, the normal/area of the quad can be also expressed as the cross of the diagonals: (<b>A</b>-<b>C</b>)x(<b>B</b>-<b>D</b>). Indeed, if you apply distribution and anticommutativity to this cross product, you will see it reduces to the same cyclic summatory of cross products.<br>
+<br>
+</div>
+<div class="part"><img class="formula" src="gfx01.png" /></div>
+</div>
+
+<br>
+<h3>And beyond</h3><hr>
+In fact, this is true for n-sided polygons. You can easily demonstrate this yourself by drawing a pentagon, then an hexagon, and generalizing the idea. The result
+is that for n vertices <span class="textFormula">v<sub>i</sub></span> with <span class="textFormula">i={0, 1, 2, ...n-1}</span> forming a polygon,<br>
+<br>
+<span class="formulaText">normal(v<sub>0</sub>, v<sub>1</sub>, ..., v<sub>n-1</sub>) = &sum;v<sub>i</sub> &#8339; v<sub>i+1</sub> </span><br>
+<br>
+where of course the i+1 wraps to 0 when it otherwise becomes n.<br>
+<br>
+<br>
+<h3>Conclusions</h3><hr>
+This is extremely useful trick for 4 kilobyte demo coding, when you want to avoid doing some vertex subtractions in order to compute your face normals (and vertex normals too, as explained in the <a class="regular" href="../normals/normals.htm">article about clever 3D mesh normalization</a>. The problem this technique might have arises in the cases where the polygons or mesh are big and some of its vertices are far from the origin. In that case the cross products might be dealing with very parallel vectors and the precision of the result might be compromised. THe regular method of computing normals doesn't suffer from this as vertices get subtracted form each other. However, for most use cases, the method presented here works just fine. Promise.
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

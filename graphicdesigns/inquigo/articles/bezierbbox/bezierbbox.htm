@@ -1,0 +1,284 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/bezierbbox/bezierbbox.htm">bezier bounding box - 2018</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<h3>Intro</h3><hr>
+Bezier curves are useful primitives for computer graphcis. From hair to font types, they show up almost everywhere. Having their 
+bounding box computer quickly is important for keeping them organized spatially for fast query or evaluation. While simple approximations
+to the bbox are trivial (such as computing the bounding box of their control points), in this article we deduce the exact bounding box
+analytically.<br>
+<br>
+
+<div class="partsC">
+<figure><img class="myPicture formula" src="gfx00.png"/><figcaption>A quadratic and a cubic Bezier segments, the bounding box of their<br> control points in yellow, and their exact bounding box in blue</figcaption></figure>
+<figure><img class="myPicture" src="gfx01.png"/><figcaption>A 3D cubic Bezier and its bounding box</figcaption></figure>
+</div>
+
+<br>
+<br>
+<h3>Quadratic Bezier</h3>
+<hr>
+<br>
+We start with a quadratic Bezier segment passing through points <b>p0</b> and <b>p2</b> and tangent control point <b>p1</b>, defined by<br>
+<br>
+<span class="formulaText">p(t) = (1-t)<sup>2</sup>&sdot;p<sub>0</sub> + 2&sdot;(1-t)&sdot;t&sdot;p<sub>1</sub> + t<sup>2</sup>&sdot;p<sub>2</sub></span><br>
+<br>
+We know its bounding box is equal or smaller to the bounding box of the convex hull defined by its three control points <b>p0</b>, 
+<b>p1</b> and <b>p2</b> - the whole curve must be contained within the convex hull of the control points, since the weights
+of each congtrol point add up to exactly 1:<br>
+<br>
+<span class="formulaText">(1-t)<sup>2</sup> + 2&sdot;(1-t)&sdot;t + t<sup>2</sup> = 1</span><br>
+<br>
+We note that if <b>p1</b> happens to be inside the bounding box defined by <b>p0</b> and <b>p2</b>, we are done
+because that's the bounding box of the whole Bezier segment. If <b>p1</b> is outside of it, then the bounding box of the segment will be
+smaller than the bounding box of the three control points but bigger than the bounding box deined by <b>p0</b> and <b>p2</b>. In order to
+find the exact extent of it, all we need to do is compute the maxima/minima of the segment's coordinates at some point along the curve,
+which we can do by computing the curve's derivative<br>
+<br>
+
+<span class="formulaText">p'(t) = t&sdot;(2p<sub>0</sub> - 4p<sub>1</sub> + 2p<sub>2</sub>) + 2&sdot;(p<sub>1</sub>-p<sub>0</sub>)</span><br>
+<br>
+and equating it to 0, which results in<br>
+<br>
+<img class="formula" src="for02.png"/><br>
+<br>
+where the division here is expressing a component-wise division. Meaning, for a 2D bezier segment, we'll evaluate the above equation for the
+<b>x</b> and <b>y</b> components of <b>p0</b>, <b>p1</b> and <b>p2</b>, resulting in two values for <b>t</b>, which when plugged back in the
+formula for the Bezier segment <b>p(t)</b> will give us our min/max bbox extent.<br>
+<br>
+The code to perform the above could look like the following:<br>
+<br>
+<div class="code">vec4 bboxBezier(in vec2 p0, in vec2 p1, in vec2 p2 )
+{
+    vec2 mi = min(p0,p2);
+    vec2 ma = max(p0,p2);
+
+    if( p1.x&lt;mi.x || p1.x&gt;ma.x || p1.y&lt;mi.y || p1.y&gt;ma.y )
+    {
+        vec2 t = clamp((p0-p1)/(p0-2.0*p1+p2),0.0,1.0);
+        vec2 s = 1.0 - t;
+        vec2 q = s*s*p0 + 2.0*s*t*p1 + t*t*p2;
+        mi = min(mi,q);
+        ma = max(ma,q);
+    }
+    
+    return vec4( mi, ma );
+}</div>
+<br>
+Needless to say that for a 3D quadratic Bezier segment the code is basically the same, but extending all data types to <b>vec3</b> and the inner bounding
+box test to a 3D test.<br>
+<br>
+This code is relatively fast, it contains a few multiplications and one division, and in most cases the saving is bounding space are pretty big.
+This is a reference implementation running in realtime: <a class="regular" href="https://www.shadertoy.com/view/lsyfWc">https://www.shadertoy.com/view/lsyfWc</a>
+<br>
+<br>
+<br>
+<h3>Cubic Bezier</h3>
+<hr>
+<br>
+The process to compute the bounding box of a cubic Bezier segment is analogous. The derivative becomems a second degree polynomial, which of course
+has also analytic solution involving one square root. So, lets see:<br>
+<br>
+
+<span class="formulaText">p(t) = (1-t)<sup>3</sup>&sdot;p<sub>0</sub> + 3&sdot;(1-t)<sup>2</sup>&sdot;t&sdot;p<sub>1</sub> + 3&sdot;(1-t)&sdot;t<sup>2</sup>&sdot;p<sub>2</sub> + t<sup>3</sup>&sdot;p<sub>3</sub></span><br>
+<br>
+Again the base functions follow the binomical coefficients, and add up to 1. The derivative of the curve is actual a second degree bezier curve itself,
+with tangents as control points:<br>
+<br>
+
+<span class="formulaText">p'(t)/3 = (1-t)<sup>2</sup>&sdot;(p<sub>1</sub>-p<sub>0</sub>) + 2&sdot;(1-t)&sdot;t&sdot;(p<sub>2</sub>-p<sub>1</sub>) + t<sup>2</sup>&sdot;(p<sub>3</sub>-p<sub>2</sub>)</span><br>
+<br>
+Note I divided the derivative by 3 to make it easier to recognize it as a second degree Bezier, since we don't care about constant factor anyways for
+our minima/maxima search. Speaking of what, equating the derivative with zero gives us a quadratic equation of the form<br>
+<br>
+<span class="formulaText">at<sup>2</sup> + 2bt + c = 0</span><br>
+<br>
+with of course<br>
+<br>
+<img align="middle" class="formula" src="for07.png"/><br>
+<br>
+where<br>
+<br>
+<span class="formulaText">
+a = -1&sdot;p<sub>0</sub> + 3&sdot;p<sub>1</sub> - 3&sdot;p<sub>2</sub> + 1&sdot;p<sub>3</sub><br>
+b =  1&sdot;p<sub>0</sub> - 2&sdot;p<sub>1</sub> + 1&sdot;p<sub>2</sub><br>
+c = -1&sdot;p<sub>0</sub> + 1&sdot;p<sub>1</sub></span>
+<br>
+<br>
+and the three coefficients are vectors really (for we are working in  N dimensions, so the above quadratic is are really N simultanous quadratic equations to be solved).
+Also, these coefficients shows yet again one more way the Bezier curves are related to Pascals's triangle. If we rewrite the above as a matrix multiplication it might be more obvious:<br>
+<br>
+<img class="formula" src="for09.png"/><br>
+<br>
+where <b>k</b> is a Nx2 matrix.<br>
+<br>
+Now with all the quadratics in place, we are ready to solve the equation and compute our analytically perfect and tight bounding box (in this case, for a 2D curve)!<br>
+<br>
+<div class="code">vec4 bboxBezier(in vec2 p0, in vec2 p1, in vec2 p2, in vec3 p3 )
+{
+    vec2 mi = min(p0,p3);
+    vec2 ma = max(p0,p3);
+
+    vec2 c = -1.0*p0 + 1.0*p1;
+    vec2 b =  1.0*p0 - 2.0*p1 + 1.0*p2;
+    vec2 a = -1.0*p0 + 3.0*p1 - 3.0*p2 + 1.0*p3;
+
+    vec2 h = b*b - a*c;
+	
+    if( h.x > 0.0 )
+    {
+        h.x = sqrt(h.x);
+        float t = (-b.x - h.x)/a.x;
+        if( t&gt;0.0 && t&lt;1.0 )
+        {
+            float s = 1.0-t;
+            float q = s*s*s*p0.x + 3.0*s*s*t*p1.x + 3.0*s*t*t*p2.x + t*t*t*p3.x;
+            mi.x = min(mi.x,q);
+            ma.x = max(ma.x,q);
+        }
+        t = (-b.x + h.x)/a.x;
+        if( t&gt;0.0 && t&lt;1.0 )
+        {
+            float s = 1.0-t;
+            float q = s*s*s*p0.x + 3.0*s*s*t*p1.x + 3.0*s*t*t*p2.x + t*t*t*p3.x;
+            mi.x = min(mi.x,q);
+            ma.x = max(ma.x,q);
+        }
+    }
+	
+    if( h.y&gt;0.0 )
+    {
+        h.y = sqrt(h.y);
+        float t = (-b.y - h.y)/a.y;
+        if( t&gt;0.0 && t&lt;1.0 )
+        {
+            float s = 1.0-t;
+            float q = s*s*s*p0.y + 3.0*s*s*t*p1.y + 3.0*s*t*t*p2.y + t*t*t*p3.y;
+            mi.y = min(mi.y,q);
+            ma.y = max(ma.y,q);
+        }
+        t = (-b.y + h.y)/a.y;
+        if( t&gt;0.0 && t&lt;1.0 )
+        {
+            float s = 1.0-t;
+            float q = s*s*s*p0.y + 3.0*s*s*t*p1.y + 3.0*s*t*t*p2.y + t*t*t*p3.y;
+            mi.y = min(mi.y,q);
+            ma.y = max(ma.y,q);
+        }
+    }
+    
+    return vec4( mi, ma );
+}</div>
+<br>
+Or if a more compact (but more wastefull in most architectures) is your thing, then<br>
+<br>
+<div class="code">vec4 bboxBezier(in vec2 p0, in vec2 p1, in vec2 p2, in vec3 p3 )
+{
+    vec2 mi = min(p0,p3);
+    vec2 ma = max(p0,p3);
+
+    vec2 c = -1.0*p0 + 1.0*p1;
+    vec2 b =  1.0*p0 - 2.0*p1 + 1.0*p2;
+    vec2 a = -1.0*p0 + 3.0*p1 - 3.0*p2 + 1.0*p3;
+
+    vec2 h = b*b - a*c;
+
+    if( any(greaterThan(h,vec2(0.0))))
+    {
+        vec2 g = sqrt(abs(h));
+        vec2 t1 = clamp((-b - g)/a,0.0,1.0); vec2 s1 = 1.0-t1;
+        vec2 t2 = clamp((-b + g)/a,0.0,1.0); vec2 s2 = 1.0-t2;
+        vec2 q1 = s1*s1*s1*p0 + 3.0*s1*s1*t1*p1 + 3.0*s1*t1*t1*p2 + t1*t1*t1*p3;
+        vec2 q2 = s2*s2*s2*p0 + 3.0*s2*s2*t2*p1 + 3.0*s2*t2*t2*p2 + t2*t2*t2*p3;
+
+        if( h.x&gt;0.0 )
+        {
+            mi.x = min(mi.x,min(q1.x,q2.x));
+            ma.x = max(ma.x,max(q1.x,q2.x));
+        }
+
+        if( h.y&gt;0.0  )
+        {
+            mi.y = min(mi.y,min(q1.y,q2.y));
+            ma.y = max(ma.y,max(q1.y,q2.y));
+        }
+    }
+    
+    return vec4( mi, ma );
+}</div>
+<br>
+Either way, you have a realtime running reference code here: <a class="regular" href="https://www.shadertoy.com/view/XdVBWd">https://www.shadertoy.com/view/XdVBWd</a><br>
+<br>
+Extending the above code to 3D is trivial, you can find some reference code here: <a class="regular" href="https://www.shadertoy.com/view/MdKBWt">https://www.shadertoy.com/view/MdKBWt</a><br>
+<br>
+<img src="gfx01.png"/>
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

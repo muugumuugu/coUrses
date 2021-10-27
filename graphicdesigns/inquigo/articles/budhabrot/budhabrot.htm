@@ -1,0 +1,106 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/budhabrot/budhabrot.htm">budhabrot - 2002</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+This rendering algorithm was invented by <a class="regular" href="http://www.superliminal.com/fractals/bbrot/bbrot.htm">Melinda Green</a>. She gives a very concise description of the algorithm, and it is quite straightforward to implement.<br>
+<br>
+The idea is to iterate each point on the complex plane as if you were drawing a standard Mandelbrot set, with a given maximun iteration count limit. Each iterated point will follow an orbit as usual, and what we are going to do is to detect all the escaping orbits and record each point of such orbits in a density map. So, as with the IFS fractals, we initialize a buffer to zero and we increment each pixel of the buffer each time a point of a escaping orbit falls in it. We would ideally want to uniformly sample the complex plane. This means that we don't get the correct image until we completely sample the plane. What you probably want to do is to implement this as a progressive renderer, so that you can get a sense of the final look gets while it gets computed, quite like in a Montecarlo based raytracers.<br>
+<br>
+In any case, after a few million iterated points we get our density map ready. We have to play with a few transfers functions as usual to convert this density map into a nice grey level image. I normally use some rooting function (like square or a cubic), and a contrast increasing function after (like a smoothstep(), or something like that).<br>
+<br>
+This of course creates a grey level image. As Melinda explains, a simple trick is to repeat the process two more times with different maximum-iterations limit. That way you get three monochrome images that you can combine into the red, green and blue channels to get your color image.<br>
+<br>
+In its original form, the algorithm allows for computing this three images at once at almost zero cost. Instead of repeating the iterations three times with different iteration-count limit, you just do it once with the maximum of the three limits, and then track the state of the orbit when the iteration count equals the first and second limit.<br>
+<br>
+<div class="partsC">
+    <div class="part"><a href="gfx04.htm"><img class="myPicture" src="bud_04_p.jpg"/></a><br><i>Cubic Mandelbrot Set. Click to enlarge</i></div>
+    <div class="part"><a href="gfx03.htm"><img class="myPicture" src="bud_03_p.jpg"/></a><br><i>Zoom in the standard Mandelbrot Set. Click to enlarge</i></div>
+</div>
+<br>
+The software to render these images was as usual very small and simple, I did it in 2006. A C application working without any multithreading or SIMD. The density buffer was done in 32 bit integer per color component, to avoid overflows. That means I used one gigabyte of memory for the 12000x7200 images I rendered.<br>
+<br>
+The conversion from this 96 bit density map to a color image was done in a second step with a different application. This allowed me to tune the transfer functions very quickly without recomputing all the densities each time.<br>
+<br>
+For the images on this page I used random sampling like in Montecarlo methods. I got some problems first with the random number generator, because the 2^31 period that the standard random (congruential) number generators in the C libraries was not enough to uniformly sample the plane before I got reiterated points. In the Numerical Recipes book I found few 10^18 period generators (much better!). however even that was not good enough, so I changed the random number generator once more to make sure I didn't end up with a biased image. I used MT19937 generator that has 2^19937 period (astronomical period as their authors -<a class="regular" href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html">Takuji Nishimura and Makoto Matsumoto</a> - say).<br>
+<br>
+Just during the days I made this image a surprisingly interesant post was done in the sci.fractals group. Alex Steckles had the idea of using the Metropolis integration method to the Budhabrot rendering. The algorithm has been successfully used to accelerate Montecarlo based pathtracers, so why not to apply it here also? The method works so fine that you can even zoom on the Mandelbrot set and still get decent images in short time, something impossible before. I tried it but I got biased images, so I guess that I will have to figure out where the bug is...<br>
+<br>
+Based on the same idea, I decided to try a kind of genetic algorithm to choose my sampling points, and indeed I also got dense images for previously loooooong to render regions of the Mandelbrot set. But again, I got very biased images so I decided not to go in that direction. So I guess that if I even come back to the Budhabrot algorithm, I will have to review the Metropolis code.<br>
+<br>
+<br>
+In 2002 I also played with budhabrot images, at as low resolution as 2560x1920, what was quite good at that time. For speeding up the calculations I used an ugly trick that I prefer not to mention here, and that caused those artifacts visible in the image (like the color discontinuity in the period-two bulb. <br>
+<br>
+<br>
+<div class="partsC">
+    <div class="part"><a href="gfx01.htm"><img class="myPicture" src="bud_01_p.jpg"/></a></div>
+    <div class="part"><a href="gfx02.htm"><img class="myPicture" src="bud_02_p.jpg"/></a></div>
+</div>
+<!-- -------------------------------------------------------------------------------------------- -->
+
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

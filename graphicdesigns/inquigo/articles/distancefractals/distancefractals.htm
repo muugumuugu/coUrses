@@ -1,0 +1,290 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/distancefractals/distancefractals.htm">distance to fractals - 2004</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+	Computing the distance to a Julia set (or Mandelbrot set) of a polynomial is very useful, both for 2D and 3D (4D) fractal rendering algorithms. In 2D (complex domain), computing the distance enables the rasterization of the fractal without aliasing, because filtering is possible in cases where the area of the filled Julia set of Mandelbrot is too thin to be captured by point sampling inside the pixel, which happens most of the time. Having a distance also helps in 3D, where <a class="regular" href="../raymarchingdf/raymarchingdf.htm">raymarching of SDFs</a> can be used to efficiently rendering <a class="regular" href="../juliasets3d/juliasets3d.htm">3D Julia sets.</a><br>
+	<br>
+	<br>
+	<center>
+	<img class="myPicture" src="gfx00.jpg" /><br>
+	The Mandelbrot set rendered with the distance formula.</center><br>
+	<br>
+	<br>
+	
+	<!-- --------------------------------------------------------------------------------- -->
+	
+	<h3>Part 1 - My basic approach</h3><hr>
+	
+	<div class="partsB">
+    <div class="part60">
+	Without going into details in this article, here goes an intuitive and non-rigorous explanation of how we compute the distance to a Julia set. I'll compare this technique to a more mathematically correct one at the end of the article. But for now, given a polynomial map of degree <b>p</b><br>
+	<br>
+	z<sub>n+1</sub> = z<sub>n</sub><sup>p</sup> + c<br>
+	<br>
+	(where p=2 for the traditional Julia and Mandelbrot sets) we compute its Boettcher map as<br>
+	<br>
+	<img class="formula" src="for00.png" /><br>
+	<br>
+	This is an "uniformizating" deformation of the C plane. You can think of this map as follows: when far from the set, the z<sub>n</sub><sup>p</sup> term in f(z) = z<sub>n</sub><sup>p</sup> + c dominates over c. So, far away from c, z<sub>n+1</sub> &thickapprox; z<sub>n</sub><sup>p</sup>, and near infinity we can almost say that z<sub>n</sub> = z<sup>p<sup>n</sup></sup>. Iterating all the way backwards (undoing all the iterations) as if c has never existed and the Julia set had been the unit circle all along can be done by computing z<sub>n</sub><sup>p<sup>-n</sup></sup>.<br>
+	<br>
+	So our Boettcher map deforms the plane in a way such that all the exterior of the Julia maps to the exterior of a unit disk (which is the Julia set for c=0). And it tends to the identity map<br>
+	<br>
+	<img class="formula" src="for05.png" /><br>
+	<br>
+	the further we move away from the set. Visually, it's a smooth deformation, like a blanket that attaches to the boundary of the set. You can find source code to compute it here: <a class="regular" href="https://www.shadertoy.com/view/MdX3zN">https://www.shadertoy.com/view/MdX3zN</a>.<br>
+	<br>
+	This map takes this form for any polynomial with any number of terms actually, not just monic ones, since the term z<sup>p</sup> always dominates near infinity.
+	</div>
+        <div class="part"><img class="myPicture" src="gfx05.jpg" /><br>The Boettcher map &phi;<sub>c</sub>(z<sub>o</sub>) applied to a grid pattern</div>
+    </div>
+
+    <br>
+	<div class="partsB">
+    <div class="part60">
+	The Hubbard-Douady potential is the logarithm of the modulo of the Boettcher map, and can be seen as similar to the electric potential of a cylindrical charge (usually for a Julia set that is the unit circle, now for any Julia set of any shape thanks to the uniformizing Boettcher map):<br>
+	<br>
+	<img class="formula" src="for01.png" /><br>
+	<br>
+	This is a smooth function, evaluates to zero inside the set (since z<sub>n</sub> won't diverge by definition but the denominator p<sup>n</sup> grows without bounds). It actually tends to zero as we get closer to the boundary of the set and grows approximately towards log|z<sub>o</sub>| as we move far away from the set (since the uniforming Boettcher map &phi;(c) tends to the identity):<br>
+	<br>
+	<img class="formula" src="for06.png" /><br>
+	<br>
+	So, this function behaves a bit as a distance, in that it reaches zero exactly at the boundary of the Julia set, and increases the further we are from it. It is not a metric though, but we can try to fix it. For that, we can use the usual technique of dividing the function by the length of its gradient <a class="regular" href="../distance/distance.htm">to  approximate distances</a> to the isosurfaces (it's like reversing a first order Taylor approximation really):<br>
+	<br>
+	<img class="formula" src="for02.png" />
+	</div>
+        <div class="part"><img class="myPicture" src="gfx06.jpg" /><br>The Hubbard-Douady potential G<sub>c</sub>(z<sub>o</sub>)</div>
+    </div>
+	
+	<div class="partsB">
+    <div class="part60">
+	Computing the derivative of the logarithm, and canceling some terms, results in<br>
+	<br>
+	<img class="formula" src="for03.png" /><br>
+	<br>
+	Basically this means than during our regular iteration loop we need to keep track of both z<sub>n</sub> as usual and of its derivative z'<sub>n</sub>. If we are rendering the generalized Mandelbrot set with<br>
+	<br>
+	<span class="formulaText">z<sub>n+1</sub> = z<sub>n</sub><sup>p</sup> + c</span><br>
+	<br>
+	then simple derivation rules give<br>
+	<br>
+	<span class="formulaText">
+		z'<sub>n+1</sub> = p&sdot;&nbsp;z<sub>n</sub><sup>p-1</sup>&sdot;&nbsp;z'<sub>n</sub>&nbsp;&nbsp;&nbsp;with&nbsp;&nbsp;&nbsp;z'<sub>0</sub> = 1
+	</span><br>
+	<br>
+	and for a Mandelbrot set,<br>
+	<br>
+	<span class="formulaText">
+		z'<sub>n+1</sub> = p&sdot;&nbsp;z<sub>n</sub><sup>p-1</sup>&sdot;&nbsp;z'<sub>n</sub> + 1&nbsp;&nbsp;&nbsp;with&nbsp;&nbsp;&nbsp;z'<sub>0</sub> = 0
+	</span><br>
+	</div>
+        <div class="part"><img class="myPicture" src="gfx07.jpg" /><br>The approximated SDF, d<sub>c</sub>(z<sub>o</sub>)</div>
+    </div>
+	
+	<div class="partsB">
+    <div class="part60">
+	As said, this work for any rational Mandelbrot or Julia set. The image to the right was computed with this algorithm for the Julia set of f(z) = (z-(1+i)/10)&sdot;(z-i)&sdot;(z-1)<sup>4</sup> / ((z+1)&sdot;(z-(1+i)) + c, which is a rational function of degree 4. You can find the source code and realtime online demo for that image here: <a class="regular" href="https://www.shadertoy.com/view/4dXGDX">https://www.shadertoy.com/view/4dXGDX</a>.<br>
+	<br>
+	So for a traditional Julia set we'd compute the distance as follows:<br>
+	<br>
+	<div class="code">float calcDistance( complex z0, complex c )
+{
+    complex z = zo;
+    complex dz = complex( 1.0, 0.0 );
+
+    float m2;
+    for( int i=0; i&lt;1024; i++ )
+    {
+        dz = 2.0*z*dz;
+        z  = z*z + c;
+        m2 = modulo_squared(z);
+        if( m2 &gt; 1e20 ) break;
+    }
+    return sqrt( m2/modulo_squared(dz) )*0.5*log(m2);
+}</div>
+	</div>
+        <div class="part"><img class="myPicture" src="gfx08.jpg" /><br>Approximated SDF for the Julia set of a degree 4 rational</div>
+    </div>
+
+
+	<div class="partsB">
+    <div class="part60">
+	You can find this source code in action in this realtime shader: <a class="regular" href="https://www.shadertoy.com/view/Mss3R8">https://www.shadertoy.com/view/Mss3R8</a>.<br>
+	<br>
+	Now, note three things: one, we are using complex multiplications for z and dz, of course. Two, we changed the traditional bailout threshold (2 for a quadratic Julia set) to 1e10, since for our definition of G we need |z| to be big. Three, not only we avoided the square root inside the loop, but also saved one more in the computation of d through the properties of the logarithm.<br>
+    <br>
+	Now, the following is a neat optimization that only applies to Julia sets and that I apply often: since all we need in our distance computation is the length of |z'<sub>n</sub>|, we don't need to track the whole complex or quaternion number z'. Instead we can just track its length right from the beginning. We can even only track the square of the length and avoid square roots as well. So, for a traditional z<sup>2</sup>+c Julia set:<br>
+	<br>
+	<span class="formulaText">
+		|z'<sub>n+1</sub>|<sup>2</sup> = 4|z<sub>n</sub>|<sup>2</sup>&sdot;|z'<sub>n</sub>|<sup>2</sup><br>
+		|z'<sub>0</sub>| = 1
+	</span><br>
+	<br>
+	which would translate into:<br>
+	<br>
+	<div class="code">float calcDistance(  complex z0, complex c )
+{
+    complex z = zo;
+    float d2 = 1.0;
+    float m2;
+    for( int i=0; i&lt;1024; i++ )
+    {
+        d2 *= 4.0*m2;
+        z  = z*z + c;
+        m2 = modulo_squared(z);
+        if( m2 &gt; 1e20 ) break;
+    }
+    return sqrt(m2/d2)*0.5*log(m2);
+}</div>
+<br>
+	You can see this optimization in action in this realtime shader with source code, which was used to compute the images to the right: <a class="regular" href="https://www.shadertoy.com/view/Mss3R8">https://www.shadertoy.com/view/Mss3R8</a>. The equivalent realtime animation and code for the Mandelbrot can be found here: <a class="regular" href="https://www.shadertoy.com/view/lsX3W4">https://www.shadertoy.com/view/lsX3W4</a><br>
+	</div>
+        <div class="part">
+			<img class="myPicture" src="gfx01.jpg" /><br>A close up to a f(z)=z<sup>2</sup>+c Julia set.<br><br><br><br>
+			<img class="myPicture" src="gfx04.jpg" /><br>A close up to a f(z)=z<sup>2</sup>+c Julia set.
+	     </div>
+    </div>
+    <br>
+	This is a zoom animation I created in 2002 using this distance technique, which I leave here for my own historical reference:<br>
+	<br>
+	
+	<center>
+	<video muted loop controls disablepictureinpicture controlsList="nodownload nofullscreen noremoteplayback" >
+      <source src="vid00.mp4" type="video/mp4">
+      <source src="vid00.webm" type="video/webm">
+    </video>
+	</center>
+
+    <br>
+	<br>
+	<!-- --------------------------------------------------------------------------------- -->
+	
+	<h3>Part 2 - Comparison to the mathematical state of the art</h3><hr>
+	As I mentioned, utilizing G(z<sub>o</sub>) and forcing it into getting closer to an euclidean distance through its linearized Taylor expansion<br>
+	<br>
+	<img class="formula" src="for02.png" /><br>
+	<br>
+	to get<br>
+	<br>
+	<img class="formula" src="for03.png" /><br>
+	<br>
+	is just an approximation. In practice it's good enough for most applications, but that doesn't mean we shouldn't strive to do better, if a better way exists. In fact, mathematicians have come up with a better approximation (I removed all the subindices to make it easier to read):<br>
+	<br>
+	<img class="formula" src="for04.png" /><br>
+	<br>
+	First, the formula above is usually given with a 1/2 factor in it and as a lower bound. For distance measurement purposes I have remove the 1/2 factor so it matches better with actual measurements.<br>
+	<br>
+	Second, we can see right away that when close to the boundary of the fractal set G tends to zero, so the two formulas are in agreement there. Hopefully one with the mathematical seal of approval is better when we move a bit away from the set. Well, let's see if that's true.<br>
+	<br>
+	One way to check that would be to compute the real distance to a julia set through pixel scanning. While totally uncomplicated, there's an even nice way to do some tests.<br>
+	<br>
+	While the Julia set of f(z)=z<sup>2</sup>+c is generally a fractal, the special cases c=0 and c=-2 are special indeed. So, for c=0 we get f(z)=z<sup>2</sup> and the Julia set must be boundary of the unit disk, since anything bigger than 1 (in length) will start growing uncontrollably and diverge to infinity, while anything smaller will converge rapidly to the fixed point 0. So in this case the Julia set of f(z) is not a fractal, but a circle. And computing <a class="regular" href="../distfunctions/distfunctions.htm">the distance to a circle</a> is pretty easy.<br>
+	<br>
+	Similarly, although maybe less obviously, the case c=-2 is also not a fractal but a horizontal line segment of length 4 centered at the origin (repelling fixed points are -1 and 2, if you are interested). And we also know <a class="regular" href="https://www.youtube.com/watch?v=PMltMdi1Wzg">how to compute euclidean distances to line segments</a>.<br>
+	<br>
+	So let's go ahead and compare the distance approximations to the ground truth. In the bottom half of the image and on the top left and top right corners is the ground truth, the distance to the unit disk. At the top center left in desaturated yellow is the traditional approximated SDF (I'll call it SDF from now on even though it's not signed and cannot measure distances inside the set). On the top center right in saturated yellow is the better approximation.<br>
+	<br>
+	<center><img class="myPicture" src="gfx10.jpg"/></center><br>
+	<br>
+	Indeed, it seems that while the traditional SDF works fine close to the circle but then quickly gets off track, the new SDF seems to behave really well, maybe even perfectly! That's great. Let's now compare the line segment Julia set for f(z)=z<sup>2</sup>-c<br>
+	<br>
+	<center><img class="myPicture" src="gfx11.jpg"/></center><br>
+	<br>
+	Unlike the previous one, this picture is disappointing. Both SDF approximations seem to be wrong, but the traditional one seems to stay closer to the real true distance for a little bit longer. So you might think that you could maybe pick one or the other depending on the particular Julia set you are rendering? So let's look a bit closer to their implementations.<br>
+	<br>
+	In terms of computations there's not much of a difference, since the most expensive part of the overall computation is in the iterations themselves, not so much in the exponentials and logarithms in the expressions. Still, the better approximation can also be optimized using the properties of the logarithms like the third version here:<br>
+	<br>
+	<div class="code">// traditional version
+float d = 0.5*sqrt(lz2/ld2)*log(lz2);
+
+// new approximation, direct
+float k = exp2(-n);
+float g = k*log(sqrt(lz2));
+float ldg = k*sqrt(ld2/lz2);
+d = sinh(g)/(ldg*exp(g));
+
+// new approximation, optimized
+float k = exp2(-n);
+d = 0.5*sqrt(lz2/ld2)*(1.0-pow(lz2,-k))/k;</div>
+	<br>
+	After optimizing the new approximation not only it gets cheaper, but also resembles a lot more then traditional one - the log has now been replaced with another expression that behaves similarly, but differently. But, besides this anecdotal fact, there's a very important thing to mention: the new approximation suffers a lot from precision issues. As n gets big (the number of iterations) k gets small, and that needs to be put together with lz2 which is big, resulting in an SDF of pretty bad quality, especially near the set where n is big and G is small, which is precisely where we need more precision (pun intended) for our renderer. I tried computing G indirectly through the sum of logarithms which you can find in some of the specialized literature, but that also didn't help, so overall it seems the traditional SDF which is also easier to derive is a better choice in most cases.<br>
+	<br>
+	<br>
+	<!-- --------------------------------------------------------------------------------- -->
+	<h3>Part 3 - Final words</h3><hr>
+	If you are going to use this SDF for raymarching, there's a small catch. As I quickly mentioned, mathematicians calculated that the SDF above is an approximation but might sometimes be slightly bigger than the actual distance, and that half of that approximation guarantees to be an upper bound for it. So, for raymarching purposes we'll use the formula above multiplied by 1/2.<br>
+	<br>
+	It's also worth mentioning that the SDF above works for quaternions as well (4D), but that when rendering in 3D we usually just take one planar cut of it. In that case, the distance computed in quaternion space (4D) through the SDF above might be smaller than the actual distance the ray could travel in 3D. This is natural and happens with the projection of any shape from a higher dimensional space to a small one (thing of concave shapes).<br>
+	<br>
+	There's a follow up article to this one dedicated to <a class="regular" href="../juliasets3d/juliasets3d.htm">4D Julia sets</a> as well, and that having an SDF to the surface of the set naturally is what you need for <a class="regular" href="../raymarchingdf/raymarchingdf.htm">raymarching</a> them. Even though I won't expand on that in here and you should definitely go check those articles I just linked to, here goes an image of a pretty Julia set, cut in half, rendered with the traditional SDF derived in this article in Part 1:<br>
+	<br>
+	<br>
+	<center>
+	<img class="myPicture" src="gfx12.jpg" /><br>
+	A 3D (quaternion) Julia set rendered with the traditional distance formula</center><br>
+	<br>
+	
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

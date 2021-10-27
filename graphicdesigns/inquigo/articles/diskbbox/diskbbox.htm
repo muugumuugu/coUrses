@@ -1,0 +1,177 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/diskbbox/diskbbox.htm">disk and cylinder bounding box - 2016</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<h3>Intro</h3><hr>
+<br>
+Computing axis aligned bounding boxes (AABBs) of different geometrical primitives is useful for collision detection and for rendering algorithms. In particular, disks are a common primitive used for splatting and global illumination lighting algorithms, for representing distant geometry and for point cloud rendering. So, being able to compute the tightest possible axis aligned bounding box of an arbitrarily oriented disk is pretty important, especially if it can be done quickly and analytically without having to loop over the perimeter of the disk. Fortunately, such a close form expression exists.<br>
+<br>
+<center><img class="myPicture" src="gfx00.png" /><br><i>Mathematically perfect (tightest) axis aligned bounding box of a disk</i></center>
+<br>
+<br>
+
+<br>
+<h3>Maths</h3><hr>
+<br>
+Luckily for us computing the bounding box of an arbitrarily oriented ellipse in 3D space can be done exactly if the ellipse is defined by its center, radius and two orthonormal tangent axes. The derivation is easy, you can find it in <a class="regular" href="http://iquilezles.org/www/articles/ellipses/ellipses.htm">this other article</a> that I wrote some time ago, the result been:<br>
+<br>
+<br>
+<img class="formula" src="for00.png" /><br>
+<br>
+where <b>u</b> and <b>v</b> are the axes of the ellipse.<br>
+<br>
+The only problem is that disks are usually defined by a single orientation vector (or normal) rather than two (different sized) axes. One way to work around this is to stick with our disk normal and then compute two orthonormal vectors to it by cross-producting the normal with some non-parallel vector. However, while this works well, it seems like a waste of compute and it's mathematically inelegant (and therefore unsatisfactory), for it seems it shouldn't be necessary to use arbitrary vectors to perform a pretty deterministic computation.<br>
+<br>
+My solution in order to do so was first noting that crossing the normal vector with either of the canonical <b>i</b>, <b>j</b> or <b>k</b> axes produces a different pair of axes and a different mathematical expression, but the three of them should land on the same numerical bounding box result, for the disk is unique. This means that actually developing the three computations into the three different expressions and combining them together into a single one should still be a valid solution, but should remove all the asymmetries in the terms you get otherwise by choosing only one of the three axis.<br>
+<br>
+So, let's see. For a given disk orientation or normal <b>n</b> = (<b>x</b>, <b>y</b>, <b>z</b>), constructing the basis vectors <b>u</b> and <b>v</b> crossing <b>n</b> with the three canonical axes (1,0,0), (0,1,0) and (0,0,1) produces the following:<br>
+<br>
+<span class="formulaText">u<sub>i</sub> = (1,0,0) &times; (x,y,z)</span> &nbsp; &nbsp; <span class="formulaText">v<sub>i</sub> = u<sub>i</sub> &times; (x,y,z)</span><br>
+<span class="formulaText">u<sub>j</sub> = (0,1,0) &times; (x,y,z)</span> &nbsp; &nbsp; <span class="formulaText">v<sub>j</sub> = u<sub>j</sub> &times; (x,y,z)</span><br>
+<span class="formulaText">u<sub>k</sub> = (0,0,1) &times; (x,y,z)</span> &nbsp; &nbsp; <span class="formulaText">v<sub>k</sub> = u<sub>k</sub> &times; (x,y,z)</span><br>
+<br>
+which, taking into account that |<b>n</b>| = 1, would result in the following <b>u</b> and <b>v</b> axis vectors:<br>
+<br>
+<img class="formula" src="for02.png" /><br>
+<br>
+In order to get the bounding box extents, we'd have to choose one of these solutions for <b>i</b>, <b>j</b> or <b>k</b> and square and add the three <b>x</b>, <b>y</b> and <b>z</b> components of <b>u</b> and <b>v</b>, before doing the last square root. Since we decided we'd instead use the three of them and add them together, let's do so. What we get before square rooting and averaging down (dividing by 3) is:<br>
+<img class="formula" src="for03.png" /><br>
+<br>
+which after much mathematical manipulation searching for symmetry in the terms, and after fair amount of cancellations and simplifications, I arrived to some pretty decently coordinate-independent solution for the <b>x</b> coordinate, which Cleve Ard simplified even further:<br>
+<br>
+<img class="formula" src="for04.png" /><br>
+<br>
+The <b>y</b> and <b>z</b> components of the bounding box extent can be obtained similarly. Then the three components can be expressed as a single vector calculation, assuming that vectors get multiplied and squared component-wise (not dotted or crossed):<br>
+<br>
+<img class="formula" src="for05.png" /><br>
+<br>
+Which is indeed a particular case of the formula for the ellipse that we started with for the case in which |<b>u</b>| = |<b>v</b>| = 1. Hence, the final bounding box for our disk or radius <b>r</b>, centered at position <b>c</b> and oriented to face the direction <b>n</b>, is<br>
+<br>
+<img class="formula" src="for06.png" /><br>
+<br>
+<br>
+<h3>Code</h3><hr>
+<br>
+The code is a direct implementation of the formula above, and exploits the component-wise multiplication of vectors. The only note here is that if you want to be smart you can encode a disk described by a position, a normal and a radius in 6 floats instead of 7, since you can encode the radius of the disk in the length of the normal. However, for clarity the code below assumes the straightforward 7 floats description of a disk:<br>
+<br>
+
+<div class="code">struct bound3
+{
+  vec3 mMin;
+  vec3 mMax;
+};
+
+<span class="codeComment">// bounding box for a disk defined by cen(ter), nor(mal), rad(ius)</span>
+bound3 DiskAABB( in vec3 cen, in vec3 nor, float rad )
+{
+  vec3 e = rad*sqrt( 1.0 - nor*nor );
+  return bound3( cen-e, cen+e );
+}</div>
+<br>
+This realtime visual shows the bounding box computed by the code above: <a class="regular" href="https://www.shadertoy.com/view/ll3Xzf">https://www.shadertoy.com/view/ll3Xzf</a>
+<br>
+
+<br>
+<h3>Beyond disks</h3><hr>
+<br>
+A nice side effect of this efficient and exact bounding box computation for disks is that we can apply it to the computation of arbitrarily oriented cylinders and cones as well, by noting that the bounding box of such a shapes is the bounding box of the bounding boxes of their caps.<br>
+<br>
+<br>
+<center><img class="myPicture" src="gfx01.png" /><br><i>Mathematically perfect (tightest) axis aligned bounding box of a cylinder</i></center>
+<br>
+<br>
+Since the maths are basically the same, I'll simply drop the code for the cylinder:<br>
+<br>
+
+<div class="code"><span class="codeComment">// bounding box for a cylinder defined by points <b>pa</b> and <b>pb</b>, and a radius <b>ra</b></span>
+bound3 CylinderAABB( in vec3 pa, in vec3 pb, in float ra )
+{
+  vec3 a = pb - pa;
+  vec3 e = ra*sqrt( 1.0 - a*a/dot(a,a) );
+  return bound3( min( pa - e, pb - e ),
+	         max( pa + e, pb + e ) );
+}</div>
+<br>
+and for the cone:<br>
+<br>
+<div class="code"><span class="codeComment">// bounding box for a cone defined by points <b>pa</b> and <b>pb</b>, and radii <b>ra</b> and <b>rb</b></span>
+bound3 ConeAABB( in vec3 pa, in vec3 pb, in float ra, in float rb )
+{
+  vec3 a = pb - pa;
+  vec3 e = sqrt( 1.0 - a*a/dot(a,a) );
+  return bound3( min( pa - e*ra, pb - e*rb ),
+	         max( pa + e*ra, pb + e*rb ) );
+}
+</div>
+<br>
+You can find the realtime version with this code above in action here: <a class="regular" href="https://www.shadertoy.com/view/MtcXRf">https://www.shadertoy.com/view/ll3Xzf</a> and <a class="regular" href="https://www.shadertoy.com/view/WdjSRK">https://www.shadertoy.com/view/WdjSRK</a>
+<br>
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

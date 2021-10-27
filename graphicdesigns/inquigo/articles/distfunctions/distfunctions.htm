@@ -1,0 +1,761 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/distfunctions/distfunctions.htm">distance functions</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<!-- -------------------------------------------<!-- ------------------------------------------- -->
+
+<style>
+.part1 { padding-right:64px; padding-bottom:32px; width:15%; }
+.part2 { padding-right:0px;  padding-bottom:32px; }
+@media only screen and (max-width: 1280px)
+{
+  .part1 { padding-right:0px; padding-bottom:0px; width:100%; }
+  .part2 { width:100%; }
+}
+</style>
+
+<!---------------------------------------------------------------------------->
+
+<h3>Intro</h3><hr>
+Here you will find the distance functions for basic primitives, plus the formulas for combining them together for building more complex shapes, as well as some distortion functions that you can use to shape your objects. Hopefully this will be useful for those rendering scenes with raymarching. You can see some of the results you can get by using these techniques in the <a href="../raymarchingdf/raymarchingdf.htm">raymarching distance fields</a> article or in <a href="https://www.youtube.com/watch?v=8--5LwHRhjk">this video</a>.<br> 
+<br>
+I have other article where I explain how to compute SDFs and raymarch more complex objects such as <a href="../menger/menger.htm">recursive primitives</a>, <a href="../mandelbulb/mandelbulb.htm">fractals</a> or <a href="../sdfbounding/sdfbounding.htm">acceleration struture based meshes</a>. You can also often construct 3D SDFs by extruding or doing revolutions on <a href="../distfunctions2d/distfunctions2d.htm">2D SDFs</a>, so have a look to those too. And if you carea bout how I derived these formulas, you can explore some of the <a href="../../../live/index.htm">video tutorials</a> I have on the topic.<br>
+<br>
+In this index below, each primitives, modifier and operator function in this page you'll find a "exact" or "bound" note. This refers to the properties of the SDF that is generated or returned by the function. An "exact" SDF is one that retains all the qualities of a true SDF in Euclidean space - it really measures a distance exactly, meaning and its gradient always has length one. A "bound" SDF is no longer a true SDF (being pedantic) and only returns a lower bound to the real SDF, which can still be useful in certain scenarios. SDFs that are "exact" are generally desired over the "bound" ones because they work better with a bigger number of algorithms and techniques, and produce higher quality results. However some primitives (like the ellipsoid) or operators (like the smooth minimum here) cannot be "exact" because the very mathematics that describe them prevent it. In those cases, I propose a "bound" version and mark it so to prevent confusion. If a primitive that has an "exact" implementation can also be approximated by a "bound" version and sometimes I sometimes document that one too, but not too often because while locally faster than their "exact" counterpart they often backfire in the form of a global performance hit (ironically) due to their poorer quality in measuring distances.<br>
+<br>
+All primitives here are centered at the origin. You will have to transform the point to get arbitrarily rotated, translated and scaled objects (see below). Many of these primtives below use dot2() or ndot(), which I list here quickly before the primitives:<br>
+<br>
+<div class="code">float dot2( in vec2 v ) { return dot(v,v); }
+float dot2( in vec3 v ) { return dot(v,v); }
+float ndot( in vec2 a, in vec2 b ) { return a.x*b.x - a.y*b.y; }</div>
+<br>
+Lastly, you have working sample code of all of these primitives here: <a href="https://www.shadertoy.com/playlist/43cXRl">https://www.shadertoy.com/playlist/43cXRl</a> and <a href="https://www.shadertoy.com/view/Xds3zN">https://www.shadertoy.com/view/Xds3zN</a><br>
+<br>
+<br>
+<br>
+<h3>Primitives</h3><hr>
+<br>
+<br>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx00.png"/></div>
+<div class="part2"><b>Sphere - exact</b> &nbsp (<a href="https://www.shadertoy.com/view/Xds3zN">https://www.shadertoy.com/view/Xds3zN</a>)<br><br>
+<div class="code">float sdSphere( vec3 p, float s )
+{
+  return length(p)-s;
+}</div></div></div><br>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx01.png"/></div>
+<div class="part2"><b>Box - exact</b> &nbsp (Youtube Tutorial with derivation: <a href="https://www.youtube.com/watch?v=62-pRVZuS5c">https://www.youtube.com/watch?v=62-pRVZuS5c</a>)<br><br>
+<div class="code">float sdBox( vec3 p, vec3 b )
+{
+  vec3 q = abs(p) - b;
+  return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx02.png"/></div>
+<div class="part2"><b>Round Box - exact</b><br><br>
+<div class="code">float sdRoundBox( vec3 p, vec3 b, float r )
+{
+  vec3 q = abs(p) - b;
+  return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0) - r;
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx33.png"/></div>
+<div class="part2"><b>Box Frame - exact</b> &nbsp (<a href="https://www.shadertoy.com/view/3ljcRh">https://www.shadertoy.com/view/3ljcRh</a>)<br><br>
+<div class="code">float sdBoxFrame( vec3 p, vec3 b, float e )
+{
+  p = abs(p  )-b;
+  vec3 q = abs(p+e)-e;
+  return min(min(
+      length(max(vec3(p.x,q.y,q.z),0.0))+min(max(p.x,max(q.y,q.z)),0.0),
+      length(max(vec3(q.x,p.y,q.z),0.0))+min(max(q.x,max(p.y,q.z)),0.0)),
+      length(max(vec3(q.x,q.y,p.z),0.0))+min(max(q.x,max(q.y,p.z)),0.0));
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx03.png"/></div>
+<div class="part2"><b>Torus - exact</b><br><br>
+<div class="code">float sdTorus( vec3 p, vec2 t )
+{
+  vec2 q = vec2(length(p.xz)-t.x,p.y);
+  return length(q)-t.y;
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx06.png"/></div>
+<div class="part2"><b>Capped Torus - exact</b> &nbsp (<a href="https://www.shadertoy.com/view/tl23RK">https://www.shadertoy.com/view/tl23RK</a>)<br><br>
+<div class="code">float sdCappedTorus(in vec3 p, in vec2 sc, in float ra, in float rb)
+{
+  p.x = abs(p.x);
+  float k = (sc.y*p.x>sc.x*p.y) ? dot(p.xy,sc) : length(p.xy);
+  return sqrt( dot(p,p) + ra*ra - 2.0*ra*k ) - rb;
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx30.png"/></div>
+<div class="part2"><b>Link - exact</b> &nbsp (<a href="https://www.shadertoy.com/view/wlXSD7">https://www.shadertoy.com/view/wlXSD7</a>)<br><br>
+<div class="code">float sdLink( vec3 p, float le, float r1, float r2 )
+{
+  vec3 q = vec3( p.x, max(abs(p.y)-le,0.0), p.z );
+  return length(vec2(length(q.xy)-r1,q.z)) - r2;
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx04.png"/></div>
+<div class="part2"><b>Infinite Cylinder - exact</b><br><br>
+<div class="code">float sdCylinder( vec3 p, vec3 c )
+{
+  return length(p.xz-c.xy)-c.z;
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx09.png"/></div>
+<div class="part2"><b>Cone - exact</b><br><br>
+<div class="code">float sdCone( in vec3 p, in vec2 c, float h )
+{
+  // c is the sin/cos of the angle, h is height
+  // Alternatively pass q instead of (c,h),
+  // which is the point at the base in 2D
+  vec2 q = h*vec2(c.x/c.y,-1.0);
+    
+  vec2 w = vec2( length(p.xz), p.y );
+  vec2 a = w - q*clamp( dot(w,q)/dot(q,q), 0.0, 1.0 );
+  vec2 b = w - q*vec2( clamp( w.x/q.x, 0.0, 1.0 ), 1.0 );
+  float k = sign( q.y );
+  float d = min(dot( a, a ),dot(b, b));
+  float s = max( k*(w.x*q.y-w.y*q.x),k*(w.y-q.y)  );
+  return sqrt(d)*sign(s);
+}
+</div></div></div><br>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx09.png"/></div>
+<div class="part2"><b>Cone - bound</b> (<b>not</b> exact!)</b><br><br>
+<div class="code">float sdCone( vec3 p, vec2 c, float h )
+{
+  float q = length(p.xz);
+  return max(dot(c.xy,vec2(q,p.y)),-h-p.y);
+}</div></div></div><br>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+
+<div class="partsL"><div class="part1"><img class="formula" src="gfx09.png"/></div>
+<div class="part2"><b>Infinite Cone - exact</b><br><br>
+<div class="code">float sdCone( vec3 p, vec2 c )
+{
+    // c is the sin/cos of the angle
+    vec2 q = vec2( length(p.xz), -p.y );
+    float d = length(q-c*max(dot(q,c), 0.0));
+    return d * ((q.x*c.y-q.y*c.x<0.0)?-1.0:1.0);
+}</div></div></div><br>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+
+<div class="partsL"><div class="part1"><img class="formula" src="gfx10.png"/></div>
+<div class="part2"><b>Plane - exact</b><br><br>
+<div class="code">float sdPlane( vec3 p, vec3 n, float h )
+{
+  // n must be normalized
+  return dot(p,n) + h;
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx11.png"/></div>
+<div class="part2"><b>Hexagonal Prism - exact</b><br><br>
+<div class="code">float sdHexPrism( vec3 p, vec2 h )
+{
+  const vec3 k = vec3(-0.8660254, 0.5, 0.57735);
+  p = abs(p);
+  p.xy -= 2.0*min(dot(k.xy, p.xy), 0.0)*k.xy;
+  vec2 d = vec2(
+       length(p.xy-vec2(clamp(p.x,-k.z*h.x,k.z*h.x), h.x))*sign(p.y-h.x),
+       p.z-h.y );
+  return min(max(d.x,d.y),0.0) + length(max(d,0.0));
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx21.png"/></div>
+<div class="part2"><b>Triangular Prism - bound</b><br><br>
+<div class="code">float sdTriPrism( vec3 p, vec2 h )
+{
+  vec3 q = abs(p);
+  return max(q.z-h.y,max(q.x*0.866025+p.y*0.5,-p.y)-h.x*0.5);
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx22.png"/></div>
+<div class="part2"><b>Capsule / Line - exact</b><br><br>
+<div class="code">float sdCapsule( vec3 p, vec3 a, vec3 b, float r )
+{
+  vec3 pa = p - a, ba = b - a;
+  float h = clamp( dot(pa,ba)/dot(ba,ba), 0.0, 1.0 );
+  return length( pa - ba*h ) - r;
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx29.png"/></div>
+<div class="part2"><b>Capsule / Line - exact</b><br><br>
+<div class="code">float sdVerticalCapsule( vec3 p, float h, float r )
+{
+  p.y -= clamp( p.y, 0.0, h );
+  return length( p ) - r;
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx23.png"/></div>
+<div class="part2"><b>Capped Cylinder - exact</b><br><br>
+<div class="code">float sdCappedCylinder( vec3 p, float h, float r )
+{
+  vec2 d = abs(vec2(length(p.xz),p.y)) - vec2(h,r);
+  return min(max(d.x,d.y),0.0) + length(max(d,0.0));
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx23.png"/></div>
+<div class="part2"><b>Capped Cylinder - exact</b> &nbsp (<a href="https://www.shadertoy.com/view/wdXGDr">https://www.shadertoy.com/view/wdXGDr</a>)<br><br>
+<div class="code">float sdCappedCylinder(vec3 p, vec3 a, vec3 b, float r)
+{
+  vec3  ba = b - a;
+  vec3  pa = p - a;
+  float baba = dot(ba,ba);
+  float paba = dot(pa,ba);
+  float x = length(pa*baba-ba*paba) - r*baba;
+  float y = abs(paba-baba*0.5)-baba*0.5;
+  float x2 = x*x;
+  float y2 = y*y*baba;
+  float d = (max(x,y)&lt;0.0)?-min(x2,y2):(((x&gt;0.0)?x2:0.0)+((y&gt;0.0)?y2:0.0));
+  return sign(d)*sqrt(abs(d))/baba;
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx05.png"/></div>
+<div class="part2"><b>Rounded Cylinder - exact</b><br><br>
+<div class="code">float sdRoundedCylinder( vec3 p, float ra, float rb, float h )
+{
+  vec2 d = vec2( length(p.xz)-2.0*ra+rb, abs(p.y) - h );
+  return min(max(d.x,d.y),0.0) + length(max(d,0.0)) - rb;
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx26.png"/></div>
+<div class="part2"><b>Capped Cone - exact</b><br><br>
+<div class="code">float sdCappedCone( vec3 p, float h, float r1, float r2 )
+{
+  vec2 q = vec2( length(p.xz), p.y );
+  vec2 k1 = vec2(r2,h);
+  vec2 k2 = vec2(r2-r1,2.0*h);
+  vec2 ca = vec2(q.x-min(q.x,(q.y&lt;0.0)?r1:r2), abs(q.y)-h);
+  vec2 cb = q - k1 + k2*clamp( dot(k1-q,k2)/dot2(k2), 0.0, 1.0 );
+  float s = (cb.x&lt;0.0 && ca.y&lt;0.0) ? -1.0 : 1.0;
+  return s*sqrt( min(dot2(ca),dot2(cb)) );
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx26.png"/></div>
+<div class="part2"><b>Capped Cone - exact</b> &nbsp (<a href="https://www.shadertoy.com/view/tsSXzK">https://www.shadertoy.com/view/tsSXzK</a>)<br><br>
+<div class="code">float sdCappedCone(vec3 p, vec3 a, vec3 b, float ra, float rb)
+{
+    float rba  = rb-ra;
+    float baba = dot(b-a,b-a);
+    float papa = dot(p-a,p-a);
+    float paba = dot(p-a,b-a)/baba;
+    float x = sqrt( papa - paba*paba*baba );
+    float cax = max(0.0,x-((paba<0.5)?ra:rb));
+    float cay = abs(paba-0.5)-0.5;
+    float k = rba*rba + baba;
+    float f = clamp( (rba*(x-ra)+paba*baba)/k, 0.0, 1.0 );
+    float cbx = x-ra - f*rba;
+    float cby = paba - f;
+    float s = (cbx < 0.0 && cay < 0.0) ? -1.0 : 1.0;
+    return s*sqrt( min(cax*cax + cay*cay*baba,
+                       cbx*cbx + cby*cby*baba) );
+}</div></div></div><br>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx07.png"/></div>
+<div class="part2"><b>Solid Angle - exact</b> &nbsp (<a href="https://www.shadertoy.com/view/wtjSDW">https://www.shadertoy.com/view/wtjSDW</a>)<br><br>
+<div class="code">float sdSolidAngle(vec3 p, vec2 c, float ra)
+{
+  // c is the sin/cos of the angle
+  vec2 q = vec2( length(p.xz), p.y );
+  float l = length(q) - ra;
+  float m = length(q - c*clamp(dot(q,c),0.0,ra) );
+  return max(l,m*sign(c.y*q.x-c.x*q.y));
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx28.png"/></div>
+<div class="part2"><b>Round cone - exact</b><br><br>
+<div class="code">float sdRoundCone( vec3 p, float r1, float r2, float h )
+{
+  vec2 q = vec2( length(p.xz), p.y );
+    
+  float b = (r1-r2)/h;
+  float a = sqrt(1.0-b*b);
+  float k = dot(q,vec2(-b,a));
+    
+  if( k &lt; 0.0 ) return length(q) - r1;
+  if( k &gt; a*h ) return length(q-vec2(0.0,h)) - r2;
+        
+  return dot(q, vec2(a,b) ) - r1;
+}</div></div></div><br>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx28.png"/></div>
+<div class="part2"><b>Round Cone - exact</b> &nbsp (<a href="https://www.shadertoy.com/view/tdXGWr">https://www.shadertoy.com/view/tdXGWr</a>)<br><br>
+<div class="code">float sdRoundCone(vec3 p, vec3 a, vec3 b, float r1, float r2)
+{
+    // sampling independent computations (only depend on shape)
+    vec3  ba = b - a;
+    float l2 = dot(ba,ba);
+    float rr = r1 - r2;
+    float a2 = l2 - rr*rr;
+    float il2 = 1.0/l2;
+    
+    // sampling dependant computations
+    vec3 pa = p - a;
+    float y = dot(pa,ba);
+    float z = y - l2;
+    float x2 = dot2( pa*l2 - ba*y );
+    float y2 = y*y*l2;
+    float z2 = z*z*l2;
+
+    // single square root!
+    float k = sign(rr)*rr*rr*x2;
+    if( sign(z)*a2*z2 > k ) return  sqrt(x2 + z2)        *il2 - r2;
+    if( sign(y)*a2*y2 < k ) return  sqrt(x2 + y2)        *il2 - r1;
+                            return (sqrt(x2*a2*il2)+y*rr)*il2 - r1;
+}</div></div></div><br>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx25.png"/></div>
+<div class="part2"><b>Ellipsoid - bound (<b>not</b> exact!)</b> &nbsp (<a href="https://www.shadertoy.com/view/tdS3DG">https://www.shadertoy.com/view/tdS3DG</a>)<br><br>
+<div class="code">float sdEllipsoid( vec3 p, vec3 r )
+{
+  float k0 = length(p/r);
+  float k1 = length(p/(r*r));
+  return k0*(k0-1.0)/k1;
+}</div></div></div><br>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx19.png"/></div>
+<div class="part2"><b>Rhombus - exact</b> &nbsp (<a href="https://www.shadertoy.com/view/tlVGDc">https://www.shadertoy.com/view/tlVGDc</a>)<br><br>
+<div class="code">float sdRhombus(vec3 p, float la, float lb, float h, float ra)
+{
+  p = abs(p);
+  vec2 b = vec2(la,lb);
+  float f = clamp( (ndot(b,b-2.0*p.xz))/dot(b,b), -1.0, 1.0 );
+  vec2 q = vec2(length(p.xz-0.5*b*vec2(1.0-f,1.0+f))*sign(p.x*b.y+p.z*b.x-b.x*b.y)-ra, p.y-h);
+  return min(max(q.x,q.y),0.0) + length(max(q,0.0));
+}</div></div></div><br>
+
+
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx20.png"/></div>
+<div class="part2"><b>Octahedron - exact</b> &nbsp (<a href="https://www.shadertoy.com/view/wsSGDG">https://www.shadertoy.com/view/wsSGDG</a>)<br><br>
+<div class="code">float sdOctahedron( vec3 p, float s)
+{
+  p = abs(p);
+  float m = p.x+p.y+p.z-s;
+  vec3 q;
+       if( 3.0*p.x &lt; m ) q = p.xyz;
+  else if( 3.0*p.y &lt; m ) q = p.yzx;
+  else if( 3.0*p.z &lt; m ) q = p.zxy;
+  else return m*0.57735027;
+    
+  float k = clamp(0.5*(q.z-q.y+s),0.0,s); 
+  return length(vec3(q.x,q.y-s+k,q.z-k)); 
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx20.png"/></div>
+<div class="part2"><b>Octahedron - bound (<b>not</b> exact)</b><br><br>
+<div class="code">float sdOctahedron( vec3 p, float s)
+{
+  p = abs(p);
+  return (p.x+p.y+p.z-s)*0.57735027;
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx08.png"/></div>
+<div class="part2"><b>Pyramid - exact</b> &nbsp (<a href="https://www.shadertoy.com/view/Ws3SDl">https://www.shadertoy.com/view/Ws3SDl</a>)<br><br>
+<div class="code">float sdPyramid( vec3 p, float h)
+{
+  float m2 = h*h + 0.25;
+    
+  p.xz = abs(p.xz);
+  p.xz = (p.z&gt;p.x) ? p.zx : p.xz;
+  p.xz -= 0.5;
+
+  vec3 q = vec3( p.z, h*p.y - 0.5*p.x, h*p.x + 0.5*p.y);
+   
+  float s = max(-q.x,0.0);
+  float t = clamp( (q.y-0.5*p.z)/(m2+0.25), 0.0, 1.0 );
+    
+  float a = m2*(q.x+s)*(q.x+s) + q.y*q.y;
+  float b = m2*(q.x+0.5*t)*(q.x+0.5*t) + (q.y-m2*t)*(q.y-m2*t);
+    
+  float d2 = min(q.y,-q.x*m2-q.y*0.5) &gt; 0.0 ? 0.0 : min(a,b);
+    
+  return sqrt( (d2+q.z*q.z)/m2 ) * sign(max(q.z,-p.y));
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx24.png"/></div>
+<div class="part2"><b>Triangle - exact</b> &nbsp (<a href="https://www.shadertoy.com/view/4sXXRN">https://www.shadertoy.com/view/4sXXRN</a>)<br><br>
+<div class="code">float udTriangle( vec3 p, vec3 a, vec3 b, vec3 c )
+{
+  vec3 ba = b - a; vec3 pa = p - a;
+  vec3 cb = c - b; vec3 pb = p - b;
+  vec3 ac = a - c; vec3 pc = p - c;
+  vec3 nor = cross( ba, ac );
+
+  return sqrt(
+    (sign(dot(cross(ba,nor),pa)) +
+     sign(dot(cross(cb,nor),pb)) +
+     sign(dot(cross(ac,nor),pc))&lt;2.0)
+     ?
+     min( min(
+     dot2(ba*clamp(dot(ba,pa)/dot2(ba),0.0,1.0)-pa),
+     dot2(cb*clamp(dot(cb,pb)/dot2(cb),0.0,1.0)-pb) ),
+     dot2(ac*clamp(dot(ac,pc)/dot2(ac),0.0,1.0)-pc) )
+     :
+     dot(nor,pa)*dot(nor,pa)/dot2(nor) );
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<div class="partsL"><div class="part1"><img class="formula" src="gfx27.png"/></div>
+<div class="part2"><b>Quad - exact</b> &nbsp (<a href="https://www.shadertoy.com/view/Md2BWW">https://www.shadertoy.com/view/Md2BWW</a>)<br><br>
+<div class="code">float udQuad( vec3 p, vec3 a, vec3 b, vec3 c, vec3 d )
+{
+  vec3 ba = b - a; vec3 pa = p - a;
+  vec3 cb = c - b; vec3 pb = p - b;
+  vec3 dc = d - c; vec3 pc = p - c;
+  vec3 ad = a - d; vec3 pd = p - d;
+  vec3 nor = cross( ba, ad );
+
+  return sqrt(
+    (sign(dot(cross(ba,nor),pa)) +
+     sign(dot(cross(cb,nor),pb)) +
+     sign(dot(cross(dc,nor),pc)) +
+     sign(dot(cross(ad,nor),pd))&lt;3.0)
+     ?
+     min( min( min(
+     dot2(ba*clamp(dot(ba,pa)/dot2(ba),0.0,1.0)-pa),
+     dot2(cb*clamp(dot(cb,pb)/dot2(cb),0.0,1.0)-pb) ),
+     dot2(dc*clamp(dot(dc,pc)/dot2(dc),0.0,1.0)-pc) ),
+     dot2(ad*clamp(dot(ad,pd)/dot2(ad),0.0,1.0)-pd) )
+     :
+     dot(nor,pa)*dot(nor,pa)/dot2(nor) );
+}</div></div></div><br>
+
+<br>
+<br>
+<h3>Primitive alterations</h3><hr>
+Once we have the basic primitives, it's possible to apply some simple operations that change their shape while still retaining exact an euclidean metric to them, which is an important property since SDFs with undistorted euclidean metric allow for faster ray marchine.<br>
+<br>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<b>Elongation - exact</b><br>
+<br>
+Elongating is a useful way to construct new shapes. It basically splits a primitive in two (four or eight), moves the pieces apart and and connects them. It is a perfect distance preserving operation, it does not introduce any artifacts in the SDF. Some of the basic primitives above use this technique. For example, the Capsule is an elongated Sphere along an axis really. You can find code here: <a href="https://www.shadertoy.com/view/Ml3fWj">https://www.shadertoy.com/view/Ml3fWj</a><br><br>
+
+<div class="partsL">
+<div class="part1"><img class="formula" src="gfx42.png"/></div>
+<div class="part2"><div class="code">float opElongate( in sdf3d primitive, in vec3 p, in vec3 h )
+{
+    vec3 q = p - clamp( p, -h, h );
+    return primitive( q );
+}
+
+float opElongate( in sdf3d primitive, in vec3 p, in vec3 h )
+{
+    vec3 q = abs(p)-h;
+    return primitive( max(q,0.0) ) + min(max(q.x,max(q.y,q.z)),0.0);
+}
+</div></div></div><br>
+The reason I provide to implementations is the following. For 1D elongations, the first function works perfectly and gives exact exterior and interior distances. However, the first implementation produces a small core of zero distances inside the volume for 2D and 3D elongations. Depending on your application that might be a problem. One way to create exact interior distances all the way to the very elongated core of the volume, is the following, which is in languages like GLSL that don't have function pointers or lambdas need to be implemented a bit differently (check the code linked about in Shadertoy to see one example).<br>
+<br>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<b>Rounding - exact</b><br>
+<br>
+Rounding a shape is as simple as subtracting some distance (jumping to a different isosurface). The rounded box above is an example, but you can apply it to cones, hexagons or any other shape like the cone in the image below. If you happen to be interested in preserving the overall volume of the shape, most of the times it's pretty easy to shrink the source primitive by the same amount we are rounding it by. You can find code here: <a href="https://www.shadertoy.com/view/Mt3BDj">https://www.shadertoy.com/view/Mt3BDj</a><br><br>
+<br>
+<div class="partsL">
+<div class="part1"><img class="formula" src="gfx43.png"/></div>
+<div class="part2"><div class="code">float opRound( in sdf3d primitive, float rad )
+{
+    return primitive(p) - rad
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<b>Onion - exact</b><br>
+<br>
+For carving interiors or giving thickness to primitives, without performing expensive boolean operations (see below) and without distorting the distance field into a bound, one can use "onioning". You can use it multiple times to create concentric layers in your SDF. You can find code here: <a href="https://www.shadertoy.com/view/MlcBDj">https://www.shadertoy.com/view/MlcBDj</a><br><br>
+<br>
+<div class="partsL">
+<div class="part1"><img class="formula" src="gfx44.png"/></div>
+<div class="part2"><div class="code">float opOnion( in float sdf, in float thickness )
+{
+    return abs(sdf)-thickness;
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<b>Revolution and extrusion from 2D - exact</b><br>
+<br>
+Generating 3D volumes from 2D shapes has many advantages. Assuming the 2D shape defines exact distances, the resulting 3D volume is exact and way often less intensive to evaluate than when produced from boolean operations on other volumes. Two of the most simplest way to make volumes our of flat shapes is to use extrusion and revolution (generalizations of these are easy to build, but we we'll keep simple here):
+
+You can find code here: <a href="https://www.shadertoy.com/view/4lyfzw">https://www.shadertoy.com/view/4lyfzw</a><br><br>
+<br>
+<div class="partsL">
+<div class="part1"><img class="formula" src="gfx49.png"/></div>
+<div class="part2"><div class="code">float opExtrusion( in vec3 p, in sdf2d primitive, in float h )
+{
+    float d = primitive(p.xy)
+    vec2 w = vec2( d, abs(p.z) - h );
+    return min(max(w.x,w.y),0.0) + length(max(w,0.0));
+}
+
+float opRevolution( in vec3 p, in sdf2d primitive, float o )
+{
+    vec2 q = vec2( length(p.xz) - o, p.y );
+    return primitive(q)
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<b>Change of Metric - bound</b><br>
+<br>
+Most of these functions can be modified to use other norms than the euclidean. By replacing length(p), which computes (x<sup>2</sup>+y<sup>2</sup>+z<sup>2</sup>)<sup>1/2</sup> by (x<sup>n</sup>+y<sup>n</sup>+z<sup>n</sup>)<sup>1/n</sup> one can get variations of the basic primitives that have rounded edges rather than sharp ones. I do not recommend this technique though, since these primitives require more raymarching steps until an intersection is found than euclidean primitives. Since they only give a bound to the real SDF, this kind of primitive alteration also doesn't play well with shadows and occlusion algorithms that rely on true SDFs for measuring distance to occluders. You can find the code here: <a href="https://www.shadertoy.com/view/ltcfDj">https://www.shadertoy.com/view/ltcfDj</a><br><br>
+<br>
+<div class="partsL">
+<div class="part1"><img class="formula" src="gfx46.png"/></div>
+<div class="part2"><div class="code">float length2( vec3 p ) { p=p*p; return sqrt( p.x+p.y+p.z); }
+
+float length6( vec3 p ) { p=p*p*p; p=p*p; return pow(p.x+p.y+p.z,1.0/6.0); }
+
+float length8( vec3 p ) { p=p*p; p=p*p; p=p*p; return pow(p.x+p.y+p.z,1.0/8.0); }</div></div></div><br>
+<br>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<h3>Primitive combinations</h3><hr>
+Sometimes you cannot simply elongate, round or onion a primitive, and you need to combine, carve or intersect basic primitives. Given the SDFs d1 and d2 of two primitives, you can use the following operators to combine together.<br>
+<br>
+<br>
+<b>Union, Subtraction, Intersection - exact/bound, bound, bound</b><br>
+<br>
+These are the most basic combinations of pairs of primitives you can do. They correspond to the basic boolean operations. <b>Please note</b> that only the Union of two SDFs returns a true SDF, not the Subtraction or Intersection. To make it more subtle, this is only true in the exterior of the SDF (where distances are positive) and not in the interior. You can learn more about this and how to work around it in the article <a href="../interiordistance/interiordistance.htm">"Interior Distances"</a>. Also note that opSubtraction() is not commutative and depending on the order of the operand it will produce different results.<br>
+<br>
+<div class="partsL">
+<div class="part1"><img class="formula" src="gfx45.png"/></div>
+<div class="part2"><div class="code">float opUnion( float d1, float d2 ) { return min(d1,d2); }
+
+float opSubtraction( float d1, float d2 ) { return max(-d1,d2); }
+
+float opIntersection( float d1, float d2 ) { return max(d1,d2); }</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<b>Smooth Union, Subtraction and Intersection - bound, bound, bound</b><br>
+<br>
+Blending primitives is a really powerful tool - it allows to construct complex and organic shapes without the geometrical semas that normal boolean operations produce. There are many flavors of such operations, but the basic ones try to replace the min() and max() functions used in the opUnion, opSubstraction and opIntersection above with smooth versions. They all accept an extra parameter called <b>k</b> that defines the size of the smooth transition between the two primitives. It is given in actual distance units. You can find more details in the <a href="../smin/smin.htm">smooth minimum article<a> article in this same site. You can code here: <a href="https://www.shadertoy.com/view/lt3BW2">https://www.shadertoy.com/view/lt3BW2</a><br>
+<br>
+<div class="partsL">
+<div class="part1"><img class="formula" src="gfx47.png"/></div>
+<div class="part2"><div class="code">float opSmoothUnion( float d1, float d2, float k ) {
+    float h = clamp( 0.5 + 0.5*(d2-d1)/k, 0.0, 1.0 );
+    return mix( d2, d1, h ) - k*h*(1.0-h); }
+
+float opSmoothSubtraction( float d1, float d2, float k ) {
+    float h = clamp( 0.5 - 0.5*(d2+d1)/k, 0.0, 1.0 );
+    return mix( d2, -d1, h ) + k*h*(1.0-h); }
+
+float opSmoothIntersection( float d1, float d2, float k ) {
+    float h = clamp( 0.5 - 0.5*(d2-d1)/k, 0.0, 1.0 );
+    return mix( d2, d1, h ) + k*h*(1.0-h); }</div></div></div><br>
+<br>
+<h3>Positioning</h3><hr>
+Placing primitives in different locations and orientations in space is a fundamental operation in designing SDFs. While rotations, uniform scaling and translations are exact operations, non-uniform scaling distorts the euclidean spaces and can only be bound. Therefore I do not include it here.<br>
+<br>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<b>Rotation/Translation - exact</b><br>
+<br>
+Since rotations and translation don't compress nor dilate space, all we need to do is simply to transform the point being sampled with the inverse of the transformation used to place an object in the scene. This code below assumes that transform encodes only a rotation and a translation (as a 3x4 matrix for example, or as a quaternion and a vector), and that it does not contain any scaling factors in it.<br>
+<br>
+<div class="partsL">
+<div class="part1"><img class="formula" src="gfx13.png"/></div>
+<div class="part2"><div class="code">vec3 opTx( in vec3 p, in transform t, in sdf3d primitive )
+{
+    return primitive( invert(t)*p );
+}</div></div></div>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<b>Scale - exact</b><br>
+<br>
+Scaling an obect is slightly more tricky since that compresses/dilates spaces, so we have to take that into account on the resulting distance estimation. Still, it's not difficult to perform:<br>
+<br>
+<div class="partsL">
+<div class="part1"><img class="formula" src="gfx14.png"/></div>
+<div class="part2"><div class="code">float opScale( in vec3 p, in float s, in sdf3d primitive )
+{
+    return primitive(p/s)*s;
+}</div></div></div>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<b>Symmetry - bound and exact</b><br>
+<br>
+Symmetry is useful, since many things around us are symmetric, from humans, animals, vehicles, instruments, furniture, ... Oftentimes, one can take shortcuts and only model half or a quarter of the desired shape, and get it duplicated automatically by using the absolute value of the domain coordinates before evaluation. For example, in the image below, there's a single object evaluation instead of two. This is a great savings in performance. You have to be aware however that the resuluting SDF might not be an exact SDF but a bound, if the object you are mirroring crosses the mirroring plane.<br>
+<br>
+<div class="partsL">
+<div class="part1"><img class="formula" src="gfx48.png"/></div>
+<div class="part2"><div class="code">float opSymX( in vec3 p, in sdf3d primitive )
+{
+    p.x = abs(p.x);
+    return primitive(p);
+}
+
+float opSymXZ( in vec3 p, in sdf3d primitive )
+{
+    p.xz = abs(p.xz);
+    return primitive(p);
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<b>Infinite Repetition</b><br>
+<br>
+Domain repetition is a very useful operator, since it allows you to create infinitely many primitives with a single object evaluator and without increasing the memory footprint of your application. The code below shows how to perform the operation in the simplest way:<br>
+<br>
+<div class="partsL">
+<div class="part1"><img class="formula" src="gfx12.png"></div>
+<div class="part2"><div class="code">float opRep( in vec3 p, in vec3 c, in sdf3d primitive )
+{
+    vec3 q = mod(p+0.5*c,c)-0.5*c;
+    return primitive( q );
+}</div></div></div><br>
+In this code <b>c</b> is the repetition period (which can be different in each coordinate direction). This will work great for primitives that have a bounding box smaller than half the repetition period. If the object is big, you will need to check the 7 neighboring repetitions (in 3D, 3 in 2D) to check for closest neighbors, just as you usually do in a voronoi/Worley/cellular construction. You have an example of this in action in the following image where all of the grass field is made from a single blade which repeates infinitely in the X and Z directions with the code above. (A link to the real time animation and code for the image is right below the image).<br>
+<br>
+<img src="gfx40.png"/><br>
+<a href="https://www.shadertoy.com/view/4tByz3">https://www.shadertoy.com/view/4tByz3</a><br>
+<br>
+<br>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<b>Finite Repetition</b><br>
+<br>
+Infinite domain repetition is great, but sometimes you only need a few copies or instances of a given SDF, not infinite. A frequently seen but suboptimal solution is
+to generate infinite copies and then clip the unwanted areas away with a box SDF. This is not ideal because the resulting SDF is not a real SDF but just a bound, since clipping through max() only produces a bound. A much better approach is to clamp the indices of the instances instead of the SDF, and let a correct SDF emerge from the
+truncated/clamped indices. You can see this in action here as a 2D shader, although it works in any number of dimensions: <a href="https://www.shadertoy.com/view/3syGzz">https://www.shadertoy.com/view/3syGzz</a>. Code:<br>
+<br>
+<div class="partsL">
+<div class="part1"><img class="formula" src="gfx18.png"></div>
+<div class="part2"><div class="code">vec3 opRepLim( in vec3 p, in float c, in vec3 l, in sdf3d primitive )
+{
+    vec3 q = p-c*clamp(round(p/c),-l,l);
+    return primitive( q );
+}
+</div></div></div><br>
+This produces a rectangle of l.x times l.y instances. Naturally, you can create any rectangular shape you want (or other shape) by changing the limits of the clamp or the clamp function itself. Also note that the function can be specialized to 2 or 1 dimensions easily.<br>
+<br>
+<br>
+<br>
+<br>
+<h3>Deformations and distortions</h3><hr>
+<br>
+Deformations and distortions allow to enhance the shape of primitives or even fuse different primitives together. The operations usually distort the distance field and make it non euclidean anymore, so one must be careful when raymarching them, you will probably need to decrease your step size, if you are using a raymarcher to sample this. In principle one can compute the factor by which the step size needs to be reduced (inversely proportional to the compression of the space, which is given by the Jacobian of the deformation function). But even with dual numbers or automatic differentiation, it's usually just easier to find the constant by hand for a given primitive.<br>
+<br>
+I'd say that while it is tempting to use a distortion or displacement to achieve a given shape, and I often use them myself of course, it is sometimes better to get as close to the desired shape with actual exact euclidean primitive operations (elongation, rounding, onioning, union) or tight bounded functions (intersection, subtraction) and then only apply as small of a distortion or displacement as possible. That way the field stays as close as possible to an actual distance field, and the raymarcher will be faster.<br>
+<br>
+<br>
+<b>Displacement</b><br>
+<br>
+The displacement example below is using sin(20*p.x)*sin(20*p.y)*sin(20*p.z) as displacement pattern, but you can of course use anything you might imagine.<br>
+<br>
+<div class="partsL">
+<div class="part1"><img class="formula" src="gfx15.png"></td><td width="32px"></div>
+<div class="part2"><div class="code">float opDisplace( in sdf3d primitive, in vec3 p )
+{
+    float d1 = primitive(p);
+    float d2 = displacement(p);
+    return d1+d2;
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<b>Twist</b><br>
+</br>
+<div class="partsL">
+<div class="part1"><img class="formula" src="gfx16.png"></td><td width="32px"></div>
+<div class="part2"><div class="code">float opTwist( in sdf3d primitive, in vec3 p )
+{
+    const float k = 10.0; // or some other amount
+    float c = cos(k*p.y);
+    float s = sin(k*p.y);
+    mat2  m = mat2(c,-s,s,c);
+    vec3  q = vec3(m*p.xz,p.y);
+    return primitive(q);
+}</div></div></div><br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<b>Bend</b><br>
+<br>
+<div class="partsL">
+<div class="part1"><img class="formula" src="gfx17.png"></td><td width="32px"></div>
+<div class="part2"><div class="code">float opCheapBend( in sdf3d primitive, in vec3 p )
+{
+    const float k = 10.0; // or some other amount
+    float c = cos(k*p.x);
+    float s = sin(k*p.x);
+    mat2  m = mat2(c,-s,s,c);
+    vec3  q = vec3(m*p.xy,p.z);
+    return primitive(q);
+}</div></div></div><br>
+<br>
+<br>
+<br>
+A reference implementation of most of these primitives and operators can be found here (click in the image to rotate the camera, or in the title to jump to the source code):<br><br>
+<iframe class="myPicture" style="width:640px;height:360px;"  frameborder="0" src="https://www.shadertoy.com/embed/Xds3zN?gui=true&t=10&paused=true" allowfullscreen></iframe>
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

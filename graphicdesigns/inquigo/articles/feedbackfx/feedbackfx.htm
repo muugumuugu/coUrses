@@ -1,0 +1,139 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/feedbackfx/feedbackfx.htm">feedback effect - 2002</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<div class="partsB">
+<div class="part70">
+This is a very old effect that was used in the software rendering demos of the 90s. It's a nice one, cause despite its simplicity, it generates images that look interesting. You have probably seen the effect in the real world, when you take a video camera and you use is to record your room, and you take the output video signal and you plug it to your tv set. Then, of course, you see on the tv whatever you are shooting to. Now, if you point your camera towards the tv screen, you get the tv being displayed in itself. Because there is a little delay on the video signal going from the camera to the tv, what you see is an "infinte" sequence of images. If you start moving the camera, and turning it, you will see all sort of spirals in your television.<br>
+<br>
+There is a very simple way to make such a thing as a demo effect, and it's cheap, small and fast, that's why it was used often. Today, with OpenGL and such APIs for graphisc, it's even easier, and the quality is much better too due to the high quality mipmap and bilinear interpolation texture fetches that we have for free. Also, the implementation of this effect doesn't need shaders or anything, we just need to be able to render to a texture. So, even the old OpenGL 1.1 can do it. In fact you can download the following <a class="regular" href="realim.zip">executable</a> and watch the effect yourself in your own ancient computer.<br>
+</div>
+<div class="part">
+<img src="gfx00.jpg"/>
+<br>
+<i>The effect - a rotating texture with feedback</i>
+</div>
+</div>
+
+The first thing you need is an OpenGL texture object. Say its identifier (as returned by <i>glGenTextures()</i> for example) is <b><i>tid</i></b>. Then, the second thing you have to code is a function to draw the texture at fullscreen with some rotation and scale, some sort of <i>renderQuad()</i>. This function assumes that both projection and modelview matrices are set to identity, so that the screen coordinates range from -1 to 1 both horizontal and verticaly, in 2d.<br>
+<div class="code">void renderQuad( float time, int tid )
+{
+    const float s = 0.8f + 0.3f*sinf(0.2f*time);
+    const float a = 0.4f*time;
+
+    glEnable( GL_TEXTURE_2D );
+    glBindTexture( GL_TEXTURE_2D, tid );
+    glBegin( GL_QUADS );
+        glTexCoord2f( 0.5f + s*cosf(a + 0.0000f), 0.5f + s*sinf(a + 0.0000f) ); glVertex2i( -1,  1 );
+        glTexCoord2f( 0.5f + s*cosf(a + 1.5708f), 0.5f + s*sinf(a + 1.5708f) ); glVertex2i( -1, -1 );
+        glTexCoord2f( 0.5f + s*cosf(a + 3.1416f), 0.5f + s*sinf(a + 3.1416f) ); glVertex2i(  1, -1 );
+        glTexCoord2f( 0.5f + s*cosf(a + 2.3562f), 0.5f + s*sinf(a + 2.3562f) ); glVertex2i(  1,  1 );
+    glEnd();
+    glBindTexture( GL_TEXTURE_2D, 0 );
+    glDisable( GL_TEXTURE_2D );
+}</div>
+<br>
+Good, believe it or not, we are almost done with the effect :) Now we need to introduce the feedback. To do so, what we are going to do is to take the buffer we just rendered with <i>renderQuad()</i> and copy it back to the texture we are using. But we are not going to completely overwrite it, we will just update a part of the texture, like for example the center part. We will keep few pixels non updated on the border, just like when you film your television you camera is not fullscreen capturing the screen of the tv (the screen only covers part of the viewport). We can use the <i>glCopyTexSubImage2D()</i> for that, or we can use FBO (frame buffers objects). But let's do it in the old way, with <i>glCopyTexSubImage2D()</i>:<br>
+<br>
+<div class="code">void copyTexture( int textureSize, int border, int tid )
+{
+    glBindTexture( GL_TEXTURE_2D, tid );
+    glCopyTexSubImage2D( GL_TEXTURE_2D, 0, border, border, 0, 0, textureSize-2*border, textureSize-2*border );
+    glBindTexture( GL_TEXTURE_2D, 0 );
+}</div>
+<br>
+The first argument is the size of the texture we are using, for example 512, and the second one, <i>border</i>, is the amount of pixels we are going to keep free of feedback, for example, 64.<br>
+<br>
+Now we are ready to build the complete effect:<br>
+<br>
+<div class="code">void renderFeedBackEffect( const MyEffect *ffx, float time, int xres, int yres )
+{
+    <span class="codeComment">// render a rotated and scaled version of the texture</span>
+    glViewport( 0, 0, ffx->mTextureSize, ffx->mTextureSize );
+    glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+    glColor3f( 0.75f, 0.75f, 0.75f );
+    renderQuad( time, ffx->mTextureID );
+
+    <span class="codeComment">// feedback</span>
+    copyTexture( ffx->mTextureSize, 64, ffx->mTextureID );
+
+    <span class="codeComment">// display the texture on screen</span>
+    glViewport( 0, 0, xres, yres );
+    glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
+    renderQuad( time, ffx->mTextureID );
+}</div>
+<br>
+The <i>glColor3f()</i> command is used so that each copy of the image in the feedback loop get's attenuated. That makes the old copies of the image fade to black slowly as they get older (look the sample image on the top right of this page, note how the spirals go to dark). The <i>glTexEnvi()</i> is used to ensure this color modulation happens in the right momments. Of course, <i>xres</i> and <i>yres</i> are the screen resolutions, and <i>time</i> is the current time for the frame (in seconds normaly).<br>
+<br>
+Of course, do not forget to set the projection and modelview matrices to identity (no need for <i>glOrtho()</i> or anything), and disable depth tests.
+<!-- -------------------------------------------------------------------------------------------- -->
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

@@ -1,0 +1,143 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/ismoothstep/ismoothstep.htm">inverse smoothstep - 2017</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<h3>Intro</b></h3><hr>
+
+<div class="parts">
+<div class="part">
+<a class="regular" href="https://en.wikipedia.org/wiki/Smoothstep">Smoothstep</a> is one of the most frequently used functions in computer graphics, from animation to pattern generation, procedural modeling and <a class="regular" href="../texture/texture.htm">texture filtering</a>, among many other. Now, sometimes one might want to reverse the effect of a smoothstep, and doing so it's a little tricky - the invese of a cubic polynomial requires finding its roots and, while analytically computable, it's not trivial. This article describes how to derive and compute the inverse.<br>
+<br>
+To the right of this text, you can see the smoothstep function in yellow, it's inverse in blue, and the composition of both in grey, which naturally matches the identity function (grey diagonal line).
+</div>
+<div class="part"><img src="gfx00.png"/></div>
+</div>
+
+
+<h3>The math</b></h3><hr>
+The cubic smoothstep() is simply, after remapping and clamping,<br>
+<br>
+y(x) = x<sup>2</sup>(3-2x)<br>
+<br>Inverting this function requires solving the cubic equation<br>
+<br>
+x(y) = 2x<sup>3</sup> - 3x<sup>2</sup> + y<br> 
+<br>
+The discriminant of this equation is<br>
+<br>
+&#916; = 27&#8901;4y(1-y)<br>
+<br>
+which is between 0 and 27 - always possitive or zero - which means the equation will have generaly 3 real solutions, and they will be repeated exactly at y=0 and y=1.<br>
+<br>
+The standard way to solve a cubic equation with three real roots is the trigonometric form of <a class="regular" href="https://proofwiki.org/wiki/Cardano%27s_Formula">Cardano's formula</a>. One starts by computing<br>
+<br>
+p = (3ac-b<sup>2</sup>) / (3a<sup>2</sup>)<br>
+q = (-2b<sup>3</sup> + 9abc - 27a<sup>2</sup>d) / (27a<sup>3</sup>)<br>
+<br>
+R = q/2<br>
+Q = p/3<br>
+<br>
+and since in our case a=2, b=-3, c=0 and d=y, we get<br>
+<br>
+R = (1-2y)/8<br>
+Q = -1/4<br>
+<br>
+With R and Q at hand, we can apply the trigonometric solution, which is<br>
+<br>
+&#966; = acos( R/sqrt(-Q<sup>3</sup>) )<br>
+x = 2&#8901;sqrt(-Q)&#8901;cos(&#966;/3 + 2&#960;/3) - b/3a<br>
+<br>
+where the phase 2&#960;/3 selects the correct root. This simplifies nicely to<br>
+<br>
+&#966; = acos(1-2y)<br>
+x = 0.5 + cos((&#966;-2&#960)/3)<br>
+<br>
+which is pretty compact. There's a transformation and an extra simplification that can be done by noting that sin() and cos() are shifted by &#960/2, and combining that offset with the -&#960 offset we already added to &#966;:<br>
+<br>
+&#981; = asin(1-2*y)<br>
+x = 0.5 + cos( &#960/2 + &#981;/3 )<br>
+<br>
+which using the trigonometric identity cos(A+B) = cos(A)&#8901;cos(B) - sin(A)&#8901;sin(B) simplifies to<br>
+<br>
+&#981; = asin(1-2y)<br>
+x = 0.5 - sin( &#981;/3 )<br>
+<br>
+<h3>The code</h3><hr>
+Here goes some GLSL code for the maths above:<br>
+<div class="code">float inverse_smoothstep( float y )
+{
+    return 0.5 - sin(asin(1.0-2.0*y)/3.0);
+}
+</div>
+
+And here's a realtime running implementation, <a class="regular" href="https://www.shadertoy.com/view/MsSBRh">https://www.shadertoy.com/view/MsSBRh</a>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

@@ -1,0 +1,149 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/interiordistance/interiordistance.htm">interior SDFs - 2020</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<h3>Intro</h3><hr>
+<br>
+When modeling with SDFs, there are two ways to achieve complex shapes: one is to combine simpler shapes with union, subtraction and intersection operations, which are usually implemented with min() and max() functions. The other one is to design a new formula from scratch for the SDF of the desired shape. The second option involves some mathematical derivation, which is just fine with the caveat that sometimes it might be impossible to get such closed form formula. Because of that, people tend to work with a very small set of basic primitives and the just combine them as needed.<br>
+<br>
+However, the min() and max() of two SDFs do not always produce a valid SDF, in that the result is actually not a distance field, but just a lower bound to the real distance to the resulting surface. This impacts the performance and quality of the algorithm used with the SDF (like in the case of a raymarcher), or can even completely break it and stop functioning (like in the case of collision detection).<br>
+<br>
+<br>
+<center>
+<div class="partsC">
+<div class="part"><img class="myPicture" src="gfx01.jpg"/><br>Incorrect SDF - using min() to combine one circle and two boxes</div>
+<div class="part"><img class="myPicture" src="gfx00.jpg"/><br>Correct SDF</div>
+</div>
+</center>
+<br>
+Now, while it is well known that the max() based operators (subtraction and intersection) break the SDF of the resulting shape (they produce bounds, not correct distance everywhere), the min() based ones (union) are often assumed to produce correct SDFs. But this is sometimes an incorrect assumption. In particular, in the interior of the resulting shape the SDF, where it takes negative values, it doesn't work as expected. I'm not talking about small deviation from the real SDF or accuracy problems, but of totally broken SDFs.<br>
+<br>
+However, one might think that the interior of the SDF is often not needed, except for subsurface scattering or volumetric effets perhaps. But this is also not true. This is clear when modeling a shape or scene through its negative space. For example, one might desire to model the interior of a L-shaped room by using two box SDFs, making their union, and then flipping the sign of the SDF. After all, an L shape really looks like two boxes. However, the SDF produced by the union of two boxes and a negation is totally wrong, and neither the raymarcher in charge of rendering nor the physics engine will work with it as expected. The images bellow show the difference between the SDF generated with min() of two boxes and a disk, which is wrong, and the correct SDF for that shape. So, let's see what we can do about this problem.<br>
+<br>
+<br>
+<br>
+<h3>Idea 1</h3><hr>
+<br>
+The first thing one can do is of course to ignore the problem. That's totally alright as long as one knows the implications and limitations that come with the decision.<br>
+<br>
+For example, ignoring the problem won't backfire if we are raymarching only solid/opaque geometry. In principle a vanilla distance field raymarcher doesn't need to ever touch the inner volume of the shapes, so we should be good. Some more advanced raymarching techniques might, but let's assume we are using a basic raymarching setup for now.<br>
+<br>
+In theory the broken interior SDF could still create some problems during the numerical computation of the surface normals and/or gradient, which often is implemented as <a class="regular" href="../normalsSDF/normalsSDF.htm">central differences</a> that can potentially (and often do) sample the interior of the SDF. In practice, the artifacts introduced by min() exist mostly in the deep interior of the shape and only touch the surface at isolated locations. Since the central differences method usually sample in a small neighborhood of the surface, the errors are rare and small when they exist. And in practice, the problem can often just be ignored.<br>
+<br>
+<br>
+<br>
+<h3>Idea 2</h3><hr>
+<br>
+However, sometimes we don't want to ignore the interior of our SDF. This can be, as mentioned in the introduction, because we've realized that the interior of a given SDF is really close to the object we are modeling. For example, the L shaped room example above, made of two boxes and one circle, is very easily modeled with two boxes and one circle indeed. At least its walls or in/out interface is. The interior of the room is however broken due to the SDF problem that we are analyzing today.<br>
+<br>
+One thing that we can do, that might work in some situations, is to reverse the problem and think of the negative space around the shape. In the case of this room, it would mean making our SDF model the outside of the room (the yellow areas) instead of the interior (the blue ones). If we think inside-out we can see that we can model the room by using five boxes and one arc/moon shape.<br>
+<br>
+Then we can invert the definition of interior and exterior by changing the sign of the SDF, and get a perfectly clean SDF inside the room. Of course, the exterior of the room now has the wrong SDF, but assuming our game or film scene happens inside the room, we will be totally fine (except, again, in the computation of some of the surface normals). This is an example of the idea in action:<br>
+<br>
+<center>
+<div class="partsC">
+<div class="part"><img class="myPicture" src="gfx04.jpg"/><br>Filling up the exterior - Incorrect Exterior SDF</div>
+<div class="part"><img class="myPicture" src="gfx03.jpg"/><br>Filling up the interior - Incorrect Interior SDF</div>
+<div class="part"><img class="myPicture" src="gfx02.jpg"/><br>Correct SDF</div>
+</div>
+</center>
+
+<br>
+<br>
+<br>
+<h3>Idea 3</h3><hr>
+<br>
+Of course, since we can in principle generate both correct internal and external SDFs, and we can also exactly discern between interior and exterior volumes, we can pick the appropriate exact SDF as needed. This comes at the cost of double modeling cost (in artist time) and storage.<br>
+
+<br>
+<br>
+<br>
+<h3>Idea 4</h3><hr>
+<br>
+In 2D, there's one thing one can do - model the boundary of the object as a series of line segments, circle arcs and quadratic bezier segments, all of which have exact SDFs. If the shape is a closed loop, determining interior and exterior areas is really simple (a cross product per segment suffices). Therefore we can produce arbitrary closed shapes with correct SDF both inside and outside the shape. This idea of using a countour SDF is how the ground-truth pictures in this article were produced. You can see one possible implementation of this 2D contour-SDF modeling in this shader: <a class="regular" href="https://www.shadertoy.com/view/3t33WH">https://www.shadertoy.com/view/3t33WH</a>.<br>
+<br>
+From there, one can use the elongation or revolution operators described in the <a class="regular" href="../distfunctions/distfunctions.htm">3D SDF index page</a> to generate exact 3D shapes with correct interior and exterior distances!<br>
+<br>
+This is so far my favorite technique since, while not general, it's the closest to being it.<br>
+<br>
+<br>
+<br>
+<h3>Idea 5</h3><hr>
+<br>
+One last idea is what I hinted to at the beginning of the introduction of the article - instead of only using basic (often convex) SDF primitives, one can start embracing more complex (often concave) yet exact SDF primitives. You'll find many of such SDFs in my <a class="regular" href="../distfunctions2d/distfunctions2d.htm">2D SDF index page</a> and on my <a class="regular" href="../distfunctions/distfunctions.htm">3D SDF index page</a>. The reason I've been deriving and collecting them is exactly this one.<br>
+<br>
+As an example, the <a class="regular" href="https://www.shadertoy.com/view/XtGfzw">cross SDF</a> could have been implemented as the union/min() of two boxes, which would produce the incorrect interior SDF. However, this cross SDF implementation not only implements the correct interior (and exterior) distance field, but <b>also</b> is faster, since it can use the symmetry of the problem to evaluate a single box-like formula. This is also the case with sdHorseshoe(), sdOctogon() and many others.<br>
+<br>
+Similarly, shapes that could be made with basic primitives combined with substractions and intersection operations also suffer form incorrect distances (exterior distances in that case). And many of them can be made correct everywhere and more performant by implementing the final shape directly as an SDF, such as in the case of sdArc(), sdPie(), sdVesica(), etc.<br>
+
+ <!-- ----------------------------------------------------------------- -->
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>
