@@ -1,0 +1,110 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/raypolys/raypolys.htm">rays and polygons - 2010</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+This is basic stuff, but why not to refresh memory from time to time and revisit the basic concepts once again. Say you are raymarching or raytracing some objects in a fragment shader, and you want to composite them with some other geometry that you rendered or will render through regular rasterization. The only thing you need to do is to output a depth value in your raytracing/marching shader, and let the depth buffer do the rest. The first to do, then, is to understand what "depth" means here.<br>
+<br>
+In a raytracer/marcher, you probably have access to the distance from the ray origin (you camera position) to the closest geometry/intersection point. That distance is <b>not</b> what you want to write to the depth buffer, as hardware rasterizers (OpenGL or DirectX) don't store distances to the camera, but the z of the geometry/intersection point. The reason is that this z value is still monotonically increasing with the distance, but has the property of being linear (linear like in "can be interpolated across the surface of a play 3D triangle). So, in your raymarcher, compute the intersection point, and use its z component for writing to the depth buffer.<br>
+<br>
+Well, that will not work just like that. your api of preference will remap your z values to a -1 to 1 range based on the near and far clipping planes you decided to set up. Furthermore, the remapping will probably also transform your z values to some other sort of scale that exploits the properties of perspective (like with a curve that compresses values in the far distance). So you will have to implement the same remapping in your shader before you can merge your raytraced/marched objects with the rest of the polygons.<br>
+<br>
+The mapping is simple, though, and is normally configured by the projection matrix. Grab your OpenGL Redbook, and have a look to the content of a standard projection matrix. The third and fourth row are what we need, since those are the ones that affect the z and w components of your points when transformed from eye to clip space. So, if ze is the z of your intersection point in camera (eye) space, then you can compute the clip space z and w as<br>
+<br>
+zc = -ze*(far+near)/(far-near) - 2*far*near/(far-near)<br>
+wc = -ze<br>
+<br>
+The hardware will then do the perspective division and compute the z value in normalized device coordinates before converting it to a 24 bit depth value:<br>
+<br>
+zn = zc/zw = (far+near)/(far-near) + 2*far*near/(far-near)/ze<br>
+<br>
+which you can see it is a formula of the form zn = a + b/ze which produces the desired depth compression. You can check that the boundary conditions are met, by doing<br>
+<br>
+ze = -near  -> zn = -1;<br>
+ze = -far -> zn =  1;<br>
+<br>
+Yeah, remember that your depths in camera space are negative inwards the screen. So, our raytracing/marching shader should end with something like<br>
+<br>
+  <div class="code">float a = (far+near)/(far-near);
+float b = 2.0*far*near/(far-near);
+gl_FragDepth = a + b/z;</div>
+<br>
+You probably want to upload <em>a</em> and <em>b</em> as uniforms to your shader.<br>
+<br>
+Alternatively, if you don't want mess with all this, you can directly grab the projection parameters from the projection matrix, and do something like<br>
+<br>
+  <div class="code">float zc = ( (ModelView)ProjectionMatrix * vec4( intersectionPoint, 1.0 ) ).z;
+float wc = ( (ModelView)ProjectionMatrix * vec4( intersectionPoint, 1.0 ) ).w;
+gl_FragDepth = zc/wc;</div>
+<br>
+which is a little bit more expensive, but gives the same results...<br>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

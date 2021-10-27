@@ -1,0 +1,266 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/smin/smin.htm">smooth minimum - 2013</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<h3>Intro</h3><hr>
+<br>
+One of the basic building blocks of impicit procedural modeling (such as when building a distance field for raymarching based on <a class="regular" href="../distfunctions/distfunctions.htm">basic primitives</a>) is
+the union operator.<br>
+<br>
+<div class="code">float opU( float d1, float d2 )
+{
+    return min( d1, d2 );
+}</div>
+<br>
+This operator works great, but has the problem that the resulting shape has discontinuities in its derivatives. Or in other words, the resulting surface of unifying two smooth objects is not a smooth surface anymore. This
+is often inconvenient from a looks perspective, such as when trying to model organic shapes.<br>
+<br>
+<div class="partsC">
+<div class="part"><img class="myPicture" src="gfx00.jpg"/><br><i>Regular min() based primitive union</i></div>
+<div class="part"><img class="myPicture" src="gfx01.jpg"/><br><i>smooth-min() based primitive union</i></div>
+</div>
+
+The images above are a zoom into a procedurally modelled creature (which you can see in realtime online here: <a class="regular" href="https://www.shadertoy.com/view/Mss3zM">https://www.shadertoy.com/view/Mss3zM</a>), where the legs are made of (deformed) cylinders and the body of a (deformed) sphere. When using the regular min() based primitive union, shown in the image to the let, the intersection between the legs and the body becomes apparent. In the right side image, the smooth-min based union explained in this article is used instead, resulting in a much more organic and visually pleasing connection between the parts.
+<br>
+<br>
+<br>
+<h3>Several implementations</h3><hr>
+<br>
+The way to smoothly blend the shapes is to get rid of the discontinuity of the min() function, of course. But we want our smooth-min function to behave quite like min() when one of the two primitives is way further that the other. It's only in the area where the two values get similar that we want to apply the smoothness.<br>
+<br>
+<div class="partsC">
+
+<div class="part">
+<div class="code"><span class="codeComment">// exponential smooth min (k = 32);</span>
+float smin( float a, float b, float k )
+{
+    float res = exp2( -k*a ) + exp2( -k*b );
+    return -log2( res )/k;
+}</div>
+</div>
+
+<div class="part">
+<div class="code"><span class="codeComment">// polynomial smooth min (k = 0.1);</span>
+float smin( float a, float b, float k )
+{
+    float h = clamp( 0.5+0.5*(b-a)/k, 0.0, 1.0 );
+    return mix( b, a, h ) - k*h*(1.0-h);
+}</div>
+</div>
+
+<div class="part">
+<div class="code"><span class="codeComment">// power smooth min (k = 8);</span>
+float smin( float a, float b, float k )
+{
+    a = pow( a, k ); b = pow( b, k );
+    return pow( (a*b)/(a+b), 1.0/k );
+}</div>
+</div>
+</div>
+
+These three functions produce smooth results, with different qualities. The three accept a paramter <i>k</i> that controls the radious/distance of the smoothness. From these three, probably the polynomial is the fastest, and  also the easiest to control, for <i>k</i> maps directly to a blending band size/distance. Unlike the other two, it probably suffers from second order discontinuities (derivatives), but visually is pleasing enough for most applications.<br>
+<br>
+As a curiosity, it might be worth noting that the exponential and power based smooth-min functions, both generalize to more than two distances, so they are probably better suited for computing minimun distances to big sets of points beyond 2, for example when you want to compute <a class="regular" href="../smoothvoronoi/smoothvoronoi.htm">smooth voronoi patterns</a> or interpolate pointclouds. In the case of the power based smooth-min function, the expression <i>a*b/(a+b)</i> generalizes with the same formula as when computing the global resistance of N parallel resistors: 1/ ( 1/a + 1/b + 1/c + ... ). For example, for three distances, you get a*b*c / (a*b + b*c + c*a).<br>
+<br>
+Besides accepting an aribtrary number of points, another advantage of the exponential smin() over the polynomial smin() is that when called multiple times with two arguments at a time, the exponential smin() produces the same result regardless of the order of the operations. The polynomial smin() however is not order independent. To make it more explicit, smin(a,smin(b,c)) is equal to smin(b,smin(a,c)) for the exponential smin(), but not for the polynomial. That means that the exponential smin() allows one to process long lists of distances in any arbitrary order and slowly compute the smin, while the polynomial is ordering dependent.<br>
+<br>
+EDIT 5 years later - I have learnt that Media Molecule used the polynomial smin() presented here for their game "Dreams" (credited to Dave Smith), although their rewrote it in an equivalent but more efficient form to look like this:<br>
+<br>
+<div class="code"><span class="codeComment">// polynomial smooth min (k = 0.1);</span>
+float smin( float a, float b, float k )
+{
+    float h = max( k-abs(a-b), 0.0 )/k;
+    return min( a, b ) - h*h*k*(1.0/4.0);
+}</div>
+<br>
+As noted by Shadertoy user TinyTexel, this can be generalized to higher levels of continuity than the quadratic polynomail offers (C1), which might be important for preventing lighting artifacts. Moving on to a cubic curve gives us C2 continuity, and doesn't get a lot
+more expensive than the quadratic one anyways:<br>
+<br>
+<div class="code"><span class="codeComment">// polynomial smooth min (k = 0.1);</span>
+float sminCubic( float a, float b, float k )
+{
+    float h = max( k-abs(a-b), 0.0 )/k;
+    return min( a, b ) - h*h*h*k*(1.0/6.0);
+}</div>
+<br>
+Laslty, it's worth mentioning that since the polynomial smin() is always smaller or equal to regular min() by design, it is well suited for raymarching algorithms since the ray will never overshoot past the original sharp intersection.<br>
+<br>
+
+<div class="partsC">
+<div class="part"><img class="myPicture formula" src="gfx05.png"/><br><i>Two functions</i></div>
+<div class="part"><img class="myPicture formula" src="gfx04.png"/><br><i>The polynomial smooth min of the two funcitons</i></div>
+</div>
+
+<br>
+<br>
+<h3>Derivation</h3><hr>
+<br>
+Deriving the polynomial smin() fuction is not difficult. The easiest is probably to start with the simplified version:<br>
+<br>
+<span class="formulaText">smin( f(x), g(x), k ) = min( f(x), g(x) ) - w(x,k)</span><br>
+<br>
+If x=a is the point at which f(x)-g(x) = -k, and x=b is the point where f(x)-g(x) = k, and a middle point x=c is where f(x)=g(x), then we know that<br>
+<br>
+<span class="formulaText">w(a)=0, w(b)=0, w(c)=s</span><br>
+<br>
+with s being the maximum value. Since we want w(x) to be a smooth function that connects nicely to the curves f(x) and g(x) at the points x=a and x=b, we can choose<br>
+<br>
+<span class="formulaText">w(x) = s&#183;h<sup>n</sup>(x)</span><br>
+<br>
+with <span class="formulaText">h(x) = 1 &#177; [f(x)-g(x)]/k</span><br>
+<br>
+meaning h(x) is a power curve of degree n, with range between 0 and 1, and with the sings being positive if x &lt; c and negative if x &gt; c. This gives two versions of w(x), which we can call wl(x) and wr(x) for "left" and "right".<br>
+<br>
+Since we want continuity also at x=c, we need to make sure that the derivatives of smin match when coming from either left or right of x=c. Therefore,<br>
+<br>
+<span class="formulaText">f'(c) + wl'(c) = g'(c) + wr'(c)</span><br>
+<br>
+which means that<br>
+<br>
+<span class="formulaText">f'(c) + [f'(c)-g'(c)]nS/k = g'(c) - [f'(c)-g'(c)]&#183;n&#183;s/k</span><br>
+<br>
+This can only be solved if <span class="formulaText">1+2&#183;n&#183;s/k = 0</span>, which gives<br>
+<br>
+<span class="formulaText">s = -k/2n</span><br>
+<br>
+which is what we used in the quadratic and cubic implementations above.<br>
+<br>
+The quadratic smin() though doesn't have second derivatives for w(x), meaning tha the only way the condition<br>
+<br>
+<span class="formulaText">f''(c) + wl''(c) = g''(c) + wr''(c)</span><br>
+<br>
+can be met is making w(x) a cubic. Fortunately, since h(c)=1, the same condition 1+2&#183;n&#183;s/k = 0 needs to be met for ensuring continuity of the second (or any higher order) derivative.<br>
+<br>
+This method can be used to generate smooth minimums of higher degrees easily.<br>
+<br>
+<br>
+<br>
+<h3>Mix factor</h3><hr>
+<br>
+Besides smoothly blending values, it might be useful to compute also a blending factor that can be used for shading. For example, if the smooth-minimum is being used to blend SDF shapes, having a blend factor could be useful to blend the material properties of the two shapes during the transition area.<br>
+<br>
+This the code for the quadratic and cubic smooth-minimum that returns the smooth-minimum in .x and the blend factor in .y:<br>
+<br>
+<div class="code">vec2 smin( float a, float b, float k )
+{
+    float h = max( k-abs(a-b), 0.0 )/k;
+    float m = h*h*0.5;
+    float s = m*k*(1.0/2.0);
+    return (a&lt;b) ? vec2(a-s,m) : vec2(b-s,m-1.0);
+}</div>
+<br>
+<div class="code">vec2 sminCubic( float a, float b, float k )
+{
+    float h = max( k-abs(a-b), 0.0 )/k;
+    float m = h*h*h*0.5;
+    float s = m*k*(1.0/3.0); 
+    return (a&lt;b) ? vec2(a-s,m) : vec2(b-s,1.0-m);
+}</div>
+<br>
+The generalization to any power n being:<br>
+<br>
+<div class="code">float sminN( float a, float b, float k, float n )
+{
+    float h = max( k-abs(a-b), 0.0 )/k;
+    float m = pow(h, n)*0.5;
+    float s = m*k/n; 
+    return (a&lt;b) ? vec2(a-s,m) : vec2(b-s,m-1.0);
+}</div>
+
+
+<br>
+<br>
+<h3>Results</h3><hr>
+<br>
+In general, the polynomial smooth-min function works very well, predictably and fast. It can be used to connect surfaces, such as snow and bridge in the images below.<br>
+<br>
+
+<div class="partsC">
+<div class="part"><img class="myPicture" src="gfx02.jpg"/><br><i>Regular min() based primitive union</i></div>
+<div class="part"><img class="myPicture" src="gfx03.jpg"/><br><i>Polynomial smooth-min() based  primitive union</i></div>
+</div>
+
+<br>
+It obviously becomes very handy for connecting the different pieces of one same character, such as the fingers, hands, arms and body, wich in the case of the following realtime shader are made of spheres, cones and segment primitives):<br>
+<br>
+<br>
+
+<div class="iframeCenter" style="max-width:800px;"><div>
+<iframe frameborder="0" src="https://www.shadertoy.com/embed/MsXGWr?gui=true&t=10&paused=true" allowfullscreen></iframe>
+</div></div>
+
+<br>
+<br>
+And finally, this is the result under animation of the body parts that are blended (note that texture coordinates are not fixed so the texture swims, but that's a different problem unrelated to the smooth-min):<br>
+<br>
+<div class="iframeCenter" style="max-width:800px;"><div>
+<iframe src="//www.youtube.com/embed/HaQ_KWAVR60?rel=0" frameborder="0" allowfullscreen></iframe></div></div>
+<!-- -------------------------------------------------------------------------------------------- -->
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

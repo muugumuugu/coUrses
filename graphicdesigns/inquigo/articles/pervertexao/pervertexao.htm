@@ -1,0 +1,153 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/pervertexao/pervertexao.htm">per vertex ambient occlusion - 2005</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+As you know Ambient Occlusion is a widely used technique to improve the computer graphics lighting of the old shading models without resorting to full global illumination techniques. It just takes a few bytes of code (less than 1 kilobyte, as shown in some of the demos in this website) and the results are quite convincing. In fact, many productions for the film industry use ambient occlusion for simulating global illumination.<br>
+<br>
+Just in case, I will explain quickly what ambient occlusion is. You will find hundred of references by just googling anyway (remember, google is our friend). So, Ambient Occlusion is the result of simplifying the rendering equation that describes the light interaction. But don't worry, you'll not find any integral in this fast-tutorial. However, you must know that in reality when a point on a suface of an object is lit, the light arriving to it normally  comes from many many directions. However in normal direct lighting models (what you do in OpenGL) only light coming from a few point or directional lights (normally no more than 8) is used. That'a a very bad approximation to reality, where light can bounce several times around the scene before arriving to the point your pixel is representing. Actually, light is coming from "everywhere" to that point, and that "everywhere" means that we should "gather" the light arriving from everywhere to the point rather than sending light only from those 8 lights.<br>
+<br>
+What ambient occlusion does is exactly that gathering of light from the everywhere, but in a very simplified mode. Simplifications are: light is not bouncing (even if this can be trivially simulated with AO) and thus all the geometry in the scene is blocking the light arriving from "everywhere" to that point (normally that "everywhere" means the sky). Thus, geometry blocks light arriving to the point. In case of having only one point light source, we also know this phenomena as "shadow". However, in the case of ambient occlusion we don't have the concept of shadow anymore, but of occlusion instead. If a point is completelly surrounded by dense geometry then the point is probably quite occluded and no light arrives to it so it will be dark. If the point is however just facing the sky, with no geometry above it, the point will be white because all the light arrives to it. In between, of course, you have the complete spectrum of gray shades.<br>
+<br>
+Thus, to get our ambient occlusion into the scene, we have three options. We calculate it for every pixel in the screen, we calculate it for many points in the surface and back it into textures, or we calculate it per vertex and then interpolate. First option is just too slow, and second one needs a uv-unwraping technique, lot of processing time and lot of memory usage. So in some of the demos here I used per vertex calculation, what needs moderatelly tesselated geometry to catch all the details in the shading variations. Hopefully, the light irradiance into a point is smoothly changing in space, so we will assume we can fake lighting with a low frequency ambient occlusion. This means that we don't really need so many polygons. For the static models of <a class="regular" href="../../../prods/index.htm#195_95_256">195/95/256</a> we never used more than 60 thousand polygons per model.<br>
+<br>
+Something that can obviously be made is to use more vertices in those places where you expect higher frequencies, as shown in the next image below:<br>
+<br>
+<br>
+<br>
+<center>
+<img class="myPicture" src="lig_gfx_01.jpg"/><br>
+Adaptive tesselation level for those parts that more need it.
+</center>
+<br>
+<br>
+<br>
+And remember that you don't need to specify lights on your scene, or at least it's not needed for basic results.<br>
+<br>
+So, let's have a look to the results of all this. The image below shows how this Ambient Occlusion actually looks for one of the scenes of this project. You may find this rendering similar to the Brasil renderer, but this is just a shoot from the realtime 64 kilobytes demo. As opposed to most of the implementations of Ambient Occlusion, there is no raytracing at all for the calculations. Instead we use a lot simpler approach, using the graphics card, that does not scale well for big scenes as raytacing does, but that worked just fine for these small scenes in this project.
+<br>
+<br>
+<br>
+<br>
+<center>
+<img class="myPicture" src="lig_gfx_02.jpg"/><br>
+The ambient occlusion contribution of the "Stone" scene.
+</center>
+<br>
+<br>
+Once you have your Ambient Occlusion into the scene is time to enjoy with the shaders. Let's make a comparison to test the impact of the new lighting technique. First image below shows basic shading of a simple texture modulated by the diffuse term of a single directional light according to classical OpenGL shading. We could add some shadowmapping to this to gain a bit of depth perception since the real 3d position of the objects is quite ambiguous otherwise. Then, below, the same image with the same texture modulated not by the diffuse term but by the Ambient Occlusion calculated in the image shown before.<br> 
+<br>
+<br>
+<center>
+<img class="myPicture" src="lig_gfx_04.jpg"/><br>
+Traditional OpenGL shading with one directional light source.
+</center>
+<br>
+<br>
+<center>
+<img class="myPicture" src="lig_gfx_03.jpg"/><br>
+Replacement of the diffuse term with the Ambient Occlusion.
+</center>
+<br>
+<br>
+<br>
+Note the difference in the realism of the image, and the "soft shadow" effect created by the occlusion of the sky below the columns. This is nice, but we can use this new information we have about light occlusion in other ways for sure. In fact, Ambient Occlusion was originally designed for replacement of the ambient term in the traditional direct lighting model (OpenGL model). That term is normally a constant color, but can be replaced with the Ambient Occlusion and then continue doing regular OpenGL lighting. Let's have a look to the process in another scene of the demo.<br>
+<br>
+For the "Wax" scene of the demo the first part to be done was the main statue and the shader. This first image shows the shadowmap for the direct diffuse lighting coming from a directional light source.
+<br>
+<br>
+<br>
+<center>
+<img class="myPicture" src="lig_gfx_05.jpg"/><br>
+Just shadow rendering.
+</center>
+<br>
+<br>
+<br>
+Next image shows the normal OpenGL shading applied to the model, making use of the shadow map to cancel the diffuse ilumation. Note how the shadow map artifacts (due to small resolution shadowmap) mostly dissappeared (thankfully).
+<br>
+<br>
+<br>
+<center>
+<img class="myPicture" src="lig_gfx_06.jpg"/><br>
+Rutinal OpenGL rendering, making use of the shadow map information.
+</center>
+<br>
+<br>
+<br>
+And finally the Ambient Occlusion is used to replace the constant ambient term to fake the indirect lighting of the scene. Note once more the increase on the realism of the image.
+<br>
+<br>
+<br>
+<center>
+<img class="myPicture" src="lig_gfx_07.jpg"/><br>
+Realtime use of the Ambient Occlusion to simulate indirect lighting.
+</center>
+<!-- -------------------------------------------------------------------------------------------- -->
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

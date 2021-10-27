@@ -1,0 +1,173 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/spheredensity/spheredensity.htm">sphere density - 2015</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+    <h3>Motivation</h3><hr>
+
+    Sometimes you need to do some pixel color processing selectively in some areas of your CG image. Usually this can be done in two dimensions, or more generally, through lighting. Indeed, while effects studios doing live action and photoreal rendering treat lighting as a way achieve realism and believability, animation studios see lighting as a way to paint colors in the screen in a way that lets them realize their artistic vision. Point-lights, rods, and volumes become brushes really. However, many of these light-based coloring techniques lack thickness or a sense of participating media - they only affect surfaces but not the space between them. In this article we'll see how to develop one volumetric tool that you can use to implement such colorization techniques, or to implement simple traditional fog, but localized in space.<br>
+    <br>
+    <center><img class="myPicture" src="gfx00.jpg" /><br><i>Analytically integrated volumetric media (no raymarching)</i></center>
+    <br>
+    The idea is that we want to place a sphere in some location in space and accumulate some participating media density along the view ray within the volume. Then use that accumulation to drive some visual effect (as simple as fog or as complex as image distortion, color grading, texturing or some procedural effect. But it all starts from accumulating density of media along a segment or space. Which can be easily implemented with volumetric raymarching. However this is slow. In this article we are going to see how to achieve this analytically without raymarching, by using only a few maths operations.<br>
+    <br>
+    We used this technique in the VR film <a class="regular" href="https://en.wikipedia.org/wiki/Henry_(2015_film)">"Henry"</a>, and I know it was used as well in Epic's game "Robo Recall".
+    <br>
+    <br>
+
+    <h3>The code</h3><hr>
+    The first step is to detect if the current pixel overlaps with the spherical volume, and early skip if it doesn't. We can do this by a simple ray-sphere intersection test. If an intersection happens, then we are interested in knowing the entry and exit point of the ray with the sphere, so that we can later integrate the fog amount along the segment of the ray which is inside the sphere. The raytrace is very simple, and we describe it here in the following paragraph only for reference:<br>
+    <br>
+    For points in space <b>x</b>, a sphere with center <b>sc</b> and radius <b>sr</b> is defined by<br>
+    <br>
+    <span class="formulaText">|x-sc| = r</span><br>
+    <br>
+    and a ray originating at the camera position <b>ro</b> and going through our pixel in direction <b>rd</b> can be defined as<br>
+    <br>
+    <span class="formulaText">x = ro + t&sdot; rd</span><br>
+    <br>
+    with t>0 for rays shooting forward and <span class="formulaText">|rd|=1</span> for an isotropic metric. The overlap and intersection of the pixel ray with the sphere can be solved by replacing <b>x</b> in the sphere equation with the ray equation:<br>
+    <br>
+    <span class="formulaText">|ro + t&sdot; td - sc| = r</span><br>
+    <br>
+    Since <span class="formulaText">(a+b)<sup>2</sup> = a<sup>2</sup> + b<sup>2</sup> + 2ab</span>, squaring both sides of the equation and expanding the result gives us<br>
+    <br>
+    <span class="formulaText">t<sup>2</sup> + t&sdot; 2&lt;rd,ro-sc&gt;+|ro-sc|<sup>2</sup> - r<sup>2</sup> = 0</span><br>
+    <br>
+    which is a quadratic in <b>t</b> with solution <img class="formula" src="for05.png" /> with <span class="formulaText">b = &lt;rd,ro-sc&gt;</span> and <span class="formulaText">c = |ro-sc|<sup>2</sup> - r<sup>2</sup></span> as long as <span class="formulaText">b<sup>2</sup>&gt;c</span> of course.
+    <br>
+    <br>
+    Once we have the entry and exit points parametrized by <b>t</b>, we are almost ready for integrating the fog. Before that we just have to account for the case the sphere is completely behind the camera (<b>t2<0.0</b>) or completely hidden behind the depthbuffer (<b>t1</b>><b>dbuffer</b>). Then we have to clip the segment so that we only integrate from the camera position forward and no further than indicated by the depth buffer, which we can do by performing:<br>
+    <br>
+    <span class="formulaText">
+    T<sub>1</sub> = max(-b-h,0)<br>
+    T<sub>2</sub> = min(-b+h,depthbuffer)</span><br>
+    <br>
+    We can now integrate the fog along the segment. We can choose from a variety of fog density functions. We chose one that peaks at the center of the sphere where the density is maximum (1.0) and decays quadratically until it reaches zero at the surface of the sphere.<br>
+    <br>
+    <img class="formula" src="for11.png" /><br>
+    <br>
+    This function is easily integrable analytically:<br>
+    <br>
+    <img class="formula" src="for12.png" /><br>
+    <br>
+    It might be convenient now to normalize the accumulated fog F such that it takes the value 1 in the extreme case of the ray going right trhough its center all the way from its surface to the back side. In that geometric configuration we have <b>c=0</b> and <b>b=-r</b>, so<br>
+    <br>
+    <img class="formula" src="for13.png" /><br>
+    <br>
+    Therefore the final expression, ready for implementation, is<br>
+    <br>
+    <img class="formula" src="for14.png" /><br>
+    <br>
+    As a curiosity, note than when the sphere does not overlap with the camera or the scene, then <br>
+    <br>
+    <img class="formula" src="for15.png" /><br>
+    <br>
+    These results are almost ready for being implemented in code. Before that, it is worth noting that some floating point precision can be gained by recasting the whole problem into the unit sphere (centered at the origin and with radius 1), in which case the final implementation is:<br>
+    <br>
+    <div class="code">float computeFog( vec3  ro, vec3  rd,   <span class="codeComment">// ray origin, ray direction</span>
+                  vec3  sc, float sr,   <span class="codeComment">// sphere center, sphere radius</span>
+                  float dbuffer )
+{
+    <span class="codeComment">// normalize the problem to the canonical sphere</span>
+    float ndbuffer = dbuffer / sr;
+    vec3  rc = (ro - sc)/sr;
+
+    <span class="codeComment">// find intersection with sphere</span>
+    float b = dot(rd,rc);
+    float c = dot(rc,rc) - 1.0f;
+    float h = b*b - c;
+
+    <span class="codeComment">// not intersecting</span>
+    if( h&lt;0.0f ) return 0.0f;
+    h=sqrtf( h );
+    float t1=-b - h;
+    float t2=-b + h;
+
+    <span class="codeComment">// not visible (behind camera or behind ndbuffer)</span>
+    if( t2&lt;0.0f || t1&gt;ndbuffer ) return 0.0f;
+
+    <span class="codeComment">// clip integration segment from camera to ndbuffer</span>
+    t1 = max( t1, 0.0f );
+    t2 = min( t2, ndbuffer );
+
+    <span class="codeComment">// analytical integration of an inverse squared density</span>
+    float i1 = -(c*t1 + b*t1*t1 + t1*t1*t1/3.0f);
+    float i2 = -(c*t2 + b*t2*t2 + t2*t2*t2/3.0f);
+    return (i2-i1)*(3.0f/4.0f);
+}</div>
+
+    <br>
+    Here goes the code above running live: <a class="regular" href="https://www.shadertoy.com/view/XljGDy">https://www.shadertoy.com/view/XljGDy</a><br>
+    <br>
+    <div class="iframeCenter" style="max-width:800px;"><div>
+    <iframe frameborder="0" src="https://www.shadertoy.com/embed/XljGDy?gui=true&t=10&paused=true"></iframe>
+    </div></div>
+
+    <br>
+    <br>
+    <br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

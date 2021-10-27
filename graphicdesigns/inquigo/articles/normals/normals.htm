@@ -1,0 +1,127 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/normals/normals.htm">clever normalization of a mesh - 2004</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+Wait... an article about how to calculate vertex normals for a mesh? This is very easy right? Yes, but let's say you want high quality normals at faster speed than usual implementations, with a more compact code too. Ok, then this very short article is for you! I invented this little mehotd around 2004 and I've now seen used in many places, which makes me happy! Let's have a look:<br>
+<br>
+<br>
+<h3>Getting rid of the divisions</h3><hr>
+Most mesh normalization implementations out there use the typical normal averaging of face normals to calculate the vertex normal. For that, one  iterates all the faces on which the current vertex is contained, accumulate the normals and then divide by the amount of faces used in the accumulation.<br>
+<br>
+Now think what this division is doing to the normal. It does not change it's direction for sure, since a division by a scalar only affects the length of the normal. Actually we do not care about this length at all, since we will most probably normalize it to unit length. This means that rigth after the face normal accumulation, we are done, we don't need any division. Thus we can skip not only this operation by also all the code to keep track of the amount of faces that affect each vertex.<br>
+<br>
+<br>
+<h3>Getting rid of the normalizations (square roots and divisions)</h3><hr>
+Now think again what we are really doing when accumulating the face normals into vertex normals. We are making a linear combination of normals, with equal importance or weight for all of them. Is this good? Well, one would think that polygons with bigger area should probably contribute more to the final result. This indeed gives better quality vertex normals. So, let's try to calculate the area of each polygon... Hey, but wait! Open your primary school math book. Have a look to the definition of cross product, specially to the length of the cross product. Cheeses, the length of a cross product is proportional to the area of the paralepiped created by the two vectors involved in the product. And is not our triangle normal calculated actually as the cross product of two of its edges? Basically the cross product of these two edges will then give as a face normal with length proportional to the area of the triangle. For free!<br>
+<br>
+Ok, this means we must not normalize the face normals, and just accumulate them on the vertices so that we do a high quality vertex normal calculation. We just skipped one vector normalization per face (meaning, one square root and a division, or an inverse-square root)!<br>
+<br>
+<br>
+<h3>Looping only once</h3><hr>
+Some implementations make two passes on the mesh to normalize it, one on the faces to calc face normals and vertex-to-normal connectivity, and a second one where this information is used to do the actual normal accumulation for each vertex. This is unnecessary, we can make the code a lot smaller and faster, and use less memory by doing it all in one pass. For each face on the mesh, calc the face normal (without normalization, as just explained), and directly accumulate this normal in each vertex belonging to the face. After you are done with the faces, each vertex will have recieved all the face normals it was supposed to recieve. That simple.
+<br>
+<br>
+<h3>The code</h3><hr>
+To finish, let's put all together in a small piece of code:
+<br>
+<div class="code">
+void Mesh_normalize( Mesh *myself )
+{
+    Vert     *vert = myself->vert;
+    Triangle *face = myself->face;
+
+    for( int i=0; i&lt;myself->mNumVerts; i++ ) vert[i].normal = vec3(0.0f);
+
+    for( int i=0; i&lt;myself->mNumFaces; i++ )
+    {
+        const int ia = face[i].v[0];
+        const int ib = face[i].v[1];
+        const int ic = face[i].v[2];
+
+        const vec3 e1 = vert[ia].pos - vert[ib].pos;
+        const vec3 e2 = vert[ic].pos - vert[ib].pos;
+        const vec3 no = cross( e1, e2 );
+
+        vert[ia].normal += no;
+        vert[ib].normal += no;
+        vert[ic].normal += no;
+    }
+
+    for( i=0; i&lt;myself->mNumVerts; i++ ) verts[i].normal = normalize( verts[i].normal );
+}
+</div>
+<br>
+This is quite fast, fast enough to do lot of mesh normalizations per frame. On top of it, if you are using vertex shaders you can be interested on
+skipping the last vertex normalization and do it on the shader (last line on the code above). Also in some cases, like 64 or
+even 4 kilobyte demos, it's usual to have all allocated buffers automatically initialized to zero. In that case, if this is the first and only
+normalization for a given mesh, you may skip the first loop on the function too of course.
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

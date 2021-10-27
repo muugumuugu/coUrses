@@ -1,0 +1,291 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/voronoilines/voronoilines.htm">voronoi edges - 2012</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<h3>Intro</h3><hr>
+
+Anyone who has used voronoi procedurals to create a reptile skin texture or dry ground tiles know that when taking F2 - F1 and thresholding it, the width of the lines separating the cells have inconsistent width. Which in an anoying problem. Techniques exist to alleviate this problem, but they are only approximations. Here we will find the implementation of the voronoi noise that generates mathematically pefect cell separation lines, and which is full procedural (and runs at a few hundred frames per second in my laptop's GPU).<br>
+<br>
+<br>
+<br>
+
+<div class="partsB">
+<div class="part" style="width:400px;"><img class="myPicture" src="gfx00.jpg"/><br><i>Simple F2-F1 voronoi leads to non uniform lines, corrupted cells and broken cell isolines</i></div>
+<div class="part" style="width:400px;"><img class="myPicture" src="gfx01.jpg"/><br><i>The new algorithm provides the correct distance metric. Lines are correct, even at the connection points, and isolines equally spaced.</i></div>
+<div class="part" style="width:400px;"><img class="myPicture" src="gfx07.jpg"/><br><i>The wrong approximate solution. Note the funny line widths and the broken cell isolines</i></div>
+</div>
+
+<br>
+<br>
+<h3>The problem</h3><hr>
+<br>
+The problem is that substracting the distance to the closest point from the distance to the second closest point, or what people know as <i>F2-F1 Voronoi</i>, it's pretty close to a cell border generator. Indeed, the borders of the cells happen at locations where these two distances are equal (equidistant points from the two closest neighbors), so the function F2-F1 takes value 0.0 exactly at the borders of the cells, which is super usefull. So, i'd say it's pretty normal that one is tempted to simply smoothstep F2-F1 between two small numbers and call that a "cell edge". That sort of works, but not completelly. F2-F1 is not a distance really, as it expands and contracts depending on the distance between the the two cell points in each side of the edge, which can change wildly over the domain of the voronoi. Anyway, for reference, the implementation would be like this:<br>
+<br>
+
+<br>
+
+<div class="partsB">
+<div class="part">
+<div class="code">vec2 voronoi( in vec2 x )
+{
+    ivec2 p = floor( x );
+    vec2  f = fract( x );
+
+    vec2 res = vec2( 8.0 );
+    for( int j=-1; j&lt;=1; j++ )
+    for( int i=-1; i&lt;=1; i++ )
+    {
+        ivec2 b = ivec2(i, j);
+        vec2  r = vec2(b) - f + random2f(p + b);
+        float d = dot(r, r);
+
+        if( d &lt; res.x )
+        {
+            res.y = res.x;
+            res.x = d;
+        }
+        else if( d &lt; res.y )
+        {
+            res.y = d;
+        }
+    }
+
+    return sqrt( res );
+}</div>
+</div>
+
+
+<div class="part">
+<div class="code">float getBorder( in vec2 p )
+{
+    vec2 c = voronoi( p );
+
+    float dis = c.y - c.x;
+
+    return 1.0 - smoothstep(0.0,0.05,dis);
+}</div>
+<br><br>
+<img class="myPicture" src="gfx02.jpg"/></div>
+
+</div>
+
+<br>
+As it can be seing in the image to the right, and in the header of the article, this naive thresholding doesn't give good results. Some borders are thin, and others are so thick they completelly take over the cell and make it black (or yellow in the picture in the header).<br>
+<br>
+<br>
+<h3>Some ways to <i>almost</i> solve the problem</h3><hr>
+<br>
+
+One simple approach to estimate the real distance would be to take the function F2-F1, and evaluate its gradient, then divide F2-F1 by the modulo of the gradient. You can learn how to do that in <a class="regular" href="../distance/distance.htm">this article</a>. This us a generic method in fact, and it works okeish in most cases (but not always). The problem is, of course, it's  very slow cause it needs three extra voronoi evaluations. Thing is we can do much better than that.<br>
+<br>
+Good voronoi implementations not only return the distance to the closest points, but also the points themselves (both position and ID). This is useful for a number of reasons involving coordinate systems for interesting shading, etc. Not important right now. But, if we know where the closest two points of our voronoi grid are, then we can probably approximate much better the distance to the line that separates the cells.<br>
+<br>
+<div class="partsB">
+<div class="part"><img src="gfx04.jpg"/></div>
+<div class="part70">
+Of course, that line is the line that bisects the red segment between these two points <i>a</i> and <i>b</i>. It passes through the point <i>m</i> which is just the average of <i>a</i> and <i>b</i>. The direction vector of the border (yellow) is perpendicular to the direction of the red segment, and can of course be obtained by swaping and negating one of the coordinates of the <i>b-a</i> red semgment direction. The blue point <i>x</i> is the point we are shading, and the distance to the border is the length of the purple segment. That's what we are after. So, we just have to project the vector <i>x - m</i> along a normalized version of <i>b - a</i>, which gives us the length of the purple vector.<br>
+<br>
+<img class="formula" src="gfx05.png"/><br>
+<br>
+The very cool thing of not working in "world/object" space is that we already have the coordinates of <i>a</i> and <i>b</i> relative to <i>x</i> in the implementation of the voronoi itself, hence we can evaluat our distance in a coordinate frame centered at <i>x</i>, and remove <i>x</i> from the equation. This makes the code smaller, and less sensitive to precision issues.
+</div>
+</div>
+
+
+<br>
+The code for this atempt to fixing the problem would then be:
+<br>
+<br>
+
+<div class="partsB">
+<div class="part">
+<div class="code">vec2 voronoi( in vec2 x, out vec2 oA, out vec2 oB )
+{
+    ivec2 p = floor( x );
+    vec2  f = fract( x );
+
+    vec2 res = vec2( 8.0 );
+    for( int j=-1; j&lt;=1; j++ )
+    for( int i=-1; i&lt;=1; i++ )
+    {
+        ivec2 b = ivec2(i, j);
+        vec2  r = vec2(b) - f + random2f(p+b);
+        float d = dot( r, r );
+
+        if( d &lt; res.x )
+        {
+            res.y = res.x;
+            res.x = d;
+            oA = r;
+        }
+        else if( d &lt; res.y )
+        {
+            res.y = d;
+            oB = r;
+        }
+    }
+
+    return sqrt( res );
+}</div>
+
+</div>
+
+
+<div class="part">
+<div class="code">float getBorder( in vec2 p )
+{
+    vec2 a, b;
+    vec2 c = voronoi( p, a, b );
+
+    float d = dot(0.5*(a+b),normalize(b-a));
+
+    return 1.0 - smoothstep(0.0,0.05,d);
+}</div>
+<br><br>
+<img class="myPicture" src="gfx03.jpg"/></div>
+
+</div>
+
+<br>
+The image resulting from changing these three lines of code is much better - there's no broken black cells, and the lines are all the same size. More or less. Because the image is still not perfect just yet, the thickness of the lines is still doing some funny things. This is because in the inside of the cells the second closest point does still change discontinuosly, meaning that sometimes, especially near the corners where three lines meet, we are computing the distance to the wrong border line. The error manifests itslef pretty well in the cell distance isolines, which actually make no sense for many of the cells.
+<br>
+
+<br>
+<br>
+<h3>The final algorithm</h3><hr>
+<br>
+
+Ok then, the solution must be to first detect which cell contains the closest point to our shading point <i>x</i>, then do the neighbor search centered at that cell instead of the cell that contains <i>x</i>. One way to do that is implementing this, indeed, in two passes. That will make things slower of course, but it will still be a constant time algorithm (in fact, the code runs above 100 frames per second - 10 milisecond - in my laptop at 1280x720 resolution). Note that in the seccond loop we are relying on <i>normalize()</i> to create an <i>inf</i> in case <i>r</i> equals <i>mr</i>.<br>
+<br>
+<div class="partsB">
+<div class="part">
+<div class="code">float voronoiDistance( in vec2 x )
+{
+    ivec2 p = ivec2(floor( x ));
+    vec2  f = fract( x );
+
+    ivec2 mb;
+    vec2 mr;
+
+    float res = 8.0;
+    for( int j=-1; j<=1; j++ )
+    for( int i=-1; i<=1; i++ )
+    {
+        ivec2 b = ivec2(i, j);
+        vec2  r = vec2(b) + random2f(p+b)-f;
+        float d = dot(r,r);
+
+        if( d < res )
+        {
+            res = d;
+            mr = r;
+            mb = b;
+        }
+    }
+
+    res = 8.0;
+    for( int j=-2; j<=2; j++ )
+    for( int i=-2; i<=2; i++ )
+    {
+        ivec2 b = mb + ivec2(i, j);
+        vec2  r = vec2(b) + random2f(p+b) - f;
+        float d = dot(0.5*(mr+r), normalize(r-mr));
+
+        res = min( res, d );
+    }
+
+    return res;
+}</div>
+</div>
+
+<div class="part">
+<div class="code">float getBorder( in vec2 p )
+{
+    float d = voronoiDistance( p );
+
+    return 1.0 - smoothstep(0.0,0.05,d);
+}</div>
+<br><br>
+<img class="myPicture" src="gfx06.jpg"/></div>
+
+</div>
+<br>
+One interesting thing to do would be to implement this in a single pass. The other thing pending for me to do is to identify the equidistant point within the each cell, which does NOT coincide with the jittered point that originated the cell. That's why in the pictures above the glowing dot (the originating point of the cell) does not lay in the place where all the isolines collapse.<br>
+<br>
+<br>
+
+<div class="iframeCenter" style="max-width:800px;"><div>
+<iframe frameborder="0" src="https://www.shadertoy.com/embed/ldl3W8" allowfullscreen></iframe>
+</div></div>
+<!-- -------------------------------------------------------------------------------------------- -->
+
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

@@ -1,0 +1,529 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/raymarchingdf/raymarchingdf.htm">raymarching distance fields - 2008</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<!-- --------------------------------------------------------------------------------- -->
+<style>
+.part
+{
+    width: 45%;
+	padding-bottom:64px;
+}
+
+@media only screen and (max-width: 1280px)
+{
+    .part
+	{
+        padding-right: 0px;
+        width: 100%;
+    }
+}
+</style>
+
+<!-- --------------------------------------------------------------------------------- -->
+
+Raymarching SDFs (Signed Distance Fields, or Functions sometimes) is slowly getting popular, because despite its elegance and simplicity, it is a powerful way to render 3D models, both procedural and not. But the technique has been around for a long time. The oldest mention of raymarched SDFs that I've been able to find is the paper by <a href="https://www.evl.uic.edu/hypercomplex/html/book/rtqjs.pdf">Sandin, Hart and Kauffman</a> from 1989, which used it for rendering 3D fractals. B.Wyvill and G.Wyvill did work on modeling through implicit fields too that same year, and many of the common SDF operators we use today like min() for union, max() for intersection and smooth-minimum were already described by A.Ricci in his paper about constructive solid modeling for implicit surfaces in 1972 no less. I think it's fair to say raymarching of SDFs has been an ongoing and ever evolving topic since the beginning of times.<br>
+<br>
+My own causal experiments with raymarching SDFs started in 2001 but got more serious in 2007 when I read about <a href="http://amd-dev.wpengine.netdna-cdn.com/wordpress/media/2012/10/Evans-Fast_Approximations_for_Lighting_of_Dynamic_Scenes-print.pdf">Alex Evan's work</a> from 2006 and <a href="https://www.cs.cmu.edu/~kmcrane/Projects/QuaternionJulia/paper.pdf">Keenan Crane's</a> work from 2005. While raymarching arbitrary isosurfaces had been used extensively by demosceners like myself for a long time, the idea of constraining the field to be an euclidean distance (ie, a field with a gradient of unit length everywhere) and its consequences for rendering speed and creative shading and lighting potential was new and exciting to me.<br>
+<br>
+
+<center>
+<video width="960" height="540" autoplay muted loop poster="vid_00.png">
+  <source src="vid_00.mp4" type="video/mp4">
+  <source src="vid_00.webm" type="video/webm">
+</video>
+<br>
+A raymarched procedural SDF, step by step modeling, shading and lighting
+</center>
+
+<br>
+Now, although raymarching SDFs is a great way to <a href="../sdfbounding/sdfbounding.htm">render regular polygonal meshes</a>, as a demoscener and lover of procedural content, my focus went straight to implementing the SDFs directly as code instead of as a data structure. Timing was great for such an effort -- 1st, GPUs were evolving their computational/ALU capabilities faster than their memory bandwidth (which means purely mathematical SDFs started to be competitive against a 3D-texture/voxel/octree based SDFs). 2nd, I had personal interest exploring the maths required to do so. 3rd, I was starting to grow an interest in getting better at art. 4th, as a demoscener I was naturally captivated by procedural content generation. And as a result of this multi-convergence, in 2008 I created four images by raymarching SDFs (which you can see at the very bottom of this page). I have never stoped since, always as a hobby but also always consistently and pushing myself, improving and polishing the maths and techniques, and even developing new one occasionally.<br>
+<br>
+I'm not alone on this of course, many people have jumped into the boat of SDFs as well, and no matter whether they are Shadertoy hobbyist, game developers working on a commercial game, ML researcher at a university, a CG professor or a student, they are all pushing the field forward in fronts such antialiasing, efficient shadowing, UV mapping, articulation, differentiable rendering and many more.<br>
+<br>
+For my part, besides the technical research itself, I also spend time trying to create beautiful realtime animations based on these techniques to attract some attention to them, in the hopes that even more people consider exploring the field.<br>
+<br>
+Now, if you are ready to jump aboard and join us, I developed these resources that you should check:<br>
+<br>
+<ul>
+<li><a href="../../index.htm">Articles on Raymarching</a> on this site</li>
+<li><a href="../../../live/index.htm">My video tutorials and streams about raymarching SDFs</a> on Youtube</li>
+<li><a href="../../material/nvscene2008/nvscene2008.htm">The lecture called "Rendering Worlds with Two Triangles" </a> that I have 2008 on the topic</li>
+<li><a href="https://www.shadertoy.com/user/iq">All my Shadertoy examples</a>, some of which I list below:</li>
+</ul>
+<br>
+
+<div class="partsC">
+
+    <div class="part">
+        <img class="myPicture" src="gfx34.jpg" /><br>
+        <b>Selfie Girl, 2020</b><br><br>
+        This was my second human SDF and my first attempt at facial animation. When I finished it I was as proud of it as I was critical of the many flaws it had. But of course I think it's still a great example of using SDFs for organic modeling. I think the whole primitive count for the whole painting is 32, so that gives you a sense on how little data is needed to represent 3D scenes and how efficiently it can be stored and processed. <br>
+		<br>
+		Source code: <a href="https://www.shadertoy.com/view/WsSBzh">https://www.shadertoy.com/view/WsSBzh</a><br>
+		<b>Tutorial</b>: <a href="https://www.youtube.com/watch?v=8--5LwHRhjk">https://www.youtube.com/watch?v=8--5LwHRhjk</a>
+    </div>
+
+
+    <div class="part">
+		<video class="myPicture" muted loop preload="metadata" poster="./gfx33.jpg" onmouseover="this.play();" onmouseleave="this.pause();">
+          <source src="vid33.mp4" type="video/mp4">
+          <source src="vid33.webm" type="video/webm">
+        </video>
+        <br>
+		<b>Sphere Gears, 2019</b><br><br>
+        This was a improv session, based on some other Shadertoy user's idea, which I started as an optimization exercise. In particular, thanks to the symmetry of the object you can evaluate only 4 gear pieces instead of the 18 that make the whole object. Similarly, within each gear, only a single tooth/dent is evaluated instead of 12, making the whole SDF pretty cheap to evaluate.<br>
+		<br>
+		Source code: <a href="https://www.shadertoy.com/view/tt2XzG">https://www.shadertoy.com/view/tt2XzG</a><br>
+		<b>Tutorial (part 1)</b>: <a href="https://www.youtube.com/watch?v=sl9x19EnKng">https://www.youtube.com/watch?v=sl9x19EnKng</a><br>
+		<b>Tutorial (part 2)</b>: <a href="https://www.youtube.com/watch?v=bdICU2uvOdU">https://www.youtube.com/watch?v=bdICU2uvOdU</a>
+    </div>
+	
+    <div class="part">
+		<video class="myPicture" muted loop preload="metadata" poster="./gfx32.jpg" onmouseover="this.play();" onmouseleave="this.pause();">
+          <source src="vid32.mp4" type="video/mp4">
+          <source src="vid32.webm" type="video/webm">
+        </video>
+		<br>
+		<b>Happy Jumping, 2019</b>
+		<br><br>
+        Happy Jumping was a one-day effort to animate a character, which I had never done before really. I designed a super simple character for
+		it and the animation was rough - in fact, it gets out of model very often. But it was a fine first attempt. The lighting is my usual 3 light rig (key, fill, bounce) and some fake subsurface.<br>
+		<br>
+		Buy metal print: <a href="https://www.redbubble.com/i/metal-print/Happy-Jumping-by-InigoQuilez/43594745.0JXQP" target="_blank">https://tinyurl.com/y2bffl2e</a><br>
+		Source code: <a href="https://www.shadertoy.com/view/3lsSzf">https://www.shadertoy.com/view/3lsSzf</a><br>
+		<b>Tutorial</b>: <a href="https://www.youtube.com/watch?v=Cfe5UQ-1L9Q">https://www.youtube.com/watch?v=Cfe5UQ-1L9Q</a>
+    </div>
+
+    <div class="part">
+		<video class="myPicture" muted loop preload="metadata" poster="./gfx30.jpg" onmouseover="this.play();" onmouseleave="this.pause();">
+          <source src="vid30.mp4" type="video/mp4">
+          <source src="vid30.webm" type="video/webm">
+        </video>
+        <br>
+		<b>Planet Fall, 2018</b><br><br>
+        Planet Fall was an improv/jam session, although it turned out pretty well. It's a level recursion of voronoi distributed cylinders on a sphere. The lighting is cheated as usual and the occlusion mostly painted by hand. But the color palette makes it look so pretty.<br>
+		<br>
+		Buy metal print: <a href="https://www.redbubble.com/i/metal-print/Planet-Fall-by-InigoQuilez/39846658.0JXQP" target="_blank">https://tinyurl.com/y689go89</a><br>
+		Source code: <a href="https://www.shadertoy.com/view/lltBWB">https://www.shadertoy.com/view/lltBWB</a>
+    </div>
+
+    <div class="part">
+		<video class="myPicture" muted loop preload="metadata" poster="./gfx31.jpg" onmouseover="this.play();" onmouseleave="this.pause();">
+          <source src="vid31.mp4" type="video/mp4">
+          <source src="vid31.webm" type="video/webm">
+        </video>
+		<br>
+		<b>Surfer Boy, 2018</b><br><br>
+        This was my first attempt at creating a human face completely procedurally/mathematically. It's made mostly of ellipsoids, cones and quadratic bezier curves. It was mostly modeled to camera - it doesn't look that good from other angles. In order to keep it realtime I did a pretty simple lighting setup (no ambient occlusion, no GI, just painted colors here and there).<br>
+		<br>
+		Source code: <a href="https://www.shadertoy.com/view/ldd3DX">https://www.shadertoy.com/view/ldd3DX</a>
+    </div>
+
+    <div class="part">
+        <img class="myPicture" src="gfx28.jpg" />
+		<br>
+		<b>Greek Temple, 2017</b><br><br>
+        This image was born as a live coding improv session for the students of UPenn, although I spend a couple of days working after the live coding was done. The temple is made of basic domain repetition of 6 or 7 boxes and cylinders. The most interesting bit is probably the lack of global illumination - instead, the rich bounce lighting in the temple is achieved by colorzing the relevant areas by hand positioned colors. Also, for the sake of an interesting composition, the light direction that illuminates the ocean and terrain is different from the direction of the light that illuminates the temple.<br>
+		<br>
+		Buy metal print: <a href="https://www.redbubble.com/i/metal-print/Greek-Temple-by-InigoQuilez/39845587.0JXQP" target="_blank">https://tinyurl.com/y4pfzukx</a><br>
+		Source code: <a href="https://www.shadertoy.com/view/ldScDh">https://www.shadertoy.com/view/ldScDh</a><br>
+		<b>Tutorial</b>: <a href="https://www.youtube.com/watch?v=-pdSjBPH3zM">https://www.youtube.com/watch?v=-pdSjBPH3zM</a>
+    </div>
+
+    <div class="part">
+		<video class="myPicture" muted loop preload="metadata" poster="./gfx29.jpg" onmouseover="this.play();" onmouseleave="this.pause();">
+          <source src="vid29.mp4" type="video/mp4">
+          <source src="vid29.webm" type="video/webm">
+        </video>		
+		<br>
+		<b>Ladybug, 2017</b>
+		<br><br>
+        I made this one after another live coding session for the students of the University of Washington. I made a mushroom for them, and then the two weeks that followed, in small chuncks of night time, I slowly completed the drawings until I got here. The modeling is weak and I only pushed it enough to sell the image at medium resolution. It could get a lot more love, but I had to stop somewhere before I'd take too many nights. Lighting is mostly faked (no ambient occlusion, no GI) and very much painted by hand to look good (especially everything that has to do with bounce lighting and subsurface looking materials).<br>
+		<br>
+		Buy metal print: <a href="https://www.redbubble.com/i/metal-print/Ladybug-by-InigoQuilez/39845563.0JXQP" target="_blank">https://tinyurl.com/yxp5xh5s</a><br>
+		Source code: <a href="https://www.shadertoy.com/view/4tByz3">https://www.shadertoy.com/view/4tByz3</a>
+    </div>
+        
+    <div class="part">
+        <img class="myPicture" src="gfx26.jpg" /><br>
+		<b>Fractal Cave, 2016</b>
+		<br><br>
+        The was a <a href="../menger/menger.htm">menger sponge fractal</a> with some variations and a heavy domain distortion. The image was path-traced though the raymarching in the signed distance field.<br>
+		<br>
+		Buy metal print: <a href="https://www.redbubble.com/i/canvas-print/Cave-by-InigoQuilez/39845435.5Y5V7" target="_blank">https://tinyurl.com/y6adojx8</a><br>
+		Source code: <a href="https://www.shadertoy.com/view/Xtt3Wn">https://www.shadertoy.com/view/Xtt3Wn</a>
+    </div>
+
+    <div class="part">
+        <img class="myPicture" src="gfx27.jpg" />
+		<br>
+		<b>Rainforest - 2016</b>
+		<br><br>
+        This was an attempt to raymarch a signed distance field of a tree-populated terrain. Trees are mere spheres with some basic noise displacement distributed on a voronoi pattern. The most interesting part is the heavy use of analytical derivatives of noise to compute fast normals and slopes, which helped a lot speed up the raymarching process of both terrain (the bigger the slope, the smaller the step size - you can read on the Lipschitz constant).<br>
+		<br>
+		Buy metal print: <a href="https://www.redbubble.com/i/metal-print/Rainforest-by-InigoQuilez/39843511.0JXQP" target="_blank">https://tinyurl.com/y49m7olp</a><br>
+		Source code: <a href="https://www.shadertoy.com/view/4ttSWf">https://www.shadertoy.com/view/4ttSWf</a>
+    </div>
+        
+    <div class="part">
+		<video class="myPicture" muted loop preload="metadata" poster="./gfx25.jpg" onmouseover="this.play();" onmouseleave="this.pause();">
+          <source src="vid25.mp4" type="video/mp4">
+          <source src="vid25.webm" type="video/webm">
+        </video>
+		<br>
+		<b>Elephants - 2016</b>
+		<br><br>
+		Since the Snail worked so well, I tried to make elephants too, with the same exact techniques. This proved to be more difficult, and the results are only mediocre. In particular, the modeling was difficult to make for me by just typing formulas, so I left it unfinished and only added detail that would be seen from this camera angle. The trees are ellipsoids with some domain distortion, and the terrain a distance field to a plane with displacement.<br>
+		<br>
+		Source code: <a href="https://www.shadertoy.com/view/4dKGWm">https://www.shadertoy.com/view/4dKGWm</a>
+    </div>
+
+    <div class="part">
+		<video class="myPicture" muted loop preload="metadata" poster="./gfx24.jpg" onmouseover="this.play();" onmouseleave="this.pause();">
+          <source src="vid24.mp4" type="video/mp4">
+          <source src="vid24.webm" type="video/webm">
+        </video>
+		<br>
+		<b>Snail, 2015</b>
+		<br><br>
+		The Snail was one of my all time favorite images, because it looks good and tells a little story. It was mostly a modeling exercise, by using simple <a href="../distfunctions/distfunctions.htm">distance functions</a> blended together <a href="../smin/smin.htm">smoothly</a>. The shell was interesting to make, and the translucent feeling of the snail itself took me a while to get right.<br>
+		<br>
+		Buy metal print: <a href="https://www.redbubble.com/i/metal-print/Snail-by-InigoQuilez/39845499.0JXQP" target="_blank">https://tinyurl.com/y3f6ghh6</a><br>
+		Source code: <a href="https://www.shadertoy.com/view/ld3Gz2">https://www.shadertoy.com/view/ld3Gz2</a>
+    </div>
+        
+    <div class="part">
+        <img class="myPicture" src="gfx22.jpg" />
+		<br>
+		<b>Sculpture III, 2015</b>
+		<br><br>
+        Just like Sculpture II below, this was an (domain) deformed sphere through <a href="../warp/warp.htm">here</a>. The distortion was made with four octaves of sine waves.<br>
+		<br>
+		Source code: <a href="https://www.shadertoy.com/view/XtjSDK">https://www.shadertoy.com/view/XtjSDK</a><br>
+    </div>
+
+    <div class="part">
+		<video class="myPicture" muted loop preload="metadata" poster="./gfx23.jpg" onmouseover="this.play();" onmouseleave="this.pause();">
+          <source src="vid23.mp4" type="video/mp4">
+          <source src="vid23.webm" type="video/webm">
+        </video>
+        <br>
+        <b>Arlo - 2015</b>
+		<br><br>
+        This was mostly a procedural modeling exercise with signed distance field. By using simple <a href="../distfunctions/distfunctions.htm">distance functions</a> blended together <a href="../smin/smin.htm">smoothly</a>, I was able to replicate the main character of Pixar's movie The Good Dinosaur. I didn't have time to pose it in a more interesting action, so he's looking forward and stiff. The most interesting part in this drawing was the use of ray differentials to do <a href="../filteringrm/filteringrm.htm">proper texture filtering</a> in a raymarching context.<br>
+		<br>
+		Source code: <a href="https://www.shadertoy.com/view/4dtGWM">https://www.shadertoy.com/view/4dtGWM</a>
+    </div>
+        
+    <div class="part">
+		<video class="myPicture" muted loop preload="metadata" poster="./gfx20.jpg" onmouseover="this.play();" onmouseleave="this.pause();">
+          <source src="vid20.mp4" type="video/mp4">
+          <source src="vid20.webm" type="video/webm">
+        </video>
+		<br>
+		<b>Eve arrives, 2015</b>
+		<br><br>
+        Eve was my first attempt at modeling an actual character. And I chose her because she is simple - she's made of basic ellipsoids and sphere that are <a href="../smin/smin.htm">smooth blended</a> together. The background detail is done with domain repetition of one box.<br>
+		<br>
+		Source code: <a href="https://www.shadertoy.com/view/llsXRX">https://www.shadertoy.com/view/llsXRX</a>
+    </div>
+
+    <div class="part">
+		<video class="myPicture" muted loop preload="metadata" poster="./gfx21.jpg" onmouseover="this.play();" onmouseleave="this.pause();">
+          <source src="vid21.mp4" type="video/mp4">
+          <source src="vid21.webm" type="video/webm">
+        </video>
+		<br>
+		<b>Mushroom - 2015</b>
+		<br><br>
+        For this drawing I tried to create rocks by a technique that I saw the user TDM use for one of <a href="https://www.shadertoy.com/view/ldSSzV">his shaders</a>: start with a sphere and cut bigger spheres of it to create a semi sharp rock. It worked more or less fine, I got some interesting rocks.<br>
+		<br>
+		Source code: <a href="https://www.shadertoy.com/view/4tBXR1">https://www.shadertoy.com/view/4tBXR1</a>
+    </div>
+        
+    <div class="part">
+        <img class="myPicture" src="gfx18.jpg" />
+		<br>
+		<b>Antialias, sort of - 2014</b>
+		<br><br>
+        This was an attempt to antialiasing the screen-space edges of the raymarched distance fields. By using ray differentials, one can estimate how much of the pixel footprint (pixel frustum) does approximately intersect the geometry, given that at each marching step we heave the distance to the closest surface. That was used in this image to compute partial coverage per near-intersection, and them they were all composited front to back to give the correct smooth image without edge pixelization.<br>
+		<br>
+	    Source code: <a href="https://www.shadertoy.com/view/llXGR4">https://www.shadertoy.com/view/llXGR4</a>.
+    </div>
+
+    <div class="part">
+        <img class="myPicture" src="gfx19.jpg" />
+		<br>
+		<b>Sculpture II - 2014</b>
+		<br><br>
+        This was another quick experiment on domain distortion through <a href="../warp/warp.htm">here</a>. In this case, a sphere got distorted by a sine wave of a sine wave of a sin wave of a sin wave... of a sin wave. The result: a beatiful shape.<br>
+		<br>
+		Source code: <a href="https://www.shadertoy.com/view/4ssSRX">https://www.shadertoy.com/view/4ssSRX</a>
+    </div>
+        
+    <div class="part">
+		<video class="myPicture" muted loop preload="metadata" poster="./gfx16.jpg" onmouseover="this.play();" onmouseleave="this.pause();">
+          <source src="vid16.mp4" type="video/mp4">
+          <source src="vid16.webm" type="video/webm">
+        </video>
+		<br>
+		<b>Canyon - 2014</b>
+		<br><br>
+        A simple terrain in this case. Some bits are floating in the air since it was defined as a true 3D field, not as a height-map based distance field. Adding white snow on a red/yellow terrain always works and it's a cheap way to get good results without doing much effort on actual shading/texturing/surfacing.<br>
+		<br>
+		Source code: <a href="https://www.shadertoy.com/view/MdBGzG">https://www.shadertoy.com/view/MdBGzG</a>
+    </div>
+
+    <div class="part">
+        <img class="myPicture" src="gfx17.jpg" />
+		<br>
+		<b>Worms - 2014</b>
+		<br><br>
+        This one was improvised over a night, and it featured some domain repetition with only three cylinders modeled, and domain distortion to make them curve along the vertical axis.<br>
+		<br>
+		Buy metal print: <a href="https://www.redbubble.com/i/metal-print/Worms-with-code-by-InigoQuilez/39863456.0JXQP" target="_blank">https://tinyurl.com/yycfesnj</a><br>
+		Source code: <a href="https://www.shadertoy.com/view/XsjXR1">https://www.shadertoy.com/view/XsjXR1</a>
+    </div>
+        
+    <div class="part">
+        <img class="myPicture" src="gfx14.jpg" />
+		<br>
+		<b>Fish Swimming - 2014</b>
+		<br><br>
+        The interesting aspect of this signed distance field image is the way the texturing was done. Since there are no meshes or vertices for the modeling of the fish, there is no place to store UV coordinates that can deform with the model itself. But I was able to make the animation function of the fish invertible such that each point on the surface would be able to know where it came from in the res pose of the fish and do the noise and pattern lookups there. That way the textures didn't swim on the surface of the fish as they did in the Insect drawing below. The fish did swim actually, with some simple sine waves and noise.<br>
+		<br>
+		Source code: <a href="https://www.shadertoy.com/view/ldj3Dm">https://www.shadertoy.com/view/ldj3Dm</a>
+    </div>
+
+    <div class="part">
+		<video class="myPicture" muted loop preload="metadata" poster="./gfx15.jpg" onmouseover="this.play();" onmouseleave="this.pause();">
+          <source src="vid15.mp4" type="video/mp4">
+          <source src="vid15.webm" type="video/webm">
+        </video>
+		<br>
+		<b>Dolphin - 2014</b>
+		<br><br>
+        This was  my attempt at doing water splashes. That was done by doing some displacement of the water plane with an exponential shape based on the proximity of the dolphin to the water. Indeed, the signed distance field representation can be used beyond finding marching and shadow or occlusion computation - in this case helps the water know about the dolphin. The dolphin itself was made with a few cylinders and some other smoothly blended primitives.<br>
+		<br>
+		Source: <a href="https://www.shadertoy.com/view/4sS3zG">https://www.shadertoy.com/view/4sS3zG</a>
+    </div>
+        
+    <div class="part">
+        <img class="myPicture" src="gfx12.jpg" />
+		<br>
+		<b>Woods - 2013</b>
+		<br><br>
+        In this case a simple camera rotation was enough to hide the domain repetition of the trees. The interesting part is that I had to fake the lighting to the point of bending the light itself along the depth of the drawing: the direction of the sun light is different in the foreground and in the background (interpolated between those two poses). Tha allowed me to get the patch of light in the red mushroom by the camera and the nice side lighting in the tree in the background. Modeling wise, the trees are cylinders with an exponentially decaying radious along its axis, all smoothly blended together with the <a href="../smin/smin.htm">smooth minimun formula</a>, and some noise on top as a displacement.<br>
+		<br>
+		Source code: <a href="https://www.shadertoy.com/view/XsfGD4">https://www.shadertoy.com/view/XsfGD4</a>
+    </div>
+
+    <div class="part">
+		<video class="myPicture" muted loop preload="metadata" poster="./gfx13.jpg" onmouseover="this.play();" onmouseleave="this.pause();">
+          <source src="vid13.mp4" type="video/mp4">
+          <source src="vid13.webm" type="video/webm">
+        </video>
+		<br>
+		<b>Rounded Voxels - 2013</b>
+		<br><br>
+        This was an exercise to integrate together fast ray-casting though a regular grid and raymarching inside the grid cells. Basically, the ray marches quickly though a volumetric regular grid, which can be done efficiently with a few additions and integer mask operations, and when found a grid cell to be not empty, a raymarcher takes over to find the intersection of the signed distance field defining the rounded boxes. If no intersection happens, the control is returned to the grid marcher.<br>
+		<br>
+		Source code: <a href="https://www.shadertoy.com/view/4djGWR">https://www.shadertoy.com/view/4djGWR</a>
+    </div>
+        
+    <div class="part">
+        <img class="myPicture" src="gfx10.jpg" />
+		<br>
+		<b>Volcanic - 2013</b>
+		<br><br>
+        This was a serious attempt at getting some decent outdoors lighting without resorting to global illumination. I wrote an article about it <a href="../outdoorslighting/outdoorslighting.htm">here</a>. Modeling was based mostly on value noise, and there's also some smoke added as a second raymarching pass.<br>
+		<br>
+		Source code: <a href="https://www.shadertoy.com/view/XsX3RB">https://www.shadertoy.com/view/XsX3RB</a>
+    </div>
+
+    <div class="part">
+        <img class="myPicture" src="gfx11.jpg" />
+		<br>
+		<b>Wavy - 2013</b>
+		<br><br>
+        This was an attempt to pretty colors. It used some <a href="../distfunctions/distfunctions.htm">domain deformation</a> through wrapping like the one I described <a href="../warp/warp.htm">here</a>, but in 3D and with only one level of indirection (the rendering is slow enough as it is).<br>
+		<br>
+		Source code: <a href="https://www.shadertoy.com/view/ldX3zS">https://www.shadertoy.com/view/ldX3zS</a>
+    </div>
+        
+    <div class="part">
+        <img class="myPicture" src="gfx08.jpg" />
+		<br>
+		<b>Angels - 2013</b>
+		<br><br>
+        Angels used some basic domain repetition to create many flying creatures despite I only had one. The differences in the animations between the different creatures was made by taking the cell id to offset the animation formula (which was based on cosine waves). The creatures themselves were made with some simple fractal recursion of ellipsoids.<br>
+		<br>
+		Source code: <a href="https://www.shadertoy.com/view/lssGRM">https://www.shadertoy.com/view/lssGRM</a>
+    </div>
+
+    <div class="part">
+        <img class="myPicture" src="gfx09.jpg" />
+		<br>
+		<b>Insect - 2013</b>
+		<br><br>
+        This shader was one of the first to use the <a href="../smin/smin.htm">smooth minimun formula</a> to blend shapes together (legs and body). It also performs some analytic inverse kinematic to position the legs automatically in the terrain without simulation or integration.<br>
+		<br>
+		Source code: <a href="https://www.shadertoy.com/view/Mss3zM">https://www.shadertoy.com/view/Mss3zM</a>
+    </div>
+        
+    <div class="part">
+        <img class="myPicture" src="gfx06.jpg" />
+		<br>
+		<b>Piano - 2013</b>
+		<br><br>
+        This was an exercise in combining true lighting with painted lighting. By "painted" I mean that it wasn't computed though shadow casting or pathtracing, but that it color was injected artificially in specific areas and objects in the scene to convey ("fake") expensive lighting effects. For example, some of the light in the bottom part of the wall was added artificially, and the window from which the light comes in doesn't exist, but was shaped by hand with the formula of a square. On the other hand, this drawing performed true reflections.<br>
+		<br>
+		Source code: <a href="https://www.shadertoy.com/view/ldl3zN">https://www.shadertoy.com/view/ldl3zN</a>
+    </div>
+
+    <div class="part">
+        <img class="myPicture" src="gfx07.jpg" />
+		<br>
+		<b>Rocks - 2013</b>
+		<br><br>
+        This drawing was based on a voronoi pattern again, like Leizex (see below), and was mostly an exercise on shading simple rocks. However it's interesting to see how now this could be done in realt-time in the GPU while Leizex (2008) wasn't real time at all!<br>
+		<br>
+		Source code: <a href="https://www.shadertoy.com/view/MsXGzM">https://www.shadertoy.com/view/MsXGzM</a>
+    </div>
+        
+    <div class="part">
+        <img class="myPicture" src="gfx04.jpg" />
+		<br>
+		<b>Fruxis - 2012</b>
+		<br><br>
+        I made this one for the Trsac Demo party. It was my raymarched procedural distance field that was implemented in the GPU (GLSL). It was also my first to use a pathtracer (using <a href="../simplepathtracing/simplepathtracing.htm">this algorithm</a>). You can find a modified version of it that does <b>not</b> use pathtracing here: <a href="https://www.shadertoy.com/view/ldl3zl">https://www.shadertoy.com/view/ldl3zl</a>
+    </div>            
+
+    <div class="part">
+        <img class="myPicture" src="gfx05.jpg" />
+		<br>
+		<b>Cell - 2013</b>
+		<br><br>
+        This was my first procedural signed distance field exercise in Shadertoy (WebGL). The interesting bit was my attempt to fake the subsurface scattering of light by raymarching inside the volume of the geometry to measure thickness.<br>
+		<br>
+		Source code here: <a href="https://www.shadertoy.com/view/Xdl3R4">https://www.shadertoy.com/view/Xdl3R4</a>
+    </div>
+        
+    <div class="part">
+		<video class="myPicture" muted loop preload="metadata" poster="./gfx02.jpg" onmouseover="this.play();" onmouseleave="this.pause();">
+          <source src="vid02.mp4" type="video/mp4">
+          <source src="vid02.webm" type="video/webm">
+        </video>
+		<br>
+		<b>Leizex - 2008</b>
+		<br><br>
+        This was a one day production. I wanted to check how it is to directly raymarch a three dimensional voronoi pattern. It did work, although it was very slow them, but it is realtime this days of course. The lighting is fake again - there aren't any light sources, neither there is ambient occlusion computations or anything. Colors are procedurally assigned to points in space.<br>
+		<br>
+		Source code here: <a href="https://www.shadertoy.com/view/XtycD1">https://www.shadertoy.com/view/XtycD1</a>
+    </div>
+            
+    <div class="part">
+        <img class="myPicture" src="gfx03.jpg" />
+		<br>
+		<b>Bridge - 2009</b>
+		<br><br>
+        This is a sketch really, but it never got completed, due to the lack of artistic inspiration at the time. The interesting part is probably the technique used for creating the grass, which is based on voronoi-driven domain tiling.
+    </div>
+
+    <div class="part">
+        <img class="myPicture" src="gfx01.jpg" />
+		<br>
+		<b>Organix - 2008</b>
+		<br><br>
+        Organix won the 1st position at the Function Demoparty in Hungary. It's a raymarched SDF, but it run on the CPU in around 40 seconds at 1280x720 resolution. Needles to say this is realtime these days in the GPU. The lighting is fake in this one, in that shadows and ambient occlusion are procedurally painted on the geometry, not computer through raycasting or similar techniques.<br>
+		<br>
+		Source Code: <a href="https://www.shadertoy.com/view/ldByDh">https://www.shadertoy.com/view/ldByDh</a>
+    </div>
+	
+    <div class="part">
+        <video class="myPicture" muted loop preload="metadata" poster="./gfx00.jpg" onmouseover="this.play();" onmouseleave="this.pause();">
+          <source src="rgba_slisesix.mp4" type="video/mp4">
+          <source src="rgba_slisesix.webm" type="video/webm">
+        </video>
+        <br>
+		<b>Slisesix - 2008</b>
+		<br><br>
+        This image was the first image I generated by raymarching SDFs (Signed Distance Functions). It contained smooth blending of geometric primitives, domain repetition, ambient occlusion and soft shadows. It won the 1st prize of 4 Kilobytes Procedural Graphics of Euskal Party 2008 in Spain.<br>
+		<br>
+		Source code here: <a href="https://www.shadertoy.com/view/lsf3zr">https://www.shadertoy.com/view/lsf3zr</a>
+    </div>
+        
+</div>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

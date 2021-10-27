@@ -1,0 +1,174 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/noacos/noacos.htm">avoiding trigonometry - 2013</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<h3>Intro</h3><hr>
+I think we should use less trigonometry in computer graphics. As my understanding of projections, reflections, and vector operations improved over time, a growing unease grew as well every time I saw trigonometry at the core of 3D algorithms. These days I'm at a point where if I see some asin, acos, atan, sin, cos or tan in the middle of a 3D algorithm, I'll assume the code was written by an inexperienced programmer and needs review.<br>
+<br>
+Now, don't get me wrong. Trigonometry <b>is</b> convenient and necessary for data input, for feeding the larger algorithm. What's wrong is when angles and trigonometry suddenly emerge deep in the internals of a 3D engine or algorithm out of nowhere, where only vectors and geometry were involved as inputs. And each time such a wrong happens, a kitten is being killed. Not a kitten that cared about performance or precision necessarily, but a kitten that appreciated elegance and truth. Let me explain.<br>
+<br>
+I've already discussed in other places before how the dot and cross products encode all the information you need to deal with orientation related operations. These two products capture all the information that you've learnt to associate with the cosine and sine of angles, and more. And since they operate on vectors, which are the native way we represent objects, there's no reason to not stay in vector-land all the way and stay away from the more abstract (less dimensional) world of trigonometry and its multiple identities. So, let's make this claim of mine more concrete with an example (we could the same exercise with many others, this is just one).<br>
+<br>
+<br>
+<h3>The wrong way to do orientate a space/object</h3><hr>
+Say you have this function, which computes a matrix that rotates vectors around a given axis <i>v</i> by an amount of <i>a</i> radians. Many 3D engines, renderers or math libraries will have one such routine. The function will look something like this:<br>
+<br>
+<div class="code">mat3x3 rotationAxisAngle( const vec3 & v, float a )
+{
+    const float si = sinf( a );
+    const float co = cosf( a );
+    const float ic = 1.0f - co;
+
+    return mat3x3( v.x*v.x*ic + co,       v.y*v.x*ic - si*v.z,    v.z*v.x*ic + si*v.y,
+                   v.x*v.y*ic + si*v.z,   v.y*v.y*ic + co,        v.z*v.y*ic - si*v.x,
+                   v.x*v.z*ic - si*v.y,   v.y*v.z*ic + si*v.x,    v.z*v.z*ic + co );
+}</div>
+<br>
+So now imagine you are somewhere in the internals of your project, writing some code that needs to set the orientation of an object in a given direction. For example, you are aligning a spaceship to an animation path, by making sure the spaceship's <b>z</b> axis aligns with the path's tangent or direction vector <b>d</b>. So, you decide you want to use <span class="codigoInText">rotationAxisAngle()</span> function for that. Then, you first measure the angle between the spaceship's <b>z</b> axis and the desired orientation vector <b>d</b>. Since you are a graphics programmer, you know you can do this by taking the dot product of the two vectors and then extracting the angle the form from it with an <span class="codigoInText">acos()</span> call. Great. Also, because you know that sometimes <span class="codigoInText">acos()</span> can return nonsense if its argument lays outside of the -1..1 range, you decide to clamp the dot product to -1..1, "because floating point". Fine. But at this stage one kitten has already been murdered. But since you don't know that yet, you proceed to writing the rest of the code. So, next you compute the rotation axis, which you know it's the cross product of your <b>z</b> and <b>d</b> vectors, for all points in the spaceship need to rotate in planes parallel to that spanned by these two vectors. Then you decide to normalize the rotation axis vector, just because you like normalizing things. And so, in the end, your code looks like this:<br>
+<br>
+<div class="code">    const vec3   axi = normalize( cross( z, d ) );
+    const float  ang = acosf( clamp( dot( z, d ), -1.0f, 1.0f ) );
+    const mat3x3 rot = rotationAxisAngle( axi, ang );</div>
+<br>
+This does work. But I claim it's wrong. To see why, let's expand the code of <span class="codigoInText">rotationAxisAngle()</span> in place and see the whole picture of what's mathematically going on:<br>
+<br>
+<div class="code">    const vec3   axi = normalize( cross( z, d ) );
+    const float  ang = acosf( clamp( dot( z, d ), -1.0f, 1.0f ) );
+    const float  co = cosf( ang );
+    const float  si = sinf( ang );
+    const float  ic = 1.0f - co;
+    const mat3x3 rot = mat3x3( axi.x*axi.x*ic + co,         axi.y*axi.x*ic - si*axiz,    axi.z*axi.x*ic + si*axi.y,
+                               axi.x*axi.y*ic + si*axi.z,   axi.y*axi.y*ic + co,         axi.z*axi.y*ic - si*axi.x,
+                               axi.x*axi.z*ic - si*axi.y,   axi.y*axi.z*ic + si*axi.x,   axi.z*axi.z*ic + co );</div>
+
+<br>
+As you have already probably noticed, we are performing an rather imprecise and expensive <span class="codigoInText">acos()</span> call just to undoit immediately after by computing a <span class="codigoInText">cos()</span> on its return value. This begs the question: why not skip the <span class="codigoInText">acos()</span> and <span class="codigoInText">cos()</span> chain altogether. Isn't this simplification more than just an optimization? Could it be a deeper mathematical structure or relationship manifesting itself? Some simplifications and symmetrys in mathematical expressions are certainly accidental and meaningless, but more often than not they are the conequence of deep truths, so let's keep exploring see if we can learn anything here.<br>
+<br>
+Even though we could potentially simplify cos(acos(x)), it seems we need to compute the angle anyways for our <span class="codigoInText">sin()</span> function coming right after the cosine. However... if you are familiar with the cross product, you might now that cross products encode sines just like dot products encode cosines. It might not be surprising though you never realized this, and that's fine, that's why we are here. So this is the point - wherever there's a dot product, chances are there's a cross product lying around that completes the picture of what's geometrically being described. For any parallel thing you can measure (dot products, cosines) there's a perpendicular component that you can measure too (cross product, sines). So, check this out:
+<br>
+<br>
+<h3>The proper way to do it</h3><hr>
+We can extract the sine of the angle between <b>z</b> and <b>d</b> by just looking at the length of their cross product. Indeed, <b>z</b> and <b>d</b> are normalized so the length of their cross product is the sine of the angle they form times one and times one again! Which means we can and should rewrite our operation this way:<br>
+<br>
+<div class="code">mat3x3 rotationAlign( const vec3 & d, const vec3 & z )
+{
+    const vec3   v = cross( z, d );
+    const float si = length( v );
+    const float co = dot( z, d );
+    const float ic = 1.0f - co;
+	
+    return mat3x3( v.x*v.x*ic + co,       v.y*v.x*ic - si*v.z,    v.z*v.x*ic + si*v.y,
+                   v.x*v.y*ic + si*v.z,   v.y*v.y*ic + co,        v.z*v.y*ic - si*v.x,
+                   v.x*v.z*ic - si*v.y,   v.y*v.z*ic + si*v.x,    v.z*v.z*ic + co );
+}</div>
+<br>
+Good, we are getting somewhere now. Let's keep going and also get rid of the normalization/square root by propagating the 1/si to the matrix:<br>
+<br>
+<div class="code">mat3x3 rotationAlign( const vec3 & d, const vec3 & z )
+{
+    const vec3  v = cross( z, d );
+    const float c = dot( z, d );
+    const float k = (1.0f-c)/(1.0f-c*c);
+
+    return mat3x3( v.x*v.x*k + c,     v.y*v.x*k - v.z,    v.z*v.x*k + v.y,
+                   v.x*v.y*k + v.z,   v.y*v.y*k + c,      v.z*v.y*k - v.x,
+                   v.x*v.z*K - v.y,   v.y*v.z*k + v.x,    v.z*v.z*k + c    );
+}</div>
+<br>
+Lastly, we can simplify <i>k</i> to k = 1/(1+c) which is more elegant and also moves the two singularities in <i>k</i> and so the whole function (<i>d</i> and <i>z</i> are parallel) to a single one (when <i>d</i> and <i>z</i> are the same vector, in which case there's no clear rotation that is best anyways (Lastly Zoltan Vrana for the tip). So, the final function looks like this:<br>
+<br>
+<div class="code">mat3x3 rotationAlign( const vec3 & d, const vec3 & z )
+{
+    const vec3  v = cross( z, d );
+    const float c = dot( z, d );
+    const float k = 1.0f/(1.0f+c);
+
+    return mat3x3( v.x*v.x*k + c,     v.y*v.x*k - v.z,    v.z*v.x*k + v.y,
+                   v.x*v.y*k + v.z,   v.y*v.y*k + c,      v.z*v.y*k - v.x,
+                   v.x*v.z*K - v.y,   v.y*v.z*k + v.x,    v.z*v.z*k + c    );
+}</div>
+<br>
+<h3>Conclusion</h3><hr>
+So look at that. There aren't any trigonometric or inverse trigonometric functions, nor clamp or normalizations. This is great from a stability and performance point of view. And also, we have solved a vector problem using only vectors, which feels like it should have been the right thing right from the beginning.<br>
+<br>
+Now, I'm not going to claim that in this particular example it's clearly intuitive what that matrix means. We can see that it is <br>
+<br>
+<div class="code">    v * v^T     (   c, -v.z,  v.y)
+M = -------  +  ( v.z,    c, -v.x)
+      1+c       (-v.y,  v.x,    c)</div><br>
+which has something very quaterniony to it if you ask me, with that "real" component <b>c</b> and that vector component <b>v</b>, but that's for another day. The point is, almost always you can perform the same exercise of simplifying trigonometric calls and slowly untangle a simpler vector form expression for the same problem. Also, oftentimes, instead of discovering a vector form that way, you can actually rethink the whole problem from scratch as a vector problem from the beginning. You need to have some intuition of dot products, cross products, projections, etc for that, but once you got it you'll find that most trigonometric identities out there are just saying something about simple vector configurations, and you'll never have to memorize one again. But that also is for another day.<br>
+<br>
+I'll just conclude saying that part of the problem I find in real life is due to poorly designed APIs, like <span class="codigoInText">rotationAxisAngle(v,a)</span> or WebXR stereo projection information, which work on angles instead of actual vectors. Sometimes the cost is a performance and stability cost like we saw, other times the cost takes the form of unnecessary confusion (are the angles in radians or degrees, and they negative or positive in the inner side of the frustum, etc etc). Either way, let's strive to do more vectors operations and less trigonometry!<br>
+<br>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+
+<br>
+<br>
+<br>
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>
+

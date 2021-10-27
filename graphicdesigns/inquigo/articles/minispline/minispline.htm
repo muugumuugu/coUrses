@@ -1,0 +1,147 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/minispline/minispline.htm">minimal code for splines - 2003</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+This is an coding trick I developed for the <a class="regular" href="../../../prods/index.htm#paradise">Paradise</a> 64k demo in 2004. Before Paradise, all the camera movents of our 4k and 64k intros had been done with simple combinations of sinus and cosinus functions. However we wanted more camera control for Paradise, so we decided to implement some minimal spline functionality. We decided that Catmull-Rom splines, even if they don't provide tangent controls, would suffice for our little production. So we went for it and we ended up with a cute tiny implementation that allowed us to interpolate both 3D and n-dimensional control points.
+<br>
+<br>
+<br>
+<h3>Catmull-Rom splines</h3><hr>
+The beauty of Catmull-Rom splines over Bezier or other types of Splines and other cubic polynomial interpolation functions in general is that with this type of spline control over the shape of the curve is super simple and can't be more intuitive. Simply choose a few point in space, a time for every one of them, <i>et voilá</i>, you are done, your path will pass thru those points at those moments in time. Can't be more easy.<br>
+<br>
+I'm not going to explain how Catmull-Rom splines are constructed, you can simply go to google for that, or derive the formulas yourself, it's very easy because you simply have to:<br>
+<br>
+1. build a generic cubic polynomial p(t) = a + b&#8901;t + c&#8901;t<sup>2</sup> + d&#8901;t<sup>3</sup>, where p(t) is your path in space and a,b,c,d are coefficients (points in space too)<br>
+2. take it's derivative p'(t) = b + 2c&sdot;t + 3d&sdot;t<sup>2</sup><br>
+3. make sure that at t=0 the curve passes thru your first point p1 (you got the first coefficient already, a = p1)<br>
+4. make sure that at t=0 the curve has tangent (p2-p0)/2 (and you got the second coefficient, b = (p2-p0)/2)<br>
+5. make sure that at t=1 the curve passes thru the second point p2<br>
+6. make sure that at t=1 the curve has tangent (p3-p1)/2<br>
+7. solve 5 and 6 to get <i>c</i> and <i>d</i><br>
+<br>
+If you follow these steps you will arrive to something like:<br>
+<br>
+a = (2&#8901;p1)<br>
+b = (p2-p0)<br>
+c = (2&#8901;p0 - 5&#8901;p1 + 4&#8901;p2 - p3)<br>
+d = (-p0 + 3&#8901;p1 - 3&#8901;p2 + p3)<br>
+<br>
+or if you want as<br>
+<br>
+a = < { 0, 2, 0, 0}, {p0,p1,p2,p3} ><br>
+b = < {-1, 0, 1, 0}, {p0,p1,p2,p3} ><br>
+c = < { 2,-5, 4,-1}, {p0,p1,p2,p3} ><br>
+d = < {-1, 3,-3, 1}, {p0,p1,p2,p3} ><br>
+<br>
+Mathematicians will tell me you cannot dot a vector with a vector of vectors, but well, you get the idea.<br>
+<br>
+Of course one first needs to know the segment (p1,p2) in which we want to perform the cubic interpolation above. Then, the formula for p(t) have to be used after normalizing <i>t</i> to the proper (t1,t2) interval.<br>
+<br>
+<br>
+<h3>The code</h3><hr>
+This code is written using standard C types only, so it should be pretty much CopyPaste-able, and easily adapted to your needs. There might be some corner cases you might want to add checks for, like the cases where t is less than zero or bigger than the time of the last key of the spline.<br>
+<br>
+<div class="code">static signed char coefs[16] = {
+    -1, 2,-1, 0,
+     3,-5, 0, 2,
+    -3, 4, 1, 0,
+     1,-1, 0, 0 };
+
+void spline( const float *key, int num, int dim, float t, float *v )
+{
+    const int size = dim + 1;
+
+    <span class="codeComment">// find key</span>
+    int k = 0; while( key[k*size] < t ) k++;
+
+    <span class="codeComment">// interpolant</span>
+    const float h = (t-key[(k-1)*size])/(key[k*size]-key[(k-1)*size]);
+
+    <span class="codeComment">// init result</span>
+    for( int i=0; i&lt;dim; i++ ) v[i] = 0.0f;
+
+    // add basis functions
+    for( int i=0; i&lt;4; i++ )
+    {
+        int kn = k+i-2; if( kn&lt;0 ) kn=0; else if( kn&gt;(num-1) ) kn=num-1;
+        const signed char *co = coefs + 4*i;
+        const float b  = 0.5f*(((co[0]*h + co[1])*h + co[2])*h + co[3]);
+        for( int j=0; j < dim; j++ ) v[j] += b * key[kn*size+j+1];
+    }
+}</div>
+<br>
+This might compile to something between 100 or 150 bytes depending on your compiler settings. It can probably be optimized by computing <b>k*size</b> only once and reusing it in the rest of the code, and using offsets to index in the <b>kn</b> keys, but I don't want to make the code that unreadable here, although I would certainly do it if I was using this for a 4k intro.<br>
+<br>
+As you can guess from the code, the format for the path key is: { t0, x1, y1, z1, t1, x1, y1, z1, t2, ,x2, y2, z2, ... }, that is not the best option regarding data compression, but works allows a small implementation of the spline code. You probably want to store the splines in a more compressible format (like independant streams for the different t, x, y, z signals, and then apply some linear prediction on them and then quantify them for example, or any other thing you might come with) and then convert it to this format before performing the spline evaluation.
+<!-- -------------------------------------------------------------------------------------------- -->
+
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

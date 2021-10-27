@@ -1,0 +1,161 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/palettes/palettes.htm">palettes - 1999</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<!-- --------------------------------------------------------------------------------- -->
+
+<style>
+figure { padding:0px; margin:0px; }
+
+.part1 { display:inline-block; padding-right:64px; padding-bottom:32px;}
+.part2 { display:inline-block; padding-right:0px;  padding-bottom:32px;}
+@media only screen and (max-width: 1280px)
+{
+  .part1 { padding-right:0px; }
+  .part2 { padding-right:0px; }
+}
+
+</style>
+
+<!-- --------------------------------------------------------------------------------- -->
+
+<h3>Intro</h3><hr>
+When doing procedural graphics it's always a good idea to add color variation to the elements of the image. From grass blades, to grass clumps, to rocks or trees or hills, all scales of detail benefit from some color
+variation. In order to achieve this, one can employ different methods of course, but among the cheapest and the most coder-friendly ones there are those based on simple (hard)coded formulas. Usually these
+color variations will be subtle but important, and can be achieved by employing a color palette that modifies the base color of the element (blade of grass, rock, or whatever it is). A simple addition or
+modulation (multiply) will suffice - more often than not there's no need to go the route of converting the color to HSV and doing hue or saturation manipulations in that space before converting back to RGB.<br>
+<br>
+Creating procedural palettes is also interesting to colorize signals that are gray scale and don't have natural colorization, such as density plots or fractals. This article is about one posible way to compute such
+palettes for modulation or visualization in a cheap way - as said, with a simple formula.<br>
+<br>
+<br>
+<div style="display:flex;justify-content:center;">
+
+<figure>
+<img class="myPicture" src="gfx00.jpg"/>
+<figcaption>Simple procedural color palette (<a class="regular" href="https://www.shadertoy.com/view/Xl2GRc">https://www.shadertoy.com/view/Xl2GRc</a>)</i></figcaption></figure></div>
+
+<br>
+<br>
+<h3>The idea</h3><hr>
+One of the simplest formulas or expressions possible is the cosine of a linear argument. Popular wisdom (especially between old-school coders) is that trigonometric functions are expensive and that therefore it is important to
+avoid them (by means of LUTs or linear/triangular approximations). Often popular wisdom is wrong - despite the above still holds true in some especial cases (a CPU heavy inner loop) it does not in general: for example, in the GPU,
+computing a cosine is way, way faster than any attempt to approximate it. So, lets take advantage of this and go with the straight cosine expresion:<br>
+<br>
+<span class="formulaText">color(t) = a + b &sdot; cos[ 2&pi;(c&sdot;t+d)]</span><br>
+<br>
+It can't get any simpler. As <b>t</b> runs from 0 to 1 (our normalized palette index or domain), the cosine oscilates <b>c</b> times with a phase of <b>d</b>. The result is scaled and biased by <b>a</b> and <b>b</b> to
+meet the desired constrast and brightness.<br>
+<br>
+Of course, in order to get hue variation the four parameters  <b>a</b>, <b>b</b>, <b>c</b> and <b>d</b> must be vectors of three components (red, gree, blue). If you need to ensure the palettes cycle over the 0..1 interval
+exactly, then you'll need to make <b>c</b> an integer number of halves (0.0, 0.5, 1.0, 1.5, 2.0, ...). If you worry about C1 continuity, then make <b>c</b> an integer (and you'll get infinite degree continuity in fact).<br>
+<br>
+<br>
+<h3>Some examples</h3><hr>
+
+The amount of color variations is not bad given the simplicity of the method. All the palattes produced by the above formula have the same rythm, but it's just good enough for too many purposes:<br>
+<br>
+<br>
+<table cellpadding="10" cellspacing="0">
+<tr><td>a<td><td>b</td><td>c</td><td>d</td><td>palette</td></tr>
+<tr><td>0.5, 0.5, 0.5<td><td>0.5, 0.5, 0.5</td><td>1.0, 1.0, 1.0</td><td>0.00, 0.33, 0.67</td><td><img class="myPicture" src="pal01.png"/></td></tr>
+<tr><td>0.5, 0.5, 0.5<td><td>0.5, 0.5, 0.5</td><td>1.0, 1.0, 1.0</td><td>0.00, 0.10, 0.20</td><td><img class="myPicture" src="pal02.png"/></td></tr>
+<tr><td>0.5, 0.5, 0.5<td><td>0.5, 0.5, 0.5</td><td>1.0, 1.0, 1.0</td><td>0.30, 0.20, 0.20</td><td><img class="myPicture" src="pal03.png"/></td></tr>
+<tr><td>0.5, 0.5, 0.5<td><td>0.5, 0.5, 0.5</td><td>1.0, 1.0, 0.5</td><td>0.80, 0.90, 0.30</td><td><img class="myPicture" src="pal04.png"/></td></tr>
+<tr><td>0.5, 0.5, 0.5<td><td>0.5, 0.5, 0.5</td><td>1.0, 0.7, 0.4</td><td>0.00, 0.15, 0.20</td><td><img class="myPicture" src="pal05.png"/></td></tr>
+<tr><td>0.5, 0.5, 0.5<td><td>0.5, 0.5, 0.5</td><td>2.0, 1.0, 0.0</td><td>0.50, 0.20, 0.25</td><td><img class="myPicture" src="pal06.png"/></td></tr>
+<tr><td>0.8, 0.5, 0.4<td><td>0.2, 0.4, 0.2</td><td>2.0, 1.0, 1.0</td><td>0.00, 0.25, 0.25</td><td><img class="myPicture" src="pal07.png"/></td></tr>
+</table><br>
+<br>
+These are some examples of some of these palettes used to achieve color variation of a base color or for direct visualization of scalar quantities:<br>
+<br>
+
+<div class="partsC">
+<figure class="part1"><img class="myPicture" src="gfx02.jpg"/><figcaption><a class="regular" href="https://www.shadertoy.com/view/lsfGDB">https://www.shadertoy.com/view/lsfGDB</a></figcaption></figure>
+<figure class="part1"><img class="myPicture" src="gfx03.jpg"/><figcaption><a class="regular" href="https://www.shadertoy.com/view/XdjXWK">https://www.shadertoy.com/view/XdjXWK</a></figcaption></figure>
+<figure class="part2"><img class="myPicture" src="gfx04.jpg"/><figcaption><a class="regular" href="https://www.shadertoy.com/view/Mdl3RH">https://www.shadertoy.com/view/Mdl3RH</a></figcaption></figure>
+</div>
+
+<br>
+<br>
+<h3>Implementation</h3><hr>
+The code follows trivially from the formula described above:<br><br>
+<div class="code"><span class="codeComment">// cosine based palette, 4 vec3 params</span>
+vec3 palette( in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d )
+{
+    return a + b*cos( 6.28318*(c*t+d) );
+}</div>
+<br>
+<br>
+Here you can see the technique working in realtime - you can edit the numbers to create your own new palettes (click in the title in order to jump to the source code):<br>
+<br>
+<center><iframe class="myPicture" style="width:640px;height:360px;" frameborder="0" src="https://www.shadertoy.com/embed/ll2GD3?gui=true&t=10&paused=true" allowfullscreen></iframe></center>
+<!-- -------------------------------------------------------------------------------------------- -->
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

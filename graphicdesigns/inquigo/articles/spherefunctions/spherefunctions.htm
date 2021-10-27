@@ -1,0 +1,352 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/spherefunctions/spherefunctions.htm">sphere functions</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<!-- --------------------------------------------------------------------------------- -->
+<h3>Intro</h3><hr>
+<br>
+If you are an engineer, you might have heard this before:
+<br>
+<br>
+<br>
+<center><i>"Well, first let us consider a spherical cow..."</i></center><br>
+<br>
+<br>
+This is a humorous observation of the way engineers often operate. But the truth is that replacing precise problems that have only approximated, expensive or even unknown solution by approximated problems that do have an exact, cheap or known problems is sometimes a good strategy. And so, in the context of graphics, sometimes you can replace a cow, indeed, by a sphere (for example, if it's not too close to the camera, or if you are in an occlusion pass).<br>
+<br>
+In fact, spheres are useful in too many ways to be ignored. I have written a few articles already on the subject of computing analytically different properties of spheres that are useful for rendering, which are scattered over this website. Some others I have not documented yet, but this page can be seen as an index to those articles and techniques, and a summary of the resulting formulas. I do not recommend to simply copy&paste them without reading the associated article first so you understand the context where they can be used, and their strengths and pitfalls.<br>
+<br>
+I have used these techniques both in demos and also in production of featured films. For example, I have used a bunch of spheres to shape its occlusion and directional shadows analytically rather than resorting to shadow maps. Also, if you are rendering massive terrains made of hundreds of millions of rocks, bushes and trees, you might want to organize things in bounding spheres and check analytically (without rasterization whatsoever), how many pixels does each bounding sphere take in screen space in to do level of detail decisions. I have used spherical density to do localized color grading, and for fog volumes.<br>
+<br>
+Whether you are using spheres to approximate cows, or you are making a demo or game with spheres for artistic reasons, probably some of the formulas bellow will be of use to you.<br>
+<br>
+<br>
+
+<br>
+<h3>Functions</h3><hr>
+In the code below, <b>pi</b> means 3.141593... and <b>eps</b> is a small positive number close to zero.
+<br>
+<br>
+<br>
+
+
+<!-- ------------------------------------- -->
+
+<div class="partsB">
+<div class="part">
+<b>Sphere Intersection</b><br>
+<br>
+<div class="code">float sphIntersect( vec3 ro, vec3 rd, vec4 sph )
+{
+    vec3 oc = ro - sph.xyz;
+    float b = dot( oc, rd );
+    float c = dot( oc, oc ) - sph.w*sph.w;
+    float h = b*b - c;
+    if( h&lt;0.0 ) return -1.0;
+    h = sqrt( h );
+    return -b - h;
+}</div>
+</div>
+
+<div class="part">
+<a class="regular" href="http://www.iquilezles.org/blog/?p=2411">http://www.iquilezles.org/blog/?p=2411</a><br>
+<img class="myPicture" src="gfx06.jpg"/></div>
+</div>
+
+<!-- ------------------------------------- -->
+
+<div class="partsB">
+<div class="part">
+<b>Sphere Density</b><br>
+<br>
+<div class="code">float sphDensity( vec3 ro, vec3 rd, vec4 sph, float dbuffer )
+{
+    float ndbuffer = dbuffer/sph.w;
+    vec3  rc = (ro - sph.xyz)/sph.w;
+	
+    float b = dot(rd,rc);
+    float c = dot(rc,rc) - 1.0;
+    float h = b*b - c;
+    if( h&lt;0.0 ) return 0.0;
+    h = sqrt( h );
+    float t1 = -b - h;
+    float t2 = -b + h;
+
+    if( t2&lt;0.0 || t1&gt;ndbuffer ) return 0.0;
+    t1 = max( t1, 0.0 );
+    t2 = min( t2, ndbuffer );
+
+    float i1 = -(c*t1 + b*t1*t1 + t1*t1*t1/3.0);
+    float i2 = -(c*t2 + b*t2*t2 + t2*t2*t2/3.0);
+    return (i2-i1)*(3.0/4.0);
+}</div>
+</div>
+
+<div class="part">
+<a class="regular" href="http://www.iquilezles.org/www/articles/spheredensity/spheredensity.htm">Maths / Article</a><br>
+<a class="regular" href="https://www.shadertoy.com/view/XljGDy">Example / Code</a><br>
+<img class="myPicture" src="gfx01.jpg"/></div>
+
+</div>
+
+<!-- ------------------------------------- -->
+
+<div class="partsB">
+<div class="part">
+<b>Sphere Projection</b><br>
+<br>
+<div class="code">float projectSphere( vec4 sph, in mat4 cam, float fle )
+{
+    vec3  o = (cam*vec4(sph.xyz,1.0)).xyz;
+	
+    float r2 = sph.w*sph.w;
+    float z2 = o.z*o.z;	
+    float l2 = dot(o,o);
+    float k1 = l2-r2;
+    float k2 = r2-z2;
+	
+    return -pi*fle*fle*r2*sqrt(abs(k1/k2))/k2;
+}</div>
+</div>
+
+<div class="part">
+<a class="regular" href="http://www.iquilezles.org/www/articles/sphereproj/sphereproj.htm">Maths / Article</a><br>
+<a class="regular" href="https://www.shadertoy.com/view/XdBGzd">Example / Code</a><br>  
+<img class="myPicture" src="gfx02.jpg"/></div>
+</div>
+
+<!-- ------------------------------------- -->
+
+<div class="partsB">
+<div class="part">
+<b>Sphere Visibility</b><br>
+<br>
+<div class="code">int sphereVisibility( vec4 sA, vec4 sB, vec3 c )
+{
+    vec3 ac = sA.xyz - c;
+    vec3 bc = sB.xyz - c;
+    float ia = 1.0/length(ac);
+    float ib = 1.0/length(bc);
+    float k0 = dot(ac,bc)*ia*ib;
+    float k1 = sA.w*ia;
+    float k2 = sB.w*ib;
+    float m1 = k0*k0 + k1*k1 + k2*k2;
+    float m2 = 2.0*k0*k1*k2;
+
+         if( m1 + m2 - 1.0 < 0.0 ) return 1;
+    else if( m1 - m2 - 1.0 < 0.0 ) return 2;
+    return 3;
+}</div>
+</div>
+
+<div class="part">
+<a class="regular" href="http://www.iquilezles.org/www/articles/sphereocc/sphereocc.htm">Maths / Article</a><br>
+<a class="regular" href="https://www.shadertoy.com/view/XdS3Rt">Example / Code</a><br>  
+<img class="myPicture" src="gfx03.jpg"/></div>
+
+</div>
+<!-- ------------------------------------- -->
+
+<div class="partsB">
+<div class="part">
+<b>Sphere Ambient Occlusion</b><br>
+<br>
+<div class="code">float sphOcclusion( vec3 pos, vec3 nor, vec4 sph )
+{
+    vec3  di = sph.xyz - pos;
+    float l  = length(di);
+    float nl = dot(nor,di/l);
+    float h  = l/sph.w;
+    float h2 = h*h;
+    float k2 = 1.0 - h2*nl*nl;
+
+    float res = max(0.0,nl)/h2;
+    if( k2 > 0.0 ) // approx. for penetration
+    {
+        res = clamp(0.5*(nl*h+1.0)/h2,0.0,1.0);
+        res = sqrt( res*res*res );
+    }
+    return res;
+}</div>
+</div>
+
+<div class="part">
+<a class="regular" href="http://www.iquilezles.org/www/articles/sphereao/sphereao.htm">Maths / Article</a><br>
+<a class="regular" href="https://www.shadertoy.com/view/4djSDy">Example / Code</a><br>  
+<img class="myPicture" src="gfx04.jpg"/></div>
+
+</div>
+<!-- ------------------------------------- -->
+<div class="partsB">
+<div class="part">
+<b>Sphere Soft Shadow</b><br>
+<br>
+<div class="code">float sphSoftShadow( vec3 ro, vec3 rd, vec4 sph, float k )
+{
+    vec3 oc = ro - sph.xyz;
+    float b = dot( oc, rd );
+    float c = dot( oc, oc ) - sph.w*sph.w;
+    float h = b*b - c;
+    return (b>0.0)?step(-eps,c):smoothstep(0.0,1.0,h*k/b);
+}
+
+float sphSoftShadow( vec3 ro, vec3 rd, vec4 sph, float k )
+{
+    vec3 oc = ro - sph.xyz;
+    float r = sph.w*sph.w;
+    float b = dot( oc, rd );
+    float c = dot( oc, oc ) - r;
+    float h = b*b - c;
+    float d = -sph.w + sqrt( max(0.0,r-h));
+    float t = -b     - sqrt( max(0.0,h) );
+    return (t&lt;0.0)?1.0:smoothstep(0.0,1.0,k*d/t);
+}</div>
+</div>
+
+<div class="part">
+<a class="regular" href="../sphereshadow/sphereshadow.htm">Maths / Article</a><br>
+<a class="regular" href="https://www.shadertoy.com/view/4d2XWV">Example / Code</a><br>
+<img class="myPicture" src="gfx05.jpg"/></div>
+
+</div>
+<!-- ------------------------------------- -->
+
+<div class="partsB">
+<div class="part">
+<b>Sphere Distance</b><br>
+<br>
+<div class="code">vec2 sphDistances( vec3 ro, vec3 rd, vec4 sph )
+{
+    vec3 oc = ro - sph.xyz;
+    float b = dot( oc, rd );
+    float c = dot( oc, oc ) - sph.w*sph.w;
+    float h = b*b - c;
+    float d = sqrt( max(0.0,sph.w*sph.w-h)) - sph.w;
+    return vec2( d, -b-sqrt(max(h,0.0)) );
+}</div>
+</div>
+
+<div class="part">
+<a class="regular" href="https://www.shadertoy.com/view/MsSSWV">Example / Code</a><br>  
+<img class="myPicture" src="gfx07.jpg"/></div>
+
+</div>
+<!-- ------------------------------------- -->
+
+<div class="partsB">
+<div class="part">
+<b>Sphere Motion</b><br>
+<br>
+<div class="code">vec2 sphMotion( vec3 ro, vec3 rd, vec4 sph, vec3 ve, out vec3 nor )
+{
+    float t = -1.0;
+    float s = 0.0;
+    nor = vec3(0.0);
+	
+    vec3  rc = ro - sph.xyz;
+    float A = dot(rc,rd);
+    float B = dot(rc,rc) - sph.w*sph.w;
+    float C = dot(ve,ve);
+    float D = dot(rc,ve);
+    float E = dot(rd,ve);
+    float aab = A*A - B;
+    float eec = E*E - C;
+    float aed = A*E - D;
+    float k = aed*aed - eec*aab;
+		
+    if( k>0.0 )
+    {
+        k = sqrt(k);
+        float hb = (aed - k)/eec;
+        float ha = (aed + k)/eec;
+        float ta = max( 0.0, ha );
+        float tb = min( 1.0, hb );
+		
+        if( ta < tb )
+        {
+            ta = 0.5*(ta+tb);
+            float k1 = A - E*ta;
+            float k2 = B + C*ta*ta - 2.0*D*ta;
+            t = -k1 - sqrt( k1*k1 - k2 );
+            s = 2.0*(tb - ta);
+			
+            vec3 pa = ro + rd*t;
+            vec3 pb = sph.xyz + ta*ve;
+            nor = normalize( pa - pb );
+        }
+    }
+
+    return vec2(t,s);
+}</div>
+</div>
+
+<div class="part">
+<a class="regular" href="https://www.shadertoy.com/view/MdB3Dw">Example / Code</a><br>  
+<img class="myPicture" src="gfx08.jpg"/></div>
+
+</div>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

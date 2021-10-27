@@ -1,0 +1,142 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/tunnel/tunnel.htm">tunnel artifact - 2013</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<h3>Intro</h3><hr>
+<br>
+Texturing a polygonal clinder might be more difficult that it semas, due to the seam which is really obvious under mipmapping. One way to fix it is to duplicate some vertices and have unique UVs in them, but that can be expensive or inconvenient (for example, it can mess up the way the normals of the mesh are computed).<br>
+<br>
+A very similar situation happens when rendering a raytraced cylinder, such as when creating a tunnel effect, such as those we usually see in small demos and intros in the demoscene. One easy way to achieve the effect is by simply performing a <a class="regular" href="../deform/deform.htm">plane deformation</a> that converts the cartesian coordinates to polar and then inverts the radius. This is equivalent to performing a raytrace from the origin into a cylinder and then apply cylindrical mapping to it. When done in the GPU one probably wants to enable mipmapping in the texture of the tunnel in order to get smooth antialiased pixels in the back of the tunnel, far from the camera. However, when doing so, one often get an artifact in one side of the tunnel where a whole line of pixels (2 lines, to be exact) displays incorrect colors.<br>
+<br>
+
+<div class="partsC">
+<div class="part"><img class="myPicture" src="gfx01.png"/><br><i>Rendering with line artifact</i></div>
+<div class="part"><img class="myPicture" src="gfx00.png"/><br><i>Corrected rendering</i></div>
+</div>
+<br>
+
+<h3>The Problem</h3><hr>
+<br>
+The formula for the tunnel usually is something like this:<br>
+<br>
+<div class="code">vec3 doTunnel( sampler2D sampler, in vec2 uv, in float time ) 
+{
+    <span class="codeComment">// get polar coordinates</span>    
+    float a = atan( uv.y, uv.x );
+    float r = length( uv );
+    
+    <span class="codeComment">// pack and animate</span>    
+    uv = vec2( 1.0/r + time, a/3.1415927 );
+
+    <span class="codeComment">// fetch from texture</span>    
+    return texture( sampler, uv ).xyz;
+}</div>
+<br>
+The code makes sense, but it's buggy as we know from the rendered images. The artifact happens only in some conditions. Say the center of the tunnel falls between two pixels p, and p+1. If p is an odd number, then the artifact won't manifest. However, if p is an even number, the line artifact appears.
+<br> 
+The reason is that the GPU computes <b>uv</b> derivatives only in blocks of 2x2 pixels. As we know, <b>uv</b> derivatives are needed to estimate how big the footprint of a pixel is in texture space, or in other words, to know how many texels in the texture will be needed during filtering to render this pixel. This information is only computed every other pixel, due to the way the hardware threads work together in the GPU. But basically, if the values of the <b>uv</b> change more than they should for any reason within one of those 2x2 pixels, we'll have problems.<br>
+<br>
+Of course, that's exactly what can happen when the <b>atan()</b> changes from PI to -PI, right at the branch (the -x axis). While everywhere else <b>atan()</b> produces smoothly change values (as you move across pixels <b>atan()</b> produces slowly changing values), for the pixels right above and below the -x axis things change abruptly.<br>
+<br>
+Now, as said before, we can get lucky and it might happen that this change happens exactly between two groups of 2x2 pixels, and therefore never gets registered. In that case, the artifact doesn't happen. But if we are unlucky and we placed our tunnel in the screen such that the -x axis falls exactly inside a 2x2 pixel group, or in other words, if it happens between pixels p and p+1 with an p even number, then the 2x2 pixel quad will register a difference of 2PI in one of the coordinates. That will be enough to push the texture lookup to the smallest levels of the LOD/mip chain, which usually contains the average color of the texture, resulting in the artifact.<br>
+<br>
+<br>
+<h3>The Fix</h3><hr>
+<br>
+The fix, as with <a class="regular" href="../filteringrm/filteringrm.htm">all other artifacts related to mipmapping and discontinuities in the texture coordinates</a>, is to compute these by hand.<br>
+<br>
+In our case, since the tunnel is symetric, we can use the right side of the tunnel for the derivative computation, and then propagate it to the left side of the tunnel:<br>
+<br>
+<div class="code">vec3 doTunnel( sampler2D sampler, in vec2 uv, in float time ) 
+{
+    <span class="codeComment">// get polar coordinates</span>    
+    float a = atan( uv.y, uv.x );
+    float b = atan( uv.y, abs(uv.x) );
+    float r = length( uv );
+    
+    <span class="codeComment">// pack and animate</span>    
+    vec2 uvL = vec2( 1.0/r + time, a/3.1415927 );
+    vec2 uvR = vec2( 1.0/r + time, b/3.1415927 );
+
+    <span class="codeComment">// fetch from texture</span>    
+    return textureGrad( sampler, uvL, dFdx(uvR), dFdy(uvR)).xyz;
+}</div>
+<br>
+This fixes the arificat. Of course, if you were concerned by the double call to <b>atan()</b> (you probably shouldn't), you can probably compute only one the right side of it and then adjust for the left side based on some basic trigonometry.<br>
+<br>
+This is a live running example of this simple trick, runing in Shadertoy: <a class="regular" href="https://www.shadertoy.com/view/Ms2SWW#">https://www.shadertoy.com/view/Ms2SWW#</a>:
+<br>
+<br>
+<div class="iframeCenter" style="max-width:800px;"><div>
+<iframe frameborder="0" src="https://www.shadertoy.com/embed/Ms2SWW?gui=true&t=10&paused=true&muted=false" allowfullscreen></iframe>
+</div></div>
+<!-- -------------------------------------------------------------------------------------------- -->
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

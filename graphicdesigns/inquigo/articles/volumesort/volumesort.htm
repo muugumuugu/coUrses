@@ -1,0 +1,183 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/volumesort/volumesort.htm">volumetric sort - 2006</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<!-- --------------------------------------------------------------------------------- -->
+
+<br>
+
+<h3>Intro</h3><hr>
+
+Let's say you have a set of objects that you want to alpha blend. Let's say the position of these objects is constant. And let's assume also that your
+objects are all positioned along a 2d or 3d grid. Then, you can very easily sort this objects at virtually zero performance cost, and this article will
+explain you how.<br>
+<br>
+It might look like the premises are too restrictive, not applicable to "real life". However, imagine you have a field of grass, and you want to draw
+the blades in back-to-front order. You can probably afford aligning them into a 2D grid, and might be apply random scale and orientation to break
+the regulartity. Or may be you have a cloud rendering engine using billboards, and you have to sort them also to properly alpha blend the particles. Or
+you could even have a point-cloud viewer showing some nice Julia sets coming froma 1024^3 voxel (like the one in the end of this article).<br>
+<br>
+<br>
+<br>
+<h3>In 2D</h3><hr>
+
+To explain the techinque, let's first think about the problem in 2D. Let's say you have a grid of objects like the one below. Now let's say you are
+looking to this grid of objects from the view point indicated by the orange arrow in the diagram. Now, try to agree with the fact that given this
+situation you could draw your objects line by line, starting from the line <b>a</b>, <b>b</b>-... until the line <b>p</b>, <b>q</b>-...
+<br>
+<br>
+<div class="partsB">
+<div class="part60">That's obviously because we are looking roughly from bottom to top. Note also that because we are a bit skewed to the left, we better
+draw the objects from "left to right" within each line; ie, <b>a</b>, <b>c</b>, <b>d</b>, ... instead of ..., <b>e</b>, <b>d</b>, <b>c</b>, <b>b</b>,
+<b>a</b>.<br>
+<br>Good. In a very similar way, the correct order to render the objects in the grid for a view point like the one indicated with the green arrow should be left to rigth for the columns, and then botton to top within each column: ..., <b>p</b>, <b>k</b>, <b>f</b>, <b>a</b>, ..., <b>q</b>, <b>l</b>,
+<b>g</b>, <b>b</b>, ...<br>
+<br>
+So it's quite simple. We can determine the order just based on the view vector. If instead of "left to right" and "botton to up" we use +x, -x, +y and -y, we can easily see that there 8 different possible orders: { +x+y, +x-y, -x+y, +x-y, +y+x, +y-x, -y+x, -y-x } (basically we have 4 options for the first axis (+x, -x, +y, -y) and the there is only 2 remaining for the second (+x, -x or +y, -y, depending on the first option).<br>
+<br>
+The transition between one order and another is done on half quadrants, as you can see. The figure showing 2D square split in 8 sections shows the areas where the same order is valid (you can see the orange and green areas corresponding to the arrows we used as example in the previous diagram). The trick now is clear: precompute 8 index arrays and save the in video memory, one for each possible order. For each rendering pass, take the view direction and compute wich of the orders is the good one, and use it to render. So, we basically skip any sorting time, and also bus trafic between the CPU and the GPU. The only drawback is that we need 8 copies of the index arrays in memory instead of 8, and as we will see inmediatly, it is even worse in 3D... But again, is so cool to have zero sorting cost!
+</div>
+<div class="part"><img class="myPicture formula" src="gfx_02.jpg"/><br>
+<br>
+<br>
+<img src="gfx_01.jpg" /><br><i>When the view vector stays in any<br>point of a colored area, the order<br>is the same.</i>
+</div>
+</div>
+
+<br>
+<h3>In 3D</h3><hr>
+
+<div class="partsB">
+<div class="part60">In 3D the situation is quite the same, we only have one axis more. The difference is that now the amount of possible orders is quite bigger. For the first axis's order we have 6 options (-x,+x,-y,+y,-z,+z), for the second we have 4 (assume we choosed -x, the we still have -y,+y,-z,+z) and 2 for the last axis (assuming we chose +z, we still have -y and +y). So that's a total of 48 posibilities! This can be a lot of video memory depending of the application. There is some simple tricks to help of course. For example, we keep the 48 copies in system memory and just upload the one we need. Assuming frame to frame coherence, this should happen not to often. We can even have a small thread runing in parallel to the rendering just calculating the index array instead of precalculating and storing it in system memory. We can even anticipate the camera movement and precompute (asynchronously) the next expected index array.<br>
+<br>
+Another trick is to have a top level grid to sort cells of objects, and then let random ordered drawing of the objects in the cell. If the objects where a field of grass, this can work pretty well. Or even, if we allready have an octree data structure to do frustum culling and occlussion queries on the dataset, we can sort the octree nodes with this technique and then do standard CPU sorting in the visible node, or even have precomputed index arrays per-node.<br>
+<br>
+Now the view vector can belong to 48 possible sections in the surface of a cube, as shown in the picture below.
+</div>
+<div class="part"><img class="formula" src="gfx_00.jpg" /><br><i>In 3D, we have 48 areas for the view vector.</i></div>
+</div>
+
+
+
+<br>
+<h3>Implementation</h3><hr>
+
+
+To finish the article, a bit of code to show how you can get the order index (from 0 to 47) from the 3D view vector. There is probably a more simple (read compact) way to do it.<br>
+<br>
+<div class="code">int calcOrder( const vec3 & dir )
+{
+    int signs;
+
+    const int   sx = dir.x&lt;0.0f;
+    const int   sy = dir.y&lt;0.0f;
+    const int   sz = dir.z&lt;0.0f;
+    const float ax = fabsf( dir.x );
+    const float ay = fabsf( dir.y );
+    const float az = fabsf( dir.z );
+
+    if( ax&gt;ay && ax&gt;az )
+    {
+        if( ay&gt;az ) signs = 0 + ((sx&lt;&lt;2)|(sy&lt;&lt;1)|sz);
+        else        signs = 8 + ((sx&lt;&lt;2)|(sz&lt;&lt;1)|sy);
+    }
+    else if( ay&gt;az )
+    {
+        if( ax&gt;az ) signs = 16 + ((sy&lt;&lt;2)|(sx&lt;&lt;1)|sz);
+        else        signs = 24 + ((sy&lt;&lt;2)|(sz&lt;&lt;1)|sx);
+    }
+    else
+    {
+        if( ax&gt;ay ) signs = 32 + ((sz&lt;&lt;2)|(sx&lt;&lt;1)|sy);
+        else        signs = 40 + ((sz&lt;&lt;2)|(sy&lt;&lt;1)|sx);
+    }
+
+    return signs;
+}</div><br>
+<br>
+
+
+<br>
+<h3>Examples</h3><hr>
+
+
+These are a few image of realtime experiments using this technique from about 2005. All volumes were precalculated and billboard vertex buffers stored statically. There were 48 static index buffers precomputed as well and the right one was chosen at run time based on view angle, as explained in this article.
+<br>
+<br>
+<div class="partsC">
+<div class="part"><img class="myPicture" src="gfx_03.jpg"/><br><i>Click to enlarge</i></div>
+<div class="part"><img class="myPicture" src="gfx_04.jpg"/><br><i>Click to enlarge</i></div>
+</div>
+<div class="partsC">
+<div class="part"><img class="myPicture" src="gfx_05.jpg"/><br><i>Click to enlarge</i></div>
+<div class="part"><img class="myPicture" src="gfx_06.jpg"/><br><i>Click to enlarge</i></div>
+</div>
+<!-- -------------------------------------------------------------------------------------------- -->
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

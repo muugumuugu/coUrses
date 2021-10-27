@@ -1,0 +1,271 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/morenoise/morenoise.htm">value noise derivatives - 2008</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+    <h3>Intro</h3><hr>
+    Here I will write some interesting facts about Value Noise (similar but not the same as Gradient Noise, of which Perlin Noise is one posible implementation). Yes, incredibly enough, you will find here some information that you cannot find anywhere else, not that much poeple speaks about the derivatives of the Value Noise, like how to calculate them analytically and what to do with them. So, why not to do it here? They are very useful after all. For example, I used them to create the landscape in the <a class="regular" href="../../../prods/index.htm#elevated">Elevated</a> 4k demo. For Gradient Noise derivatives you can read <a class="regular" href="../gradientnoise/gradientnoise.htm">this other article</a>. So, let's see.<br>
+    <br>
+    <br>
+
+    <div class="partsC">
+        <div class="part"><img class="myPicture" src="gfx_i00.jpg" /><br>Source code: <a class="regular" href="https://www.shadertoy.com/view/MdX3Rr">https://www.shadertoy.com/view/MdX3RrM</a></div>
+        <div class="part">
+            <i>
+                Noise derivatives are used to slightly modify the traditional fbm construction<br>
+                in a very simple way. Note the much nicer variety obtained compared to a<br>
+                regular fbm.<br>
+                <br>
+                Analytical derivatives computation is much faster and more accurate than the<br>
+                central differences method, and depending on the fractal sum function (ridged<br>
+                noise, turbulence, etc), analytical normals can be computed for the complete<br>
+                heightmap.<br>
+                <br>
+                The image is rendered by directly raymarching the procedural function (no <br>
+                normal maps, no materials), only diffuse lighting and fog are used.
+            </i>
+        </div>
+    </div>
+
+    <br>
+    <br>
+    <h3>The derivatives</h3>
+    <hr>
+    <br>
+    Let's call our 3d Value Noise <i><b>n(x,y,z)</b></i>. Everything it's the same for any amount of dimensions of course. We adopt the usual notation for derivatives<br><br>
+    <table><tr><td><img class="formula" src="gfx_f01.png" /></td><td width="50" align="center">or</td><td><img class="formula" src="gfx_f02.png" /></td><td>in short.</td></tr></table>
+    <br>
+    The (3d) noise function it's based on a (tri)linear interpolation of random values at some given latice points. Something like this:<br>
+    <br>
+    <div class="code">n = lerp(w, lerp(v, lerp(u, a, b) ,lerp(u, c, d)),
+lerp(v, lerp(u, e, f), lerp(u, g, h)));</div>
+    <br>
+    where <i>u(x)</i>, <i>v(y)</i>, <i>w(z)</i> are normally a cubic or quintic polynomial of the form<br>
+    <br>
+    <span class="formulaText">u(x) = 3x<sup>2</sup> - 2x<sup>3</sup></span><br>
+    <br>
+    or<br>
+    <br>
+    <span class="formulaText">u(x) = 6x<sup>5</sup> - 15x<sup>4</sup> + 10x<sup>3</sup></span><br>
+    <br>
+    Now, <i>n(x,y,z)</i> can be expanded as follows<br>
+    <br>
+    <span class="formulaText">n(u,v,w) = k<sub>0</sub> + k<sub>1</sub>&#183;u + k<sub>2</sub>&#183;v + k<sub>3</sub>&#183;w + k<sub>4</sub>&#183;uv + k<sub>5</sub>&#183;vw + k<sub>6</sub>&#183;wu + k<sub>7</sub>&#183;uvw</span><br />
+    <br />
+    with<br>
+    <br>
+    k<sub>0</sub> =  a<br>
+    k<sub>1</sub> =  b - a<br>
+    k<sub>2</sub> =  c - a<br>
+    k<sub>3</sub> =  e - a<br>
+    k<sub>4</sub> =  a - b - c + d<br>
+    k<sub>5</sub> =  a - c - e + g<br>
+    k<sub>6</sub> =  a - b - e + f<br>
+    k<sub>7</sub> = -a + b + c - d + e - f -g + h<br>
+    <br>
+    The derivatives can now be computed easily, for example, for the <i><b>x</b></i> dimension:<br>
+    <br>
+    &#8706;n/&#8706;x = (k<sub>1</sub> + k<sub>4</sub>&#183;v + k<sub>6</sub>&#183;w + k<sub>7</sub>&#183;vw)&#183;u'(x)<br>
+    <br>
+    with<br>
+    <br>
+    <span class="formulaText">u'(x) = 6&#183;x&#183;(1-x) &nbsp;&nbsp;</span><br />
+    <br>
+    or<br>
+    <br>
+    <span class="formulaText">u'(x) = 30&#183;x<sup>2</sup>(x<sup>2</sup> - 2x + 1)</span><br>
+    <br>
+    depending whether we chose the cubic or quintic <i><b>u(x)</b></i> function above.<br>
+    <br>
+    Therefore it's very easy to make a function than returns the noise value and the three derivatives in one go, making it extremely cheap compared
+    to the central difference method, that is 5 times slower.<br>
+    <br>
+    <div class="code"><span class="codeComment">// returns 3D value noise and its 3 derivatives</span>
+ vec4 noised( in vec3 x )
+ {
+    vec3 p = floor(x);
+    vec3 w = fract(x);
+
+    vec3 u = w*w*w*(w*(w*6.0-15.0)+10.0);
+    vec3 du = 30.0*w*w*(w*(w-2.0)+1.0);
+
+    float a = myRandomMagic( p+vec3(0,0,0) );
+    float b = myRandomMagic( p+vec3(1,0,0) );
+    float c = myRandomMagic( p+vec3(0,1,0) );
+    float d = myRandomMagic( p+vec3(1,1,0) );
+    float e = myRandomMagic( p+vec3(0,0,1) );
+    float f = myRandomMagic( p+vec3(1,0,1) );
+    float g = myRandomMagic( p+vec3(0,1,1) );
+    float h = myRandomMagic( p+vec3(1,1,1) );
+
+    float k0 =   a;
+    float k1 =   b - a;
+    float k2 =   c - a;
+    float k3 =   e - a;
+    float k4 =   a - b - c + d;
+    float k5 =   a - c - e + g;
+    float k6 =   a - b - e + f;
+    float k7 = - a + b + c - d + e - f - g + h;
+
+    return vec4( -1.0+2.0*(k0 + k1*u.x + k2*u.y + k3*u.z + k4*u.x*u.y + k5*u.y*u.z + k6*u.z*u.x + k7*u.x*u.y*u.z),
+                 2.0* du * vec3( k1 + k4*u.y + k6*u.z + k7*u.y*u.z,
+                                 k2 + k5*u.z + k4*u.x + k7*u.z*u.x,
+                                 k3 + k6*u.x + k5*u.y + k7*u.x*u.y ) );
+}</div>
+    <br>
+    You can see an example of the code above here: <a class="regular" href="https://www.shadertoy.com/view/XsXfRH">https://www.shadertoy.com/view/XsXfRH</a>
+
+    <br>
+    <br>
+    <br>
+    <h3>Fbm derivatives</h3>
+    <hr>
+    <br>
+    The fBM (<a class="regular" href="../fbm/fbm.htm">Fractional Brownian Motion</a>) is normally implemented as a fractal sum of Value Noise functions.<br>
+    <br>
+    <img class="formula" src="gfx_f10.png" /><br>
+    <br>
+    with w=1/2 and s=2, or something close, normally. When s=2 each iteration is called a "octave" - for the doubling of the frequency, like in music. The total derivative is in that case the weighted sum of the derivatives for each octave of course, as in regular derivative rules. If you implement a ridged Value Noise or other variations you can also easily drive the right way to combine the derivatives, unless you have a discontinuous shaping function like a fabsf().<br>
+    <br>
+    <div class="code"><span class="codeComment">// returns 3D fbm and its 3 derivatives</span>
+vec4 fbm( in vec3 x, int octaves )
+{
+    float f = 1.98;  <span class="codeComment">// could be 2.0</span>
+    float s = 0.49;  <span class="codeComment">// could be 0.5</span>
+    float a = 0.0;
+    float b = 0.5;
+    vec3  d = vec3(0.0);
+    mat3  m = mat3(1.0,0.0,0.0,
+    0.0,1.0,0.0,
+    0.0,0.0,1.0);
+    for( int i=0; i &lt; octaves; i++ )
+    {
+        vec4 n = noised(x);
+        a += b*n.x;          <span class="codeComment">// accumulate values</span>
+        d += b*m*n.yzw;      <span class="codeComment">// accumulate derivatives</span>
+        b *= s;
+        x = f*m3*x;
+        m = f*m3i*m;
+    }
+    return vec4( a, d );
+}</div>
+    <br>
+    <br>
+    Having derivatives available is useful for other purposes. For example, derivatives of noise allow to compute analytic normals without central differences. In the case of raymarching a terrain, this can be super useful if normals are needed at each raymarcing step (for example, to determine if trees grow or not at a given point based on slope). Similarly, when doing volumetric raymarching of clouds, having analytic normals (extracted form noise derivatives) without resporting to central differences can make the whole algorith up to 6x faster (depending how the central differences are inplemented).<br>
+    <br>
+    This is a realtime raymarched landscape computed with analytical normals through value noise derivatives as explained in this article:<br>
+    <br>
+    <center><img class="myPicture" src="gfx02.jpg" /><br />Source code: <a class="regular" href="https://www.shadertoy.com/view/4ttSWf">https://www.shadertoy.com/view/4ttSWf</a></center>
+    <br>
+    <br>
+    <br>
+    This rock has surface normals computed analytically without central differences, by using the code above explained in this article:<br>
+    <br>
+    <center><img class="myPicture" src="gfx03.jpg" /><br />Source code: <a class="regular" href="https://www.shadertoy.com/view/XttSz2">https://www.shadertoy.com/view/XttSz2</a></center>
+
+    <br>
+    <br>
+    <br>
+    <br>
+    <h3>Other uses</h3>
+    <hr>
+    <br>
+    Another use of noise derivatives is to modify the fbm() construction to achieve different looks. For example, it is enough injecting the derivatives in the core of the fbm allows to simulate different erosion-like effects and creates some rich variety of shapes to the terrain, with flat areas as well as more rough areas (click to enlarge the images).
+    <br>
+    <br>
+    
+    <div class="partsC">
+    <div class="part"><a href="gfx00.htm" class="image"><img class="myPicture" src="gfx_i01.jpg" /></a><br><i>Rendered with the cubic <b>u(x)</b>. Note the continuity artefacts.</i></div>
+    <div class="part"><a href="gfx01.htm" class="image"><img class="myPicture" src="gfx_i02.jpg" /></a><br><i>Rendered with the quintic <b>u(x)</b></i></div>
+    </div>
+    <br>
+    These images were computed with the code below. The image on the right uses the cubic version of <i><b>u(x)</b></i> while the one on the left uses the quintic. Note how the left image has some discontinuity artefacts, due to the non continuity of the second derivatives of <i><b>u(x)</b></i> and therefore of the fbm function.<br>
+    <br>
+<div class="code">const mat2 m = mat2(0.8,-0.6,0.6,0.8);
+
+float terrain( in vec2 p )
+{
+    float a = 0.0;
+    float b = 1.0;
+    vec2  d = vec2(0.0);
+    for( int i=0; i&lt;15; i++ )
+    {
+        vec3 n=noised(p);
+        d +=n.yz;
+        a +=b*n.x/(1.0+dot(d,d));
+        b *=0.5;
+        p=m*p*2.0;
+    }
+    return a;
+    }</div>
+<br>
+You can see the code live and in action in Shadertoy: <a class="regular" href="https://www.shadertoy.com/view/MdX3Rr">https://www.shadertoy.com/view/MdX3Rr</a><br>
+<br>
+<!-- -------------------------------------------------------------------------------------------- -->
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

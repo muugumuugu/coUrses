@@ -1,0 +1,164 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/patchedsphere/patchedsphere.htm">patched sphere - 2008</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<h3>Motivation</h3><hr>
+
+Everybody knows how to generate a polygonal sphere... but not everybody knows making <i>good</i> polygonal spheres. I mean, spheres that are usable for rendering with a rasterizer using, say, a texture, or a normal map. Often one resorts to the polar coordinates to construct the sphere and the texture mapping coords, since the polar coordinates are the natural parametrization of a sphere. The problem is that parametrization has singularities in the poles, and the mapping gets quite contractive (high derivative) on the surroundings of the poles, making it useless for texture mapping (the texture gets stretched a lot there). It also causes thin triangles to appear on the poles (unless a nonuniform sampling of the 2 parameters is used), as it can be noted on the image on the right. There are even more disadvantages with the polar parametrization; for example, it involves trigonometric functions, meaning that if one wants to compute tangents to the surface (for normal mapping for example) it has to resort to more trigonometric functions, that are usually too expensive to be abused on realtime shaders.<br>
+<br>
+So, while the natural parametrization of the sphere is the polar one, we will probably want to use something else than the matematicaly obvious way of thinking. Here, we will use a piecewise algebraic parametrization (good for fast shader execution) that will suffer less parameter space distortion (good for texturing). On top of that, almost everybody having programmed a cubemap texture fetch is familiar with it.<br>
+<br>
+<div class="partsC">
+<div><img style="mix-blend-mode:screen;" src="gfx00.png" /><br><i>Traditional sphere parametrization</i></div>
+<div><img style="mix-blend-mode:screen;" src="gfx01.png"/><br><i>A cube</i></div>
+<div><img style="mix-blend-mode:screen;" src="gfx02.png"/><br><i>The cube after normalization</i></div>
+</div>
+<br>
+<br>
+The idea is simple, take a cube, and "normalize" it so each point on the surface is moved towards the center of the cube so that it's distance gets being one. In other words, generate a cube with many vertices, and normalize each of them. The trick will work of course with any concave shape, but a cube not being the simplest one (a thetraedra) is basic enough and it's very easy to manage.<br>
+
+<br>
+For example, since each face of the cube has a simple (and natural) rectangular parametrization (0,1)x(0,1), we get automatically a simple parametrization domain for the sphere too. The rest of the article is about this parametrization, and to the way one can extract the corresponding tangent space basis vectors analytically, in an exact and cheap way, even per pixel if necessary.
+
+<br>
+<br>
+<h2>The sphere description</h2><hr>
+
+We start by taking one of the faces of the cube (actually all the article will deal with one of the six faces, the other faces follow identical steps). For example the +z face (I assume OpenGL coordinate system, ie, the one you learn at school : x=right, y=up, z=towards you). Let's call the two parameters of the face surface domain <b><i>s</i></b> and <b><i>t</i></b>, with values in the interval [0,1]. We want our cube to be centered in the origin, and ranging on the [-1,1] values, so our surface points <b><i>p</i></b> are expressed as:<br>
+<br>
+<span class="formulaText">p(s,t) = ( 1-2s, 1-2t, 1 )</span><br>
+<br>
+next we normalize this point on the surface of the cube to get a point <b><i>q</i></b> on the surface of the sphere:<br>
+<br>
+<img class="formula" src="for01.png"/><br>
+<br>
+meaning<br>
+<br>
+<img class="formula" src="for02.png"/><br>
+<br>
+where &nbsp; <span class="formulaText">k<sup>2</sup> = 3 + 4(s<sup>2</sup> - s + t<sup>2</sup> - t)</span><br>
+<br>
+that can be rewrite as<br>
+<br>
+<img class="formula" src="for03.png"/><br>
+<br>
+with<br>
+<br>
+<span class="formulaText">x = 1-2s &nbsp;&nbsp; y = 1-2t &nbsp;&nbsp; k<sup>2</sup> = x<sup>2</sup> + y<sup>2</sup> + 1</span><br>
+<br>
+The inverse mapping &nbsp; f: &#x211c;<sup>3</sup> &#x2192; &#x211c;<sup>2</sup> (the one that goes from <b><i>q</i></b> to parameter space) is equivalent to cast a  ray with direction q into the plane <b><i>z</i>=1</b>, and takes the form<br>
+<br>
+<img class="formula" src="for07.png"/><br>
+<br>
+and that's actually what I imagine the cubemapping units of the GPU do to fetch the texel data.
+
+<br>
+<br>
+<h2>The real deal</h2><hr>
+
+Now that we understand what the sphere really is, it's time to compute its tangent space. Actually, we will compute a tangent space basis such that its basis vectors follow the texture coordinate parametrization, that's what you need to do normal/bump mapping. Basically, the surface tangent vectors will be aligned to the directional derivatives of the sphere (think about it as follows: when you slightly change <b><i>s</i></b> or <b><i>t</i></b> the point <b><i>q</i></b> moves, and the difference between the new and old position of <b><i>q</i></b> is your tangent vector. We could also be measureing changes with respect to <b>x</b> and <b>y</b> of course, so lets use those since they are easier to deal with. The derivative with respect to <b><i>x</i></b> will give a tangent <b><i>u</i></b>, and the derivative respect to <b><i>y</i></b> will give the second tangent <b><i>v</i></b> (sometimes called binormal). Now take care, these two vector will not necessarily be orthogonal to each other, although they will be linearly independant, will so define a tangent plane to the sphere, and will of course be orthogonal to the normal <b><i>n</i></b> to the surface.<br>
+<br>
+We start the maths doing<br>
+<br>
+<span class="formulaText">q(x,y) = (x, y, 1) &sdot; (x<sup>2</sup>+y<sup>2</sup>+1)<sup>-1/2</sup></span><br>
+
+<br>
+as before, and derivating repect to <b><i>x</i></b> and <b><i>y</i></b> to get <b><i>u</i></b> and <b><i>v</i></b>:<br>
+<br>
+<span class="formulaText">u=&part;q/&part;x   and v=&part;q/&part;y</span><br>
+<br>
+with<br>
+<br>
+<span class="formulaText">u = &part;q/&part;x = ( &part;q<sub>x</sub>/&part;x, &part;q<sub>y</sub>/&part;x, &part;q<sub>z</sub>/&part;x )<br>
+v = &part;q/&part;y = ( &part;q<sub>x</sub>/&part;y, &part;q<sub>y</sub>/&part;y, &part;q<sub>z</sub>/&part;y )
+</span><br>
+<br>
+of course. So,<br>
+<br>
+<img class="formula" src="for13.png"/><br>
+<br>
+If only the direction of the tangent basis vectors are of interest (for example because the application needs normalized tangent space vectors), then one can skip the common factor to the three components. By replacing variables the expression gets simpler to code:<br>
+<br>
+<span class="formulaText">u = ( 1+y<sup>2</sup>, -xy, -x )</span><br>
+<span class="formulaText">v = ( -xy, 1+x<sup>2</sup>, -y )</span><br>
+<br>
+Note that these two vectors are not perpendicular (check for &lt;u,v&gt;&#x2260;0), although their cross product n = u&Cross;v = k<sup>2</sup>&#8901;(x,y,1) = k<sup>2</sup>&#8901;q(s,t), what means that points indeed on the direction of the surface normal <b><i>n</i></b>.
+<br>
+<br>
+<br>
+<br>
+<h3>Implementation</h3><hr>
+<br>
+
+Finally the implementation is easy, very few computations are needed, none of them complex. The image on the right shows the <b><i>u</i></b> and <b><i>v</i></b> vectors computed as just explained. Please note that these tangent vectors are <b>exact</b>, they are not based on differencing vertex positions or texcoords, they are analytically correct, what means that one can get per pixel exact tangent basis, if needed. In that case, one can move from the vertex shader down to the pixel shader <b><i>s</i></b> and <b><i>t</i></b> (only two floats, half interpolator!) and evaluate  <b><i>u</i></b> and <b><i>v</i></b>, or perhaps compute those in the vertex shader and pass them to the pixel shader (6 floats...). Take also into account that <b><i>u</i></b> and <b><i>v</i></b> are not orthogonal to each other, so some tricks as transposing the tangent matrix will not work (you will have to compute the inverse, or better, do the bump lighting computations in object space!).<br>
+<br>
+<img class="myPicture" style="mix-blend-mode:screen;" src="gfx03.png"/></td>
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

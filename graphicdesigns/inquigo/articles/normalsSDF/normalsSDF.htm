@@ -1,0 +1,231 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/normalsSDF/normalsSDF.htm">normals for an SDF - 2015</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<h3>Intro</h3><hr>
+And SDF is a Signed Distance Function, and in the context of computer graphics, it's usualy employed to rapidly <a class="regular" href="../raymarchingdf/raymarchingdf.htm">raymarch geometry and scenes</a>. When doing lighting on such scenes, or collision detection, having access to the surface normals of the geometry is necessary. The surfaces that emerge from an SDF <b>f(p)</b>, where <b>p</b> is a point in space, are given by a particular iso-surface, normally the <b>f(p) = 0</b> isosurface. Computing the normal <b>n</b> of that isosurfaces can be done through the <a class="regular" href="https://en.wikipedia.org/wiki/Gradient">gradient</a> of the SDF at points located on the surface.<br>
+<br>
+<img class="formula" src="for00.png"/><br>
+<br>
+Remember that the gradient of a scalar field is always perpendicular to the iso-lines or iso-surfaces described by the scalar field,
+and since the normals to a surface need to be perpendicular, the normals must align with the gradient.<br>
+<br>
+<center>
+<img class="myPicture" src="gfx00.jpg"/><br>
+Surface normals filtered for antialaising, computed with the tetrahedron technique below<br>
+(realtime version: <a class="regular" href="https://www.shadertoy.com/view/ldScDh">https://www.shadertoy.com/view/ldScDh</a>)
+</center>
+<br>
+<br>
+There are multiple ways to compute such gradient. Some are numerical, others are analytical, all with different advangates and disavantages. This article is about numerically computing them, which requires the least code writing, but might not be the fastest or most accurate. Still, its simplicity make it the most popular way to compute normals in realtime raymarched demos and games.<br>
+<br>
+<br>
+<br>
+<h3>Classic technique - forward and central differences</h3><hr>
+<br>
+In its simplest form, we take the definition of gradient.<br>
+<br>
+<img class="formula" src="for01.png"/><br>
+<br>
+Those partial derivatices can be computed with small differences, as we know from the definition of derivative. For example,<br>
+<br>
+<img class="formula" src="for02.png"/><br>
+<br>
+where <b>h</b> is as small as possible. This is called forward differentiation, since it takes the point under consideration <b>p</b>=(x,y,z) and evaluates <b>f</b> at <b>p'</b>=(x+h,y,z), a point in the possitive <b>x</b> direction. Backwards and central differences are also possible, which take the following forms:<br>
+<br>
+<img class="formula" src="for03.png"/><br>
+<br>
+Actually central differences are often preferred since they don't favor neither possitive nor negative axes, which is important in order to make sure the normals follow the surface without any directional bias. Note the division by two times <b>h</b> in the central differences method, which is the distance between the function sampling points.<br>
+<br>
+Using central differences, the normal therefore takes the following form<br>
+<br>
+<img class="formula" src="for04.png"/><br>
+<br>
+Note how the division by 2h can be simplified away since the normalization will rescale the normal anyways to unit length. When encoding this in a program, it looks like this:<br>
+<br>
+<div class="code">
+vec3 calcNormal( in vec3 p ) <span class="codeComment">// for function f(p)</span>
+{
+    const float eps = 0.0001; <span class="codeComment">// or some other value</span>
+    const vec2 h = vec2(eps,0);
+    return normalize( vec3(f(p+h.xyy) - f(p-h.xyy),
+                           f(p+h.yxy) - f(p-h.yxy),
+                           f(p+h.yyx) - f(p-h.yyx) ) );
+}
+</div>
+
+<br>
+This form can be found in many raymarching demos in places like Shadertoy or the demoscene productions. However, if evaluating <b>f(p)</b> six times becomes too expensive, one can use forward differences instead<br>
+<br>
+<img class="formula" src="for05.png"/><br>
+<br>
+since it only requires four evaluations instead of six. Even though the following is not true due to numerical reasons, in some special cases we can assume f(p) is zero though, since by definition we are looking for the zero isosurface, and get away with the following three evaluations:<br>
+<br>
+<img class="formula" src="for06.png"/><br>
+<br>
+<br>
+<h3>Tetrahedron technique</h3><hr>
+<br>
+There's a nice alternative to the direct gradient definition technique that is based also on central differences, which means the lighting done on the normals will follow the surfaces without any shift, that uses only four evaluations instead of six, making it as efficient as the forward differences. I first saw this technique used by Paulo Falcao in Pouet around 2008 and then later by Paul Malin in Shadertoy. I have embraced it in most of my shaders since then, and it looks like this:<br>
+<br>
+<div class="code">vec3 calcNormal( in vec3 & p ) <span class="codeComment">// for function f(p)</span>
+{
+    const float h = 0.0001; <span class="codeComment">// replace by an appropriate value</span>
+    const vec2 k = vec2(1,-1);
+    return normalize( k.xyy*f( p + k.xyy*h ) + 
+                      k.yyx*f( p + k.yyx*h ) + 
+                      k.yxy*f( p + k.yxy*h ) + 
+                      k.xxx*f( p + k.xxx*h ) );
+}</div>
+<br>
+The reason this works is the following:<br>
+<br>
+The four sampling points are arranged in a tetrahedron with vertices <b>k0</b> = {1,-1,-1}, <b>k1</b> = {-1,-1,1}, <b>k2</b> = {-1,1,-1} and <b>k3</b> = {1,1,1}. Evaluating the sum<br>
+<br>
+<img class="formula" src="for07.png"/><br>
+<br>
+on those four vertices produces some nice cancellations that results in<br>
+<br>
+<img class="formula" src="for08.png"/><br>
+<br>
+which are four <a class="regular" href="https://en.wikipedia.org/wiki/Directional_derivative">directional derivatives</a>, meaning we can rewrite the sum as<br>
+<br>
+<img class="formula" src="for09.png"/><br>
+<br>
+We can now proceed to rewriting this using matrices, or we can keep looking at one component at a time. Let's do the later. For <b>x</b>, we get<br>
+<br>
+<img class="formula" src="for10.png"/><br>
+<br>
+(this makes use of the fact that the dot product is a linear operator). The results are similar for the <b>y</b> and <b>z</b> components, meaning that<br>
+<br>
+<img class="formula" src="for11.png"/><br>
+<br>
+which after normalization gives us our normal at the zero-isosurface.<br>
+<br>
+<br>
+<h3>An important implementation detail</h3><hr>
+<br>
+I hope I can obsolete this paragraph some day in the future, but as of today, your development platform might decide to take the above code and inline the four calls to f() inside calcNormal(). If f() is long, as it often is, that can create problems with the number of intructions available in your platform, and often times it can crash the shader compiler (often happens in WebGL). One trick to prevent the compiler from inlining f() is to make sure the loop depends on some input uniform that the compiler doesn't know about. Thomas Hooper though of this trick first and has since become pretty common among the Shadertoy community, since it helps both prevent the crashes and also get the compilation times down by a lot. This a variation of his trick made by Clément Baticle (a.k.a. Klems):<br>
+<br>
+<div class="code">vec3 calcNormal( in vec3 & p ) <span class="codeComment">// for function f(p)</span>
+{
+    const float h = 0.0001;      <span class="codeComment">// replace by an appropriate value</span>
+    #define ZERO (min(iFrame,0)) <span class="codeComment">// non-constant zero</span>
+    vec3 n = vec3(0.0);
+    for( int i=ZERO; i<4; i++ )
+    {
+        vec3 e = 0.5773*(2.0*vec3((((i+3)>>1)&1),((i>>1)&1),(i&1))-1.0);
+        n += e*map(pos+e*h).x;
+    }
+    return normalize(n);
+}</div>
+
+<br>
+<br>
+<h3>Cetral differences for Terrains</h3><hr>
+<br>
+When rendering raymarched terrains we usuaully have a heightmap of the form <b>g(x,z)</b> that defines it through <b>y</b> = <b>g(x,z)</b>. This can be rewriten as <b>f(x,y,z)</b> = <b>y</b> - <b>g(x,z)</b> = 0, which means that while not a distance field it is still a scalar field, so we can still use all the gradient logic in order to comptue its normal. By doing so, we get<br>
+<br>
+<img class="formula" src="for12.png"/><br>
+<br>
+which means that the normal can be computed simply as<br>
+<br>
+<div class="code">vec3 getNormal( const vec2 & p ) <span class="codeComment">// for terrain g(p)</span>
+{
+    const float eps = 0.0001; <span class="codeComment">// or some other value</span>
+    const vec2 h = vec2(eps,0);
+    return normalize( vec3( g(p-h.xy) - g(p+h.xy),
+                            2.0*h.x,
+                            g(p-h.yx) - g(p+h.yx) ) );
+}</div>
+<br>
+Beware that because we are using central differences and the distance between the sampling points is <b>2h</b>, removing the division by <b>2h</b> means we need to multiply the y component (which is <b>1</b>) by <b>2h</b>. This is the code that you can also find in <a class="regular" href="../terrainmarching/terrainmarching.htm">article about terrain marching</a>. You can arrive to the same formula if you consider the four little triangles that you can create if you were polygonalizing the terrain field with triangles of size h, and were computing normals for those triangles and then averaging them, as you would be doing for a mesh.<br>
+<br>
+<br>
+<h3>Some words about sampling and aliasing</h3>
+<hr>
+<br>
+You might have noticed that so far we haven't paid any attention to the value of <b>h</b>. In theory, it needs to be as small as possible in order for the components of the gradient to properly approximate the spatial derivatives. Of course too small values will introduce numerical errors, so in practice there's a limit to how small <b>h</b> can be.<br>
+<br>
+However, there's another important consideration when it comes to picking a value - geometry detail and aliasing. Indeed, when taking our central differences at a point in space, we should consider how far it is from camera, or more exactly, what's the footprint of the current pixel being rendered into world space at the sampling point. The idea is that we want to know how tiny do geometrical details get when projected to the screen in the neighborhood of the sampling point - or equivalently, how big is the pixel footprint compared to the geometrical detail in the area. We want this information so that we can do Level of Detail (LoD) in the raymarched geometry - we don't need to compute SDFs for objects/features that are really far in the distance and get too tiny due to perspective projection. This is not only a performance optimization, but more importantly, an image quality issue. By ensuring that we do not consider and sample geometry that is not big enough to be reliably captured by a ray representing the whole pixel, we are effectively implementing a type filtering (band limiting) that prevents aliasing.<br>
+<br>
+Now, under such circumstances, one needs to make sure that the <b>h</b> used to sample the gradients is also about the size of the pixel footprint (or the size of the biggest detail we decided to reject as part of the LoD system). This is going to be something proportional to the distance from the sampling point to the camera, often referred as <b>t</b> in raytracers and raymarchers.<br>
+<br>
+The effect is very dramatic, as can be seen in the aniamted GIF below. Look to the distant cliff walls on the left side of the image:<br>
+<br>
+<img class="myPicture" src="gfx03.gif"/><br>
+<br>
+On the left you can see the stabilized/filtered normals computed by choosing <b>h</b> proportionally to the pixel foorprint. To the right is the naive version that uses a constant <b>h</b> (0.001 in this case, making it bigger makes the image lose detail in the foreground). The difference is pretty big.<br>
+<br>
+
+ <!-- -------------------------------------------------------------------------------------------- -->
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

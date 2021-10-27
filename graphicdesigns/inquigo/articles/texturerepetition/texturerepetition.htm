@@ -1,0 +1,239 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/texturerepetition/texturerepetition.htm">texture repetition - 2015</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<h3>Problem</h3><hr>
+<br>
+One of the most typical problems with texture mapping of large surfaces is the visible repetition of the texture. While things like GL_ARB_texture_mirrored_repeat can help alleviate the problem a bit by making the period of repetition twice bigger, the hardware cannot solve the problem on its own. However, if we are okey with paying the cost of more than a single texture fetch per sample, then there are pretty decent ways to prevent texture repetition. I'm going to present 3 different techniques.<br>
+<br>
+<br>
+<div class="partsC">
+<div class="part"><img class="myPicture" src="gfx00.jpg"/><br>The texture to be tiled</div>
+<div class="part"><img class="myPicture" src="gfx02.jpg"/><br>Regular texture tiling with GL_REPEAT</div>
+<div class="part"><img class="myPicture" src="gfx01.jpg"/><br>The proposed solutions with "Technique 1"</div>
+</div>
+
+<br>
+<br>
+<h3>Technique 1</h3><hr>
+<br>
+One way to prevent the visual repetition of the texture is to assign a random offset and orientation to each tile of the repetition. We can do that by determining in which tile we are, creating a series of four pseudo-random values for the tile, and then using these to offset and re-orient the texture. Re-orientation can be something as simple as mirroring in x or y or both. This produces a non repeating pattern over the whole surface.<br>
+<br>
+The technique just described comes with some caveats that needs to be solved: First, the pattern will show seams across the tile boundaries, since the differently offseted texture tiles won't match at the tile borders. Secondly, because of the discontinuity introduced on the final texture fetch coordinates themselves, the derivatives will have huge jumps at the tile borders and mipmapping will break apart, creating line artifcats.<br>
+<br>
+One solution to solve both problems is to sample the texture with the offset and orientation mentioned above at four texture tiles, and blend between them when sufficiently close to the border of the current tile (in the possitive U and V directions for example). While this will introduced some amount of blurring in the certain areas of the tile, it is acceptable in most cases, as shown in the image at the beginning of the article.<br>
+<br>
+Of course, for this to work we must use custom texture gradients of course, which must come from the original repeating UV mapping.<br>
+<br>
+The code is pretty simple, and you can find it live in Shadertoy: <a class="regular" href="https://www.shadertoy.com/view/lt2GDd">https://www.shadertoy.com/view/lt2GDd</a>
+<br>
+<br>
+<div class="code">vec4 textureNoTile( sampler2D samp, in vec2 uv )
+{
+    ivec2 iuv = ivec2( floor( uv ) );
+     vec2 fuv = fract( uv );
+
+    <span class="codeComment">// generate per-tile transform</span>
+    vec4 ofa = hash4( iuv + ivec2(0,0) );
+    vec4 ofb = hash4( iuv + ivec2(1,0) );
+    vec4 ofc = hash4( iuv + ivec2(0,1) );
+    vec4 ofd = hash4( iuv + ivec2(1,1) );
+    
+    vec2 ddx = dFdx( uv );
+    vec2 ddy = dFdy( uv );
+
+    <span class="codeComment">// transform per-tile uvs</span>
+    ofa.zw = sign( ofa.zw-0.5 );
+    ofb.zw = sign( ofb.zw-0.5 );
+    ofc.zw = sign( ofc.zw-0.5 );
+    ofd.zw = sign( ofd.zw-0.5 );
+    
+    <span class="codeComment">// uv's, and derivatives (for correct mipmapping)</span>
+    vec2 uva = uv*ofa.zw + ofa.xy, ddxa = ddx*ofa.zw, ddya = ddy*ofa.zw;
+    vec2 uvb = uv*ofb.zw + ofb.xy, ddxb = ddx*ofb.zw, ddyb = ddy*ofb.zw;
+    vec2 uvc = uv*ofc.zw + ofc.xy, ddxc = ddx*ofc.zw, ddyc = ddy*ofc.zw;
+    vec2 uvd = uv*ofd.zw + ofd.xy, ddxd = ddx*ofd.zw, ddyd = ddy*ofd.zw;
+        
+    <span class="codeComment">// fetch and blend</span>
+    vec2 b = smoothstep( 0.25,0.75, fuv );
+    
+    return mix( mix( textureGrad( samp, uva, ddxa, ddya ), 
+                     textureGrad( samp, uvb, ddxb, ddyb ), b.x ), 
+                mix( textureGrad( samp, uvc, ddxc, ddyc ),
+                     textureGrad( samp, uvd, ddxd, ddyd ), b.x), b.y );
+}</div>
+
+Note that the code propagates the orientation mirror transformation to the derivatives. Since the underlaying hardware is probably taking the absolute value of these, you can pretty savely optimize those away and simply pass <b>ddx</b> and <b>ddy</b> to the <b>textureGrad()</b> function.<br>
+<br>
+The only remaining caveat with this technique is that the per-tile hash function might by alias at high minification factors. For example, if this technique is used to texture a huge terrain, depending on the way this texturing method is used, aliasing might occur in the horizon or distant parts of the terrain.<br>
+<br>
+<br>
+<br>
+<h3>Technique 2</h3><hr>
+Another way to get even more organic looking texture un-tile-fication (just invented a word there) is to bomb the whole surface with randomly scaled, offseted and rotated copies of the original texture which get blended together, with the blending weight factor dependant on the distance to the center of each of these copies. This can be accomplished with a <a class="regular" href="../smoothvoronoi/smoothvoronoi.htm">smooth voronoi</a> patter for example. Blending weights proportional to a gaussian fallof for each feature point in the voronoi pattern works fine. Just remember to renormalize the final color to the total contribution of each feature point, otherwise texture brightness range will be lost.<br>
+<br>
+Live code in Shadertoy can be reached here: <a class="regular" href="https://www.shadertoy.com/view/4tsGzf">https://www.shadertoy.com/view/4tsGzf</a>
+<br>
+<div class="code">vec4 textureNoTile( sampler2D samp, in vec2 uv )
+{
+    vec2 p = floor( uv );
+    vec2 f = fract( uv );
+	
+    <span class="codeComment">// derivatives (for correct mipmapping)</span>
+    vec2 ddx = dFdx( uv );
+    vec2 ddy = dFdy( uv );
+    
+    <span class="codeComment">// voronoi contribution</span>
+    vec4 va = vec4( 0.0 );
+    float wt = 0.0;
+    for( int j=-1; j<=1; j++ )
+    for( int i=-1; i<=1; i++ )
+    {
+        vec2 g = vec2( float(i), float(j) );
+        vec4 o = hash4( p + g );
+        vec2 r = g - f + o.xy;
+        float d = dot(r,r);
+        float w = exp(-5.0*d );
+        vec4 c = textureGrad( samp, uv + o.zw, ddx, ddy );
+        va += w*c;
+        wt += w;
+    }
+	
+    <span class="codeComment">// normalization</span>
+    return va/wt;
+}</div>
+
+<br>
+Of course, the drawback is the algorithm samples the texture 9 times, which might stress the memory bus too much. But in the other hand, it really help with high quality imagery  or situation where just simply can affort it.<br>
+<br>
+<br>
+<div class="partsC">
+<div class="part"><img class="myPicture" src="gfx04.png"/><br>Regular texture tiling with GL_REPEAT</div>
+<div class="part"><img class="myPicture" src="gfx03.png"/><br>Smooth Voronoi based tiling</div>
+</div>
+<br>
+
+<br>
+<br>
+<h3>Technique 3</h3><hr>
+There's a really cheap way to achieve this as well with a different concept. The idea is to not have tiles like in Technique 1 but regions similar to Technique 2, but defined differently. First, let start by letting the texture repeat over the plane as usual. Then, imagine we have seveal virtual versions of this tiling pattern, say 8, by simply applying constant offsets to the texture lookup. One can make the technique more powerful by allowing rotations, symmetries and scales for these 8 virtual version, but for our purposes offsets suffice most of the times. Now, the final un-repeating pattern is evaluated at each point of the texuring domain by first pick one number between 0 and 7, which we can call <i>index</i>, and then picking one of these versions for sampling the texels based on it. By choosing the same values for the index within regions, we can create patches of the plane that use the same virtual pattern. Of course seams would be visible, so in order to improve this we  actually make the index a floating point value instead of an integer. That way the index can change slowly and smoothly over the plane. We can then use it to interpolate between the two closest virtual patterns rather than just picking one. This low frequency index variation pattern can be procedural noise, or random values coming from a Look Up Table or a texture, which makes it easier to filter and therefore get a completelly filterable resulting pattern (unlike index values based on a procedural function which is usually more difficult to filter).<br>
+<br>
+The code for the technique is below, and some live code in Shadertoy can be found here: <a class="regular" href="https://www.shadertoy.com/view/Xtl3zf">https://www.shadertoy.com/view/Xtl3zf</a>
+<br>
+<div class="code">vec4 textureNoTile( sampler2D samp, in vec2 uv )
+{
+    <span class="codeComment">// sample variation pattern</span>    
+    float k = texture( iChannel1, 0.005*x ).x; <span class="codeComment">// cheap (cache friendly) lookup</span>    
+    
+    <span class="codeComment">// compute index</span>    
+    float index = k*8.0;
+    float i = floor( index );
+    float f = fract( index );
+
+    <span class="codeComment">// offsets for the different virtual patterns</span>    
+    vec2 offa = sin(vec2(3.0,7.0)*(i+0.0)); <span class="codeComment">// can replace with any other hash</span>    
+    vec2 offb = sin(vec2(3.0,7.0)*(i+1.0)); <span class="codeComment">// can replace with any other hash</span>    
+
+    <span class="codeComment">// compute derivatives for mip-mapping</span>    
+    vec2 dx = dFdx(x), dy = dFdy(x);
+    
+    <span class="codeComment">// sample the two closest virtual patterns</span>    
+    vec3 cola = textureGrad( iChannel0, x + offa, dx, dy ).xxx;
+    vec3 colb = textureGrad( iChannel0, x + offb, dx, dy ).xxx;
+
+    float sum( vec3 v ) { return v.x+v.y+v.z; }
+
+    <span class="codeComment">// interpolate between the two virtual patterns</span>    
+    return mix( cola, colb, smoothstep(0.2,0.8,f-0.1*sum(cola-colb)) );
+
+}</div>
+<br>
+
+Several notes here: First, provided the variation pattern is low frequency, sampling it is really cheap since almost all the times the data will be in the texture cache. Second, the hashes for creating the offsets for the virtual patterns can be as sophisticated as needed. Third, texture coordinate derivatives need to be computed for proper filtering since we are introducing discontinuities. Forth, the interpolation function can be a cubic or linear like in this example above, and can be enriched with any other fancy technique that makes the images look good - in this example case I'm using the difference between the two virtual patterns to boost the contrast of the blended areas.<br>
+<br>
+Bellow is a comparison of the regular tiling pattern and the Technique 3, which is only two texture fetches, together with a break down of the regions in which the different virtual textures are sampled:<br>
+<br>
+<br>
+<div class="partsC">
+<div class="part"><img class="myPicture" src="gfx04.png"/><br>Regular texture tiling with GL_REPEAT</div>
+<div class="part"><img class="myPicture" src="gfx05.png"/><br>Technique 3 in action</div>
+<div class="part"><img class="myPicture" src="gfx06.png"/><br>The index used for variation, encoded as color</div>
+</div>
+
+<br>
+<div class="partsC">
+<div class="part"><img class="myPicture" src="gfx07.png"/><br>Variation 2, masked by index</div>
+<div class="part"><img class="myPicture" src="gfx08.png"/><br>Variation 4, masked by index</div>
+<div class="part"><img class="myPicture" src="gfx09.png"/><br>Variation 6, masked by index</div>
+</div>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

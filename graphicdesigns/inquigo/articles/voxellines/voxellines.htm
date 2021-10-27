@@ -1,0 +1,188 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/voxellines/voxellines.htm">voxel lines and occlusion - 2013</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<!-- --------------------------------------------------------------------------------- -->
+
+<br>
+<h3>Intro</h3><hr>
+Voxels are fun. There's something mesmerizing about their apparence, so it's natural that people use them a lot in their demoscene production, shadertoy creations and even in their visual effects demo reels. Their XYZ plane aligned geometry makes for a good candidate for all sort of rendering optimizations. And also makes it kind of easy to perform some operations that would otherwise be difficult in other contexts. Among such things, there's the computation of shape edges and occupancy.<br>
+<br>
+<br>
+<center><img class="myPicture" src="gfx02.png"/><br><i>Voxel edges computed on the fly per pixel (see <a class ="regular" href="https://www.shadertoy.com/view/4dfGzs">https://www.shadertoy.com/view/4dfGzs</a>)</i></center>
+<br>
+<br>
+<h3>Edges</h3><hr>
+So, you have your voxel volume which is full of either empty or filled cells/voxels, with values 0 or 1 representing the state. You are now shading the face of a voxel cell and you want to mark the pixels belonging to the edges of the voxel shape as such. I will assume that:<br>
+<br>
+<div class="partsB">
+<div class="part60">
+<ul>
+<li> you know if this face is point up, down, left, right, front or back</li>
+<li> you therefore can access the neighbor voxels around this face in "local space"</li>
+<li> you have a vec4 called <b>va</b> with the values of the right, left, front and back side voxels</li>
+<li> you have a vec4 called <b>vb</b> with the values of the front right, front left, back left and back right corner voxels</li>
+<li> you have a vec4 called <b>vc</b> with the values of the right, left, front and back of the voxel above the current</li>
+<li> you have a vec4 called <b>vd</b> with the values of the front right, front left, back left and back right corner voxels of the cell above the current</li>
+<li> you have normalized uv parametrization for the face</li>
+</ul>
+Note that <b>va</b>, <b>vb</b>, <b>vc</b> and <b>vd</b> capture the information of the neighbors in "local" space. You can see these cells represented in the figure to the right. The blue grid cell is the current cell undergoing shading. The cell above it (in local space) is naturally guaranteed to be empty if we are to see this cell at all from our current camera's point of view (that is the cell the ray intersecting this voxel cell arrived from).
+</div>
+<div class="part"><img class="formula" src="gfx03.png"/><br><i>Labeling of the voxel cells involved (in local space)</i></div>
+</div>
+<br>
+<br>
+Now that we have all this information, we can tag the pixels that belong to the edges (within some range in UV space, like 0.85 to 0.95 for example) as actual edges for the voxel solid by looking at the neighbor voxel grid cells stored in <b>va</b>, <b>vb</b>, <b>vc</b> and <b>vd</b>. For example, any of the edges of the blue cell will be an actual geometric edge if the cell to that side <b>va</b> is empty. It will also be an edge if <b>va</b> is not empty but <b>vc</b>, the voxel to the side and above, is also not empty. So, for the right edge of our voxel face we have:<br> 
+<br>
+<div class="code">float rightEdge = smoothstep( 0.85, 0.95, uv.x) * ( ((1.0-va.x)||(vc.x))?1.0:0.0 );</div>
+<br>
+We can perform the OR operation above directly with floating point signals by using <b>or(a,b) = a + b - a*b</b>:<br>
+<br>
+<div class="code">float rightEdge = smoothstep( 0.85, 0.95, uv.x) * (1.0-va.x + va.x*vc.x));</div>
+<br>
+We can also do this for the whole four sides of the face at once, if only to bring clarity to the code:<br>
+<br>
+<div class="code">float edges = maxcomp( smoothstep( 0.85, 0.95, vec4(uv.x,1.0-uv.x,uv.y,1.0-uv.y) ) * (1.0-vc*(1.0-va)) );</div>
+<br>
+where maxcomp() returns the largest component of a vector.<br>
+<br>
+<br>
+This code will work, except that due to the thickness of the edge at rendering time we also need to take care of the corners. We can proceed similarly with the corners though, and flag a corner as belonging to an edge if the <b>vb</b> cell is empty or the <b>vd</b> cell is solid. Putting both edge and corner detectors together produces the following code:<br>
+<br>
+<div class="code">float isEdge( in vec2 uv, vec4 va, vec4 vb, vec4 vc, vec4 vd )
+{
+    <span class="codeComment">// float maxcomp( in vec4 v ) { return max( max(v.x,v.y), max(v.z,v.w) ); }</span>    
+
+    vec2 st = 1.0 - uv;
+
+    <span class="codeComment">// sides</span>    
+    vec4 wb = smoothstep( 0.85, 0.95, vec4(uv.x,
+                                           st.x,
+                                           uv.y,
+                                           st.y) ) * ( 1.0 - va + va*vc) );
+    <span class="codeComment">// corners</span>
+    vec4 wc = smoothstep( 0.85, 0.95, vec4(uv.x*uv.y,
+                                           st.x*uv.y,
+                                           st.x*st.y,
+                                           uv.x*st.y) ) * (  1.0 - vb + vd*vb );
+    return maxcomp( max(wb,wc) );
+}</div>
+
+<br>
+
+<br>
+<h3>Fake Occlusion</h3><hr>
+A very similar technique can be used to compute fake occlusion on the face of a voxel from the immediate neightbor voxels. In this case we only care about the cells above the current cell undergoing shading, <b>vc</b> and <b>vd</b>. For the edges, we can simply use a linear grayscale UV gradient modulated by the neighbor cell occupancy. Or in other words, if the voxel is solid, it produces occlusion. Something like<br>
+<br>
+<div class="code">float rightOcclusion = uv.x * vc.x;</div>
+<br>
+For corners, we want to occlude when the corner cell <b>vd</b> is solid but the edge cells <b>vc</b> are empty, since the case of solid <b>vc</b> cells has already been captured with the previous test. For example, for the front right corner, we'd have<br>
+<br>
+<div class="code">float frontRightOcclusion = uv.x * uv.y * vd.x * (1.0-vc.x)*(1.0-vc.z);</div>
+<br>
+We can put it all together to get<br>
+<br>
+<div class="code">float calcOcc( in vec2 uv, vec4 va, vec4 vb, vec4 vc, vec4 vd )
+{
+    vec2 st = 1.0 - uv;
+
+    <span class="codeComment">// edges</span>
+    vec4 wa = vec4( uv.x, st.x, uv.y, st.y ) * vc;
+
+    <span class="codeComment">// corners</span>
+    vec4 wb = vec4(uv.x*uv.y,
+                   st.x*uv.y,
+                   st.x*st.y,
+                   uv.x*st.y)*vd*(1.0-vc.xzyw)*(1.0-vc.zywx);
+    
+    return wa.x + wa.y + wa.z + wa.w +
+           wb.x + wb.y + wb.z + wb.w;
+}</div>
+<br>
+which produces kind of decent cheap approximation to short distance occlusion. See the images comparing some simple rendering of a voxel without and with the occlusion approximation enabled:<br>
+<br>
+<div class="partsC">
+<div class="part"><img class="myPicture" src="gfx00.png"/><br><i>Ambient + Diffuse lighting</i></div>
+<div class="part"><img class="myPicture" src="gfx01.png"/><br><i>Same as left, with fake occlusion based on neighbor occupancy</i></div>
+</div>
+<br>
+<br>
+
+There's a live example in Shadertoy of this code (click play to watch it move, or follow <a class ="regular" href="https://www.shadertoy.com/view/4dfGzs">https://www.shadertoy.com/view/4dfGzs</a>)<br>
+<br>
+<div class="iframeCenter" style="max-width:800px;"><div>
+<iframe frameborder="0" src="https://www.shadertoy.com/embed/4dfGzs?gui=true&t=10&paused=true&muted=false" allowfullscreen></iframe>
+</div></div>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

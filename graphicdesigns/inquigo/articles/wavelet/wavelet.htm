@@ -1,0 +1,271 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/wavelet/wavelet.htm">wavelet image compression - 2007</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<h3>Intro</h3><hr>
+In 2002 I made some experiments on image compression with wavelets. In 2007 I decided to revisit the topic and I spend few days playing around and trying to see if I could do something useful with it. In the end I had a little demo called <a href="../../../prods/index.htm#Inslexia" class="regular">Inslexia</a>, which made 4th (last!) position in The Ultimate Meeting demoparty in Germany.<br>
+<br>
+As with many other compression techniques based in signal processing, wavelets exploit the fact that most signals to humans are mostly smooth. That means that <i>usually</i> a sample value (say, a pixel's color) is similar to the neightbouring samples (say, the color of the pixles around). However, most Fourier based compression techniques like mp3 for sound or JPG for images, and even lossless techniques like PNG, exploit this smoothness only at a very simple level. Indeed, all these techniques divide the signal (sound or image) into tiles of samples or pixels (for example, in groups of 8x8 pixels) and exploit smoothness inside that region only, not making use of the fact that perhaps samples/pixels are similar across those boundaries and at a much bigger scale (think of an almost completely blue sky).<br>
+<br>
+Wavelet compression allows us to exploit smoothness at watever level it happens, be it tiny groups of 2x2 samples, be it all the pixels of a flat image at once. Therefore, the compression ratio is further improved compared to block based methods. This means that for cases where one wants extreme compression, wavelets really can shine over traditional
+techniques.<br>
+<br>
+The fact that one needs <i>extreme</i> compression rations today in the 21st century is quite questionable, and that's perhaps the reason JPG2000 has not succeeded yet on becoming popular and will never do (ten years on the road, and nobody knows it exists). However, luckily for me the demoscene has little to do with real-world usefulness, so playing with wavelets for compression was still a usefull thing. This article is about my little quick experiment, and about few tip and tricks, some of the practical results and some sketches of the code involved in
+<a href="../../../prods/index.htm#Inslexia" class="regular">Inslexia</a>.<br>
+
+<br>
+<br>
+
+<h3>The Idea</h3><hr>
+The idea is to start first with a gray scale image, and do like you would proceed for a PNG image compressor: pick your buffer and group the pixels in tiles of 2x2. Now, if you only store the average color of the four pixels of each tile you are already compressing by 1:4. Good. Of course the image resolution has decreased. Let's fix it by storing the real value of the 4 pixels in a compact manner. Because these pixels are physically near to each other, we can pretty safely assume their colors will be similar to that average color that we already encoded. So, instead of storing these pixels as full gray scale values, let's store only the amount by which they are different to the average color. In fact, we only need to store three of them, cause the forth one can be deduced from the other three given the fact that we know they average. So, let's store these three values (which can be positive or negative, but probably small anyway) into a separate array, such that we have the array of corner pixels for all the image, and the three arrays of differences for the other pixels. These three arrays will compress very well cause they have small values, something that will be more true the bigger the image resolution is.<br>
+<br>
+Now we don't stop here as PNG, but note that the array of average pixels actually is a new image, which has one quarter the amount of pixels of the original image - it's just a downsampled version of it. This means we can simply repeat the process to produce a new triplet of detail values and a new average image with which will be again a quarter of the size of the current image, quite like in a mipmap chain for textures. The process can be iterated until we have a one pixel by one pixel image. The beauty is that with this process we have rearranged the image data in groups or "bands" of detail differences (in groups of three) such that make sense together. Cause the difference arrays of the first iteration correspond to the highest frequency of the image (ie, that separates one pixel from the next), the second band of differences encodes the information of half that frequency, ie, the color variations that happen every four pixels, the next band works on 8 pixles frequency, and so forth. Intuitively we can see that the higher the frequency of the band, the smaller the differences will be, cause of course color one pixel appart are much more similar to each other than colors separeted by 8 pixels.<br>
+<br>
+So in esence, one is getting some sort of frequencial decomposition of the image but at all scales, not only at 2x2 block scale like in PNG or 8x8 like in JPG. Now, call the numbers/differences
+stored in each band "coefficients", and you are done with wavelet compression...<br>
+
+<br>
+<br>
+
+<h3>The Details</h3><hr>
+<div class="partsB">
+<div class="part60">
+Well, not quite. Wavelets are a complex signal processing tool, and what we are doing here is nothing but scratching the very surface of the thing. In fact, what we are doing
+is to use one of the many possible Wavelets basis, the Haar wavelet to be more precise. But we are not going into filter-banks and dsp stuff here - instead we just will see
+how I implemented this simple multilevel color encoding technique and how I had my image compressed into my demo.<br>
+<br>
+We are going to replace the four pixels of a 2x2 tile, that we can call <b>a</b>, <b>b</b>, <b>c</b> and <b>d</b>, with new values <b>a'</b>, <b>b'</b>, <b>c'</b> and <b>d'</b>
+such that <b>a'</b> is the average of the four pixels, <b>b'</b> is the difference between <b>b</b> and the average <b>a'</b>, <b>c'</b> is the difference between <b>c</b>
+and the average <b>a'</b> and same for <b>d'</b>.<br>
+<br>
+
+<table><tr>
+  <td valign="top"><img class="formula" src="gfx04.png"/></td>
+  <td width="32"></td>
+  <td align="left" valign="top"><img class="formula" src="for00.png"/></td>
+</tr></table>
+<br>
+This can be rewriten in matrix form as<br>
+<br>
+<img class="formula" src="for01.png"/><br>
+<br>
+We note that this matrix is not orthogonal, which means that the output vector (<b>a'</b>, <b>b'</b>, <b>c'</b> and <b>d'</b>) will have some redundant information in its
+coordinates. Basically <b>a'</b>, <b>b'</b>, <b>c'</b> and <b>d'</b> will be encoding redundant color information. So we orthogonalize the matrix to get<br>
+<br>
+<img class="formula" src="for02.png"/><br>
+<br>
+which corresponds to the following pixel operations:<br>
+<br>
+<img class="formula" src="for03.png"/><br>
+<br>
+
+</div>
+<div class="part">
+    <img class="myPicture" src="gfx01.jpg"/><br><i>1300 bytes of image data</i><br>
+    <br>
+    <img class="myPicture" src="gfx00.jpg"/><br><i>4200 bytes of image data</i>
+</div>
+</div>
+
+
+<br>
+The cool part is that this matrix equals its own inverse (up to the scale factor of 1/4), so at decodification time one can plug <b>a'</b>, <b>b'</b>, <b>c'</b> and <b>d</b> into
+the matrix and get <b>a</b>, <b>b</b>, <b>c</b> and <b>d</b> back.<br>
+<br>
+So the compression starts by traversing the image in groups of 2x2 pixels and computing <b>a'</b>, <b>b'</b>, <b>c'</b> and <b>d'</b>. The traversal can be done in many
+ways, but using the traditional raster order (top to bottom, left to right) is not the optimal. In order to explode local image coherence there are much better traversal
+alternatives. For example, the one usually recommended is the Morton order, which performs recurseive (fractal) zig-zags:<br>
+<br>
+<br>
+
+<div class="partsB">
+  <div class="part"><img class="formula" src="gfx05.png"/></div>
+  <div class="part">
+  <div class="code"><span class="codeComment">// inverse morton order (used at decompression time)
+//  (i,j) coordinates of the pixel, from 0 to (2^level)-1
+//  level : iteration level, log2(resolution)</span>
+int imorton( int i, int j, int level )
+{
+    int res = 0;
+    for( int k=level-1; k>=0; k-- )
+        res = (res&lt;&lt;2) + (((j>>k)&1)&lt;&lt;1) + ((i>>k)&1);
+    return res;
+}</div>
+</div>
+
+  <div class="part">
+  <div class="code"><span class="codeComment">// morton order (used at compression time)
+//  i: index in the sequence
+//  level : iteration level, log2(resolution)
+//  returns the pixel offset = v*resolution+u</span>
+int morton( int i, int level )
+{
+    int res = 0;
+    for( int k=0; k < level; k++ )
+    {
+        res += (( i    &1)<<(k      ));
+        res += (((i>>1)&1)<<(k+level));
+        i >>= 2;
+    }
+    return res;
+}</div>
+ </div>
+</div>
+
+Once <b>a'</b>, <b>b'</b>, <b>c'</b> and <b>d'</b> are computed, <b>b'</b>, <b>c'</b> and <b>d'</b> have to be stored in the output file/stream/datablock. In the other hand, <b>a'</b> must be kept around, such that all the <b>a'</b> of all the tiles form together a new image, which is half the size in each dimension. We now have to compress this new half-size image  using the same process, repeatedly until only one we get down to an image of one single pixel, at which point the whole image has been completely encoded.<br>
+<br>
+Of course, by doing all this we have not reduced the amount of data. But we have rearranged it and decorrelated it. This means that all the <b>b'</b>, <b>c'</b> and <b>d'</b> coefficients that we have been storing actually have very predicatable values. For example, in the first iteration/pass, these coefficients will have really tinny values, probably in the order of &plusmn;4, cause images don't usually have big color variations between adjacent pixels. This means we can store the first pass coefficients with very few bits, perhaps as few as 2 or 3. Also, and here starts the fun part, you mioght choose to quantify these values and discard those who are small enough, quite like you would do in a JPG encoder. Now, the point of all these wavelets and recursive image processing is that unlike the JPG, here we will be discarding coefficients that are small enough <b>at any scale</b>. This is something JPG is unable to do. So, this means, that if we have a huge patch of blue color in the sky, our wavelet compressor will be able to store it all in a couple of data values, while JPG would have to store as many values as blocks of 8x8 pixels fit in the patch.<br>
+<br>
+For quantification, I found that a scaling factor proportional to 2^(level<sup>2</sup>) works very well. Once quantification is done, a good arithmetic compressor will take proper care of outputing the data with the minimun amount of bits possible.<br>
+<br>
+Implementation wise, cause you will be manipulating images of different sizes, you probably want to allocate only two buffers as big as the original image, and reuse them by ping-ponging them between levels.<br>
+<br>
+<div class="code"><span class="codeComment">// 512x512 gray scale image decompression</span>
+void ihaar( float **dstori, int level, const unsigned char *coeffs )
+{
+    const int res = 1 << level;
+    const float cte = m2powf(.132f*(float)(level*level));
+
+    <span class="codeComment">// ping-pong destination/origin buffers between iterations</span>
+    float *dst = dstori[(level&1)  ];
+    float *ori = dstori[(level&1)^1];
+
+    for( int i=0; i&lt;(res*res); i++ )
+    {
+        const int   j  = i >> nivel;
+        const int   k  = i & (res-1);
+        const int   m = imorton(k,j,level)*3;
+        const float a = ori[i];
+        const float b = cte*(float)(coeffs[m+0]-128);
+        const float c = cte*(float)(coeffs[m+1]-128);
+        const float d = cte*(float)(coeffs[m+2]-128);
+        dst[ (j*4+0)*res + k*2+0 ] = a + b + c + d;
+        dst[ (j*4+0)*res + k*2+1 ] = a - b + c - d;
+        dst[ (j*4+2)*res + k*2+0 ] = a + b - c - d;
+        dst[ (j*4+2)*res + k*2+1 ] = a - b - c + d;
+    }
+
+    <span class="codeComment">// recurse (from 512x512 to 1x1)</span>
+    if( level&lt;8 )
+        ihaar( dstori, level+1, coeffs );
+}</div>
+
+<br>
+<br>
+
+<h3>Color Images</h3><hr>
+So far we have compressed gray scale images only. For color images we are gonna use a very standard method that makes storing color very unexpensive, almost for free. The naive approach of decomposing the rgb images in three independent gray scale images is a very bad idea, you should <b>NEVER</b> do that. Instead we are going to use the popular luma/chroma decomposition, as JPG does.<br>
+<br>
+The principle on which the technique relies is that of the eye being mostly sensitive to luminance/luma values, and not that much to colors/chroma. Therefore, one can probably extract the luminance of the image (grayscale version of it) and its chorma, store the luminance at full resolution and downsample the choroma a lot yet getting
+a good image when upsampling the chroma and recombining it back with the original luminance.
+<br>
+<br>
+
+<div class="partsB">
+  <div class="part"><img class="myPicture" src="gfx06.jpg"><br>original image (512x512 = 768 kbyte of raw data)<br></div>
+  <div class="part"><img class="myPicture" src="gfx07.jpg"><br>luminance (512x512 = 262 kbyte of raw data)<br></div>
+  <div class="part"><img class="myPicture" src="gfx08.jpg"><br>chroma (512x512 = 524 kbyte of raw data)<br></div>
+</div>
+<div class="partsB">
+  <div class="part"><img class="myPicture" src="gfx11.jpg"><br>reconstructed image (512x512 = 264 kb of raw data)<br></div>
+  <div class="part"><img class="myPicture" src="gfx10.jpg"><br>re-upsampled luminance (32x32 = 2 kbyte of raw data)<br></div>
+  <div class="part"><img class="myPicture" src="gfx09.png"><br>downsampled chroma (32x32 = 2 kbyte of raw data)<br></div>
+</div>
+
+<br>
+In the images above I'm downsampling the chroma to 32x32 pixels image only, what is quite a lot. In fact the trick seems to behave fantastic, the reconstructed image is pretty acceptable compared to the original, but takes one third the size (as much as it's gray scale version. Here are some routines to extract the luminance <b>Y</b> and chroma <b>U</b> and <b>V</b> from the regular rgb colors and the other way arround. There are many similar color conversion formuals that will do equally well, as long as they split luminance and color.<br>
+<br><div class="code">vec3 rgb2yuv( const vec3 & rgb )
+{
+    return vec3( dot(rgb,vec3(0.25f, 0.5f,0.25f) ),
+                 dot(rgb,vec3(0.00f,-0.5f,0.50f) ),
+                 dot(rgb,vec3(0.50f,-0.5f,0.00f) ) );
+}
+
+vec3 yuv2rgb( const vec3 & yuv )
+{
+    return vec3( dot(yuv, vec3(1.0f,-0.5f, 1.5f) ),
+                 dot(yuv, vec3(1.0f,-0.5f,-0.5f) ),
+                 dot(yuv, vec3(1.0f, 1.5f,-0.5f) ) );
+}</div>
+
+<br>
+<br>
+<h3>Bluring the blocks</h3><hr>
+The extra compression achieved by the agressive quantification of the detail coeffients (<b>b'</b>, <b>c'</b> and <b>d'</b>) produces blocky artifacts (unlike the JPG image compression, these blocks do not have constant size but appear in all sizes). Something that can perhaps improve the quality of the image is to blur the decompressed buffer to hide the artifacts. Of course, plain blurring will remove detail from the image. So adaptive blurrin might be a better option. For <a href="../../../prods/index.htm#Inslexia" class="regular">Inslexia</a> I decided to go for a gaussian blur which kernel radious would vary based on the variance of the rgb colors. Variance keeps low in low frequency areas, and usually increases for areas of high amount of texture. It can derefore be used as some sort of low frequency edge detector. In the folowing four images, the one in the top-left corner shows the decompressed image that is made of no more than 1300 bytes! The image on its right is the variance of this image. Note how the high variance areas(in white) point us to the places where we don't want to blur too much, or in other words, the areas where the radious of the gaussian blur will be small. Dark areas which are low varianve areas can use a big gaussian blur kernel to perform blurring. The result is the bottom-left image. Note how much better it looks compared to the image in its right, which shows a regular blind gaussian blur applied to the original decompressed image (note the eyebrows for example).<br>
+<br>
+
+<div class="partsC">
+  <div class="part"><img class="myPicture" src="gfx12.png"><br>original image (1300 bytes)<br></div>
+  <div class="part"><img class="myPicture" src="gfx13.jpg"><br>variance<br></div>
+  <div class="part"><img class="myPicture" src="gfx01.jpg"><br>variance based gaussian blur<br></div>
+  <div class="part"><img class="myPicture" src="gfx14.jpg"><br>regular gaussian blur<br></div>
+</div>
+<!-- -------------------------------------------------------------------------------------------- -->
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

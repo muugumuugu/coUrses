@@ -1,0 +1,137 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/quaternions/quaternions.htm">thinking with quaternions - 2006</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+I am not going to explain how quaternion can be used to ratate 3D vectors. Instead, the aim of this article is to summarize and share a few useful ideas about quaternions in some projects:<br>
+<br>
+Let <span class="formulaText">q</span> be a quaternion. As we know, a quaternion has one real component and three imaginary component. The
+three imaginary units <span class="formulaText">i</span>, <span class="formulaText">j</span> and <span class="formulaText">k</span> fullfill <span class="formulaText">i<sup>2</sup>=-1</span>,
+<span class="formulaText">j<sup>2</sup>=-1</span> and <span class="formulaText">k<sup>2</sup>=-1</span>, as usual.
+However, what we are interested in for 3D graphics is in the axis/angle notation of the quaternion. By packing
+together the three imaginary components we can think on the quaternion as a real value <span class="formulaText">w</span> plus
+a 3D vector <span class="formulaText">v = { x, y, z }</span>:<br>
+<br>
+<span class="formulaText">q = { w, x, y, z } = { w, v } = w + x&sdot;i + y&sdot;j + z&sdot;k </span><br>
+<br>
+To get our axis/angle notation we just have to impose to our quaternion that the real component <span class="formulaText">w</span> is the
+cosine of a given half-angle and the vector <span class="formulaText">v</span> to be a normalized vector <span class="formulaText">a</span> scaled
+by the sine of that same half-angle.<br>
+<br>
+<span class="formulaText">q = { cos(&omega;/2), a&sdot; sin(&omega;/2) }</span><br>
+<br>
+Such a quaternion following the last restriction can be checked to be normalized, since by the definition of norm/modulus of a quaternion<br>
+<br>
+<span class="formulaText">|q|<sup>2</sup> = w<sup>2</sup> + x<sup>2</sup> + y<sup>2</sup> + z<sup>2</sup></span><br>
+<br>
+we have that<br>
+<br>
+<span class="formulaText">|q|<sup>2</sup> = cos<sup>2</sup>(&omega;/2) + (x<sup>2</sup> + y<sup>2</sup> + z<sup>2</sup>)&sdot;sin<sup>2</sup>(&omega;/2)</span><br>
+<br>
+so<br>
+<br>
+<span class="formulaText">|v|<sup>2</sup> = 1 &#x2192; |q|<sup>2</sup> = cos<sup>2</sup>(&omega;/2) + sin<sup>2</sup>(&omega;/2) = 1</span><br>
+<br>
+<br>
+Now, the interesting property comes into the game. The exponentiation of quaternions happens to be like this<br>
+<br>
+<span class="formulaText">q<sup>t</sup> = { cos(&omega;/2), a&sdot; sin(&omega;/2) }<sup>t</sup> = { cos(&omega;&sdot;t/2), a&sdot; sin(&omega;&sdot;t/2) }</span><br>
+<br>
+What results in the following interpretation: self-multiplying a quaternion <b><i>t</i></b> times is the same as multiplying the angle by <b><i>t</i></b> (even if I find this interpretation a bit tricky for non integer values of <b><i>t</i></b>...).<br>
+<br>
+We can now start to see why quaternions are used for angular operations. Actually, we know a normalized quaternion represents a 3D rotation around the axis <b><i>a</i></b> by an angle of &omega;. And we know that concatenating two rotations can be done by multiplying the two corresponding quaternions. Hence what we have to remember is just the first two rows of the following table:<br>
+<br>
+<br>
+<table cellpadding="10" border="1" style="border-collapse:collapse;border: 1px solid #808080;">
+	<tr><td></td><td>Angular Space</td><td>Quaternion Space</td></tr>
+	<tr><td>Add</td><td>&alpha; + &beta;</td><td>q<sub>&alpha;</sub> &sdot; q<sub>&beta;</sub></td></tr>
+	<tr><td>Scale</td><td>&alpha; &sdot; t</td><td>q<sub>&alpha;</sub><sup>t</sup></td></tr>
+	<tr><td>Mad</td><td>&alpha; + &beta; &sdot; t</td><td>q<sub>&alpha;</sub> &sdot; q<sub>&beta;</sub><sup>t</sup></td></tr>
+	<tr><td>Lerp</td><td>&alpha; &sdot; t + &beta; &sdot; (1-t)</td><td>q<sub>&alpha;</sub><sup>t</sup> &sdot; q<sub>&beta;</sub><sup>1-t</sup></td></tr>
+</table>
+
+<br>
+<br>
+We can now easily convert any angular operation that we want to perform into the correct quaternion operations. Just replace additions/subtractions by multiplications/divisions, and multiplications/divisions by powers/roots, and we are done.<br />
+<br>
+This relationship between angle and quaternion operations quite resembles the relationship between linear and
+logarithmical operations (say, Laplace Transform)... Actually, there is a reason for this, and it is that
+quaternions are a generalization of complex numbers, and as such normalized quaternions are generalization of
+pure complex exponentials and thus the logarithmic relationships come apparent. Actually, if we have the
+following normalized quaternion<br>
+<br>
+<span class="formulaText">q<sub>&omega;,a</sub> = cos(&omega;/2) + a&sdot; sin(&omega;/2)</span><br>
+<br>
+and we make the axis equal to the real axis a=(1,0,0), we have<br>
+<br>
+<span class="formulaText">q<sub>&omega;,(1,0,0)</sub> = cos(&omega;/2) + i&sdot; sin(&omega;/2) = e<sup>i&sdot; &omega;/2</sup></su[></span><br>
+<br>
+which is your traditional complex number rotor.
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

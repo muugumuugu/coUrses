@@ -1,0 +1,149 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/morecheckerfiltering/morecheckerfiltering.htm">filtering the checkerboard pattern</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+<h3>Intro</h3><hr>
+This article proposes a small improvement to the <a class="regular" href="../checkerfiltering/checkerfiltering.htm">box filtering of checker pattern</a>, which introduced an analytic way to filter procedural checker patterns. By introducing a triangle shaped kernel, temporal stability can be improved for animated scenes over the original box filter version, at almost the same cost.<br>
+<br>
+
+<div class="partsC">
+<div class="part"><img src="gfx00.png"/><br>Aliased checkerboard</div>
+<div class="part"><img src="gfx01.png"/><br>Analytic box filter</div>
+<div class="part"><img src="gfx02.png"/><br>Analytic triangle filter</div>
+</div>
+
+<br>
+<br>
+<h3>The Improvement</h3>
+<hr>
+<br>
+The problem with box filtering is that as the camera moves and a new feature starts overlapping a pixel's footprint, its contribution starts to affect the pixel's final color immediately. Depending on the scene, that can manifest as some flickering under camera animation (especially for slow moving cameras). One way to improve the situation is to replace the box filter by something that has a gradual contribution profile such that it zero at the edges of the kernel and gains relative weight at the center. Among the most common kernels used in CG film and games is the cubic filter. However, for this article we'll use triangular shaped kernel weights, which while not as good as the cubic, is still way way better than the box filter. In order to keep the image smooth we'll have to widen the kernel a little bit too.<br>
+<br>
+In order to do so, we basically proceed exactly as in the box filter case, only that we have to change the form of the integral to account for the triangular kernel/window shape. For that, we have to replace the box filter formula:<br>
+<br>
+<img class="formula" src="gfx04.png"/><br>
+<br>
+with<br><br> 
+<img class="formula" src="gfx05.png"/><br>
+<br>
+Note that in reality the integrals run from <b>uv-w/2</b> to <b>uv+w/2</b>, but re-centering the maths at 0 makes things easier to read. Remember also that <b>f(x)</b> is our square procedural signal.<br>
+<br> 
+The above integrals can be solved by using <a class="regular" href="https://en.wikipedia.org/wiki/Integration_by_parts">integration by parts</a>, which produces some symmetries that cancel out to reduce to the following:<br>
+<br>
+<img class="formula" src="gfx06.png"/><br>
+<br>
+where <b>p(x)</b> is the integral of the triangular signal <b>t(x)</b>, which was the integral of the square signal <b>s(x)</b>:<br>
+<br>
+<img class="formula" src="gfx07.png"/><br>
+<br>
+The tricky part now is to compute <b>p(x)</b>. Thankfully, the same way the triangular signal <b>t(x)</b> had an easy closed form, its integral (the double integral of the square signal) has it to. Since we know the area of each triangle is 1/2 and that the integral of a line is a quadratic curve, we can directly construct the <b>p(x)</b> as a connected parabolic arcs that rise one unit every two domain units. Below is a graph of the square signal <b>s(x)</b> in yellow, the triangular signal <b>t(x)</b> in red and its integral <b>p(x)</b> in blue:<br>
+<br>
+<img class="myPicture" src="gfx03.png"/><br>
+<br>
+This is the coded that returns the three signals <b>s(x)</b>, <b>t(x)</b> and <b>p(x)</b>, in a way that terms get reused nicely, which is good for performance (source code <a class="regular" href="https://www.shadertoy.com/view/MtffWs">here</a>):<br>
+<br>
+
+<div class="code"><span class="codeComment">// square signal and its first and second integrals</span>
+vec3 sqr_and_integrals( in float x )
+{
+    x *= 0.5;
+    float h = fract(x)-0.5;
+    float s = -sign(h);
+    float t = 1.0 - 2.0*abs(h);
+    float p = x + h*t;
+    return vec3( s, t, p );
+}</div>
+<br>
+Now we have all that we need to perform the actual filtering:<br>
+<br>
+<div class="code">
+vec2 p( in vec2 x )
+{
+    vec2 h = fract(x/2.0)-0.5;
+    return x*0.5 + h*(1.0-2.0*abs(h));
+}
+
+<span class="codeComment">// return a filtered checkers pattern</span>
+float checkersGradTriangle( in vec2 uv, in vec2 ddx, in vec2 ddy )
+{
+    vec2 w = max(abs(ddx), abs(ddy)) + 0.01;    <span class="codeComment">// filter kernel</span>
+    vec2 i = (p(uv+w)-2.0*p(uv)+p(uv-w))/(w*w); <span class="codeComment">// analytical integral (triangle filter)</span>
+    return 0.5 - 0.5*i.x*i.y;                   <span class="codeComment">// xor pattern</span>
+}</div>
+<br>
+It is worth noting that this code can be extended trivially to 3D by making all the vec2 functions a vec3.<br>
+<br>
+The results are pretty good, although difficult to show in images or aniamted GIFs. I recommend visiting the realtime version and source code reference here: <a class="regular" href="https://www.shadertoy.com/view/llffWs">https://www.shadertoy.com/view/llffWs</a><br>
+<br>
+<br>
+
+<!-- -------------------------------------------------------------------------------------------- -->
+
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>

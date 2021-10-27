@@ -1,0 +1,251 @@
+        
+
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+        <meta charset="ISO-8859-1">
+		<meta name="keywords" content="quilez, inigo, iñigo, fractals, demoscene, computer graphics, mathematics, rendering, demo, 3D, realtime, shader, raytracing, shadertoy, glsl">
+		<meta name="description" content="Tutorials and articles of Inigo Quilez on computer graphics, fractals, demoscene, shaders and more.">
+		<meta name="author" content="Inigo Quilez">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<meta property="og:title" content="Inigo Quilez" />
+		<meta property="og:description" content="Articles on computer graphics, math and art">
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://iquilezles.org/logo.jpg" />
+		<meta property="og:image:type" content="image/jpg" />
+		<meta property="og:url" content="https://iquilezles.org" />
+		
+		<meta name="twitter:title" content="Inigo Quilez">
+		<meta name="twitter:description" content="Articles on computer graphics, math and art">
+		<meta name="twitter:image" content="https://iquilezles.org/logo.jpg">
+		<meta name="twitter:card" content="summary_large_image">
+
+		<link rel="canonical" href="https://iquilezles.org"/>
+		<title>Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more</title>
+		<link href="/style.css?v=11" rel="stylesheet">
+		
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-M1E3CY9CCC"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config', 'G-M1E3CY9CCC');</script>
+
+	</head>
+
+	<body><div style="display:flex;flex-direction:column;min-height:100vh;">
+		
+		<header>
+		
+		<div>
+		  <a class="menu" href="/index.html">Inigo Quilez</a>
+		
+		  &nbsp; :: &nbsp; <a class="menu" href="/www/index.htm">articles</a>&nbsp; :: &nbsp; <a class="menu" href="/www/articles/meshcompression/meshcompression.htm">mesh compression - 2007</a>		</div>
+		
+		<!--<div style="font-size:0.75em;margin:0;padding:0;">-->
+		<!--<div style="margin:0;padding:0;background-color:#00ff00;display:flex;justify-self:self-end;">-->
+		<div style="padding:0;margin:0;border:0;display:flex;flex-flow:row wrap;justify-content:flex-end;">
+			<a href="https://twitter.com/iquilezles"><img class="socialMediaIcon" src="/imgTwitter.png"/></a>
+			<a href="https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw"><img class="socialMediaIcon" src="/imgYoutube.png"/></a>
+			<a href="https://www.shadertoy.com/user/iq/"><img class="socialMediaIcon" src="/imgShadertoy.png"/></a> 
+            <a href="https://www.patreon.com/inigoquilez"><img class="socialMediaIcon" src="/imgPatreon.png"/></a>
+			<a href="http://paypal.me/inigoquilez"><img class="socialMediaIcon" src="/imgPayPal.png"/></a> 
+			<a href="https://www.tiktok.com/@inigoquilez"><img class="socialMediaIcon" src="/imgTikTok.png"/></a> 
+		<!--<a href="https://space.bilibili.com/673661710"><img class="socialMediaIcon" src="/imgBiliBili.png"/></a>-->
+		</div>
+		
+		</header>
+		
+        <div id="container" style="flex-grow:1;">
+
+
+<h3>Intro</h3><hr>
+Back in 2007 I made two 4 kilobyte demos that requrired polygonal mesh compression, <a class="regular" href="../../../prods/index.htm#stiletto">Stiletto</a> and <a class="regular" href="../../../prods/index.htm#kinderplomber">Kinderplomber</a>. One featured skeletal mesh deformation of a part of a female body, and the other one did some global illumination on an asbtract tree shape. Both meshes were organic shapes, and were compressed in a few hundred bytes by using (two different) subdivision methors to amplify the data set, and also by heavily comrpessing the low resolution base mesh. The compression methods were an evolution of the naive method used for the 64 kilobyte demo <a class="regular" href="../../../prods/index.htm#paradise">Paradise</a>. This article is about the compression methods used in those two intros.<br>
+<br>
+<br>
+<div class="partsC">
+<div class="part"><img class="myPicture" src="gfx00.png"/><br>Mesh for <i>Kinderplomber</i>, compressed down to<br>967 bytes (2.04 bytes per triangle)</div>
+<div class="part"><img class="myPicture" src="gfx01.png"/><br>Mesh for <i>Stiletto</i>, compressed down to<br>710 bytes (1.75 bytes per triangle)</div>
+</div>
+<br>
+<h3>Step 1 : data input and data output</h3><hr>
+The first step is setting the rules of the game. The rules in these 4 kilobytes demos where:<br>
+<ul>
+<li>The meshes are going to be really low resolution</li>
+<li>Meshes are made of quads, not triangles: triangles are efficient for rendering, but they usually bring little additional geometrical information for most organic surfaces.</li>
+<li>There is an entropy compressor processing our data (probably an arithmetic encoder). </li>
+</ul>
+
+<b>Low resolution meshes:</b> because meshes are low resolution, we'll be able to explode some geometrical locality, but not that much. We'll try of course to encode vertex that are geometrically close to each other also near each
+other in the data stream and do some prediction on the data, but this will help only a bit. The meshes are low resolution because there's a subdivision process happening afterwards after the mesh is decoded. This approach of low
+resolution encoding plus subdivision resulted in lower demo sizes than skipping all the subdivision code and encoding a smooth (low entropy) higly compressible mesh.<br>
+<br>
+
+<b>Modeling with quads:</b> modeling with quads not only is convenient for the subdivision routine, but also is more efficient into representing surfaces. Usually the extra edges introduced by triangulating surfaces brings little to no extra geometrical information, at the cost of having more topological (connectivity) information to store.<br>
+<br>
+<center>
+<img class="formula" src="gfx02.png"/><br>
+<b>Entropy compressor:</b> this is very important and often misunderstood. Assuming<br>our data streams are going to be encoded with some arithmetic encoder or some<br>other sort of entropy compressor (ZIP, PNG, Crinkler, Kkrunchy, UPX...), it is a bad<br>idea to try to be too smart in our end and pack data streams that are unrelated to each other.
+</center>
+<br>
+
+<br>
+Suppose you have per vertex positions x, y and z, and also per vertex colors and UV texture coordinates. Say that your x, y and z values have been quantified to 6 bits each, the RGB colors to 6 bits per component too and the UVs to 6 bits for U and 6 bit for V. Your compressed vertex format aligns nicely to 48 bytes, and so you decide to store the data in this "compact" form. You might even decide to delta encode the vertex data (an array of structs) hoping to help the compressor. This is a mistake. The redundancy of the data happens across sample point of the same data channel. And by packing the data in a satisfying layout, you are shuffling the data and confusing the entropy compressor. Instead, store your data as a struct of arrays, and let each individual data channel (X, Y, Z, R, G, B, U, V) be serialized independently so that the entropy compressor can explode the coherency of the data values.<br>
+<br>
+This brings us to a second consideration. Because data packing doesn't need to happen anymore, you don't need to limit yourself to any particular number of bits per channel. Or if you do, you should not take data aligment considerations into account, but only signal to noise / quality / compression ratios.<br>
+<br>
+For example, if after quantification the X component of vertices happens to range from 0 to 41, do not try to store it in a 6 bits variable. Store it simply in a integer, or whatever is big enough to store it, and let the arithmetic encoder use the 5.4 bits it takes to store numbers from 0 to 41 (in the worst case scenario that all these numbers are pure random).<br>
+<br>
+In a similar fashion, do not RLE encode your data. Do not interfere with the compressor, just present the data to it in the most simple way you can.<br>
+<br>
+<br>
+<br>
+<h3>Step 2 : quantification</h3><hr>
+When it comes to quantify the vertex positions into an integer, we are all always tempted to use a power of two as the number of subdivisions. For example, we like to encode each axis of our model into 256 values, or
+perhaps 4096. Generally this leads to non optimal bit rates. For two reasons:<br>
+<br>
+<b>First</b>, each axis probably needs its own quantification scale. Assuming that, as explained above, the size of each data stream (in bits) doesn't need to match the others (cause there no longer is packing constrains), there's
+no reason not to use 8 bit for the <b>x</b> and <b>z</b> component of the vertices and 12 bits for the <b>y</b>, if you are compressing the model of a tree.<br>
+<br>
+Furthermore, you should not chose your number of bits beforehand. Instead, what you want is to limit the max error you allow in the quantification, and then, based on the bounding box of the object, decide how many divisions
+or cells you need in each dimension. This will create a grid or regular cubes (as opposed to boxes) with no wasted quantification in any axis.<br>
+<br>
+When doing so, of course, the number of segments in each dimension will no longer be a power of two in general. But that is simply not a problem. Rememeber the entropy encode is not limited to integer number of bits per value,
+so it will be no more efficient in encoding non-power of two number of steps. In general, the formula you want to use to decide the amount of segments for quantify your 3d model based on its bounding box, obviously:
+<br>
+<center><b>N = bbox.size/maxerror</b></center>
+and the number of bits used will be<br>
+<center><b>B = log(bbox.size/maxerror) / log(2)</b></center>
+<br>
+So, for example, if your model is 7 meters wide, 3 meters tall and 2 meter thick, and the error you want to allow is of 1 centimerer maximum, then the number of segments will be 700, 300 and 200 in each dimension, and the
+amount of bits used to encode each dimension will be 9.45, 8.22 and 7.64 respectivelly.<br>
+<br>
+<br>
+<center><img class="formula" src="gfx03.png"/><br>
+<i>Left: bad choice of number of segments per coordinates, due<br>
+to an attempt to satisfy a rounded power-of-two number of segments.<br>
+Right, correct choise of number of segments per coordinate based<br>
+on the length of bounding box in each dimension and maximum error<br>
+desired in the quantification</i></center>
+<br>
+<br>
+<br>
+<h3>Step 3 : codification</h3><hr>
+There are many ways to encode the geometry and connectivity of the mesh. I'll describe the methods I used in Paradise, Kinderplomber and Stilletto, which are improvements of the method right before it. The metric to compare the
+different methods is the number of bytes required to store the model normalized to the number of triangles in the model (2 per quad):<br>
+<br>
+<br>
+<b>Method 1</b> (Paradise) - <b>2.8</b> bytes per triangle<br>
+<br>
+This is the baseline, no effort is really done into exploiting redundancy, except for separating each data channel in a different stream:
+<ul>
+<li>for each vertex<ul><li><b>write</b> the <b>x</b> coordinate</li></ul></li>
+<li>for each vertex<ul><li><b>write</b> the <b>y</b> coordinate</li></ul></li>
+<li>for each vertex<ul><li><b>write</b> the <b>z</b> coordinate</li></ul></li>
+<li>for each quad
+<ul>
+<li><b>write</b> vertex 0 ID</li>
+<li><b>write</b> vertex 1 ID</li>
+<li><b>write</b> vertex 2 ID</li>
+<li><b>write</b> vertex 3 ID</li>
+</ul>
+</li>
+</ul>
+<br>
+<br>
+<b>Method 2</b> (Kinderplomber and 195/95/256) - <b>2.4</b> bytes per triangle<br>
+<br>
+Some (poor) geometric redundancy is extracted by computing vertex deltas (difference between the current vertex being encoded and the previous one). The connectivity is still raw data (in streams):
+<ul>
+<li>for each vertex<ul><li><b>write</b> the difference of <b>x</b> coordinate with respect to the previous vertex</li></ul></li>
+<li>for each vertex<ul><li><b>write</b> the difference of <b>y</b> coordinate with respect to the previous vertex</li></ul></li>
+<li>for each vertex<ul><li><b>write</b> the difference of <b>z</b> coordinate with respect to the previous vertex</li></ul></li>
+<li>for each quad
+<ul>
+<li><b>write</b> the difference of vertex 0 ID with respect to previous vertex ID</li>
+<li><b>write</b> the difference of vertex 1 ID with respect to previous vertex ID</li>
+<li><b>write</b> the difference of vertex 2 ID with respect to previous vertex ID</li>
+<li><b>write</b> the difference of vertex 3 ID with respect to previous vertex ID</li>
+</ul>
+</li>
+</ul>
+<br>
+<br>
+<b>Method 3</b> (Stiletto) - <b>1.8</b> bytes per triangle<br>
+<br>
+The method in Stiletto was the most complex of all. Since geometry and connectivity are related (vertices connected together by and edge are likelly to be closer to each other that vertices that are not connected by an edge), I chose to encode both simultanteously (but not together). The first step was to segmentate the mesh in quad-strips (a series of connected quadrilateral). Each quad in the strip requires only 2 vertexID rather than 4 (except for the first one of each strip). As the strips are iterated, the vertex IDs are output and also the vertex coordinates. If the vertex is a new one, it is simply output. If the vertex has been serialized before (perhaps by another strip), then only the connectivity is stored, but not the vertex coordinates (and data). Therefore there's one stream of vertex IDs for connectivity, one stream of binary flags of visited/unvisited vertices, and then as many streams of vertex data as channels are in the vertex format.<br>
+<br>
+On top of that, instead of using a simple delta coding of vertex coordinates (the context of the delta being different for each data channel in the vertex format), Stiletto used parallelogram prediction schema, where each polygon is assumed to be close to a parallelogram (where D-C = B-A), and only the deviation or error is encoded (<b>e</b> = D'-D):<br>
+<br>
+<img class="formula" src="gfx04.png"/>
+<br>
+<br>
+With all the pieces together, the encoging steps are as follow:<br>
+<ul>
+<li>for each strip
+  <ul>
+    <li><b>write</b> length of strip</li>
+  </ul>
+</li>
+<li>for each strip
+  <ul>
+    <li><b>encode</b>( vertex 0 )</li>
+    <li><b>encode</b>( vertex 1 )</li>
+    <li>each quad in the srip
+    <ul>
+        <li><b>encode</b>( vertex 2 )</li>
+        <li><b>encode</b>( vertex 3 )</li>
+    </ul>
+  </ul>
+</li>
+</ul>
+
+where encode( vertex ) does<br>
+<br>
+<ul>
+    <li><b>write</b> vertex visited</li>
+    <li>if vertex visited
+      <ul><li><b>write</b> vertex 0 ID</li></ul>
+    <li>else</li>
+    <li>
+      <ul>
+      <li><b>write</b> vertex coordinate <b>x</b> error from parallelogram</li>
+      <li><b>write</b> vertex coordinate <b>y</b> error from parallelogram</li>
+      <li><b>write</b> vertex coordinate <b>z</b> error from parallelogram</li>
+      </ul>
+    </li>
+</ul>
+Of course some boundary conditions apply, such as the fact that you need at least 2 vertices to have been encoded before you can start the parallelogram prediction.<br>
+<br>
+<br>
+<img src="gfx05.gif"/>
+<br>
+<br>
+Overall the code complexity is a little bit bigger than the first and second method, but the gains are important. Compare how the old and new method encode the same 11 polygons:<br>
+<br>
+Method 1:<br>
+quads: { 0, 1, 2, 3, 2, 3, 5, 4, 4, 5, 7, 6, 6, 7, 9, 8, 8, 9, 11, 10, 12, 13, 15, 14, 14, 15, 17, 16, 16, 17, 4, 18, 18, 4, 6, 19, 19, 6, 8, 20, 20, 8, 10, 21 }<br>
+<br>
+Method 2:<br>
+quads: { 0, 1, 1, 1, -1, 1, 2, -1, 0, 1, 2, -1, 0, 1, 2, -1, 0, 1, 2, -1, 2, 1, 2, -1, 0, 1, 2, -1, 0, 1, -13,
+14, 0, -14, 2, 13, 0, -13, 2, 12, 0, -12, 2, 11 }<br>
+<br>
+Method 3:<br>
+visited: { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,1,0,1,0 }<br>
+strips: { 5, 7, 9, 11 }<br>
+<br>
+The method 3 not only is shorter, but the stream of "visited" is going to be encoded in less that one bit. So basically, with the third method the conectivity becomes pretty much irrelevant in comparison with the
+encoding of the geometry.
+<!-- -------------------------------------------------------------------------------------------- -->
+<br>
+<br>
+<br>
+
+
+
+
+	
+    
+
+    </div> <!-- container -->
+	<footer><a href="http://www.iquilezles.org">inigo quilez</a> - learning computer graphics since 1994</footer>
+    </div></body>
+</html>
