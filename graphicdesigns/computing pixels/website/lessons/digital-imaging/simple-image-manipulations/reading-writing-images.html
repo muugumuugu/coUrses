@@ -1,0 +1,500 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/digital-imaging/simple-image-manipulations/reading-writing-images by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 18:33:06 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Simple Image Manipulations (Reading and Writing Images (A Simple Image Class))</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='image file format, PPM, header, bits per pixel, color depth, high dynamic range image, return value optimization, RVO, copy elision'>
+<meta name='date' content='2015-10-08 15:48:07'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+	<!-- Open Graph data -->
+	<meta property='fb:app_id' content='1535346446701691'/>
+	<meta property='og:title' content='Simple Image Manipulations'/>
+	<meta property='og:type' content='article'/>
+	<meta property='og:url' content='https://www.scratchapixel.com//lessons/digital-imaging/simple-image-manipulations'/>
+	<meta property='og:image' content='https://www.scratchapixel.com/images/design/logo_scratchapixel2015.png'/>
+	<meta property='og:description' content='Lesson summary: '/> 
+	<meta property='og:site_name' content='Scratchapixel'/>
+	<meta property='fb:admins' content='1260067275'/>
+	
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Simple Image Manipulations</div><div style='width: 100%; margin: 0px; display: table; vertical-align: middle; border: 1px none red;'>
+			<div style='display: table-row; height: 30px;'>
+			<div style='margin: 0px; padding: 0px; border: 1px none blue ; display: table-cell; vertical-align: middle;'>
+				<a href='https://twitter.com/share' class='twitter-share-button' data-lang='en'>Tweet</a>
+			</div></div>
+			<div style='display: table-row; height: 30px;'>
+			<div style='padding: 0px; border: 1px none blue ; display: table-cell; vertical-align: middle;'>
+				<div style='margin-top: 5px;' class='fb-like' data-share='true' data-width='450' data-show-faces='true'></div>
+			</div></div></div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="reading-writing-images.html"><b>Reading and Writing Images (A Simple Image Class)</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="image-processing.html">Simple Image Manipulations</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="bookeh-effect.html">Example 1: Simulating the Bokeh Effect in 2D</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code2baf.html?id=51&amp;origin=/lessons/digital-imaging/simple-image-manipulations">Source Code</a></div></div></div><span style='display: inline-block; width: 100%; margin: 0px 0px 10px 0px;'><i>Keywords: image file format, PPM, header, bits per pixel, color depth, high dynamic range image, return value optimization, RVO, copy elision.</i></span><p>It seems quite natural as a prerequisite to any of the lessons devoted to image processing that we learn about reading and writing images. In this lesson, we will also write a very basic Image class which will be extended over time. Obviously many designs are possible but we will just stick with a very simple one to start with. Our basic image class will only support floating point images (a must these days) composed of three channels only. You can easily extend this class as an exercise, for example you can use template to define the image data type and the number of channels on the fly. Without any further due, let's start to quickly revisit what we know about images and implement some simple code to read and write them as well as store them in memory. In the next lesson, we will extend our basic C++ class to support basic image manipulations.</p>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="right" src="../../../images/upload/simple-image-class/sic-imageplanesd41d.png?" />
+<p class="caption left">Figure 1: image channels of a RGB image.</p>
+</div>
+
+<p>We are familiar with the concept of digital images. As a quick definition let's just say that an image in the digital world, is stored or represented as a 2D array of pixels. The image resolution defines the dimension of this 2D array. The <b>width</b> (horizontal dimension) and the <b>height</b> (vertical dimension) define the overall <b>resolution</b> of the image. A <b>pixel</b> in the digital world is generally defined by three digital values, one for each elementary or primary color. If you work with an <a href="http://en.wikipedia.org/wiki/Additive_color"><b>additive color system</b></a> (which computer screens are using) these colors are <b>red</b>, <b>blue</b> and <b>green</b> (in a <a href="http://en.wikipedia.org/wiki/Subtractive_color">subtractive color</a> system these primary colors are cyan, magenta and yellow). In the old times, when computer memory and disk space were limited, pixels values were often stored using the least possible number of bytes. With 1 byte (8 bits) you can encode or represent 256 different values per color. If you use three bytes to encode the red, green and blue color of a pixel respectively, you can define up to 16.8 millions different colors. This format is know as <a href="http://en.wikipedia.org/wiki/True_Color#True_color_.2824-bit.29">Truecolor</a>. The number of bits (not bytes) used per pixel is often abbreviated with the acronym <b>bpp</b>; it stands for <b>bits per pixel</b>. Truecolor uses 24 bpp. Sometimes the number of bits used is defined per channel (i.e. per color). In this case the acronym is <b>bpc</b> (<b>bits per channel</b>) but it is not often used. The number of bits used for each color component of a single pixel, is known as the <b>color depth</b> or <b>bit depth</b>. If Truecolor is generally enough for the Internet, most image formats used by professionals in the video or film industry encode pixel color as three single (or half) floating point precision numbers (the type float in C++). This means that a single pixel uses 12 bytes of memory (or 96 bpp). A high definition image (typically 1920x1080 pixels) requires roughly 24 Mbytes of storage (assuming no compression). Storing pixel color as floats was originally motivated by the need for <b>high dynamic range images</b> (or HDR images), images capable of storing the wider range of colors and light levels one can observe in the physical world. This concept will be reviewed in a separate lesson.</p>
+
+<p>From a programming point of view, all we need to do, is to create a simple Image class, in which we will store the width and the height of the image, as well as a 1D array of pixels (you can use a two dimensional arrays if you want, but this is not necessarily more practical and is not as efficient). We need two constructors, one to create an empty image and one to create an image with a user specified resolution (line 20) which can also be filled with a given constant color (this color default to black).</p>
+
+<p>The pixels themselves are represented with a special structure named <span class='code-inline'>rib</span>. This is very convenient because we can write operators to manipulate the three floats of a pixel at once. It is trivial to access pixels from the image by overloading the bracket operator <span class='code-inline'>[]</span> and applying every mathematical operations we want on these pixels: multiplying them, comparing them, adding them, etc. The method <span class='code-inline'>friend float& operator += (...)</span> is interesting. It can be used to compute the brightness of a pixel and accumulate the result into a float. We will use it in the next chapters.</p>
+
+<p> Finally pixels are stored in the image as a 1D array of Rgb elements. The size of this area is equal to the width of the image multiplied by the image height. It is not necessary to multiply this number by the number of channels since each pixel (of type Rgb) already holds the memory to store three colors.</p>
+
+<div name="code" class="code">#include &ltcstdlib&gt
+#include &ltcstdio&gt
+
+class Image
+{
+public: 
+    // Rgb structure, i.e. a pixel 
+    struct Rgb
+    {
+        Rgb() : r(0), g(0), b(0) {} 
+        Rgb(float c) : r(c), g(c), b(c) {} 
+        Rgb(float _r, float _g, float _b) : r(_r), g(_g), b(_b) {} 
+        bool operator != (const Rgb &c) const 
+        { return c.r != r || c.g != g || c.b != b; } 
+        Rgb& operator *= (const Rgb &rgb) 
+        { r *= rgb.r, g *= rgb.g, b *= rgb.b; return *this; } 
+        Rgb& operator += (const Rgb &rgb)
+        { r += rgb.r, g += rgb.g, b += rgb.b; return *this; }
+        friend float& operator += (float &f, const Rgb rgb) 
+        { f += (rgb.r + rgb.g + rgb.b) / 3.f; return f; } 
+        float r, g, b;
+    };
+    
+    Image() : w(0), h(0), pixels(nullptr) { /* empty image */ } 
+    Image(const unsigned int &_w, const unsigned int &_h, const Rgb &c = kBlack) : 
+        w(_w), h(_h), pixels(NULL) 
+    {
+        pixels = new Rgb[w * h];
+        for (int i = 0; i < w * h; ++i)
+            pixels[i] = c;
+    }
+    const Rgb& operator [] (const unsigned int &i) const 
+    { return pixels[i]; }
+    Rgb& operator [] (const unsigned int &i)
+    { return pixels[i]; }
+    ~Image()
+    { if (pixels != NULL) delete [] pixels; } 
+    unsigned int w, h; // Image resolution 
+    Rgb *pixels; // 1D array of pixels 
+    static const Rgb kBlack, kWhite, kRed, kGreen, kBlue; // Preset colors
+}; 
+
+const Image::Rgb Image::kBlack = Image::Rgb(0);
+const Image::Rgb Image::kWhite = Image::Rgb(1);
+const Image::Rgb Image::kRed = Image::Rgb(1,0,0);
+const Image::Rgb Image::kGreen = Image::Rgb(0,1,0);
+const Image::Rgb Image::kBlue = Image::Rgb(0,0,1);
+
+int main(int argc, char **argv)
+{
+    Image *img = new Image(512, 512);
+    return 0;
+}</div>
+
+<h2>Read and Write Images: PPM, a Simple Image Format</h2>
+
+<div class="question">
+Photoshop and Preview (on Mac) can read and write PPM files. In Photoshop the format is called Portable Bit Map. If you write them out with Photoshop you will need to change the extension of the file from .bpm to .ppm (or change the file extension to .bpm in your code).
+</div>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="right" src="../../../images/upload/simple-image-class/sic-rgbimaged41d.png?" />
+<p class="caption left">Figure 2: pixels are packed together in the PPM file format.</p>
+</div>
+
+<p>The PPM format is the simplest image file format someone can design. It is not optimised at all, don't use any form of compression thus the image file on disk is large compared to other formats such PNG or JPEG. However, the code to read and save PPM images in and out is incredibly simple to write and for this reason, this format is very useful when you need your program to read or write images. Use it to prototype some ideas and replace it later by a more sophisticated format (one that supports compression and potentially some other useful features such as arbitrary number of channels, etc.). This lesson is not a complete introduction to the PPM format. Even though basic (very close to a raw format) the PPM format has its subtleties. It can for example be used to store color or black and white images, as well as pixels's data in ascii or binary mode. In this lesson we will only work with binary files and color images.</p>
+
+<div class="question"><img class="right" src="../../../images/upload/simple-image-class/sic-filed41d.png?" />
+Most image file formats are designed the same way. At the top of the file is usually stored was is called a <b>header</b>. It's generally a structure in which are defined the standard properties of the image: its resolution of course, but also the number of images planes stored in the image, the number of bits per channel, whether the data is compressed or not, which compression algorithm the pixels are processed with, etc. Generally, the only really necessary information is the image resolution. Everything else is optional. It can also contain meta data such as who created the file, the date and the time when the file was generated, etc. If it comes from a digital camera these meta data can also contain information about the lens being used, the camera settings such as shutter speed, the aperture, etc that were used when the picture was taken. This information can be useful as we will see when we get to the lesson on HDR images. Finally, the header is almost always directly followed by the image data itself. The way the data is encoded really varies from a file format to another. Colors of pixels can be stored together (as with the PPM file format) or each plane can be stored separately. Colors can be stored with integers, chars, floats, etc. Image data can also be compressed (generally they are).
+</div>
+
+<p>The <b>header</b> (the few lines at the top of the file providing the necessary information about the image we are about to read) is defined by three lines. The first line contains a string which can either be "P1", "P2", ... "P6". We are only concerned by "P6" PPM images which stands for binary color images. The next line contains two integers representing the resolution of the image. The third line contains an another integer representing the number of levels each color is encoded with (i.e. the number of grey values between black and white, generally 255). You can insert comments in the header; they start with the letter '#', but we will ignore them in this lesson.</p>
+
+<div name="code" class="code">P6
+640 480
+255 
+# comment but we won't support them for now </div>
+
+<p>In the PPM format, colors are encoded using 24 bpp. In other worlds each color is encoded as 1 bytes (in C++ an unsigned char). Each pixel is encoded in the file as a sequence of three bytes (figure 2), one for each color:</p>
+
+<div name="code" class="code">R1G1B1R2G2B2R3G3B3...</div>
+
+<p>Pixels are encoded in scanline order, from the first row to the last row in the image, for left to right (figure 2). In other words the first three bytes in the file are for the pixel at location (1,1) in the image (where (1,1) denotes the upper left corner of the image), and the last three bytes in the file represent the lower right pixel in the frame (location (640, 480) assuming the image has resolution 640x480). Let's have a look at our code to read a PPM file:</p>
+
+<div name="code" class="code">Image readPPM(const char *filename)
+{
+    std::ifstream ifs;
+    ifs.open(filename, std::ios::binary);
+    // need to spec. binary mode for Windows users
+    Image src;
+    try {
+        if (ifs.fail()) { 
+            throw("Can't open input file");
+        }
+        std::string header; 
+        int w, h, b;
+        ifs >> header;
+        if (strcmp(header.c_str(), "P6") != 0) throw("Can't read input file"); 
+        ifs >> w >> h >> b;
+        src.w = w;
+        src.h = h;
+        src.pixels = new Image::Rgb[w * h]; // this is throw an exception if bad_alloc
+        ifs.ignore(256, '\n'); // skip empty lines in necessary until we get to the binary data 
+        unsigned char pix[3]; // read each pixel one by one and convert bytes to floats
+        for (int i = 0; i < w * h; ++i) { 
+            ifs.read(reinterpret_cast&ltchar *&gt(pix), 3); 
+            src.pixels[i].r = pix[0] / 255.f; 
+            src.pixels[i].g = pix[1] / 255.f; 
+            src.pixels[i].b = pix[2] / 255.f;
+        } 
+        ifs.close();
+    }
+    catch (const char *err) {
+        fprintf(stderr, "%s\n", err);
+        ifs.close();
+    }
+    
+    return src;
+}</div>
+
+<p>Note that some special cases need to be taken care of carefully. For example when the file we want to read doesn't exist on disk, or when its size is 0 (which is unlikely but you still need to consider this option). Some programs also insert an empty line after the header when the write a PPM file out. The code removes these lines if they exist. Note that the code is really not optimized. You could read the entire block of data in memory then convert it to float, or at least read one line of pixel data at a time. The conversion from byte to float only requires a division by 255. We know that a byte can only encode a number between 0 and 255 where 0 represents black and 255 white. By dividing this value by 255, we remap the pixel color to a float in the interval [0,1] where 0 represents black and 1 represents white on the screen.</p>
+
+<div class="important">
+<p>Important question from a reader: "from a programming point of view, is it efficient to return an image?" Good question. Consider the following code:</p>
+
+<div name="code" class="code">Image dst= readPPM("./lena.ppm");</div>
+
+<p>First you must do a copy within the function reading the PPM file in the return statement (<span class='code-inline'>src</span> itself is copied to a temporary variable returned by the function). Then when <span class="code-inline">dst</span> is initialised, the data from this temporary variable is copied once more to <span class="code-inline">dst</span> itself. This implies two copies (and a series of allocations) of potentially large memory blocks which indeed would be inefficient. Though in our particular case, <span class="code-inline">src.pixels</span> is a pointer to a dynamically allocated block of memory and copying pointers values isn't in itself too bad (though this will lead to more problems as we will show later).</p>
+
+<p>However, nowadays, C++ allows what's known as <b>copy elision</b> (this will only work if you have a recent compiler). The idea is that your compiler will find out that the type of the returned function is the same as the type of the variable you allocate the result of this function to. In this situation, <span class="code-inline">dat</span> will actually be initialised as if it was created in the <span class="code-inline">readPPM</span> function directly and all copies previously involved will be omitted (or <b>elided</b>). In other words, your compiler will sort of replace <span class="code-inline">src</span> with <span class="code-inline">dst</span> in the function <span class="code-inline">readPPM()</span> for you. This is called a <b>return value optimization</b> (or <b>RVO</b> for short).</p>
+
+<p>One of the standard solutions to this problem was to return a pointer to a dynamically allocated instance of the class Image. Pointer initialization or assignment is far less costly than a copy:</p>
+
+<div name="code" class="code">Image* readPPM(...)
+{
+    Image *img = new Image(...);
+    ... 
+    return img;
+}
+
+Image *img = readPPM(...);</div>
+
+<p> But with copy elisions, this is not necessary anymore. In short, with most modern compilers, this code should be efficient and shouldn't require any copy of the image data at all (if copy elision works).</p>
+</div>
+
+<div class="question">
+
+<style>
+.code-inline1
+{
+    display: inline-block;
+	margin: 0px;
+	font-family: fixed, monospace;
+	font-size: 14px;
+	background-color: #E3F2FD;
+	white-space: pre-wrap;
+	padding: 2px;
+	line-height: 90%;
+}
+</style>
+
+In:
+
+<div name="code" class="code"  style="margin-top: 12px;">Image operator + (const Image &amp;img) const {
+    Image tmp;
+    // ...
+    return tmp; 
+}</div>
+
+You are creating and returning an object of the same type as the return type of the function. This implies that <span class="code-inline1">return tmp;</span> will consider <span class="code-inline1">tmp</span> as if it was an rvalue as per 12.8/32:
+
+<div class="scratchquote" style="font-size: 14px; margin-top: 12px; line-height: 20px;">
+When the criteria for elision of a copy operation are met or would be met save for the fact that the source object is a function parameter, and the object to be copied is designated by an lvalue, overload resolution to select the constructor for the copy is first performed as if the object were designated by an rvalue.</div>
+
+The mentioned criteria are given in 12.8/31, in particular, the first bullet point says:
+
+<div class="scratchquote" style="font-size: 14px; margin-top: 12px; line-height: 20px;">
+— In a return statement in a function with a class return type, when the expression is the name of a non-volatile automatic object (other than a function or catch-clause parameter) with the same cv-unqualified type as the function return type, the copy/move operation can be omitted by constructing the automatic object directly into the function’s return value</div>
+
+Actually, a careful reading of 12.8/31 says that in your case compilers are allowed (and the most popular ones do) to omit the copy or move altogether. This is the so called <b>return value optimization</b> (<b>RVO</b>). Indeed, consider this simplified version of your code:
+
+<div name="code" class="code" style="margin-top: 12px;">struct Image {
+    Image() {
+    }
+    Image(const Image&amp;) {
+        std::cout &lt;&lt; "copy\n";
+    }
+    Image(Image&amp;&amp;) {
+        std::cout &lt;&lt; "move\n";
+    }
+    Image operator +(const Image&amp;) const {
+        Image tmp;
+        return tmp;
+    }
+};
+int main() {
+    Image src;
+    Image copy = src + src;
+}</div>
+
+Compiled with GCC 4.8.1, this code produces no output, that is, no copy of move operation is performed. Let's complicate the code a little bit just to see what happened when RVO cannot be performed.
+
+<div name="code" class="code" style="margin-top: 12px;">Image operator +(const Image&amp;) const {
+    Image tmp1, tmp2;
+    if (std::rand() % 2)
+        return tmp1;
+    return tmp2;
+}</div>
+
+Without much of details, RVO cannot be applied here not because the standard forbids so but for other technical reasons. With this implementation of <span class="code-inline1">operator +()</span> the code outputs <span class="code-inline1">move</span>. That is, there's no copy, only a move operation. A last word. It's not advisable to do <span class="code-inline1">return std::move(tmp);</span> because it prevents RVO. Indeed, with this implementation:
+
+<div name="code" class="code" style="margin-top: 12px;">Image operator +(const Image&amp;) const {
+    Image tmp;
+    return std::move(tmp);
+}</div>
+
+The output is <span class="code-inline1">move</span>, that is, the move constructor is called, whereas, as we've seen, with <span class="code-inline1">return tmp;</span> no copy/move constructor is called. That's the correct behaviour because the expression being return <span class="code-inline1">std::move(tmp)</span> is not the name of a non-volatile automatic object as required by the RVO rule quoted above.
+
+The implementation of <span class="code-inline1">operator +()</span> which introduces <span class="code-inline">tmp</span> and <span class="code-inline1">tmp2</span> is rather an artificial way to prevent RVO. Let's go back to the initial implementation and consider another way of preventing RVO which also shows the complete picture: compile the code with the option <span class="code-inline1">-fno-elide-constructors</span> (also available in clang). The output (in GCC but it might vary in clang) is:
+
+<div name="code" class="code" style="margin-top: 12px;">move
+move</div>
+
+When a function is called stack memory is allocated to build the object to be returned. I emphasise that this is not the variable <span class="code-inline1">tmp</span> above. This another unnamed temporary object. Then, <span class="code-inline1">return tmp;</span> triggers a copy or move from <span class="code-inline1">tmp</span> to the unnamed object and the initialisation <span class="code-inline1">Image cry = src + src;</span> finally copy/move the unnamed object into <span class="code-inline1">cry</span>. That's the basic semantics. Regarding the first copy/move we have the following. Since <span class="code-inline1">tmp</span> is an lvalue the copy constructor would normally be used to copy from <span class="code-inline1">tmp</span> to the unnamed object. However, the special clause above makes an exception and says that <span class="code-inline1">tmp</span> in <span class="code-inline1">return tmp;</span> should be considered as if it was an rvalue. Hence the move constructor is called. In addition, when RVO is performed, the move is elided and <span class="code-inline1">tmp</span> is actually created on top of the unnamed object. Regarding the second copy/move it's even simpler. The unnamed object is an rvalue and therefore the move constructor is selected to move from it to <span class="code-inline1">cry</span>. Now, there's another optimization (which is similar to RVO but AFAIK doesn't have a name) also stated in 12.8/31 (third bullet point) that allows the compiler to avoid the use of the unnamed temporary and use the memory of <span class="code-inline1">cpy</span> instead. Therefore, when RVO and this optimization are in place <span class="code-inline1">tmp</span>, the unnamed object and <span class="code-inline1">cry</span> are essentially "the same object".
+
+There seems to be some confusion as to how the RVO (Return Value Optimization) works. A simple example:
+
+<div name="code" class="code" style="margin-top: 12px;">struct A {
+    int a;
+    int b;
+    int c;
+    int d;
+};
+     
+A create(int i) {
+    A a = {i, i+1, i+2, i+3 };
+    std::cout &lt;&lt; &amp;a &lt;&lt; "\n";
+   return a;
+}
+     
+int main(int argc, char*[]) {
+    A a = create(argc);
+    std::cout &lt;&lt; &amp;a &lt;&lt; "\n";
+}</div>
+
+<div name="code" class="code">0xbf928684
+0xbf928684</div>
+
+Surprising ? Actually, that is the effect of RVO: the object to be returned is constructed directly in place in the caller. How ? Traditionally, the caller (<span class="code-inline1">main</span> here) will reserve some space on the stack for the return value: the return slot; the callee (<span class="code-inline1">create</span> here) is passed (somehow) the address of the return slot to copy its return value into. The callee then allocates its own space for the local variable in which it builds the result, like for any other local variable, and then copies it into the return slot upon the <span class="code-inline1">return</span> statement. RVO is triggered when the compiler deduces from the code that the variable can be constructed directly into the return slot with equivalent semantics (the as-if rule). Note that this is such a common optimization that it is explicitly white-listed by the Standard and the compiler does not have to worry about possible side-effects of the copy (or move) constructor. When ? The compiler is most likely to use simple rules, such as:
+
+<div name="code" class="code" style="margin-top: 12px;">// 1. works
+A unnamed() { return {1, 2, 3, 4}; }
+// 2. works
+A unique_named() {
+    A a = {1, 2, 3, 4};
+    return a;
+}
+// 3. works
+A mixed_unnamed_named(bool b) {
+    if (b) { return {1, 2, 3, 4}; }
+    A a = {1, 2, 3, 4};
+    return a;
+}
+// 4. does not work
+A mixed_named_unnamed(bool b) {
+    A a = {1, 2, 3, 4};
+    if (b) { return {4, 3, 2, 1}; }
+    return a;
+}</div>
+
+In the latter case (4), the optimization cannot be applied when "A" is returned because the compiler cannot build "a" in the return slot, as it may need it for something else (depending on the boolean condition "b"). A simple rule of thumb is thus that:
+RVO should be applied if no other candidate for the return slot has been declared prior to the "return" statement.
+
+</div>
+
+<p>Let's now have a look at the function to save an image as a PPM file:</p>
+
+<div name="code" class="code">void savePPM(const Image &img, const char *filename) 
+{ 
+    if (img.w == 0 || img.h == 0) { fprintf(stderr, "Can't save an empty image\n"); return; } 
+    std::ofstream ofs; 
+    try { 
+        ofs.open(filename, std::ios::binary); // need to spec. binary mode for Windows users 
+        if (ofs.fail()) throw("Can't open output file"); 
+        ofs << "P6\n" << img.w << " " << img.h << "\n255\n"; 
+        unsigned char r, g, b; 
+        // loop over each pixel in the image, clamp and convert to byte format
+        for (int i = 0; i < img.w * img.h; ++i) { 
+            r = static_cast<unsigned char>(std::min(1.f, img.pixels[i].r) * 255); 
+            g = static_cast<unsigned char>(std::min(1.f, img.pixels[i].g) * 255); 
+            b = static_cast<unsigned char>(std::min(1.f, img.pixels[i].b) * 255); 
+            ofs << r << g << b; 
+        } 
+        ofs.close(); 
+    } 
+    catch (const char *err) { 
+        fprintf(stderr, "%s\n", err); 
+        ofs.close(); 
+    } 
+} </div>
+
+<p>Here again the code is pretty basic. We don't save the image if one its dimension is zero. If the file can't be open then we throw an exception. We then write then header, the "P6" string, followed by the width, the height of the image and the number of grey values between black and white (255). Finally we loop over all the pixels of the frame. An unsigned char can only encode integer values in the interval [0,255], thus before multiplying the pixel color by 255 we first need to clamp its value to the interval [0,1]. Finally once converted to a unsigned char, the colors of the current pixels can be written out to the file.</p>
+
+<h2>Source Code</h2>
+
+<p>This lesson and next one are part of the same group of lessons (learning about reading, writing and manipulating images). The source for these two lessons can be found here (to add link later when lesson 2 is completed).</p>
+
+<h2>What's Next?</h2>
+
+<p>In the next lesson we will learn how to extend the functionalities of the image class and use operators for manipulating images in an easy way. We will demonstrate with an example, how we can use these simple features to simulate the blur which can sometimes see in the out-of-focus areas of real photographs.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 1 of  4</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='image-processing.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/digital-imaging/simple-image-manipulations/reading-writing-images by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 18:33:41 GMT -->
+</html>

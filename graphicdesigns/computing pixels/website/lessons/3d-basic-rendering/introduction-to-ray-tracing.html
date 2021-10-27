@@ -1,0 +1,232 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-ray-tracing by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 16:43:13 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Introduction to Ray Tracing: a Simple Method for Creating 3D Images (How Does It Work?)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='ray-tracing, perspective projection, conductor, dielectric, forward tracing, backward tracing, shadow ray, primary ray, eye ray, path tracing, reflection, refraction, Appel, Whitted, index of refraction, Fresnel equation, transmission, recursive, recursion depth, image file format'>
+<meta name='date' content='2014-10-30 18:10:05'>
+
+<link rel="stylesheet" type="text/css" href="../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../css/page.css"/>
+
+<link href='../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../indexf17c.html","../../indexf17c.html","../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../indexf17c.html","../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+	<!-- Open Graph data -->
+	<meta property='fb:app_id' content='1535346446701691'/>
+	<meta property='og:title' content='Introduction to Ray Tracing: a Simple Method for Creating 3D Images'/>
+	<meta property='og:type' content='article'/>
+	<meta property='og:url' content='https://www.scratchapixel.com//lessons/3d-basic-rendering/introduction-to-ray-tracing'/>
+	<meta property='og:image' content='https://www.scratchapixel.com/images/design/logo_scratchapixel2015.png'/>
+	<meta property='og:description' content='Lesson summary: If you want to know what rendering and what ray tracing is, but don't know anything about computer graphics and don't know where to start, this lesson is just what you need. At the end of this lesson, you will be able to generate images with your own ray tracer.'/> 
+	<meta property='og:site_name' content='Scratchapixel'/>
+	<meta property='fb:admins' content='1260067275'/>
+	
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Introduction to Ray Tracing: a Simple Method for Creating 3D Images</div><div style='width: 100%; margin: 0px; display: table; vertical-align: middle; border: 1px none red;'>
+			<div style='display: table-row; height: 30px;'>
+			<div style='margin: 0px; padding: 0px; border: 1px none blue ; display: table-cell; vertical-align: middle;'>
+				<a href='https://twitter.com/share' class='twitter-share-button' data-lang='en'>Tweet</a>
+			</div></div>
+			<div style='display: table-row; height: 30px;'>
+			<div style='padding: 0px; border: 1px none blue ; display: table-cell; vertical-align: middle;'>
+				<div style='margin-top: 5px;' class='fb-like' data-share='true' data-width='450' data-show-faces='true'></div>
+			</div></div></div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction-to-ray-tracing/how-does-it-work.html"><b>How Does It Work?</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction-to-ray-tracing/raytracing-algorithm-in-a-nutshell.html">Raytracing Algorithm in a Nutshell</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction-to-ray-tracing/implementing-the-raytracing-algorithm.html">Implementing the Raytracing Algorithm</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction-to-ray-tracing/adding-reflection-and-refraction.html">Adding Reflection and Refraction</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction-to-ray-tracing/ray-tracing-practical-example.html">Writing a Basic Ray Tracer</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../code14ef.html?id=3&amp;origin=/lessons/3d-basic-rendering/introduction-to-ray-tracing">Source Code</a></div></div></div><span style='display: inline-block; width: 100%; margin: 0px 0px 10px 0px;'><i>Keywords: ray-tracing, perspective projection, conductor, dielectric, forward tracing, backward tracing, shadow ray, primary ray, eye ray, path tracing, reflection, refraction, Appel, Whitted, index of refraction, Fresnel equation, transmission, recursive, recursion depth, image file format.</i></span><div class="important">
+Please do not copy the content of this page without our express written permission. Doing so is an infringement of the Copyright Act. If you wish to use some materials from this page, please <a href="../../contact.html">get in touch with us</a>. Alternatively, you can post a link to this page on your blog or your website.
+</div>
+
+<div class="question">You can also check the lesson <a href="ray-tracing-overview/ray-tracing-rendering-technique-overview.html">An Overview of the Ray-Tracing Rendering Technique</a> if you are interested in learning about ray-tracing specifically. This lesson is more a generic introduction to 3D rendering.</div>
+
+<p>To begin this lesson, we will explain how a three-dimensional scene is made into a viewable two-dimensional image. Once we understand that process and what it involves, we will be able to utilize a computer to simulate an "artificial" image by similar methods. We like to think of this section as the theory that more advanced CG is built upon.</p>
+
+<p>In the second section of this lesson, we will introduce the ray-tracing algorithm and explain, in a nutshell, how it works. We have received email from various people asking why we are focused on ray-tracing rather than other algorithms. The truth is, we are not. Why did we chose to focus on ray-tracing in this introductory lesson? Simply because this algorithm is the most straightforward way of simulating the physical phenomena that cause objects to be visible. For that reason, we believe ray-tracing is the best choice, among other techniques, when writing a program that creates simple images.</p>
+
+<p>To start, we will lay the foundation with the ray-tracing algorithm. However, as soon as we have covered all the information we need to implement a scanline renderer, for example, we will show how to do that as well.</p>
+
+<h2>How Does an Image Get Created?</h2>
+
+<div style="width: 450px;" class="captionImage right">
+<img class="right" style="width: 450px;" src="../../images/upload/introduction-to-ray-tracing/vantagepoint.png" />
+<p class="caption left">Figure 1:  we can visualize a picture as a cut made through a pyramid whose apex is located at the center of our eye and whose height is parallel to our line of sight.</p>
+</div>
+
+<p>Although it seems unusual to start with the following statement, the first thing we need to produce an image, is a two-dimensional surface (this surface needs to be of some area and cannot be a point). With this in mind, we can visualize a picture as a cut made through a pyramid whose apex is located at the center of our eye and whose height is parallel to our <b>line of sight</b> (remember, in order to see something, we must view along a line that connects to that object). We will call this cut, or slice, mentioned before, the <b>image plane</b> (you can see this image plane as the canvas used by painters). An image plane is a computer graphics concept and we will use it as a two-dimensional surface to project our three-dimensional scene upon. Although it may seem obvious, what we have just described is one of the most fundamental concepts used to create images on a multitude of different apparatuses. For example, an equivalent in photography is the surface of the film (or as just mentioned before, the canvas used by painters).</p>
+
+<h2>Perspective Projection</h2>
+
+<p>Let's imagine we want to draw a cube on a blank canvas. The easiest way of describing the projection process is to start by drawing lines from each corner of the three-dimensional cube to the eye. To map out the object's shape on the canvas, we mark a point where each line intersects with the surface of the image plane. For example, let us say that <b>c</b><b>0</b> is a corner of the cube and that it is connected to three other points: <b>c1</b>, <b>c2</b>, and <b>c3</b>. After projecting these four points onto the canvas, we get <b>c0'</b>, <b>c1'</b>, <b>c2'</b>, and <b>c3'</b>. If <b>c0</b>-<b>c1</b> defines an edge, then we draw a line from <b>c0'</b> to <b>c1'</b>. If <b>c0</b>-<b>c2</b> defines an edge, then we draw a line from <b>c0'</b> to <b>c2'</b>.</p>
+
+<div style="width: 450px;" class="captionImage right">
+<img class="right" style="width: 450px;" src="../../images/upload/introduction-to-ray-tracing/projperspective.gif" />
+<p class="caption left">Figure 2: projecting the four corners of the front face on the canvas</p>
+</div>
+
+<p>If we repeat this operation for remaining edges of the cube, we will end up with a two-dimensional representation of the cube on the canvas. We have then created our first image using <b>perspective projection</b>. If we continually repeat this process for each object in the scene, what we get is an image of the scene as it appears from a particular vantage point. It was only at the beginning of the 15th century that painters started to understand the rules of perspective projection.</p>
+
+<h2>Light and Color</h2>
+
+<p>Once we know where to draw the outline of the three-dimensional objects on the two-dimensional surface, we can add colors to complete the picture.</p>
+
+<p>To summarize quickly what we have just learned: we can create an image from a three-dimensional scene in a two step process. The first step consists of projecting the shapes of the three-dimensional objects onto the image surface (or image plane). This step requires nothing more than connecting lines from the objects features to the eye. An outline is then created by going back and drawing on the canvas where these projection lines intersect the image plane. As you may have noticed, this is a geometric process. The second step consists of adding colors to the picture's skeleton.</p>
+<p>An object's color and brightness, in a scene, is mostly the result of lights interacting with an object's materials. Light is made up of <b>photons</b> (electromagnetic particles) that have, in other words, an electric component and a magnetic component. They carry energy and oscillate like sound waves as they travel in straight lines. Photons are emitted by a variety of light sources, the most notable example being the sun. If a group of photons hit an object, three things can happen: they can be either absorbed, reflected or transmitted. The percentage of photons reflected, absorbed, and transmitted varies from one material to another and generally dictates how the object appears in the scene. However, the one rule that all materials have in common is that the total number of incoming photons is always the same as the sum of reflected, absorbed and transmitted photons. In other words, if we have 100 photons illuminating a point on the surface of the object, 60 might be absorbed and 40 might be reflected. The total is still 100. In this particular case, we will never tally 70 absorbed and 60 reflected, or 20 absorbed and 50 reflected because the total of transmitted, absorbed and reflected photons has to be 100.</p>
+
+<p>In science, we only differentiate two types of materials, metals which are called <b>conductors</b> and <b>dielectrics</b>. Dielectris include things such a glass, plastic, wood, water, etc. These materials have the property to be electrical insulators (pure water is an electrical insulator). Note that a dielectric material can either be transparent or opaque. Both the glass balls and the plastic balls in the image below are dielectric materials. In fact, every material is in away or another transparent to some sort of electromagnetic radiation. X-rays for instance can pass through the body.</p>
+
+<p>An object can also be made out of a composite, or a multi-layered, material. For example, one can have an opaque object (let's say wood for example) with a transparent coat of varnish on top of it (which makes it look both diffuse and shiny at the same time like the colored plastic balls in the image below).</p>
+
+<p>
+<img style="width: 670px; border: 1px none orange;" src="../../images/upload/introduction-to-ray-tracing/materiald41d.png?"/>
+</p>
+
+<p>Let's consider the case of opaque and diffuse objects for now. To keep it simple, we will assume that the absorption process is responsible for the object's color. White light is made up of "red", "blue", and "green" photons. If a white light illuminates a red object, the absorption process filters out (or absorbs) the "green" and the "blue" photons. Because the object does not absorb the "red" photons, they are reflected. This is the reason why this object appears red. Now, the reason we see the object at all, is because some of the "red" photons reflected by the object travel towards us and strike our eyes. Each point on an illuminated area, or object, radiates (reflects) light rays in every direction. Only one ray from each point strikes the eye perpendicularly and can therefore be seen. Our eyes are made of photoreceptors that convert the light into neural signals. Our brain is then able to use these signals to interpret the different shades and hues (how, we are not exactly sure). This a very simplistic approach to describe the phenomena involved. Everything is explained in more detail in the lesson on color (which you can find in the section <a href="https://www.scratchapixel.com/lessons/index.php">Mathematics and Physics for Computer Graphics</a>.</p>
+
+<div style="width: 450px;" class="captionImage right">
+<img class="right" style="width: 450px;" src="../../images/upload/introduction-to-ray-tracing/lighttoeye.png" />
+<p class="caption left">Figure 3: al-Haytham's model.</p>
+</div>
+
+<div>
+<p>Like the concept of perspective projection, it took a while for humans to understand light. The Greeks developed a theory of vision in which objects are seen by rays of light emanating from the eyes. An Arab scientist, <b>Ibn al-Haytham</b> (c. 965-1039), was the first to explain that we see objects because the sun's rays of light; streams of tiny particles traveling in straight lines were reflected from objects into our eyes, forming images (Figure 3). Now let us see how we can simulate nature with a computer!</p>
+</div></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 1 of  6</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='introduction-to-ray-tracing/raytracing-algorithm-in-a-nutshell.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-ray-tracing by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 16:43:27 GMT -->
+</html>

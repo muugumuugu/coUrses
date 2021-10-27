@@ -1,0 +1,520 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/perlin-noise-part-2 by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:00:43 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Perlin Noise: Part 2 (Perlin Noise)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='Perlin noise, gradient noise, permutation, hashing function, derivatives, interpolant, height map, displacement'>
+<meta name='date' content='2016-05-28 15:53:04'>
+
+<link rel="stylesheet" type="text/css" href="../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../css/page.css"/>
+
+<link href='../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../indexf17c.html","asciimath2jax.js","../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../indexf17c.html","../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+	<!-- Open Graph data -->
+	<meta property='fb:app_id' content='1535346446701691'/>
+	<meta property='og:title' content='Perlin Noise: Part 2'/>
+	<meta property='og:type' content='article'/>
+	<meta property='og:url' content='https://www.scratchapixel.com//lessons/procedural-generation-virtual-worlds/perlin-noise-part-2'/>
+	<meta property='og:image' content='https://www.scratchapixel.com/images/design/logo_scratchapixel2015.png'/>
+	<meta property='og:description' content='Lesson summary: '/> 
+	<meta property='og:site_name' content='Scratchapixel'/>
+	<meta property='fb:admins' content='1260067275'/>
+	
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Perlin Noise: Part 2</div><div style='width: 100%; margin: 0px; display: table; vertical-align: middle; border: 1px none red;'>
+			<div style='display: table-row; height: 30px;'>
+			<div style='margin: 0px; padding: 0px; border: 1px none blue ; display: table-cell; vertical-align: middle;'>
+				<a href='https://twitter.com/share' class='twitter-share-button' data-lang='en'>Tweet</a>
+			</div></div>
+			<div style='display: table-row; height: 30px;'>
+			<div style='padding: 0px; border: 1px none blue ; display: table-cell; vertical-align: middle;'>
+				<div style='margin-top: 5px;' class='fb-like' data-share='true' data-width='450' data-show-faces='true'></div>
+			</div></div></div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="perlin-noise-part-2/perlin-noise.html"><b>Perlin Noise</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="perlin-noise-part-2/perlin-noise-terrain-mesh.html">Using Perlin Noise to Create a Terrain Mesh</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="perlin-noise-part-2/perlin-noise-computing-derivatives.html">Computing Derivatives</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="perlin-noise-part-2/improved-perlin-noise.html">Improved Perlin Noise</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../code333a.html?id=57&amp;origin=/lessons/procedural-generation-virtual-worlds/perlin-noise-part-2">Source Code</a></div></div></div><span style='display: inline-block; width: 100%; margin: 0px 0px 10px 0px;'><i>Keywords: Perlin noise, gradient noise, permutation, hashing function, derivatives, interpolant, height map, displacement.</i></span><h2>Perlin Noise</h2>
+
+<p>In 1985, Ken Perlin wrote a Siggraph paper called "An Image Synthetizer" in which he presented a type of noise function similar to the one we studied in the previous lesson (Noise Part 1) but slightly better. This noise function got improved and extended over the years primarily by Ken Perlin himself but also by others. We will study some if these improvements in this lesson. This noise function is now known under the name of <b>Perlin Noise</b>.</p>
+
+<p>The Perlin noise is very similar to the type of noise we studied in the previous lesson. Similarly to the value noise which we studied in the previous lesson, it relies on a lattice system. At the corner of lattice cells, we define some random values which are then interpolated to compute a noise value at the location of a point in space. In the previous lesson we studied the creation of 1D and 2D value noise. In this lesson we will implement the 3D version of the Perlin noise function. Implementing a 2D or even 4D function is left to the user, but by re-using the code of the previous lesson, this should be a simple exercise. But anyway, the point is that both the value noise and the Perlin noise are <b>lattice based noise functions</b>.</p>
+
+<p>So if they work on the same principle what's the difference between the two? Well the difference is how we compute the "random values" at the corners of the lattice. In the case of the value noise, we simply assign random numbers at the corners of the lattice cells and interpolate these values using the position of the point within the cell that point falls into. This process is hopefully well explained in the previous lesson. In the Perlin noise, Ken Perlin suggests to replace the random values at the cell's corners with <b>gradient</b>. What he calls gradients are just random 3D normalized vectors (in the case of the 3D noise function). This is not very complicated to generate. Rather than generating random numbers within our Noise function constructor class, we just replace the random float generation by the generation of a random 3D vector. Creating a 3D random vector is easy: you just generate three random float in the range [0,1], remap these random numbers to the range [-1,1] and then normalize the resulting vector coordinates.</p>
+
+<div name="code" class="code">unsigned seed = 2016;
+std::mt19937 generator(seed);
+std::uniform_real_distribution<float> distribution;
+auto dice = std::bind(distribution, generator);
+float gradientLen2;
+for (unsigned i = 0; i < tableSize; ++i) {
+    gradients[i] = Vec3f(2 * dice() - 1, 2 * dice() - 1, 2 * dice() - 1);
+    gradientLen2 = gradients[i].length2();
+    gradients[i] /= sqrtf(gradientLen2); // normalize gradient
+    permutationTable[i] = i;
+}</div>
+
+<p>Now there is a slight problem with this approach. Generating random normalized directions uniformly distributed is the same in a way than generating random positions on the unit sphere with a uniform distribution. Though the problem with the approach described above, is that it generates random normalized directions indeed but they are not uniformly distributed over the surface of a sphere which is a problem (because it will favour some of the directions more than others and this means in the end that our noise itself won't be uniform - and we don't want that). But let's ignore this point for now, we will correct this problem later.</p>
+
+<p>Now the problem is that of course rather than having a random number to interpolate at the corner of the cells, we have gradients or vectors. And since the noise function returns a real value, how we do go from a 3D vector to a real or float again? Ken Perlin suggested to compute directions between the position of each corner of the cell to the point P at the position of which we wish to evaluate the noise function. This provide us with 8 vectors in 3D (and 4 in the 2D case). He then used a dot product between the gradient at the corner of a cell and the vector from that corner to P. Since the dot product of two vectors gives a real number, here it is, we managed to convert our gradients or directions to some random numbers again. As with the 2D case, to compute the coordinates of the point P in the local coordinate of our "fictitious" 3D grid, we will cast the point coordinates from float to integer values and then take these integer coordinates modulo N, the size of our random directions' array (as in the lesson on value noise we chose N = 256). We explained in the previous lesson all these techniques (including how we can replace the C++ operator modulo <span class="code-inline">%</span> with the binary operator <span class="code-inline">&</span> if the size of that table is a power of 2). As we also explained in the previous lesson, that we don't want to generate a lattice of 256x256x256 directions. So we use a single 1D array of 256 random directions and use the technique of the permutation table to "randomly pickup" one of the directions stored in this table by converting the integer coordinates of the point into an index into that permutation table with a <b>hash function</b>. Once again, all these techniques are explained in the previous lesson.</p>
+
+<p>Now that we know how to convert the 8 directions at the corner of the cell into 8 signed random values (they are random since the directions at the corner of the cell were chosen randomly), all there is to do then is to linearly interpolate these values using trilinear interpolation (in the 3D case and bilinear interpolation in the 2D case). Trilinear and bilinear interpolation are explained in the lesson on <a href="../mathematics-physics-for-computer-graphics/interpolation/trilinear-interpolation.html">Interpolation</a>.
+
+<div name="code" class="code">class PerlinNoise
+{
+    static const unsigned tableSize = 256;
+    static const unsigned tableSizeMask = tableSize - 1;
+    Vec3f gradients[tableSize];
+    unsigned permutationTable[tableSize * 2];
+
+    PerlinNoise()
+    {
+        unsigned seed = 2016;
+        std::mt19937 generator(seed);
+        std::uniform_real_distribution<float> distribution;
+        auto dice = std::bind(distribution, generator);
+        float gradientLen2;
+        for (unsigned i = 0; i < tableSize; ++i) {
+            do {
+                gradients[i] = Vec3f(2 * dice() - 1, 2 * dice() - 1, 2 * dice() - 1);
+                gradientLen2 = gradients[i].length2();
+            } while (gradientLen2 > 1);
+            gradients[i] /= sqrtf(gradientLen2); // normalize gradient
+            permutationTable[i] = i;
+        }
+
+        std::uniform_int_distribution<unsigned> distributionInt;
+        auto diceInt = std::bind(distributionInt, generator);
+        // create permutation table
+        for (unsigned i = 0; i < tableSize; ++i)
+            std::swap(permutationTable[i], permutationTable[diceInt() & tableSizeMask]);
+        // extend the permutation table in the index range [256:512]
+        for (unsigned i = 0; i < tableSize; ++i) {
+            permutationTable[tableSize + i] = permutationTable[i];
+        }
+    }
+    virtual ~PerlinNoise() {}
+
+    /* inline */
+    int hash(const int &x, const int &y, const int &z) const
+    { return permutationTable[permutationTable[permutationTable[x] + y] + z]; }
+
+public:
+    float eval(const Vec3f &p) const
+    {
+        int xi0 = ((int)std::floor(p.x)) & tableSizeMask;
+        int yi0 = ((int)std::floor(p.y)) & tableSizeMask;
+        int zi0 = ((int)std::floor(p.z)) & tableSizeMask;
+ 
+        int xi1 = (xi0 + 1) & tableSizeMask;
+        int yi1 = (yi0 + 1) & tableSizeMask;
+        int zi1 = (zi0 + 1) & tableSizeMask;
+ 
+        float tx = p.x - ((int)std::floor(p.x));
+        float ty = p.y - ((int)std::floor(p.y));
+        float tz = p.z - ((int)std::floor(p.z));
+ 
+        float u = smoothstep(tx);
+        float v = smoothstep(ty);
+        float w = smoothstep(tz);
+ 
+        // gradients at the corner of the cell
+        const Vec3f &c000 = gradients[hash(xi0, yi0, zi0)];
+        const Vec3f &c100 = gradients[hash(xi1, yi0, zi0)];
+        const Vec3f &c010 = gradients[hash(xi0, yi1, zi0)];
+        const Vec3f &c110 = gradients[hash(xi1, yi1, zi0)];
+ 
+        const Vec3f &c001 = gradients[hash(xi0, yi0, zi1)];
+        const Vec3f &c101 = gradients[hash(xi1, yi0, zi1)];
+        const Vec3f &c011 = gradients[hash(xi0, yi1, zi1)];
+        const Vec3f &c111 = gradients[hash(xi1, yi1, zi1)];
+ 
+        // generate vectors going from the grid points to p
+        float x0 = tx, x1 = tx - 1;
+        float y0 = ty, y1 = ty - 1;
+        float z0 = tz, z1 = tz - 1;
+ 
+        Vec3f p000 = Vec3f(x0, y0, z0);
+        Vec3f p100 = Vec3f(x1, y0, z0);
+        Vec3f p010 = Vec3f(x0, y1, z0);
+        Vec3f p110 = Vec3f(x1, y1, z0);
+ 
+        Vec3f p001 = Vec3f(x0, y0, z1);
+        Vec3f p101 = Vec3f(x1, y0, z1);
+        Vec3f p011 = Vec3f(x0, y1, z1);
+        Vec3f p111 = Vec3f(x1, y1, z1);
+ 
+        // linear interpolation
+        float a = lerp(dot(c000, p000), dot(c100, p100), u);
+        float b = lerp(dot(c010, p010), dot(c110, p110), u);
+        float c = lerp(dot(c001, p001), dot(c101, p101), u);
+        float d = lerp(dot(c011, p011), dot(c111, p111), u);
+ 
+        float e = lerp(a, b, v);
+        float f = lerp(c, d, v);
+ 
+        return lerp(e, f, w); // g
+    }
+};</div>
+
+<div class="question">Note that in this implementation the array <span class="code-inline">gradients</span> has size  <span class="code-inline">tableSize</span>. This is not the case in Perlin implementation. It has size <span class="code-inline">tableSize * 2</span>. This is because in his original implementation the hash function he used was:
+
+<br/>
+<div name="code" class="code">return permutationTable[permutationTable[x] + y] + z</div>
+
+which return values between 0 and <span class="code-inline">tableSize * 2</span>. Any lookup into <span class="code-inline">permutation[]</span> will return a value in the range 0 to <span class="code-inline">tableSize</span> and since we add <span class="code-inline">z</span> to it which is itself in the range 0 to <span class="code-inline">tableSize</span> then the resulting number is indeed in the range 0 to <span class="code-inline">tableSize * 2</span>. Now since we use this number as an index in the array <span class="code-inline">gradients</span>, <span class="code-inline">gradients</span> needs to have a size of <span class="code-inline">tableSize * 2</span>. However in our implementation we use for the hash function:
+
+<br/>
+<div name="code" class="code">return permutationTable[permutationTable[permutationTable[x] + y] + z]</div>
+
+And this return a value in the range 0 to <span class="code-inline">tableSize * 2</span> and thus our <span class="code-inline">gradients</span> array only requires to have the size <span class="code-inline">tableSize</span>. It's a detail but worth noting.</div>
+
+<p>As usual, to interpolate the values at the corners of cells smoothly, we use the smoothstep function to remap the interpolates (we remap tx, ty and tz into u, v and w respectively - lines 55 to 57). 
+
+<p>As you can see, this is very similar to the value noise function. We just replaced the random values at the corner of the cells by a dot product between a random direction and the directions from the corners of the cell to P (lines 86 to 89).</p>
+
+<img class="left" style="width: 670px; margin-bottom: 12px;" src="../../images/upload/noise-part-2/noise-overviewd41d.png?" />
+
+<p>Getting the code right is not easy. There are a couple of traps we need to be careful about. Now, the image above helps you (hopefully) figuring out what's going on (it only represents the 2D case though). Note the "gradient vectors" at the corners of the grid cell and how we compute the vectors form the corners of the cell to the point where we compute the noise function. Note also that:</p>
+
+<ul>
+<li>You need to use the code <span class="code-inline">(int)(floor(P.x)) & 255</span> in order to compute the lower left corner of the grid cell x-coordinate (for the y-coordinate replace P.x with P.y). The question is why using the <span class="code-inline">floor</span> function (which is a function from the stl C++ library)? This is useful when the value of any of the point coordinates is negative. The problem with <span class="code-inline">int(P.x)</span> is that it returns 1 if the value of the coordinate is 1.1 or 1.999 for instance (which is good), but it returns -1 when the value is -1.2 or -1.999 when what we want in this particular case is -2. Keep in mind that the smallest coordinates of the grid cell the point is in, should always be in the lower left corner of the cell whether the cell is on the positive or negative side of the world Cartesian coordinate system axis as showed in the image above. Using the function <span class="code-inline">floor(P.x)</span> guarantees that we get the right result regardless of the coordinate sign. Indeed <span class="code-inline">(int)(floor(-1.2))</span> for example returns -2 which is what we want.</li>
+<li>Once we have computed the lower-left coordinate of the grid cell, then we need to compute its upper-right coordinate as well. We can do this by simply adding 1 to the lower left coordinate but this value might exceed the grid size (256) thus we also need to take the modulo of this value to insure that the grid coordinates stays within the range [0,255]
+<div class="code">X0 = (int)(std::floor(P.x)) & 255;
+Y0 = (int)(std::floor(P.y)) & 255;
+X1 = (X0 + 1) & 255;
+Y1 = (Y0 + 1) & 255;</div>
+</li>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" style="width: 300px;" src="../../images/upload/noise-part-2/noise-overview2d41d.png?" />
+<p class="caption left">Figure 2: visualise the noise function as a grid of size 256x256 (for the 2 case) that is repeated in every direction (in each quadrant of the Cartesian coordinate system). This is only for visualisation. In practice we never repeat the grid. What we do instead is take the coordinates of the point modulo the table size (256 in this case).</p>
+</div>
+
+<li>Again remember that the size of the gradient array is limited (256 values). We explained that one way of visualising the process is to imagine a 3D grid whose vertices are assigned random gradients. Yet the noise function works for values of x, y and z which are infinite (the grid dimensions are finite, but not the coordinates of the point used to compute the noise function). So you can also see the noise function as a repetition of this 3D grid in every direction as showed in figure 2. What this means in practice is that when a point is located in the upper right corner of that grid (which happens for instance when any of the coordinates of the point are in the range ]0,-1], ]-255, -256], [255, 256[, etc.), then we will interpolate between the gradient stored on the grid at the coordinates (255, 255) and the gradient value stored on the grid at the coordinates (0,0). Example:
+
+<div class="code">X0 = (int)(-1) & 255; // = 255 (right corner of the 3D lattice or last cell)
+X1 = (X0 + 1) & 255; // 0 (left corner of the 3D lattice of first cell)
+</li>
+</ul>
+
+<div class="captionImage right" style="width: 400px;">
+<img class="left" style="width: 400px;" src="../../images/upload/noise-part-2/noise-lattice-valued41d.png?" />
+<p class="caption left">Figure 3: at the cells' corners the noise function is always 0 (in this example we remapped the values of the noise function from [-1,1] to [0,1] this at the cell's corners the noise function is in this case always 0.5). This is always the case because the length of the vector from the cell corner to P in this case is always 0 and thus the dot product of the gradients with this vector is also always 0.</p>
+</div>
+
+<ul>
+
+<li>The dot product returns values in the range [-1,1] (assuming the vectors involved are normalized). So we can already expect that the Perlin noise function will also return negative and positive values. We get negative values when the direction at the corner of the cell and the vector from the corner of the cell to P, points in opposite directions (as show in figure 1).</li>
+
+<li>Finally, the vector V from the corner of the cell to P is of course (0,0,0) when P lies exactly on that corner. So the dot product of the gradient at that corner and V in this particular case is necessarily 0. This is visible in the image below were we superimposed the lattice over the result of the result of the noise function. Because the Perlin noise function returns values in the range [-1,1] we had to remap them in the range [0,1] to save the result out to an image, which means that the noise at the corner of each cell once remapped is 0.5 (but before remapping it would be 0 - figure 3).</li>
+
+</ul>
+
+<h2>Uniform Distribution of Gradients</h2>
+
+<p>Now, generating random directions uniformly distributed (they all have equal probability to be generated) seems simple but getting it right is trickier than it seems. The "naive" technique we just used, generates random directions indeed but these directions are not uniformly distributed. They generate random directions within the volume of a cube not within the volume of a sphere. For this reason, they are not uniformly distributed with respect to the shape of interest (the sphere). Another naive technique consists of randomly generating spherical coordinates \(\phi\) and \(\theta\) and convert these spherical coordinates to Cartesian coordinates:</p>
+
+<div name="code" class="code">float phi = 2 * drand48() * M_PI;
+float theta = drand48() * M_PI;
+float x = cos(phi) * sin(theta);
+float y = sin(phi) * sin(theta);
+float z = cos(theta);</div>
+
+<p>Though as elegant as this might sound, this doesn't work either. When you generate random spherical coordinates, these coordinates are indeed nicely distributed within the space or domain within which these coordinates are defined. That is \([0,2\pi]\) for \(\phi\) and \([0,\pi]\) for \(\theta\). Though when you wrap this nice rectangle onto a sphere you can see that the rectangle is being squeezed in at the poles of the sphere. In other words, the points that were nicely distributed over the surface of the rectangle are now being cluttered around the poles (image below). Clearly the density of points at the pole is now greater than anywhere else on the sphere, and we can clearly see that this distribution is thus not uniform.</p>
+
+<img class="left" style="width: 670px; margin-bottom: 12px;" src="../../images/upload/noise-part-2/noise-point-distrd41d.png?" />
+
+<p>Remember that what we are trying to solve here, is the creation of random unit directions uniformly distributed, which to some extent is the same problem that the one we already studied in the lesson on <a href="../3d-basic-rendering/global-illumination-path-tracing/global-illumination-path-tracing-practical-implementation.html">Global Illumination and Path Tracing</a> in which we learned how to create random samples over the hemisphere. We went through a great deal of details in this lesson so we won't explain the process here fully again. Though remember that in order to sample a function we first need to compute the PDF of that function, then its CDF and finally the invert of the CDF. Now in our particular case we want to create samples over a sphere but like the hemisphere example, we will start with solid angle to express our probability function or PDF. As you (hopefully) know, there's \(4\pi\) steradians (the unit for solid angle) in a sphere (if you are unfamiliar with the concept of solid angle, please check the lesson on radiometry in the Mathematics and Physics for Computer Graphics section). We also know that a PDF integrates to 1. So in the case of the sphere, we can write:</p>
+
+$$\int_0^{4\pi} p(\omega)dw = 1.$$
+
+<p>If you follow the steps described in the lesson on Global Illumination, you get:</p>
+
+$$p(\omega)= { {1} \over {4\pi} }.$$
+
+<div class="question">Note the difference with the hemisphere whose PDF was \({1} \over{2\pi}\)</div>
+
+<p>As in the other lesson, we want to express that PDF in terms of polar coordinates (\(\theta\) and \(\phi\)):</p>
+
+$$p(\phi, \theta)d\phi d\theta = p(\omega)d\omega.$$
+
+<p>Then recall that the differential solid angle \(d\omega\) can also be defined as (again, this is explained in the other lesson):</p>
+
+$$d\omega = \sin \theta d\phi d\theta.$$
+
+<p>If we substitute this equation in the previous equation we get:</p>
+
+$$
+\begin{array}{l}
+p(\phi,\theta)d\phi d\theta = p(\omega) d\omega,\\
+p(\phi,\theta) d\phi d\theta = p(\omega) \sin \theta d\phi d\theta.
+\end{array}
+$$
+
+<p>The \(d\phi d\theta\) terms on each side of the equation cancel out and we get:</p>
+
+$$
+\begin{array}{l}
+p(\phi, \theta)=p(\omega) \sin \theta, \\
+p(\phi, \theta)= { \dfrac { \sin \theta} {4 \pi}}.
+\end{array}
+$$
+
+<p>Let's then integrate \(p(\phi, \theta)\) with respect to \(\phi\) as explained in the lesson on global illumination. We get:</p>
+
+$$
+p(\theta)= \int_\phi^{2\pi}
+p(\phi, \theta) d \phi = 
+\int_\phi^{2\pi}  { \dfrac { \sin \theta} {4 \pi}} d \phi = 
+2\pi * { \dfrac { \sin \theta} {4 \pi} } = 
+{ \dfrac { \sin \theta} {2}}.
+$$
+
+<p>For the PDF of \(\phi\) we get:</p>
+
+$$
+p(\phi) = 
+{ \dfrac { p(\phi, \theta) } { p(\theta) } } = 
+{ \dfrac { \dfrac { \sin \theta} {4 \pi} } {\dfrac { \sin \theta} {2} } } = 
+{\dfrac {1}{2\pi}}.
+$$
+
+<p>Now that we have the PDFs for \(\phi\) and \(\theta\), we need to compute their respective CDFs and inverse them:</p>
+
+$$Pr(X \le \theta) = P(\theta) = \int_0^\theta p(\theta) d\theta = \int_0^\theta { \dfrac { \sin \theta} {2}} d\theta.$$
+
+<p>Using the Fundamental Theorem of Calculus we get:</p>
+
+$$\int_0^\theta { \dfrac { \sin \theta} {2}} d\theta = \big [ {\dfrac {-\cos \theta}{2}} \big ]_0^{\theta} = \big [{\dfrac {-\cos \theta}{2 }} -- { \dfrac {\cos 0 } {2} } \big ] = {\dfrac {1}{2}} - {\dfrac {\cos \theta}{2}}.$$
+
+<p>The CDF of the \(p(\phi)\) is simpler:</p>
+
+$$Pr(X \le \phi) = P(\phi) = \int_0^\phi {\dfrac {1}{2\pi}} d\phi = {\dfrac {1}{2\pi}}[\phi - 0] = {\dfrac {\phi}{2\pi}}.$$
+
+<p>Let's finally invert these CDFs:</p>
+
+$$
+\begin{array}{l}
+y = {\dfrac {1}{2}} - {\dfrac {\cos \theta}{2}}\\
+{\dfrac {\cos \theta}{2}} = {\dfrac {1}{2}}  - y\\
+\cos \theta = 1 - 2y\\
+\theta = \cos^{-1}(1 - 2y) = \cos^{-1}(2y - 1).
+\end{array}
+$$
+
+<div class="question">Note that \(2y - 1\) where \(y\) is the random number (uniformly distributed) in the range [0,1] and \(1 - 2y\) give the same results.</div>
+
+<p>And for \(\phi\):</p>
+
+$$
+\begin{array}{l}
+y =  {\dfrac {\phi}{2\pi}}\\
+\phi = 2 \pi y.
+\end{array}
+$$
+
+<p>Where \(y\) in this case represents a uniformly distributed random number in the range [0,1]. In other words, to generate uniformly random points over the surface of the sphere, you need to use the following code:</p>
+
+<div name="code" class="code">unsigned seed = 2016;
+std::mt19937 generator(seed);
+std::uniform_real_distribution<float> distribution;
+auto dice = std::bind(distribution, generator);
+
+float theta = acos(2 * dice() - 1);
+float phi = 2 * dice() * M_PI; 
+
+float x = cos(phi) * sin(theta);
+float y = sin(phi) * sin(theta);
+float z = cos(theta);</div>
+
+<p>Other <a href="http://mathworld.wolfram.com/SpherePointPicking.html">methods exists</a> but explaining why they work mathematically would be too complex within the scope of this lesson. So for now we will use this one in the code of our Perlin noise function.</p>
+
+<div name="code" class="code">for (unsigned i = 0; i < tableSize; ++i) { 
+    float theta = acos(2 * dice() - 1);
+    float phi = 2 * dice() * M_PI; 
+
+    float x = cos(phi) * sin(theta);
+    float y = sin(phi) * sin(theta);
+    float z = cos(theta);
+    gradients[i] = Vec3f(x, y, z);
+    permutationTable[i] = i; 
+}</div>
+
+<p>Note in the following image how the Perlin noise (right) feels generally better looking than the value noise (left). So the question is now to explain why this is the case?</p>
+
+<img class="left" style="width: 670px; margin-bottom: 12px;" src="../../images/upload/noise-part-2/perlin-noise-vs-value-noised41d.png?" />
+
+
+<h2>Why is Perlin/Gradient Noise better than Value Noise?</h2>
+
+<div class="captionImage right" style="width: 400px;">
+<img class="left" style="width: 400px;" src="../../images/upload/noise-part-2/noise-value-vs-perlin1d41d.png?" />
+<p class="caption left">Figure 5: ideal case. the random values are nicely distributed about the x-axis and thus the oscillation of the noise function is regular in frequency.</p>
+</div>
+
+<div class="captionImage right" style="width: 400px;">
+<img class="left" style="width: 400px;" src="../../images/upload/noise-part-2/noise-value-vs-perlin2d41d.png?" />
+<p class="caption left">Figure 6: note the vest case. Some random values are on the same size of the x-axis several times in a row which means that the distribution of frequencies in the value noise function is irregular.</p>
+</div>
+
+<p>It is slightly easier to understand why Perlin noise is better than value noise in 1D. In the case of value noise we generate random values at integer positions along the "line" and interpolate these values between these integer positions (as showed in figure 5 and 6). Though note that because we choose these values randomly several successive values may be very similar (as showed in figure 6). This is not great because some parts of the noise will vary quickly (when successive values are very different from each other) and some parts will change slowly (when successive values along the x-axis are similar: for example have the same sign). Parts of the noise function where values change slowly are said to have a low frequency compared to parts of the noise where the values change quickly which are said to have a higher frequency. In general, this means that value noise (when you check the frequencies the noise is made of) is composed of high and low frequencies. Keep in mind that a good noise is a noise that looks random, changes smoothly locally but which also generally presents a pretty homogeneous look. In other words, the features the noise is made of should generally have a similar size (a similar frequency). That's obviously not the case of the value noise for the reason we just explained.</p>
+
+<div class="captionImage right" style="width: 400px;">
+<img class="left" style="width: 400px;" src="../../images/upload/noise-part-2/noise-value-vs-perlin4d41d.png?" />
+<p class="caption left">Figure 7: the gradients control the shape of the Perlin noise function.</p>
+</div>
+
+<div class="captionImage right" style="width: 400px;">
+<img class="left" style="width: 400px;" src="../../images/upload/noise-part-2/noise-value-vs-perlin3d41d.png?" />
+<p class="caption left">Figure 8: the features of the Perlin noise function are more regular in frequency than the value noise function.</p>
+</div>
+
+<p>The Perlin noise technique is very similar to the value noise algorithm though rather than selecting random values at integer positions along the line, we choose "gradients". Gradients can be seen as "tangents" to the  1D noise function at the lattice points. As you can see in figure 7 and 8, it doesn't really matter in which direction the gradient points to, because if it causes the curve to go up on one side of the lattice point (say on the right of a lattice point as showed in figure 8), it causes the curve to go down on the other side of that same point (say on the left of that point). In the worse case, if two successive lattice points have gradients that aim at radically opposite directions (one points up and the other points down) then the noise function will have a "S" like shape between the two points (as showed in figure 8a). In the other case, the curve will either go up or down (figure 8b and 8c). But one can easily see that because of this construction, all features have more or less the same size. It's either a bump or a dent or a "S" like shape between two consecutive lattice points. As a result, the distribution of frequencies in the Perlin noise is more regular than the value noise's frequency spectrum (in particular it removes the low frequencies you can find in the latter). As Perlin notes in his paper:</p>
+
+<div class="scratchquote">The above texture has a band-limited character to it; there is no detail outside of a certain range of size.</div>
+
+<p>This is an important property, especially when it comes to filtering the function (check the lesson on filtering).</p>
+
+<h2>References</h2>
+
+<p><i>An Image Synthesizer</i>. Ken Perlin (1985)</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 1 of  5</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='perlin-noise-part-2/perlin-noise-terrain-mesh.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/perlin-noise-part-2 by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:02:52 GMT -->
+</html>

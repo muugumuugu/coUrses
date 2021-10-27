@@ -1,0 +1,413 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-polygon-mesh/ray-tracing-polygon-mesh-part-2 by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:17:10 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Ray-Tracing a Polygon Mesh (Ray-Tracing a Polygon Mesh (Part 2))</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='ray-tracing, polygon mesh, tessellation, triangulation, triangle, barycentric coordinates, interpolation, normals, vertex attribute, texture coordinates'>
+<meta name='date' content='2014-08-15 10:34:46'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Ray-Tracing a Polygon Mesh</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="polygon-to-triangle-mesh.html">From Polygon to Triangle Mesh</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="Ray-Tracing%20a%20Polygon%20Mesh-part-1.html">Ray-Tracing a Polygon Mesh (Part 1)</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="ray-tracing-polygon-mesh-part-2.html"><b>Ray-Tracing a Polygon Mesh (Part 2)</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../codeb23e.html?id=11&amp;origin=/lessons/3d-basic-rendering/ray-tracing-polygon-mesh">Source Code</a></div></div></div><p>Let's see how we can now reproduce the image we rendered in the lesson on rasterization. We know how to load a geometry file from disk and how to render this object using ray-tracing. Let's put these two techniques together in our program. In theory, if all works fine (mathematics never lie), we should get two perfectly identical images. Though if what we learned and said about ray-tracing is true, ray-tracing should take more time than rasterization. Let's validate these assumptions.</p>
+ 
+<p>First, we will integrate the function to read the geometry file we described in the lesson <a href="../../modeling-geometry/introduction-polygon-mesh/polygon-mesh-file-formats">Polygon Mesh</a> to our program's code. All the data read from the file (number of faces, the face and vertex arrays, the point, normal and st coordinates arrays) are passed to the <span class="code-inline">TriangleMesh</span> constructor (line 5).
+ 
+<div name="code" class="code">class TriangleMesh : public Object
+{
+public:
+    // Build a triangle mesh from a face index array and a vertex index array
+    TriangleMesh(
+        const uint32_t nfaces,
+        const std::unique_ptr&ltuint32_t []&gt &faceIndex,
+        const std::unique_ptr&ltuint32_t []&gt &vertsIndex,
+        const std::unique_ptr&ltVec3f []&gt &verts,
+        std::unique_ptr&ltVec3f []&gt &normals,
+        std::unique_ptr&ltVec2f []&gt &st) :
+        numTris(0)
+    {
+        ...
+    }
+};
+
+TriangleMesh* loadPolyMeshFromFile(const char *file)
+{
+    std::ifstream ifs;
+    try {
+        ifs.open(file);
+        if (ifs.fail()) throw;
+        std::stringstream ss;
+        ss << ifs.rdbuf();
+        uint32_t numFaces;
+        ss >> numFaces;
+        std::unique_ptr&ltuint32_t []&gt faceIndex(new uint32_t[numFaces]);
+        uint32_t vertsIndexArraySize = 0;
+        // reading face index array
+        for (uint32_t i = 0; i < numFaces; ++i) {
+            ss >> faceIndex[i];
+            vertsIndexArraySize += faceIndex[i];
+        }
+        std::unique_ptr&ltuint32_t []&gt vertsIndex(new uint32_t[vertsIndexArraySize]);
+        uint32_t vertsArraySize = 0;
+        // reading vertex index array
+        for (uint32_t i = 0; i < vertsIndexArraySize; ++i) {
+            ss >> vertsIndex[i];
+            if (vertsIndex[i] > vertsArraySize) vertsArraySize = vertsIndex[i];
+        }
+        vertsArraySize += 1;
+        // reading vertices
+        std::unique_ptr&ltVec3f []&gt verts(new Vec3f[vertsArraySize]);
+        for (uint32_t i = 0; i < vertsArraySize; ++i) {
+            ss >> verts[i].x >> verts[i].y >> verts[i].z;
+        }
+        // reading normals
+        std::unique_ptr&ltVec3f []&gt normals(new Vec3f[vertsIndexArraySize]);
+        for (uint32_t i = 0; i < vertsIndexArraySize; ++i) {
+            ss >> normals[i].x >> normals[i].y >> normals[i].z;
+        }
+        // reading st coordinates
+        std::unique_ptr&ltVec2f []&gt st(new Vec2f[vertsIndexArraySize]);
+        for (uint32_t i = 0; i < vertsIndexArraySize; ++i) {
+            ss >> st[i].x >> st[i].y;
+        }
+        
+        return new TriangleMesh(numFaces, faceIndex, vertsIndex, verts, normals, st);
+    }
+    catch (...) {
+        ifs.close();
+    }
+    ifs.close();
+    
+    return nullptr;
+}
+
+int main(int argc, char **argv)
+{
+    ...
+    std::vector&ltstd::unique_ptr&ltObject&gt&gt objects;
+    TriangleMesh *mesh = loadPolyMeshFromFile("./cow.geo");
+    if (mesh != nullptr) objects.push_back(std::unique_ptr&ltObject&gt(mesh));
+    
+    // finally, render
+    render(options, objects, 0);
+
+    return 0;
+}</div>
+ 
+<p>The function <span class="code-inline">readGeometryFile()</span> returns a pointer to a new dynamically allocated instance of the <span class="code-inline">TriangleMesh</span> class. This instance holds the geometry data of the object we just read (the geometry has been triangulated at this point if it contained faces with more than 3 vertices). This instance is added to the object list which is then passed on to the <span class="code-inline">render()</span> function (line 3).</p>
+ 
+<div name="code" class="code">void render(
+    const Options &options,
+    const std::vector&ltstd::unique_ptr&ltObject&gt&gt &objects,
+    const uint32_t &frame)
+{
+    ...
+    for (uint32_t j = 0; j < options.height; ++j) {
+        for (uint32_t i = 0; i < options.width; ++i) {
+            ...
+            *(pix++) = castRay(orig, dir, objects, options);
+        }
+    }
+    ...
+}</div>
+ 
+<p>The rest of the program is pretty conventional for a ray-tracer. We loop over each pixel in the image, generate a primary ray (whose direction and origin are transformed by the camera-to-world 4x4 transformation matrix), and test if this primary intersects any of the objects in the scene. In the <span class="code-inline">castRay()</span> we call the <span class="code-inline">trace()</span> function which is where we loop over all the objects contained in the <span class="code-inline">objects</span> list.</p>
+ 
+<div name="code" class="code">bool trace(
+    const Vec3f &orig, const Vec3f &dir,
+    const std::vector&ltstd::unique_ptr&ltObject&gt&gt &objects,
+    float &tNear, uint32_t &index, Vec2f &uv, Object **hitObject)
+{
+    *hitObject = nullptr;
+    for (uint32_t k = 0; k < objects.size(); ++k) {
+        float tNearTriangle = kInfinity;
+        uint32_t indexTriangle;
+        Vec2f uvTriangle;
+        if (objects[k]->intersect(orig, dir, tNearTriangle, indexTriangle, uvTriangle) && tNearTriangle < tNear) {
+            *hitObject = objects[k].get();
+            tNear = tNearTriangle;
+            index = indexTriangle;
+            uv = uvTriangle;
+        }
+    }
+
+    return (*hitObject != nullptr);
+}
+
+Vec3f castRay(
+    const Vec3f &orig, const Vec3f &dir,
+    const std::vector&ltstd::unique_ptr&ltObject&gt&gt &objects,
+    const Options &options)
+{
+    Vec3f hitColor = options.backgroundColor;
+    float tnear = kInfinity;
+    Vec2f uv;
+    uint32_t index = 0;
+    Object *hitObject = nullptr;
+    if (trace(orig, dir, objects, tnear, index, uv, &hitObject)) {
+        Vec3f hitPoint = orig + dir * tnear;
+        Vec3f hitNormal;
+        Vec2f hitTexCoordinates;
+        hitObject->getSurfaceProperties(hitPoint, dir, index, uv, hitNormal, hitTexCoordinates);
+        float NdotView = std::max(0.f, hitNormal.dotProduct(-dir));
+        const int M = 10;
+        float checker = (fmod(hitTexCoordinates.x * M, 1.0) > 0.5) ^ (fmod(hitTexCoordinates.y * M, 1.0) < 0.5);
+        float c = 0.3 * (1 - checker) + 0.7 * checker;
+        
+        hitColor = c * NdotView;
+    }
+
+    return hitColor;
+}</div>
+ 
+<p>The <span class="code-inline">intersect()</span> method of the triangle mesh is finally called. To test if the ray intersects the mesh, we call the ray-triangle intersection test function for each triangle in the mesh. As explained in the previous chapter, as we do so, we also keep track of the closest intersection distance in case the ray intersects more than one triangle (we also need to keep track of the intersect triangle index as well as the hit point barycentric coordinates. This information will be required for shading).</p>
+ 
+<div name="code" class="code">bool intersect(const Vec3f &orig, const Vec3f &dir, float &tNear, uint32_t &triIndex, Vec2f &uv) const
+{
+    uint32_t j = 0;
+    bool isect = false;
+    for (uint32_t i = 0; i < numTris; ++i) {
+        const Vec3f &v0 = P[trisIndex[j]];
+        const Vec3f &v1 = P[trisIndex[j + 1]];
+        const Vec3f &v2 = P[trisIndex[j + 2]];
+        float t = kInfinity, u, v;
+        if (rayTriangleIntersect(orig, dir, v0, v1, v2, t, u, v) && t < tNear) {
+            tNear = t;
+            uv.x = u;
+            uv.y = v;
+            triIndex = i;
+            isect = true;
+        }                                                                                                                                                                                                                                
+        j += 3;
+    }
+
+    return isect;
+}</div>
+ 
+<p>Finally if the ray intersects the mesh, we perform shading in the <span class="code-inline">castRay()</span> function (lines 47-56). We first call the <span class="code-inline">getGeometryData()</span> method of the intersected mesh to compute the normal and the texture coordinates at the intersection point. We then use this information to create the checkerboard pattern and compute the facing-ratio which mixed together form the final pixel color (line 56).</p>
+ 
+<div name="code" class="code">class TriangleMesh : public Object
+{
+    ...
+    void getSurfaceProperties(
+        const Vec3f &hitPoint,
+        const Vec3f &viewDirection,
+        const uint32_t &triIndex,
+        const Vec2f &uv,
+        Vec3f &hitNormal,
+        Vec2f &hitTextureCoordinates) const
+    {
+        // face normal
+        const Vec3f &v0 = P[trisIndex[triIndex * 3]];
+        const Vec3f &v1 = P[trisIndex[triIndex * 3 + 1]];
+        const Vec3f &v2 = P[trisIndex[triIndex * 3 + 2]];
+        hitNormal = (v1 - v0).crossProduct(v2 - v0);
+        hitNormal.normalize();
+        
+        // texture coordinates
+        const Vec2f &st0 = texCoordinates[triIndex * 3];
+        const Vec2f &st1 = texCoordinates[triIndex * 3 + 1];
+        const Vec2f &st2 = texCoordinates[triIndex * 3 + 2];
+        hitTextureCoordinates = (1 - uv.x - uv.y) * st0 + uv.x * st1 + uv.y * st2;
+
+        // vertex normal
+        /*
+        const Vec3f &n0 = N[triIndex * 3];
+        const Vec3f &n1 = N[triIndex * 3 + 1];
+        const Vec3f &n2 = N[triIndex * 3 + 2];
+        hitNormal = (1 - uv.x - uv.y) * n0 + uv.x * n1 + uv.y * n2;
+        */
+    }
+    ...
+};
+
+Vec3f castRay(
+    const Vec3f &orig, const Vec3f &dir,
+    const std::vector&ltstd::unique_ptr&ltObject&gt&gt &objects,
+    const Options &options)
+{
+    Vec3f hitColor = options.backgroundColor;
+    float tnear = kInfinity;
+    Vec2f uv;
+    uint32_t index = 0;
+    Object *hitObject = nullptr;
+    if (trace(orig, dir, objects, tnear, index, uv, &hitObject)) {
+        Vec3f hitPoint = orig + dir * tnear;
+        Vec3f hitNormal;
+        Vec2f hitTexCoordinates;
+        hitObject->getSurfaceProperties(hitPoint, dir, index, uv, hitNormal, hitTexCoordinates);
+        float NdotView = std::max(0.f, hitNormal.dotProduct(-dir));
+        const int M = 10;
+        float checker = (fmod(hitTexCoordinates.x * M, 1.0) > 0.5) ^ (fmod(hitTexCoordinates.y * M, 1.0) < 0.5);
+        float c = 0.3 * (1 - checker) + 0.7 * checker;
+        
+        hitColor = c * NdotView; //Vec3f(uv.x, uv.y, 0);
+    }
+
+    return hitColor;
+}</div>
+ 
+<p>A small note about shading. Don't worry too much at the moment if you don't understand the code that relates to shading. It will be explained in the introduction to shading. Though note that the code is pretty similar to the one we used in the lesson on rasterization. First, we use the barycentric coordinates of the hit point to interpolate the actual object st or texture coordinate. The final texture coordinates of the hit point is then used to compute a checkerboard pattern. As for normals, we have two options. Face normal which we talked about already in the lesson on rasterization, can be computed by taking the cross product of two of the triangle edges. We can also use the hit point barycentric coordinates to interpolate the vertex normals (read from the geometry file), the same way we interpolated texture coordinates. As mentioned, this code will be soon explained (check the lesson introduction to shading).</p>
+ 
+<h2>Result</h2>
+ 
+<p>First let's look at the visual result. As you can see the image produced by the ray-tracer is perfectly identical to the image produced by the raterizer (beside the background color of course). As mentioned at the beginning of this lesson, mathematics never lie. If you do the right thing, the two rendering techniques should produce exactly the same result. We have at least proven that this was the case, which is also a way of validating that our programs do the right thing. Hooray!</p>
+
+<img class="left" style="margin-bottom: 12px;" src="../../../images/upload/ray-triangle-mesh/cow-comparaisond41d.gif?" />
+ 
+<p>Now let's compare rendering time. Ray-tracing: 15.22 seconds. Rasterizer: 0.00628 second (we ran the two programs on the same machine). As expected, with a naive implementation, ray-tracing is 2421 times slower. This is a very large difference. Hopefully, as mentioned in the previous chapter, this can be improved to some extend using acceleration structures. We won't study acceleration structures in this section but you can find lessons on this topic in the <a href="../../advanced-raytracing">Advanced Ray-Tracing</a> section. Despite being slow, we will keep using ray-tracing in the next lessons to learn about shading. Ray-tracing as explained before, is a much better technique when it comes to shading. Shading has very much to do with computing visibility between points in space, and ray-tracing is well suited for that. It offers a unified framework to solve both the visibility problem and shading.</p>
+ 
+<h2>Conclusion</h2>
+ 
+<p>Congratulation. At this point of your learning journey, you now know the difference between ray-tracing and raserization, know how to implement the two algorithms and produce an image of a 3D model viewed from a given viewpoint that is consistent regardless of the technique you use to render this image. You have also been able to judge for yourself the difference in performance between the two techniques. In the next lesson, we will learn about transforming objects. We will then be ready to start our first lesson on shading.</p>
+
+<h2>Exercises</h2>
+
+<p>Compute the bounding box of the object and implement the ray-box intersection test to accelerate the render.</h2>
+ </article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='Ray-Tracing%20a%20Polygon%20Mesh-part-1.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 3 of  4</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='../../../codeb23e.html?id=11&amp;origin=/lessons/3d-basic-rendering/ray-tracing-polygon-mesh'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-polygon-mesh/ray-tracing-polygon-mesh-part-2 by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:17:15 GMT -->
+</html>

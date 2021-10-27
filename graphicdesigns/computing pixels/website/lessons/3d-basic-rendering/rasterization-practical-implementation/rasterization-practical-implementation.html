@@ -1,0 +1,380 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-practical-implementation by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:11:10 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Rasterization: a Practical Implementation (Rasterization: a Practical Implementation)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='rasterizer, rasteriser, rasterisation, rasterization, visibility, frame-buffer, image-buffer, depth-buffer, z-buffer, pixel, raster element, perspective projection, NDC space, inside-outside test, coverage test, edge function, barycentric coordinates, counter-clockwise ordering, winding, face culling, vertex attribute, rasterization rules, top-left rule, hidden surface removal, interpolation, perspective correct interpolation, anti-aliasing'>
+<meta name='date' content='2015-01-25 08:05:22'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Rasterization: a Practical Implementation</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="overview-rasterization-algorithm.html">An Overview of the Rasterization Algorithm</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="projection-stage.html">The Projection Stage</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="rasterization-stage.html">The Rasterization Stage</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="visibility-problem-depth-buffer-depth-interpolation.html">The Visibility Problem, the Depth Buffer Algorithm and Depth Interpolation</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="perspective-correct-interpolation-vertex-attributes.html">Perspective Correct Interpolation and Vertex Attributes</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="rasterization-practical-implementation.html"><b>Rasterization: a Practical Implementation</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code3559.html?id=26&amp;origin=/lessons/3d-basic-rendering/rasterization-practical-implementation">Source Code</a></div></div></div><h2>Improving the Rasterization Algorithm</h2>
+
+<div style="width: 300;" class="captionImage right">
+<img class="left"  src="../../../images/upload/rasterization/jaggiesd41d.png?"/><p class="caption left">Figure 1: jagged edges pixel artefacts can be reduced using anti-aliasing.</p>
+</div>
+
+<div style="width: 300;" class="captionImage right">
+<img class="left"  src="../../../images/upload/rasterization/antialiasing3d41d.png?"/><p class="caption left">Figure 2: when one sample is used the triangle is missed. But by using sub-pixels, we can detect that the pixel overlaps the triangle at least partially. The pixel color is equal to the sum of the sub-pixels colors divided by the total number of sub-pixels or samples (here this example 16 samples).</p>
+</div>
+
+<div style="width: 300;" class="captionImage right">
+<img class="left"  src="../../../images/upload/rasterization/antialiasing1d41d.png?"/><p class="caption left">Figure 3: pixels can't properly capture the shape of continuous surfaces.</p>
+</div>
+
+<div style="width: 300;" class="captionImage right">
+<img class="left"  src="../../../images/upload/rasterization/antialiasing2d41d.png?"/><p class="caption left">Figure 4: using sub-pixels to improve fight aliasing.</p>
+</div>
+
+<div style="width: 300;" class="captionImage right">
+<img class="left"  src="../../../images/upload/rasterization/antialiasing4d41d.png?"/><p class="caption left">Figure 5: anti-aliasing helps with smoothing jagged edges.</p>
+</div>
+
+<div style="width: 300;" class="captionImage right">
+<img class="left"  src="../../../images/upload/rasterization/antialiasingd41d.png?"/><p class="caption left">Figure 6: 1 sample per pixels or 1 pps (top) vs. 4 samples per pixels (bottom).</p>
+</div>
+
+<div style="width: 300;" class="captionImage right">
+<img class="left"  src="../../../images/upload/rasterization/rasterization-optimizationd41d.png?"/><p class="caption left">Figure 7: if the 4 corners of an 8x8 pixel grid overlap the triangle then all remaining pixels of the grids cover the triangle too.</p>
+</div>
+
+<h3>Aliasing and Anti-Aliasing</h3>
+
+<p>All the techniques we presented in the previous chapters are really the foundation of the rasterization algorithm. Though, we have only implemented these techniques in a very basic way. The GPU rendering pipeline and other rasterization based production renderers use the same concepts but they used highly optimized version of these algorithms. Presenting all the different tricks that are used to speed up the algorithm goes way beyond the scope of an introduction. We will just review some of them quickly now but we plan to devote a lesson to this topic in the future.</p>
+
+<p>First, let's consider one basic problem with 3D rendering. If you zoom up on the image of the triangle that we renderered in the previous chapter, you will notice that the edges of the triangle are not regular (in fact, it is not specific to the edge of the triangle, you can also see that the checkerboard pattern is irregular on the edge of the squares). The steps that you can easily see in figure 1, are called <b>jaggies</b>. These jagged edges or stair-stepped edges (depending on how you prefer to call them) are not really an artifact. This is just the result of the fact that the triangle is broken down into pixels. What we do with the rasterization process is breaking down a continuous surface (the triangle) into discrete elements (the pixels), a process that we already mentioned in the <a href="../rendering-3d-scene-overview.html">introduction to rendering</a>. The problem is similar to trying to represent a continuous curve or surface with Lego bricks. You simply can't, you will always see the bricks (figure 2). The solution to this problem in rendering is called <b>anti-aliasing</b> (also denoted AA). Rather that rendering only 1 sample per pixel (check if the pixel overlaps the triangle by testing if the point in the center of the pixel covers the triangles), we split the pixel into sub-pixels and repeat the coverage test for each sub-pixels. Of course each sub-pixel is nothing else than another brick thus this doesn't solve the problem entirely. Nonetheless it allows to capture edges of the objects with slightly more precision. Pixels are most of the time divided into a N by N number of sub-pixels where N is generally a power of 2 (2, 4, 8, etc.), though it can technically take on any value greater or equal to 1 (1, 2, 3, 4, 5, etc.). There are in fact different ways of addressing this aliasing issue. The method we described belong to the category of sampling-based anti-aliasing methods.</p>
+
+<p>The pixel final color is computed as the sum of all the sub-pixels color divided by the total number of sub-pixels. Let's take an example (as with pixels, if a sub-pixel or sample covers a triangle, it then takes on the color of that triangle, otherwise it takes on the background color which is usully black). Imagine that the triangle is white. If only 2 or the 4 samples overlap the triangle, the final pixel color will be equal to 0+0+1+1/4=0.5. The pixel won't be completely white, but it won't be complete black either. Thus rather than having a "binary" transition between the edge of the triangle and the background, that transition is more gradual, which has for effect to visually reduce the stair-stepped pixels artifact. This is what we call <b>anti-aliasing</b>. The understand anti-aliasing you need to study signal processing theory, which again is a very large and pretty complex topic on its own.</p>
+
+<p>The reason why it is best to choose N as a power of 2, is because most processors these days, can run several instructions in parallel and the number of instruction run in parallel is also generally a power of 2. You can look on the Web for things such as SSE instruction sets which are specific to CPUs, but GPUs use the same concept. SSE is a feature that is available on most modern CPU and that can be used to run generally 4 or 8 floating point calculations at the same (in one cycle). All this means is that, for the price of 1 floating point operation, you actually get 3 or 7 for free. This can in theory speed up your rendering time by 4 or 8 (you can never reach that level of performance though because you need to pay a small penalty for setting these instructions up). You can use SSE instructions for example to render 2x2 sup-pixels for the cost of computing 1 pixel, and as a result you get smoother edges (the stair-stepped edges are less visible).</p>
+
+<h3>Rendering Blocks of Pixels</h3>
+
+<p>Another common technique to accelerate rasterization is to render blocks of pixels, but rather than testing all pixels contained in the block, we first start to test pixels at the corners of the block. GPUs algorithms can use blocks of 8x8 pixels. In the fact, the technique that is being used is more elaborate and is based on a concept of tiles, but we won't detail it here. If all four corners of that 8x8 grid cover the triangle, then necessarily, the other pixels of the grid also cover the rectangle (as shown in figure 7). In that case, there is no need to test all the other pixels which saves obviously a lot of time. They can just be filled up with the triangle colors. If vertex attributes needs to interpolated across the pixels block, this is also straightforward because if you have computed them at the block's corners, then all you need to do is linearly interpolate them in both direction (horizontally and vertically). This optimisation only works when triangles are close to the screen and thus large in screen space. Small triangles don't benefit from this technique.</p>
+
+<h3>Optimizing the Edge Function</h3>
+
+<p>The edge function too can be optimized. Let's have a look at the function implementation again:</p>
+
+<span class="code-inline" style="font-size: 13px; width: 100%; line-height: 120%;">int orient2d(const Point2D& a, const Point2D& b, const Point2D& c)
+{
+    return (b.x-a.x)*(c.y-a.y) - (b.y-a.y)*(c.x-a.x);
+}</span>
+
+<p>Recall that <span class="code-inline">a</span> and <span class="code-inline">b</span> in this function are the triangle vertices and that <span class="code-inline">c</span> is the pixel coordinates (in raster space). Once interesting to note is that this function is going to be called for each pixel that is contained within the bounding box of the triangle. Though while we iterate over multiples pixels only <span class="code-inline">c</span> changes. The variable <span class="code-inline">a</span> and <span class="code-inline">b</span> stay the same. Suppose we evaluate the equation one time and get a result <span class="code-inline">w0</span>:</p>
+
+<span class="code-inline" style="font-size: 13px; width: 100%; line-height: 120%;">w0 = (b.x-a.x)*(c.y-a.y) - (b.y-a.y)*(c.x-a.x);</span>
+
+<p>Then <span class="code-inline">c.x</span> gets incremented by an amount <span class="code-inline">s</span> (the per pixel step). The new value of <span class="code-inline">w0</span> is going to be:</p>
+
+<span class="code-inline" style="font-size: 13px; width: 100%; line-height: 120%;">w0_new = (b.x-a.x)*(c.y-a.y) - (b.y-a.y)*(c.x+s-a.x);</span>
+
+<p>Subtracting the first equation from the second, we get:</p>
+
+<span class="code-inline" style="font-size: 13px; width: 100%; line-height: 120%;">w0_new - w0 = -(b.y-a.y)*s;</span>
+
+<p><span class="code-inline">-(b.y-a.y)*s</span> is a constant value for a given triangle, because <span class="code-inline">s</span> is the same amount each time (one pixel), and <span class="code-inline">a</span> and <span class="code-inline">b</span> as already mentioned are constant too. We can calculate it once and store it in a variable (call it <span class="code-inline">w0_step</span>) and then the calculation reduces to:</p>
+
+<span class="code-inline" style="font-size: 13px; width: 100%; line-height: 120%;">w0_new = w0 + w0step;</span>
+
+<p>You can do this for <span class="code-inline">w1</span> and <span class="code-inline">w2</span>, and also do a similar thing for the <span class="code-inline">c.y</span> step.</p>
+
+<p>The edge function uses 2 mults and 5 subs by with this trick it can be reduced to a simple addition (of course you need to compute a few initial values). This technique is well documented on the internet. We won't be using it in this lesson but we will study it in more detail and implement it in another lesson devoted to advanced rasterization techniques.</p>
+
+<h3>Fixed Point Coordinates</h3>
+
+<div style="width: 300;" class="captionImage right">
+<img class="left"  src="../../../images/upload/rasterization/subpixel-precisiond41d.png?"/><p class="caption left">Figure 8: fixed point coordinates.</p>
+</div>
+
+<p>Finally and to conclude this section, we will briefly talk about the technique that consists of converting vertex coordinates which are initially defined in floating-point format to fixed-point format just before the rasterization stage. Fixed-point is the fancy word (in the fact the correct technical term) for integer. When vertex coordinates are converted from NDC to raster space, they are then also converted from floating point numbers to fixed point numbers. Why do we do that? There is no easy and quick answer to this question. But to be short, let's just say that GPUs use fixed point arithmetic because from a computing point of view, manipulating integers is easier and faster than manipulating floats or doubles (it only requires logical bit operations). Again this is just a very generic explanation. The conversion from floating point to integer coordinates and how is the rasterization process implemented using integer coordinates is a large and complex topic which is not documented on the Internet (you will find very little information about this topic which is very strange considering that this very process is central to the way modern GPUs work).</p>
+
+<p>The conversion step involves to round off the vertex coordinates to the nearest integer. Though if you only do so, then you sort of snap the vertex coordinates to the nearest pixel corner coordinates. This is not so much an issue when you render a still image, but it creates visual artefacts with animation (vertices are snapped to different pixels from frame to frame). The workaround is to actually convert the number to the smallest integer value but to also reserve some bits to encode the <b>sub-pixel</b> position of the vertex (the fractional part of the vertex position). GPUs typical use 4 bits to encode sub-pixel precision (you can search graphics APIs documentation for the term sub-pixel precision). In other words, on a 32 bits integer, 1 bit might is used to encode the number's sign, 27 bits are used to encode the vertex integer position, and 4 bits are used to encode the fractional position of the vertex within the pixel. This means that the vertex position is "snapped" to the closest corner of a 16x16 sub-pixel grid as shown in figure 8 (with 4 bits, you can represent any integer number in the range [1:15]). Somehow the vertex position is still snapped to some grid corner, but snapping in this case is less of a problem than when the vertex is snapped to the pixel coordinates. This conversion process leads to many other issues one of which is <b>integer overflow</b> (overflow occurs when the result of an arithmetic operation produces a number that is greater than the number that can be encoded with the number of available bits). This may happen because integers cover a smaller range of values than floats. Things gets also sort of complex when anti-aliasing is thrown into the mix. It would take a lesson on its own to explore the topic in detail.</p>
+
+<p>Fixed points coordinates allow to to speed up the rasterization process and the edge function even more. This is one of the reasons for converting vertex coordinates to integers. These optimisation techniques will be presented in another lesson.</p>
+
+<h2>Notes Regarding our Implementation of the Rasterization Algorithm</h2>
+
+<p>Finally, we are going to quickly review the code provided in the source code chapter. Here is a description of its main components:</p>
+
+<div class="question">Use this code for learning purposes only. It is not efficient at all. Many simple optimisations could be made but we wrote it for clarity, not efficiency. Our goal is not to write production code but code that helps to learn how things work in principle. Optimizations are left to you but trying to improve the code could be a good exercise.</div>
+
+<div class="question">The object that is being rendered by the program is stored in an include file. This is fine for this small program but this would never be done in a professional application. Geometry files can be very large and including this data in the program means that the size of the program will become very large as well (which is not a good thing, plus compile time is going to increase a lot). Though again for this simple test and because the object we are using is quite light, this is not an issue. Though more generally if you are insure about the way we represent the geometry of a 3D object in a program, check the lesson on this topic in the <a href="https://www.scratchapixel.com/lessons/index.php">Modeling and Geometry section</a>. The only information we will be using in this program are the triangle vertices positions (in world space) and their texture or st coordinates.</div>
+
+<ul>
+
+<li>We will use the function <span class="code-inline">computeScreenCoordinates</span> to compute the screen coordinates using the method detailed in the lesson devoted to the <a href="../3d-viewing-pinhole-camera.html">pinhole camera model</a>. This is essentially needed to be sure that our render output can be compared to a render in Maya which is also using a physically-based camera model.</li>
+
+<div name="code" class="code">float t, b, l, r; 
+ 
+computeScreenCoordinates( 
+    filmApertureWidth, filmApertureHeight, 
+    imageWidth, imageHeight, 
+    kOverscan, 
+    nearClippingPLane, 
+    focalLength, 
+    t, b, l, r); </div>
+
+<li>The function <span class="code-inline">convertToRaster()</span> is where we convert the triangle vertices coordinates from camera space to raster space. The function is similar to the function <span class="code-inline">computePixelCoordinates()</span> that we implemented in the previous lesson. Remember that in the second chapter of this lesson we learned about a method to convert coordinates from screen space to NDC space (keep in mind that in the GPU world, coordinates in NDC space are in the range [-1,1]). We will use the same remapping method in this function. The other important thing to remember is that up to the previous lesson, projected points were 2D points. From now on, they will need to be 3D points. In the x- and y-coordinates of these points we will store the projected points coordinates in screen space. In the z-coordinate, we will store the vertices camera space z-coordinate. The z-coordinate is needed to solve the visibility problem as explained in <a href="visibility-problem-depth-buffer-depth-interpolation.html">chapter four</a> of this lesson.</li>
+
+<div name="code" class="code">convertToRaster(v0, worldToCamera, l, r, t, b, nearClippingPLane, imageWidth, imageHeight, v0Raster); 
+convertToRaster(v1, worldToCamera, l, r, t, b, nearClippingPLane, imageWidth, imageHeight, v1Raster); 
+convertToRaster(v2, worldToCamera, l, r, t, b, nearClippingPLane, imageWidth, imageHeight, v2Raster);</div>
+
+<li>Don't forget that that all vertex attributes associated to a triangle vertices also need to be "pre-divided" by these vertices z-coordinates (this needed for perspective correct interpolation). It is usually done just before the triangle gets rendered  (just before the loop that iterates over the pixels). Though be careful because in the code the vertex z-coordinate is set to its reciprocal (to speed up the computation of the sample depth). Thus rather than using a division we will use a multiplication instead.</li>
+
+<div name="code" class="code">// precompute reciprocal of the vertex z-coordinate
+v0Raster.z = 1 / v0Raster.z, 
+v1Raster.z = 1 / v1Raster.z, 
+v2Raster.z = 1 / v2Raster.z; 
+ 
+Vec2f st0 = st[stindices[i * 3]]; 
+Vec2f st1 = st[stindices[i * 3 + 1]]; 
+Vec2f st2 = st[stindices[i * 3 + 2]]; 
+
+// This is needed for perspective correct interpolation
+st0 *= v0Raster.z, st1 *= v1Raster.z, st2 *= v2Raster.z; </div>
+
+<li>The function contains two loops. One to iterate over all the triangles in the scene (the outer loop), and the second to iterate over all pixels contained in the bounding box overlapping the triangle that is being rendered (the inner loop). Note that, some variables in the inner loop are constant and can thus be pre-computed. This is the case for instance for the inverse of the triangle vertices z-coordinates which are linearly interpolated for each pixel that covers the triangle (as well as the vertex attributes that needs to be divided by their respective z-coordinates).</li>
+
+<div name="code" class="code">// Outer loop. Loop over triangles
+for (uint32_t i = 0; i < ntris; ++i) {
+    ...
+    // Inner loop. Loop over pixels
+    for (uint32_t y = y0; y <= y1; ++y) { 
+        for (uint32_t x = x0; x <= x1; ++x) {
+            ...
+        }
+    }
+}</div>
+
+<li>The rest of the program is really straightforward. Each pixel is tested for coverage using the edge function technique. If a pixel covers a triangle, we compute the pixel barycentric coordinates. We then use these coordinates to compute the depth of the sample. If we pass the depth buffer test, we then update the buffer with the new depth value and update the frame-buffer with the the triangle color.</li>
+
+<div name="code" class="code">Vec3f pixelSample(x + 0.5, y + 0.5, 0); 
+float w0 = edgeFunction(v1Raster, v2Raster, pixelSample); 
+float w1 = edgeFunction(v2Raster, v0Raster, pixelSample); 
+float w2 = edgeFunction(v0Raster, v1Raster, pixelSample); 
+if (w0 >= 0 && w1 >= 0 && w2 >= 0) { 
+    w0 /= area; 
+    w1 /= area; 
+    w2 /= area; 
+    // linearly interpolate sample depth
+    float oneOverZ = v0Raster.z * w0 + v1Raster.z * w1 + v2Raster.z * w2; 
+    float z = 1 / oneOverZ; 
+    // do we pass depth buffer test?
+    if (z < depthBuffer[y * imageWidth + x]) { 
+        depthBuffer[y * imageWidth + x] = z;
+        // update frame buffer
+        ...
+    }
+}</div>
+
+<li><b>Shading wise:</b> to make it visually more interesting we will be using several shading techniques. The model we are using has only one vertex attributes: st or texture coordinates. The texture coordinates can be used to create a checkerboard pattern with is then combined with a simple shading trick called facing ratio. The facing ration takes the dot product between the triangle normal (which we can compute with a simple cross product between any two edges of the triangle) and the view direction. The view direction is simply the vector defined by the point P on the triangle that is being shaded and the camera position E. Since all points at this point of the program are defined in camera space, the camera position (or the eye position) is simple E=(0,0,0). Thus the view direction can simply be computed as -P which then needs to be normalized. The dot product can be negative so we need to clamp it (we only want positive values).
+
+<div name="code" class="code">Vec3f n = (v1Cam - v0Cam).crossProduct(v2Cam - v0Cam); 
+n.normalize(); 
+Vec3f viewDirection = -pt; 
+viewDirection.normalize(); 
+// facing ratio 
+float nDotView =  std::max(0.f, n.dotProduct(viewDirection));</div>
+
+Note that for this technique to work, we also need to find the coordinates of P. The position of the point on the triangle that the pixel overlaps can be computed like any vertex attribute. We need to take the vertices in camera space, divide them by their respective z-coordinate, interpolate them with the barycentric coordinates and multiply the result by the sample depth (which is also coincidentally P' z-coordinate):
+
+<div name="code" class="code">// Get triangle vertices in camera space.
+Vec3f v0Cam, v1Cam, v2Cam; 
+worldToCamera.multVecMatrix(v0, v0Cam); 
+worldToCamera.multVecMatrix(v1, v1Cam); 
+worldToCamera.multVecMatrix(v2, v2Cam); 
+ 
+// Divide them by the respective z-coordinate as with any other vertex attribute and interpolate using 
+// barycentric coordinates.
+float px = (v0Cam.x/-v0Cam.z) * w0 + (v1Cam.x/-v1Cam.z) * w1 + (v2Cam.x/-v2Cam.z) * w2; 
+float py = (v0Cam.y/-v0Cam.z) * w0 + (v1Cam.y/-v1Cam.z) * w1 + (v2Cam.y/-v2Cam.z) * w2; 
+ 
+// P in camera space
+Vec3f pt(px * z, py * z, -z);</div>
+
+Don't worry if you don't understand these shading techniques very well. They will be studied as soon as we get to the lessons on shading.</li>
+
+<li>Finally, the content of the frame buffer is stored to a PPM file.</li>
+
+</ul>
+
+<p>Here is the result the program should produce. On the left you can see a render of the object in Maya. On the right, our render. As you can see the results are identical in terms of objects position and shading. Maya uses a technique call stochastic sampling that has for effect to make the aliasing artefact slightly less visible than in our render, but the difference is really subtle.</p>
+
+<img class="left"  src="../../../images/upload/rasterization/cowresultd41d.png?"/>
+
+<p>As you can see, there is really nothing magic about rendering. When you know the rules, you can reproduce images produced by professional applications.</p>
+
+<img class="left"  src="../../../images/upload/rasterization/cowresult1d41d.png?"/>
+<img class="right"  src="../../../images/upload/rasterization/cowresult2d41d.png?"/>
+<p>As a bonus, we exported the position in world space of the point on the triangle that each pixel in the image overlaps. We then displayed all the points in a 3D viewer. You can see the results below. Not surprisingly, points only show up on parts of the object that are directly visible to camera. This shows that the depth-buffer technique works as expected. Every triangle on the back of the object that is hidden by another triangle is not rendered. The second image just shows a close up of the same point set (right).</p>
+
+<h2>Conclusion</h2>
+
+<p>The main advantage of rasterization is simplicity and speed. The main drawback is that it is only useful to solve the visibility problem. Remember that rendering involves two steps: visibility and shading. The algorithm is of no use when it comes to shading.</p>
+
+<p>In this lesson, we have told you everything you really needed to know about the rasterization algorithm. Everything else you can learn from there is not so much about the technique itself but more about optimizing it (how to run it in parallel, how to make it efficient, how to run in on the GPU, etc.).</p>
+
+<p>We hope to have provided one of the best introductions to the rasterization technique. If you appreciated this work and learned something while reading this lesson, please consider making a donation.</p>
+
+<h2>Exercises</h2>
+
+<ul class="list-exercise">
+<li>Implement anti-aliasing. Divide the pixel into 4 sub-pixels. Generate a sample in the middle of each sample, and run the coverage test for each sample. Sum up the color of the samples and divide by 4. Set the pixel color to that result.</li>
+<li>Implement back-face culling. Don't render the triangle if the dot product of its normal and the view direction is lower than a certain threshold. Remember that if two vectors point in opposite direction, their dot product is negative. Remember that dot product of two vectors is the cosine of the angle between the two vectors. Express the threshold value as an angle in degrees.</li>
+<li>Write the content of the z-buffer to the PPM file (you will need to remap the values of the depth buffer to the range [0,255]).</li>
+</ul>
+
+<h2>Reference</h2>
+
+<p>A Parallel Algorithm for Polygon Rasterization. Juan Pineda. Siggraph 1988.</p>
+<p>A Subdivision Algorithm for Computer Display of Curved Surfaces. Edwin Earl Catmull. Thesis 1974.</p>
+<p>Fundamentals of Texture Mapping and Image Wrapping. Paul S. Heckbert. Thesis 1989.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='perspective-correct-interpolation-vertex-attributes.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 6 of  7</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='../../../code3559.html?id=26&amp;origin=/lessons/3d-basic-rendering/rasterization-practical-implementation'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-practical-implementation by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:11:19 GMT -->
+</html>

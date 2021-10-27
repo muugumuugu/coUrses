@@ -1,0 +1,646 @@
+<!--
+<html>
+<head>
+<title>Scratchapixel</title>
+
+<link rel="stylesheet" type="text/css" href="/css/scratchapixel2.css"/>
+<link rel="stylesheet" type="text/css" href="/css/page.css"/>
+<link rel="stylesheet" type="text/css" href="/css/code.css"/>
+<link href='http://fonts.googleapis.com/css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='http://fonts.googleapis.com/css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<script type="text/javascript"
+	src="/scratchapixelSDK.js">
+</script>
+
+</head>
+<html>
+<body onload="onload();">
+<div class="code-column">
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/code.php?id=11&origin=/lessons/3d-basic-rendering/ray-tracing-rendering-a-mesh by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 19:00:44 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Ray-Tracing a Polygon Mesh (source code)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='Ray-Tracing a Polygon Mesh, source code'>
+<meta name='date' content=''>
+
+<link rel="stylesheet" type="text/css" href="css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="css/page.css"/>
+
+<link href='../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","mml2jax.html","asciimath2jax.html","MathMenu.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","AMSsymbols.html","noErrors.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+<link rel='stylesheet' type='text/css' href='css/responsive.css'/>
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='index-2.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div class='lesson-title' style='padding: 0px; margin: 20px 0px 10px 0px;'><a href='indexf17c.html'>Ray-Tracing a Polygon Mesh</a></div><div style='box-sizing: border-box; padding: 20px 0px 0px 0px; display: inline-block; border-top: 1px none grey; width: 100%;'><div>This project contains the following files (right-click files you'd like to download):</div><a oncontextmenu='onMouseDownCodeCtxt(this, "code/upload/ray-tracing-poly-mesh/raytracepolymesh.cpp")' style='display: inline-block; margin: 10px 10px 10px 0px; color: rgb(50, 100, 200);' href='code313b.html?id=11&amp;origin=/lessons/3d-basic-rendering/ray-tracing-rendering-a-mesh&amp;src=0'>raytracepolymesh.cpp</a><a oncontextmenu='onMouseDownCodeCtxt(this, "code/upload/ray-tracing-poly-mesh/geometry.h")' style='display: inline-block; margin: 10px 10px 10px 0px; color: rgb(50, 100, 200);' href='code6f31.html?id=11&amp;origin=/lessons/3d-basic-rendering/ray-tracing-rendering-a-mesh&amp;src=1'>geometry.h</a><a oncontextmenu='onMouseDownCodeCtxt(this, "code/upload/ray-tracing-poly-mesh/cow.geo")' style='display: inline-block; margin: 10px 10px 10px 0px; color: rgb(50, 100, 200);' href='codebc69.html?id=11&amp;origin=/lessons/3d-basic-rendering/ray-tracing-rendering-a-mesh&amp;src=2'>cow.geo</a></div><div name='code' class='code'>//[header]
+// A simple program to demonstrate how to ray-trace a polygon mesh
+//[/header]
+//[compile]
+// Download the raytracepolygonmesh.cpp, geometry.h and cow.geo file to a folder.
+// Open a shell/terminal, and run the following command where the files is saved:
+//
+// c++ -o raytracepolymesh raytracepolymesh.cpp -std=c++11 -O3
+//
+// Run with: ./raytracepolygonmesh. Open the file ./out.0000.png in Photoshop or any program
+// reading PPM files.
+//[/compile]
+//[ignore]
+// Copyright (C) 2012  www.scratchapixel.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+//[/ignore]
+
+
+#include &lt;cstdio&gt;
+#include &lt;cstdlib&gt;
+#include &lt;memory&gt;
+#include &lt;vector&gt;
+#include &lt;utility&gt;
+#include &lt;cstdint&gt;
+#include &lt;iostream&gt;
+#include &lt;fstream&gt;
+#include &lt;cmath&gt;
+#include &lt;sstream&gt;
+#include &lt;chrono&gt;
+
+#include &quot;geometry.h&quot;
+
+static const float kInfinity = std::numeric_limits&lt;float&gt;::max();
+static const float kEpsilon = 1e-8;
+static const Vec3f kDefaultBackgroundColor = Vec3f(0.235294, 0.67451, 0.843137);
+
+inline
+float clamp(const float &amp;lo, const float &amp;hi, const float &amp;v)
+{ return std::max(lo, std::min(hi, v)); }
+
+inline
+float deg2rad(const float &amp;deg)
+{ return deg * M_PI / 180; }
+
+struct Options
+{
+    uint32_t width = 640;
+    uint32_t height = 480;
+    float fov = 90;
+    Vec3f backgroundColor = kDefaultBackgroundColor;
+    Matrix44f cameraToWorld;
+};
+
+class Object
+{
+ public:
+    Object() {}
+    virtual ~Object() {}
+    virtual bool intersect(const Vec3f &amp;, const Vec3f &amp;, float &amp;, uint32_t &amp;, Vec2f &amp;) const = 0;
+    virtual void getSurfaceProperties(const Vec3f &amp;, const Vec3f &amp;, const uint32_t &amp;, const Vec2f &amp;, Vec3f &amp;, Vec2f &amp;) const = 0;
+};
+
+bool rayTriangleIntersect(
+    const Vec3f &amp;orig, const Vec3f &amp;dir,
+    const Vec3f &amp;v0, const Vec3f &amp;v1, const Vec3f &amp;v2,
+    float &amp;t, float &amp;u, float &amp;v)
+{
+    Vec3f v0v1 = v1 - v0;
+    Vec3f v0v2 = v2 - v0;
+    Vec3f pvec = dir.crossProduct(v0v2);
+    float det = v0v1.dotProduct(pvec);
+
+    // ray and triangle are parallel if det is close to 0
+    if (fabs(det) &lt; kEpsilon) return false;
+
+    float invDet = 1 / det;
+
+    Vec3f tvec = orig - v0;
+    u = tvec.dotProduct(pvec) * invDet;
+    if (u &lt; 0 || u &gt; 1) return false;
+
+    Vec3f qvec = tvec.crossProduct(v0v1);
+    v = dir.dotProduct(qvec) * invDet;
+    if (v &lt; 0 || u + v &gt; 1) return false;
+    
+    t = v0v2.dotProduct(qvec) * invDet;
+    
+    return true;
+}
+
+class TriangleMesh : public Object
+{
+public:
+    // Build a triangle mesh from a face index array and a vertex index array
+    TriangleMesh(
+        const uint32_t nfaces,
+        const std::unique_ptr&lt;uint32_t []&gt; &amp;faceIndex,
+        const std::unique_ptr&lt;uint32_t []&gt; &amp;vertsIndex,
+        const std::unique_ptr&lt;Vec3f []&gt; &amp;verts,
+        std::unique_ptr&lt;Vec3f []&gt; &amp;normals,
+        std::unique_ptr&lt;Vec2f []&gt; &amp;st) :
+        numTris(0)
+    {
+        uint32_t k = 0, maxVertIndex = 0;
+        // find out how many triangles we need to create for this mesh
+        for (uint32_t i = 0; i &lt; nfaces; ++i) {
+            numTris += faceIndex[i] - 2;
+            for (uint32_t j = 0; j &lt; faceIndex[i]; ++j)
+                if (vertsIndex[k + j] &gt; maxVertIndex)
+                    maxVertIndex = vertsIndex[k + j];
+            k += faceIndex[i];
+        }
+        maxVertIndex += 1;
+        
+        // allocate memory to store the position of the mesh vertices
+        P = std::unique_ptr&lt;Vec3f []&gt;(new Vec3f[maxVertIndex]);
+        for (uint32_t i = 0; i &lt; maxVertIndex; ++i) {
+            P[i] = verts[i];
+        }
+        
+        // allocate memory to store triangle indices
+        trisIndex = std::unique_ptr&lt;uint32_t []&gt;(new uint32_t [numTris * 3]);
+        uint32_t l = 0;
+        // [comment]
+        // Generate the triangle index array
+        // Keep in mind that there is generally 1 vertex attribute for each vertex of each face.
+        // So for example if you have 2 quads, you only have 6 vertices but you have 2 * 4
+        // vertex attributes (that is 8 normals, 8 texture coordinates, etc.). So the easiest
+        // lazziest method in our triangle mesh, is to create a new array for each supported
+        // vertex attribute (st, normals, etc.) whose size is equal to the number of triangles
+        // multiplied by 3, and then set the value of the vertex attribute at each vertex
+        // of each triangle using the input array (normals[], st[], etc.)
+        // [/comment]
+        N = std::unique_ptr&lt;Vec3f []&gt;(new Vec3f[numTris * 3]);
+        texCoordinates = std::unique_ptr&lt;Vec2f []&gt;(new Vec2f[numTris * 3]);
+        for (uint32_t i = 0, k = 0; i &lt; nfaces; ++i) { // for each  face
+            for (uint32_t j = 0; j &lt; faceIndex[i] - 2; ++j) { // for each triangle in the face
+                trisIndex[l] = vertsIndex[k];
+                trisIndex[l + 1] = vertsIndex[k + j + 1];
+                trisIndex[l + 2] = vertsIndex[k + j + 2];
+                N[l] = normals[k];
+                N[l + 1] = normals[k + j + 1];
+                N[l + 2] = normals[k + j + 2];
+                texCoordinates[l] = st[k];
+                texCoordinates[l + 1] = st[k + j + 1];
+                texCoordinates[l + 2] = st[k + j + 2];
+                l += 3;
+            }                                                                                                                                                                                                                                
+            k += faceIndex[i];
+        }
+        // you can use move if the input geometry is already triangulated
+        //N = std::move(normals); // transfer ownership
+        //sts = std::move(st); // transfer ownership
+    }
+    // Test if the ray interesests this triangle mesh
+    bool intersect(const Vec3f &amp;orig, const Vec3f &amp;dir, float &amp;tNear, uint32_t &amp;triIndex, Vec2f &amp;uv) const
+    {
+        uint32_t j = 0;
+        bool isect = false;
+        for (uint32_t i = 0; i &lt; numTris; ++i) {
+            const Vec3f &amp;v0 = P[trisIndex[j]];
+            const Vec3f &amp;v1 = P[trisIndex[j + 1]];
+            const Vec3f &amp;v2 = P[trisIndex[j + 2]];
+            float t = kInfinity, u, v;
+            if (rayTriangleIntersect(orig, dir, v0, v1, v2, t, u, v) &amp;&amp; t &lt; tNear) {
+              tNear = t;
+              uv.x = u;
+              uv.y = v;
+              triIndex = i;
+              isect = true;
+            }                                                                                                                                                                                                                                
+            j += 3;
+        }
+
+        return isect;
+    }
+    void getSurfaceProperties(
+        const Vec3f &amp;hitPoint,
+        const Vec3f &amp;viewDirection,
+        const uint32_t &amp;triIndex,
+        const Vec2f &amp;uv,
+        Vec3f &amp;hitNormal,
+        Vec2f &amp;hitTextureCoordinates) const
+    {
+        // face normal
+        const Vec3f &amp;v0 = P[trisIndex[triIndex * 3]];
+        const Vec3f &amp;v1 = P[trisIndex[triIndex * 3 + 1]];
+        const Vec3f &amp;v2 = P[trisIndex[triIndex * 3 + 2]];
+        hitNormal = (v1 - v0).crossProduct(v2 - v0);
+        hitNormal.normalize();
+        
+        // texture coordinates
+        const Vec2f &amp;st0 = texCoordinates[triIndex * 3];
+        const Vec2f &amp;st1 = texCoordinates[triIndex * 3 + 1];
+        const Vec2f &amp;st2 = texCoordinates[triIndex * 3 + 2];
+        hitTextureCoordinates = (1 - uv.x - uv.y) * st0 + uv.x * st1 + uv.y * st2;
+
+        // vertex normal
+        /*
+        const Vec3f &amp;n0 = N[triIndex * 3];
+        const Vec3f &amp;n1 = N[triIndex * 3 + 1];
+        const Vec3f &amp;n2 = N[triIndex * 3 + 2];
+        hitNormal = (1 - uv.x - uv.y) * n0 + uv.x * n1 + uv.y * n2;
+        */
+    }
+    // member variables
+    uint32_t numTris;                         // number of triangles
+    std::unique_ptr&lt;Vec3f []&gt; P;              // triangles vertex position
+    std::unique_ptr&lt;uint32_t []&gt; trisIndex;   // vertex index array
+    std::unique_ptr&lt;Vec3f []&gt; N;              // triangles vertex normals
+    std::unique_ptr&lt;Vec2f []&gt; texCoordinates; // triangles texture coordinates
+};
+
+TriangleMesh* generatePolyShphere(float rad, uint32_t divs)
+{
+    // generate points                                                                                                                                                                                      
+    uint32_t numVertices = (divs - 1) * divs + 2;                                                                                                                              
+    std::unique_ptr&lt;Vec3f []&gt; P(new Vec3f[numVertices]);
+    std::unique_ptr&lt;Vec3f []&gt; N(new Vec3f[numVertices]);
+    std::unique_ptr&lt;Vec2f []&gt; st(new Vec2f[numVertices]);
+                                                                                                                                                                                                                                             
+    float u = -M_PI_2;                                                                                                                                                          
+    float v = -M_PI;                                                                                                                                                                                           
+    float du = M_PI / divs;                                                                                                                                                                                    
+    float dv = 2 * M_PI / divs;                                                                                                                                                 
+                                                                                                                                                                                                                                             
+    P[0] = N[0] = Vec3f(0, -rad, 0);
+    uint32_t k = 1;                                                                                                                                                                                           
+    for (uint32_t i = 0; i &lt; divs - 1; i++) {                                                                                            
+        u += du;                                                                                                                                                                                                                             
+        v = -M_PI;                                                                                                                                                                                                                           
+        for (uint32_t j = 0; j &lt; divs; j++) {                                                                                                                           
+            float x = rad * cos(u) * cos(v);                                                                                                                                                                   
+            float y = rad * sin(u);                                                                                                                                                                            
+            float z = rad * cos(u) * sin(v) ;                                                                                                                                                                  
+            P[k] = N[k] = Vec3f(x, y, z);
+            st[k].x = u / M_PI + 0.5;
+            st[k].y = v * 0.5 / M_PI + 0.5;
+            v += dv, k++;                                                                                                                                                                                                                    
+        }                                                                                                                                                                                                                                    
+    }                                                                                                                                                                                                                                        
+    P[k] = N[k] = Vec3f(0, rad, 0);
+    
+    uint32_t npolys = divs * divs;                                                                                                                                                                                                           
+    std::unique_ptr&lt;uint32_t []&gt; faceIndex(new uint32_t[npolys]);
+    std::unique_ptr&lt;uint32_t []&gt; vertsIndex(new uint32_t[(6 + (divs - 1) * 4) * divs]);
+                                                                                                                                                                                                                                             
+    // create the connectivity lists                                                                                                                                                                        
+    uint32_t vid = 1, numV = 0, l = 0;                                                                                                          
+    k = 0;                                                                                                                                                                                                    
+    for (uint32_t i = 0; i &lt; divs; i++) {                                                                                                                               
+        for (uint32_t j = 0; j &lt; divs; j++) {                                                                                                                           
+            if (i == 0) {                                                                                                                                                  
+                faceIndex[k++] = 3;
+                vertsIndex[l] = 0;
+                vertsIndex[l + 1] = j + vid;
+                vertsIndex[l + 2] = (j == (divs - 1)) ? vid : j + vid + 1;
+                l += 3;                                                                                                                                                                                       
+            }                                                                                                                                                                                                                                
+            else if (i == (divs - 1)) {                                                                                                 
+                faceIndex[k++] = 3;
+                vertsIndex[l] = j + vid + 1 - divs;
+                vertsIndex[l + 1] = vid + 1;
+                vertsIndex[l + 2] = (j == (divs - 1)) ? vid + 1 - divs : j + vid + 2 - divs;
+                l += 3;
+            }
+            else {
+                faceIndex[k++] = 4;
+                vertsIndex[l] = j + vid + 1 - divs;
+                vertsIndex[l + 1] = j + vid + 1;
+                vertsIndex[l + 2] = (j == (divs - 1)) ? vid + 1 : j + vid + 2;
+                vertsIndex[l + 3] = (j == (divs - 1)) ? vid + 1 - divs : j + vid + 2 - divs;
+                l += 4;
+            }
+            numV++;
+        }
+        vid = numV;
+    }
+    
+    return new TriangleMesh(npolys, faceIndex, vertsIndex, P, N, st);
+}
+
+TriangleMesh* loadPolyMeshFromFile(const char *file)
+{
+    std::ifstream ifs;
+    try {
+        ifs.open(file);
+        if (ifs.fail()) throw;
+        std::stringstream ss;
+        ss &lt;&lt; ifs.rdbuf();
+        uint32_t numFaces;
+        ss &gt;&gt; numFaces;
+        std::unique_ptr&lt;uint32_t []&gt; faceIndex(new uint32_t[numFaces]);
+        uint32_t vertsIndexArraySize = 0;
+        // reading face index array
+        for (uint32_t i = 0; i &lt; numFaces; ++i) {
+            ss &gt;&gt; faceIndex[i];
+            vertsIndexArraySize += faceIndex[i];
+        }
+        std::unique_ptr&lt;uint32_t []&gt; vertsIndex(new uint32_t[vertsIndexArraySize]);
+        uint32_t vertsArraySize = 0;
+        // reading vertex index array
+        for (uint32_t i = 0; i &lt; vertsIndexArraySize; ++i) {
+            ss &gt;&gt; vertsIndex[i];
+            if (vertsIndex[i] &gt; vertsArraySize) vertsArraySize = vertsIndex[i];
+        }
+        vertsArraySize += 1;
+        // reading vertices
+        std::unique_ptr&lt;Vec3f []&gt; verts(new Vec3f[vertsArraySize]);
+        for (uint32_t i = 0; i &lt; vertsArraySize; ++i) {
+            ss &gt;&gt; verts[i].x &gt;&gt; verts[i].y &gt;&gt; verts[i].z;
+        }
+        // reading normals
+        std::unique_ptr&lt;Vec3f []&gt; normals(new Vec3f[vertsIndexArraySize]);
+        for (uint32_t i = 0; i &lt; vertsIndexArraySize; ++i) {
+            ss &gt;&gt; normals[i].x &gt;&gt; normals[i].y &gt;&gt; normals[i].z;
+        }
+        // reading st coordinates
+        std::unique_ptr&lt;Vec2f []&gt; st(new Vec2f[vertsIndexArraySize]);
+        for (uint32_t i = 0; i &lt; vertsIndexArraySize; ++i) {
+            ss &gt;&gt; st[i].x &gt;&gt; st[i].y;
+        }
+        
+        return new TriangleMesh(numFaces, faceIndex, vertsIndex, verts, normals, st);
+    }
+    catch (...) {
+        ifs.close();
+    }
+    ifs.close();
+    
+    return nullptr;
+}
+
+bool trace(
+    const Vec3f &amp;orig, const Vec3f &amp;dir,
+    const std::vector&lt;std::unique_ptr&lt;Object&gt;&gt; &amp;objects,
+    float &amp;tNear, uint32_t &amp;index, Vec2f &amp;uv, Object **hitObject)
+{
+    *hitObject = nullptr;
+    for (uint32_t k = 0; k &lt; objects.size(); ++k) {
+        float tNearTriangle = kInfinity;
+        uint32_t indexTriangle;
+        Vec2f uvTriangle;
+        if (objects[k]-&gt;intersect(orig, dir, tNearTriangle, indexTriangle, uvTriangle) &amp;&amp; tNearTriangle &lt; tNear) {
+            *hitObject = objects[k].get();
+            tNear = tNearTriangle;
+            index = indexTriangle;
+            uv = uvTriangle;
+        }
+    }
+
+    return (*hitObject != nullptr);
+}
+
+Vec3f castRay(
+    const Vec3f &amp;orig, const Vec3f &amp;dir,
+    const std::vector&lt;std::unique_ptr&lt;Object&gt;&gt; &amp;objects,
+    const Options &amp;options)
+{
+    Vec3f hitColor = options.backgroundColor;
+    float tnear = kInfinity;
+    Vec2f uv;
+    uint32_t index = 0;
+    Object *hitObject = nullptr;
+    if (trace(orig, dir, objects, tnear, index, uv, &amp;hitObject)) {
+        Vec3f hitPoint = orig + dir * tnear;
+        Vec3f hitNormal;
+        Vec2f hitTexCoordinates;
+        hitObject-&gt;getSurfaceProperties(hitPoint, dir, index, uv, hitNormal, hitTexCoordinates);
+        float NdotView = std::max(0.f, hitNormal.dotProduct(-dir));
+        const int M = 10;
+        float checker = (fmod(hitTexCoordinates.x * M, 1.0) &gt; 0.5) ^ (fmod(hitTexCoordinates.y * M, 1.0) &lt; 0.5);
+        float c = 0.3 * (1 - checker) + 0.7 * checker;
+        
+        hitColor = c * NdotView; //Vec3f(uv.x, uv.y, 0);
+    }
+
+    return hitColor;
+}
+
+// [comment]
+// The main render function. This where we iterate over all pixels in the image, generate
+// primary rays and cast these rays into the scene. The content of the framebuffer is
+// saved to a file.
+// [/comment]
+void render(
+    const Options &amp;options,
+    const std::vector&lt;std::unique_ptr&lt;Object&gt;&gt; &amp;objects,
+    const uint32_t &amp;frame)
+{
+    std::unique_ptr&lt;Vec3f []&gt; framebuffer(new Vec3f[options.width * options.height]);
+    Vec3f *pix = framebuffer.get();
+    float scale = tan(deg2rad(options.fov * 0.5));
+    float imageAspectRatio = options.width / (float)options.height;
+    Vec3f orig;
+    options.cameraToWorld.multVecMatrix(Vec3f(0), orig);
+    auto timeStart = std::chrono::high_resolution_clock::now();
+    for (uint32_t j = 0; j &lt; options.height; ++j) {
+        for (uint32_t i = 0; i &lt; options.width; ++i) {
+            // generate primary ray direction
+            float x = (2 * (i + 0.5) / (float)options.width - 1) * imageAspectRatio * scale;
+            float y = (1 - 2 * (j + 0.5) / (float)options.height) * scale;
+            Vec3f dir;
+            options.cameraToWorld.multDirMatrix(Vec3f(x, y, -1), dir);
+            dir.normalize();
+            *(pix++) = castRay(orig, dir, objects, options);
+        }
+        fprintf(stderr, &quot;\r%3d%c&quot;, uint32_t(j / (float)options.height * 100), '%');
+    }
+    auto timeEnd = std::chrono::high_resolution_clock::now();
+    auto passedTime = std::chrono::duration&lt;double, std::milli&gt;(timeEnd - timeStart).count();
+    fprintf(stderr, &quot;\rDone: %.2f (sec)\n&quot;, passedTime / 1000);
+    
+    // save framebuffer to file
+    char buff[256];
+    sprintf(buff, &quot;out.%04d.ppm&quot;, frame);
+    std::ofstream ofs;
+    ofs.open(buff);
+    ofs &lt;&lt; &quot;P6\n&quot; &lt;&lt; options.width &lt;&lt; &quot; &quot; &lt;&lt; options.height &lt;&lt; &quot;\n255\n&quot;;
+    for (uint32_t i = 0; i &lt; options.height * options.width; ++i) {
+        char r = (char)(255 * clamp(0, 1, framebuffer[i].x));
+        char g = (char)(255 * clamp(0, 1, framebuffer[i].y));
+        char b = (char)(255 * clamp(0, 1, framebuffer[i].z));
+        ofs &lt;&lt; r &lt;&lt; g &lt;&lt; b;
+    }
+    ofs.close();
+    
+}
+
+// [comment]
+// In the main function of the program, we create the scene (create objects and lights)
+// as well as set the options for the render (image widht and height, maximum recursion
+// depth, field-of-view, etc.). We then call the render function().
+// [/comment]
+int main(int argc, char **argv)
+{
+    // setting up options
+    Options options;
+    //options.cameraToWorld[3][2] = 10;
+    Matrix44f tmp = Matrix44f(0.707107, -0.331295, 0.624695, 0, 0, 0.883452, 0.468521, 0, -0.707107, -0.331295, 0.624695, 0, -1.63871, -5.747777, -40.400412, 1);
+    options.cameraToWorld = tmp.inverse();
+    options.fov = 50.0393;
+#if 1
+    std::vector&lt;std::unique_ptr&lt;Object&gt;&gt; objects;
+    TriangleMesh *mesh = loadPolyMeshFromFile(&quot;./cow.geo&quot;);
+    if (mesh != nullptr) objects.push_back(std::unique_ptr&lt;Object&gt;(mesh));
+    
+    // finally, render
+    render(options, objects, 0);
+#else
+    for (uint32_t i = 0; i &lt; 10; ++i) {
+        int divs = 5 + i;
+        // creating the scene (adding objects and lights)
+        std::vector&lt;std::unique_ptr&lt;Object&gt;&gt; objects;
+        TriangleMesh *mesh = generatePolyShphere(2, divs);
+        objects.push_back(std::unique_ptr&lt;Object&gt;(mesh));
+    
+        auto timeStart = std::chrono::high_resolution_clock::now();
+        // finally, render
+        render(options, objects, i);
+        auto timeEnd = std::chrono::high_resolution_clock::now();
+        auto passedTime = std::chrono::duration&lt;double, std::milli&gt;(timeEnd - timeStart).count();
+        std::cerr &lt;&lt; mesh-&gt;numTris &lt;&lt; &quot; &quot; &lt;&lt; passedTime &lt;&lt; std::endl;
+    }
+#endif
+
+    return 0;
+}</div><!-- end of code --></div><!-- end of code-column -->
+</article>
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/code.php?id=11&origin=/lessons/3d-basic-rendering/ray-tracing-rendering-a-mesh by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 19:00:44 GMT -->
+</html>

@@ -1,0 +1,650 @@
+<!--
+<html>
+<head>
+<title>Scratchapixel</title>
+
+<link rel="stylesheet" type="text/css" href="/css/scratchapixel2.css"/>
+<link rel="stylesheet" type="text/css" href="/css/page.css"/>
+<link rel="stylesheet" type="text/css" href="/css/code.css"/>
+<link href='http://fonts.googleapis.com/css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='http://fonts.googleapis.com/css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<script type="text/javascript"
+	src="/scratchapixelSDK.js">
+</script>
+
+</head>
+<html>
+<body onload="onload();">
+<div class="code-column">
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/code.php?id=57&origin=/lessons/procedural-generation-virtual-worlds/perlin-noise-part-2&src=0 by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:24:29 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Perlin Noise: Part 2 (source code)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='Perlin Noise: Part 2, source code'>
+<meta name='date' content=''>
+
+<link rel="stylesheet" type="text/css" href="css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="css/page.css"/>
+
+<link href='../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","mml2jax.html","asciimath2jax.html","MathMenu.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","AMSsymbols.html","noErrors.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+<link rel='stylesheet' type='text/css' href='css/responsive.css'/>
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='index-2.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div class='lesson-title' style='padding: 0px; margin: 20px 0px 10px 0px;'><a href='lessons/procedural-generation-virtual-worlds/perlin-noise-part-2.html'>Perlin Noise: Part 2</a></div><div style='box-sizing: border-box; padding: 20px 0px 0px 0px; display: inline-block; border-top: 1px none grey; width: 100%;'><div>This project contains the following files (right-click files you'd like to download):</div><a oncontextmenu='onMouseDownCodeCtxt(this, "code/upload/noise-part-2/perlinnoise.cpp")' style='display: inline-block; margin: 10px 10px 10px 0px; color: rgb(50, 100, 200);' href='code2c1c.html?id=57&amp;origin=/lessons/procedural-generation-virtual-worlds/perlin-noise-part-2&amp;src=0'>perlinnoise.cpp</a></div><div name='code' class='code'>// [header]
+// A simple implementation of Perlin and Improved Perlin Noise
+// [/header]
+// [compile]
+// c++ -o perlinnoise -O3 -Wall perlinnoise.cpp
+// [/compile]
+// [ignore]
+// Copyright (C) 2016  www.scratchapixel.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+// [/ignore]
+
+#define _USE_MATH_DEFINES
+#include &lt;cmath&gt;
+#include &lt;cstdio&gt;
+#include &lt;random&gt;
+#include &lt;functional&gt;
+#include &lt;iostream&gt;
+#include &lt;fstream&gt;
+#include &lt;algorithm&gt;
+
+template&lt;typename T&gt;
+class Vec2
+{
+public:
+    Vec2() : x(T(0)), y(T(0)) {}
+    Vec2(T xx, T yy) : x(xx), y(yy) {}
+    Vec2 operator * (const T &amp;r) const { return Vec2(x * r, y * r); }
+    Vec2&amp; operator *= (const T &amp;r) { x *= r, y *= r; return *this; }
+    T x, y;
+};
+
+template&lt;typename T&gt;
+class Vec3
+{
+public:
+    Vec3() : x(T(0)), y(T(0)), z(T(0)) {}
+    Vec3(T xx, T yy, T zz) : x(xx), y(yy), z(zz) {}
+    Vec3 operator * (const T &amp;r) const { return Vec3(x * r, y * r, z * r); }
+    Vec3 operator - (const Vec3 &amp;v) const { return Vec3(x - v.x, y - v.y, z - v.z); }
+    Vec3&amp; operator *= (const T &amp;r) { x *= r, y *= r, z *= r; return *this; }
+    T length2() const { return x * x + y * y + z * z; }
+    Vec3&amp; operator /= (const T &amp;r) { x /= r, y /= r, z /= r; return *this; }
+    Vec3 cross(const Vec3 &amp;v) const
+    {
+        return Vec3(
+            y * v.z - z * v.y,
+            z * v.x - x * v.z,
+            x * v.y - y * v.x
+        );
+    }
+    Vec3&amp; normalize()
+    {
+        T len2 = length2();
+        if (len2 &gt; 0) {
+            T invLen = T(1) / sqrt(len2);
+            x *= invLen, y *= invLen, z *= invLen;
+        }
+        return *this;
+    }
+    friend std::ostream &amp; operator &lt;&lt; (std::ostream &amp;os, const Vec3&lt;T&gt; &amp;v)
+    {
+        os &lt;&lt; v.x &lt;&lt; &quot;, &quot; &lt;&lt; v.y &lt;&lt; &quot;, &quot; &lt;&lt; v.z;
+        return os;
+    }
+    T x, y, z;
+};
+
+typedef Vec2&lt;float&gt; Vec2f;
+typedef Vec3&lt;float&gt; Vec3f;
+
+template&lt;typename T = float&gt;
+inline T dot(const Vec3&lt;T&gt; &amp;a, const Vec3&lt;T&gt; &amp;b)
+{ return a.x * b.x + a.y * b.y + a.z * b.z; }
+
+template&lt;typename T = float&gt;
+inline T lerp(const T &amp;lo, const T &amp;hi, const T &amp;t)
+{
+    return lo * (1 - t) + hi * t;
+}
+
+inline
+float smoothstep(const float &amp;t)
+{
+    return t * t * (3 - 2 * t);
+}
+
+inline
+float quintic(const float &amp;t)
+{
+    return t * t * t * (t * (t * 6 - 15) + 10);
+}
+
+inline
+float smoothstepDeriv(const float &amp;t)
+{
+    return t * (6 - 6 * t);
+}
+
+inline
+float quinticDeriv(const float &amp;t)
+{
+    return 30 * t * t * (t * (t - 2) + 1);
+}
+
+class PerlinNoise
+{
+public:
+    PerlinNoise(const unsigned &amp;seed = 2016)
+    {
+        std::mt19937 generator(seed);
+        std::uniform_real_distribution&lt;float&gt; distribution;
+        auto dice = std::bind(distribution, generator);
+        for (unsigned i = 0; i &lt; tableSize; ++i) {
+#if 0
+            // bad
+            float gradientLen2;
+            do {
+                gradients[i] = Vec3f(2 * dice() - 1, 2 * dice() - 1, 2 * dice() - 1);
+                gradientLen2 = gradients[i].length2();
+            } while (gradientLen2 &gt; 1);
+            gradients[i].normalize();
+#else
+            // better
+            float theta = acos(2 * dice() - 1);
+            float phi = 2 * dice() * M_PI;
+
+            float x = cos(phi) * sin(theta);
+            float y = sin(phi) * sin(theta);
+            float z = cos(theta);
+            gradients[i] = Vec3f(x, y, z);
+#endif
+            permutationTable[i] = i;
+        }
+
+        std::uniform_int_distribution&lt;unsigned&gt; distributionInt;
+        auto diceInt = std::bind(distributionInt, generator);
+        // create permutation table
+        for (unsigned i = 0; i &lt; tableSize; ++i)
+            std::swap(permutationTable[i], permutationTable[diceInt() &amp; tableSizeMask]);
+        // extend the permutation table in the index range [256:512]
+        for (unsigned i = 0; i &lt; tableSize; ++i) {
+            permutationTable[tableSize + i] = permutationTable[i];
+        }
+    }
+    virtual ~PerlinNoise() {}
+
+    //[comment]
+    // Improved Noise implementation (2002)
+    // This version compute the derivative of the noise function as well
+    //[/comment]
+    float eval(const Vec3f &amp;p, Vec3f&amp; derivs) const 
+    {
+        int xi0 = ((int)std::floor(p.x)) &amp; tableSizeMask;
+        int yi0 = ((int)std::floor(p.y)) &amp; tableSizeMask;
+        int zi0 = ((int)std::floor(p.z)) &amp; tableSizeMask;
+
+        int xi1 = (xi0 + 1) &amp; tableSizeMask;
+        int yi1 = (yi0 + 1) &amp; tableSizeMask;
+        int zi1 = (zi0 + 1) &amp; tableSizeMask;
+
+        float tx = p.x - ((int)std::floor(p.x));
+        float ty = p.y - ((int)std::floor(p.y));
+        float tz = p.z - ((int)std::floor(p.z));
+
+        float u = quintic(tx);
+        float v = quintic(ty);
+        float w = quintic(tz);
+
+        // generate vectors going from the grid points to p
+        float x0 = tx, x1 = tx - 1;
+        float y0 = ty, y1 = ty - 1;
+        float z0 = tz, z1 = tz - 1;
+
+        float a = gradientDotV(hash(xi0, yi0, zi0), x0, y0, z0);
+        float b = gradientDotV(hash(xi1, yi0, zi0), x1, y0, z0);
+        float c = gradientDotV(hash(xi0, yi1, zi0), x0, y1, z0);
+        float d = gradientDotV(hash(xi1, yi1, zi0), x1, y1, z0);
+        float e = gradientDotV(hash(xi0, yi0, zi1), x0, y0, z1);
+        float f = gradientDotV(hash(xi1, yi0, zi1), x1, y0, z1);
+        float g = gradientDotV(hash(xi0, yi1, zi1), x0, y1, z1);
+        float h = gradientDotV(hash(xi1, yi1, zi1), x1, y1, z1);
+
+        float du = quinticDeriv(tx);
+        float dv = quinticDeriv(ty);
+        float dw = quinticDeriv(tz);
+
+        float k0 = a;
+        float k1 = (b - a);
+        float k2 = (c - a);
+        float k3 = (e - a);
+        float k4 = (a + d - b - c);
+        float k5 = (a + f - b - e);
+        float k6 = (a + g - c - e);
+        float k7 = (b + c + e + h - a - d - f - g);
+
+        derivs.x = du *(k1 + k4 * v + k5 * w + k7 * v * w);
+        derivs.y = dv *(k2 + k4 * u + k6 * w + k7 * v * w);
+        derivs.z = dw *(k3 + k5 * u + k6 * v + k7 * v * w);
+
+        return k0 + k1 * u + k2 * v + k3 * w + k4 * u * v + k5 * u * w + k6 * v * w + k7 * u * v * w;
+    }
+
+    //[comment]
+    // classic/original Perlin noise implementation (1985)
+    //[/comment]
+    float eval(const Vec3f &amp;p) const
+    {
+        int xi0 = ((int)std::floor(p.x)) &amp; tableSizeMask;
+        int yi0 = ((int)std::floor(p.y)) &amp; tableSizeMask;
+        int zi0 = ((int)std::floor(p.z)) &amp; tableSizeMask;
+
+        int xi1 = (xi0 + 1) &amp; tableSizeMask;
+        int yi1 = (yi0 + 1) &amp; tableSizeMask;
+        int zi1 = (zi0 + 1) &amp; tableSizeMask;
+
+        float tx = p.x - ((int)std::floor(p.x));
+        float ty = p.y - ((int)std::floor(p.y));
+        float tz = p.z - ((int)std::floor(p.z));
+
+        float u = smoothstep(tx);
+        float v = smoothstep(ty);
+        float w = smoothstep(tz);
+
+        // gradients at the corner of the cell
+        const Vec3f &amp;c000 = gradients[hash(xi0, yi0, zi0)];
+        const Vec3f &amp;c100 = gradients[hash(xi1, yi0, zi0)];
+        const Vec3f &amp;c010 = gradients[hash(xi0, yi1, zi0)];
+        const Vec3f &amp;c110 = gradients[hash(xi1, yi1, zi0)];
+
+        const Vec3f &amp;c001 = gradients[hash(xi0, yi0, zi1)];
+        const Vec3f &amp;c101 = gradients[hash(xi1, yi0, zi1)];
+        const Vec3f &amp;c011 = gradients[hash(xi0, yi1, zi1)];
+        const Vec3f &amp;c111 = gradients[hash(xi1, yi1, zi1)];
+
+        // generate vectors going from the grid points to p
+        float x0 = tx, x1 = tx - 1;
+        float y0 = ty, y1 = ty - 1;
+        float z0 = tz, z1 = tz - 1;
+
+        Vec3f p000 = Vec3f(x0, y0, z0);
+        Vec3f p100 = Vec3f(x1, y0, z0);
+        Vec3f p010 = Vec3f(x0, y1, z0);
+        Vec3f p110 = Vec3f(x1, y1, z0);
+
+        Vec3f p001 = Vec3f(x0, y0, z1);
+        Vec3f p101 = Vec3f(x1, y0, z1);
+        Vec3f p011 = Vec3f(x0, y1, z1);
+        Vec3f p111 = Vec3f(x1, y1, z1);
+
+        // linear interpolation
+        float a = lerp(dot(c000, p000), dot(c100, p100), u);
+        float b = lerp(dot(c010, p010), dot(c110, p110), u);
+        float c = lerp(dot(c001, p001), dot(c101, p101), u);
+        float d = lerp(dot(c011, p011), dot(c111, p111), u);
+
+        float e = lerp(a, b, v);
+        float f = lerp(c, d, v);
+
+        return lerp(e, f, w); // g
+    }
+
+private:
+    /* inline */
+    uint8_t hash(const int &amp;x, const int &amp;y, const int &amp;z) const
+    {
+        return permutationTable[permutationTable[permutationTable[x] + y] + z];
+    }
+
+    //[comment]
+    // Compute dot product between vector from cell corners to P with predefined gradient directions
+    //
+    //    perm: a value between 0 and 255
+    //
+    //    float x, float y, float z: coordinates of vector from cell corner to shaded point
+    //[/comment]
+    float gradientDotV(
+        uint8_t perm, // a value between 0 and 255
+        float x, float y, float z) const
+    {
+        switch (perm &amp; 15) {
+        case  0: return  x + y; // (1,1,0)
+        case  1: return -x + y; // (-1,1,0)
+        case  2: return  x - y; // (1,-1,0)
+        case  3: return -x - y; // (-1,-1,0)
+        case  4: return  x + z; // (1,0,1)
+        case  5: return -x + z; // (-1,0,1)
+        case  6: return  x - z; // (1,0,-1)
+        case  7: return -x - z; // (-1,0,-1)
+        case  8: return  y + z; // (0,1,1),
+        case  9: return -y + z; // (0,-1,1),
+        case 10: return  y - z; // (0,1,-1),
+        case 11: return -y - z; // (0,-1,-1)
+        case 12: return  y + x; // (1,1,0)
+        case 13: return -x + y; // (-1,1,0)
+        case 14: return -y + z; // (0,-1,1)
+        case 15: return -y - z; // (0,-1,-1)
+        }
+    }
+
+    static const unsigned tableSize = 256;
+    static const unsigned tableSizeMask = tableSize - 1;
+    Vec3f gradients[tableSize];
+    unsigned permutationTable[tableSize * 2];
+};
+
+//[comment]
+// Simple class to define a polygonal mesh
+//[/comment]
+class PolyMesh
+{
+public:
+    PolyMesh() : vertices(nullptr), st(nullptr), normals(nullptr) {}
+    ~PolyMesh()
+    {
+        if (vertices) delete[] vertices;
+        if (st) delete[] st;
+        if (normals) delete[] normals;
+    }
+    Vec3f *vertices;
+    Vec2f *st;
+    Vec3f *normals;
+    uint32_t *faceArray;
+    uint32_t *verticesArray;
+    uint32_t numVertices;
+    uint32_t numFaces;
+    void exportToObj();
+};
+
+//[comment]
+// Export polygonal mesh to OBJ file (vertex positions, texture coordinates and vertex normals)
+//[/comment]
+void PolyMesh::exportToObj()
+{
+    std::ofstream ofs;
+    ofs.open(&quot;./polyMesh.obj&quot;, std::ios_base::out);
+
+    for (uint32_t i = 0; i &lt; numVertices; ++i) {
+        ofs &lt;&lt; &quot;v &quot; &lt;&lt; vertices[i].x &lt;&lt; &quot; &quot; &lt;&lt; vertices[i].y &lt;&lt; &quot; &quot; &lt;&lt; vertices[i].z &lt;&lt; std::endl;
+    }
+
+    for (uint32_t i = 0; i &lt; numVertices; ++i) {
+        ofs &lt;&lt; &quot;vt &quot; &lt;&lt; st[i].x &lt;&lt; &quot; &quot; &lt;&lt; st[i].y &lt;&lt; std::endl;
+    }
+
+    for (uint32_t i = 0; i &lt; numVertices; ++i) {
+        ofs &lt;&lt; &quot;vn &quot; &lt;&lt; normals[i].x &lt;&lt; &quot; &quot; &lt;&lt; normals[i].y &lt;&lt; &quot; &quot; &lt;&lt; normals[i].z &lt;&lt; std::endl;
+    }
+
+    for (uint32_t i = 0, k = 0; i &lt; numFaces; ++i) {
+        ofs &lt;&lt; &quot;f &quot;;
+        for (uint32_t j = 0; j &lt; faceArray[i]; ++j) {
+            uint32_t objIndex = verticesArray[k + j] + 1;
+            ofs &lt;&lt; objIndex &lt;&lt; &quot;/&quot; &lt;&lt; objIndex &lt;&lt; &quot;/&quot; &lt;&lt; objIndex &lt;&lt; ((j == (faceArray[i] - 1)) ? &quot;&quot; : &quot; &quot;);
+        }
+        ofs &lt;&lt; std::endl;
+        k += faceArray[i];
+    }
+
+    ofs.close();
+}
+
+//[comment]
+// Simple function to create a polygonal grid centred around the origin
+//[/comment]
+PolyMesh* createPolyMesh(
+    uint32_t width = 1,
+    uint32_t height = 1,
+    uint32_t subdivisionWidth = 40,
+    uint32_t subdivisionHeight = 40)
+{
+    PolyMesh *poly = new PolyMesh;
+    poly-&gt;numVertices = (subdivisionWidth + 1) * (subdivisionHeight + 1);
+    std::cerr &lt;&lt; poly-&gt;numVertices &lt;&lt; std::endl;
+    poly-&gt;vertices = new Vec3f[poly-&gt;numVertices];
+    poly-&gt;normals = new Vec3f[poly-&gt;numVertices];
+    poly-&gt;st = new Vec2f[poly-&gt;numVertices];
+    float invSubdivisionWidth = 1.f / subdivisionWidth;
+    float invSubdivisionHeight = 1.f / subdivisionHeight;
+    for (uint32_t j = 0; j &lt;= subdivisionHeight; ++j) {
+        for (uint32_t i = 0; i &lt;= subdivisionWidth; ++i) {
+            poly-&gt;vertices[j * (subdivisionWidth + 1) + i] = Vec3f(width * (i * invSubdivisionWidth - 0.5), 0, height * (j * invSubdivisionHeight - 0.5));
+            poly-&gt;st[j * (subdivisionWidth + 1) + i] = Vec2f(i * invSubdivisionWidth, j * invSubdivisionHeight);
+        }
+        std::cerr &lt;&lt; std::endl;
+    }
+
+    poly-&gt;numFaces = subdivisionWidth * subdivisionHeight;
+    poly-&gt;faceArray = new uint32_t[poly-&gt;numFaces];
+    for (uint32_t i = 0; i &lt; poly-&gt;numFaces; ++i)
+        poly-&gt;faceArray[i] = 4;
+
+    poly-&gt;verticesArray = new uint32_t[4 * poly-&gt;numFaces];
+    for (uint32_t j = 0, k = 0; j &lt; subdivisionHeight; ++j) {
+        for (uint32_t i = 0; i &lt; subdivisionWidth; ++i) {
+            poly-&gt;verticesArray[k] = j * (subdivisionWidth + 1) + i;
+            poly-&gt;verticesArray[k + 1] = j * (subdivisionWidth + 1) + i + 1;
+            poly-&gt;verticesArray[k + 2] = (j + 1) * (subdivisionWidth + 1) + i + 1;
+            poly-&gt;verticesArray[k + 3] = (j + 1) * (subdivisionWidth + 1) + i;
+            k += 4;
+        }
+    }
+
+    return poly;
+}
+
+
+#define ANALYTICAL_NORMALS 1
+
+int main(int argc, char **argv)
+{
+    PerlinNoise noise;
+
+    PolyMesh *poly = createPolyMesh(3, 3, 30, 30);
+
+    // displace and compute analytical normal using noise function partial derivatives
+    Vec3f derivs;
+    for (uint32_t i = 0; i &lt; poly-&gt;numVertices; ++i) {
+        Vec3f p((poly-&gt;vertices[i].x + 0.5), 0, (poly-&gt;vertices[i].z + 0.5));
+        poly-&gt;vertices[i].y = noise.eval(p, derivs);
+#if ANALYTICAL_NORMALS
+        Vec3f tangent(1, derivs.x, 0); // tangent
+        Vec3f bitangent(0, derivs.z, 1); // bitangent
+        // equivalent to bitangent.cross(tangent)
+        poly-&gt;normals[i] = Vec3f(-derivs.x, 1, -derivs.z);
+        poly-&gt;normals[i].normalize();
+#endif
+    }
+
+#if !ANALYTICAL_NORMALS
+    // compute face normal if you want
+    for (uint32_t k = 0, off = 0; k &lt; poly-&gt;numFaces; ++k) {
+        uint32_t nverts = poly-&gt;faceArray[k];
+        const Vec3f &amp;va = poly-&gt;vertices[poly-&gt;verticesArray[off]];
+        const Vec3f &amp;vb = poly-&gt;vertices[poly-&gt;verticesArray[off + 1]];
+        const Vec3f &amp;vc = poly-&gt;vertices[poly-&gt;verticesArray[off + nverts - 1]];
+
+        Vec3f tangent = vb - va;
+        Vec3f bitangent = vc - va;
+
+        poly-&gt;normals[poly-&gt;verticesArray[off]] = bitangent.cross(tangent);
+        poly-&gt;normals[poly-&gt;verticesArray[off]].normalize();
+
+        off += nverts;
+    }
+#endif
+
+    poly-&gt;exportToObj();
+    delete poly;
+
+    // output noise map to PPM
+    const uint32_t width = 512, height = 512;
+    float *noiseMap = new float[width * height];
+
+    for (uint32_t j = 0; j &lt; height; ++j) {
+        for (uint32_t i = 0; i &lt; width; ++i) {
+            noiseMap[j * width + i] = (noise.eval(Vec3f(i, 0, j) * (1 / 64.), derivs) + 1) * 0.5;
+        }
+    }
+
+    std::ofstream ofs;
+    ofs.open(&quot;./noise2.ppm&quot;, std::ios::out | std::ios::binary);
+    ofs &lt;&lt; &quot;P6\n&quot; &lt;&lt; width &lt;&lt; &quot; &quot; &lt;&lt; height &lt;&lt; &quot;\n255\n&quot;;
+    for (unsigned k = 0; k &lt; width * height; ++k) {
+        unsigned char n = static_cast&lt;unsigned char&gt;(noiseMap[k] * 255);
+        ofs &lt;&lt; n &lt;&lt; n &lt;&lt; n;
+    }
+    ofs.close();
+
+    delete[] noiseMap;
+
+    return 0;
+}</div><!-- end of code --></div><!-- end of code-column -->
+</article>
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/code.php?id=57&origin=/lessons/procedural-generation-virtual-worlds/perlin-noise-part-2&src=0 by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:24:29 GMT -->
+</html>

@@ -1,0 +1,294 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/advanced-rendering/rendering-distance-fields/blobbies by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:20:21 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Rendering Implicit Surfaces and Distance Fields: Sphere Tracing (Blobbies)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='distance field, implicit function, sphere tracing, CSG, Constructive Solid Geometry, ray marching, implicit surfaces, gradient, level surface, level set, blobbies, soft objects, meatballs'>
+<meta name='date' content='2016-11-27 15:56:09'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Rendering Implicit Surfaces and Distance Fields: Sphere Tracing</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction.html">Introduction</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="maths-behind-sphere-tracing.html">Maths Behind Sphere-Tracing</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="basic-sphere-tracer.html">A Simple Sphere-Tracer</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="constructive-solid-geometry-blends-deformers.html">Constructive Solid Geometry, Blends and Deformers</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="blobbies.html"><b>Blobbies</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code2e85.html?id=59&amp;origin=/lessons/advanced-rendering/rendering-distance-fields">Source Code</a></div></div></div><img class="right" src="../../../images/upload/distance-fields/Flubberd41d.jpg?">
+
+<p>If you are old enough you might remember a film called Flubber released in 1997. The film depicts small jelly like characters that were digitally modelled, animated and rendered. The jelly/blobby look of the characters is something you can sort of easily produce in CGI using a technique called metaballs. To say things quickly (we will devote a full lesson to this fun technique some day), this technique was proposed by guru Jim Blinn in 1984.</p>
+
+<p>Metaballs go by several other names: soft objects or blobbies for example, though soft objects and metaballs use slightly different equations, so the names are not exactly synonymous but more on that in the future. Why are we interested in soft objects, blobbies or metaballs? Because they are essentially equation-based distance fields (well sort of but we will explain that in a moment), and as you can guess since they are equation-based, they can somehow be rendered using the sphere-tracing method. Furthermore, in the second chapter of this lesson, we spent a great deal of time explaining what is the Lipschitz constant  and how this constant could be used to develop distance estimators, however we haven't studied yet a practical example in which this method would be used. Soft objects will give us an opportunity to fill that gap. Finally, metaballs are great fun...</p>
+
+<p>Blobbies (rendered as solid objects) just look like simple spheres. It's only when they get close to each other that they start to blend like drops of liquid. The reason for that is quite simple. A metatball is defined by some function that defines a density (like for a gas) that gradually falls off from the center of the blobby. The falloff depends on the equation that is being used, but is generally exponential. When you put two blobbies close to each other, then their densities add up. These ideas are illustrated in the following image. On the left, you have a single blobby. In the middle you have two blobbies. The cyan curves above the blobbies is the profile of the blobbies' density.</p>
+
+<img class="left" style="margin-bottom: 12px;" src="../../../images/upload/distance-fields/blobs-profiled41d.png?" />
+
+<p>In the case of the implicit surfaces we studied so far, the isosurface marked the surface to be rendered. But in the case of blobbies there is no isosurface since we deal this time with densities. So how do we go from a gas to a solid so to say? The idea with blobbies is to say that the isosurface this time is not defined by a distance from a point in space to the closest point on the surface of the object, but is defined by all the points in space that have the same density. In the following you can see on the left, you can see what this isoline (in 2D) looks like when we set to 0.4. All points in the image whose density is 0.4 belong or define this isoline (in red). By changing the value, you can modify the profile of the resulting shape. Note that when the threshold of the isoline is low, the two blobbies seem to touch each other. When the threshold is hight (the density values get higher as you get closer to the center of the blobby), they look like two individual drops or spheres.</p>
+
+<img class="left" style="margin-bottom: 12px;" src="../../../images/upload/distance-fields/blobs-thresholdd41d.png?" /> 
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="width: 400px;" src="../../../images/upload/distance-fields/blobs-profile2d41d.png?" />
+<p class="caption left">Figure 1: profile of the density function.</p>
+</div>
+
+<p>Quite a few different functions to define the profile of metaballs or blobbies have been invented over time. The one that we are going to use in this lesson is the one used by Hart in his paper. The function is:</p>
+
+$$F(r) = 2 \dfrac{r^3}{R^3} - 3 \dfrac{r^2}{R^2} + 1.$$
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="margin-bottom: 12px; width: 400px;" src="../../../images/upload/distance-fields/sphere-tracing-simple-blobsd41d.png?">
+<p class="caption left">Figure 2: a blobby. Beyond the distance \(R\) the blobby has no influence.</p>
+</div>
+
+<p>Where \(r\) is the distance from a point in space to the center of the blobby, and \(R\) is the radius of the blobby itself. Note that the density drops to 0 for any value of \(r\) greater than \(R\) (figure 2). This is important as we will this property to optimize the rendering process later. The profile of this function can be seen in figure 1 (with \(R=1\)).</p>
+
+<p>The function \(F(x)\) returns a density but our sphere-tracing algorithm requires a distance. So how do we from a density to a distance? In a way you can the see the function that returns the distance of a point to the isosurface of an implicit object as a curve that converges to 0 as we get closer to the isosurface (and gets negative once we have passed on the other side of the object's surface). This idea is illustrated in figure 3. As we get closer to the surface, the distance to the actual surface becomes smaller and smaller. This is what happens when our traced-spheres becomes smaller as we approach the surface of an object. We can achieve the same effect with the profile of the blobby density function if subtract some number (that we will call our <i>magic</i> number) from the inverse of that function.</p>
+
+$$d(x, blobby) = magic - F(||x - C||).$$
+
+<p>You can see what the curve now looks like. As you can see it gets flats for any greater than the blobby maximum radius \(R\). This part of the curve is also positive (the blue section), which means that each time we will take a step forward in the direction of the shape, the size of the step will be constant as long as the distance to the blobby center is greater than \(r_A\). From \(r_A\) to \(r_B\) the curve goes down: this when the distance to the blobby surface will start to decrease until it eventually reaches a very small value (close to 0). When we will reach that point, we will have found the point where our ray intersects the surface of the blobby.</p>
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="margin-bottom: 12px; width: 400px;" src="../../../images/upload/distance-fields/sphere-tracing-distancetoblobd41d.png?">
+<p class="caption left">Figure 3: distance to the blobby isosurface.</p>
+</div>
+
+<p>Unfortunately, it turns out that this simple equation alone can't do the truck, but the final equation will produce a similar shape so hopefully this basic introduction will have helped you to understand the general idea. So why isn't that simple? If chapter 2 we mentioned that Hart had proposed in his paper a solution to develop any "conservative" distance estimation function (what he called a DUF) from any implicit equation. This solution involved to compute the Lipschitz constant of the equation, which we explained requires to compute the function second derivative, then solve the solution to \(F''(x) = 0\) and insert this soliton into the function first derivative \(F'(x)\). This is how we find the requires Lipschitz constant. The full derivation is given in <a href="maths-behind-sphere-tracing.html">chapter 2 of this lesson</a>. The DUF for the function can be found by dividing the function itself by the function's Lipschitz constant. We didn't need to use this method to find distance estimators for simple shapes such as a sphere, a curve, or a torus, but we will need to use it for blobbies because there is no solution in this case that can be found on simple geometry deduction. As you can guess, what we have to do now is follow these steps.</p>
+
+<p>The function first-order derivative is:</p>
+
+$$F'(r) = 6 \dfrac{r^2}{R^3} - 6 \dfrac{r}{R^2}.$$
+
+<p>From which we can derive the function's second-order derivative:</p>
+
+$$F''(r) = 12 \dfrac{r}{R^3} - \dfrac{6}{R^2}.$$
+
+<p>Solving for \(r\), the solution is:</p>
+
+$$
+\begin{array}{l}
+12 \dfrac{r}{R^3} - \dfrac{6}{R^2} = 0,\\
+12 \dfrac{r}{R^3} = \dfrac{6}{R^2},\\
+r = \dfrac{6R^3}{12R^2},\\
+r  = \dfrac{R}{2}.\\
+\end{array}
+$$
+
+<p>If we now compute \(F'(x)\) using the solution we get:</p>
+
+$$
+\begin{array}{l}
+F'(\dfrac{R}{2}) = 6 \dfrac{\left( \dfrac{R}{2} \right) ^2}{R^3} - 6 \dfrac{\dfrac{R}{2}}{R^2},\\
+F'(\dfrac{R}{2}) = \dfrac{6R^2}{4R^3} - \dfrac{6R}{2R^2},\\
+F'(\dfrac{R}{2}) = \dfrac{6}{4R} - \dfrac{6}{2R},\\
+
+F'(\dfrac{R}{2}) = \dfrac{3}{2R} - \dfrac{3}{R},\\
+F'(\dfrac{R}{2}) = \dfrac{3}{2R} - \dfrac{6}{2R} = - \dfrac{3}{2R}.\\
+
+\end{array}
+$$
+
+<p>This is our Lipschitz constant from which we derive our final DUF function:</p>
+
+$$d(x, \text{soft object}) = \dfrac {F(r)} {F'(r)} =  \dfrac {F(r)} { \dfrac{3}{2R} }  = \dfrac {2R} {3} F(x).$$
+
+ <p>Where \(r\) is equal to \(||x - C||\) (the distance between \(x\) and the blobby center). The final step is to find an equation that works with more than one blobby (since the point of using metaballs or blobbies is to create interesting liquid-like shapes by creating aggregate of blobbies). The classic solution consists of accumulating their contribution by summing up their density fields. We will do the same for our DUF function. Mathematics tells us that "the Lipschitz constant of a sum is bounded by the sum of the Lipschitz constants", which leads us to our final equation:</p>
+
+$$d(x, \text{soft object}) = \dfrac{magic - \sum_{n=0}^{n=i} F(|| x - C_i||)} {\sum_{n=0}^{n=i} { \dfrac {3}{2} R_i } }.$$
+
+<p>Where \(magic\) is our threshold, \(C_i\) are the blobbies centers, and \(R_i\) their radii. The follow image shows the process of tracing a ray towards the surface made by two blobbies. You can see that we progress towards the surface of the soft object by regular intervals (the green part of our distance function's curve), and that at some point the circles get smaller and smaller until we eventually reach the surface.</p> 
+
+<img class="left" style="margin-bottom: 12px;" src="../../../images/upload/distance-fields/blobs-resultd41d.png?" />
+
+<h2>Implementation</h2>
+
+<p>The implementation of soft-object in our simple sphere-tracer is straightforward. We just create a new class derived from the <span class="code-inline">ImplicitShape</span> base class and overwrite the <span class="code-inline">getDistance()</span> method with our equation for blobbies. A few remarks can be made. First notice that a soft object is made of several blobbies in our implementation. In fact you can create as many as you want and store them in the <span class="code-inline">blobbies</span> member variable. In our particular implementation, we created them in the class constructor. Note also that in the <span class="code-inline">getDistance()</span> method we only accumulate the contribution of a blobby if the distance from the point where we evaluate the current blobby's density field and the center of that blobby is lower than the blobby's radius (line 22). Finally if you look at the image above that shows the different spheres that are being traced until we reach the point of intersection with the soft-object's isosurface, you will notice that a great number of spheres are being traced before we can get to that point. This is because, as showed in figure 3, our distance estimation function returns a constant value for all distances of \(r\) that are greater than the blobby's radius. And that constant value is rather small. Since we know that the isosurface is contained within the envelope of the individual blobbies, we can accelerate the process by treating the blobbies as a collection of spheres and chose the maximum value between the minimum distance from the point to the spheres and the point to the actual isosurface (line 31). If you simply return the distance to the isosurface, you will notice that the render gets much slower.</p>
+
+<div name="code" class="code">class SoftObject : public ImplicitShape
+{
+    struct Blob
+    {
+        float R; // radius
+        Vec3f c; // blob center
+        Vec3f color; // blob color
+    };
+public:
+    SoftObject()
+    {
+        blobbies.push_back({2.0, Vec3f(-1, 0, 0), Vec3f(1, 0, 0)});
+        blobbies.push_back({1.5, Vec3f( 1, 0, 0), Vec3f(0, 0, 1)});
+    }
+    float getDistance(const Vec3f& from) const
+    {
+        float sumDensity = 0;
+        float sumRi = 0;
+        float minDistance = kInfinity;
+        for (const auto& blob: blobbies) {
+            float r = (blob.c - from).length();
+            if (r <=  blob.R) {
+                // this can be factored for speed if you want
+                sumDensity += 2 * (r * r * r) / (blob.R * blob.R * blob.R) -
+                    3 * (r * r) / (blob.R * blob.R) + 1;
+            }
+            minDistance = std::min(minDistance, r - blob.R);
+            sumRi += blob.R;
+        }
+
+        return std::max(minDistance, (magic - sumDensity) / ( 3 / 2.f * sumRi));
+    }
+    float magic{ 0.2 };
+    std::vector&ltBlob&gt blobbies;
+};</div>
+
+<p>Here a few results. On the left, just two blobbies and on the right an aggregate of about twenty blobbies. Note that there the transition between the blobbies doesn't seem to be very smooth. This can be caused by the fact that the function that we chose doesn't have second-order derivative continuity (we have already mentioned this problem in the lesson on <a href="../../procedural-generation-virtual-worlds/perlin-noise-part-2/improved-perlin-noise.html">Perlin's Noise function)</a>.</p>
+
+<img class="left" style="margin-bottom: 12px;" src="../../../images/upload/distance-fields/softobject-resultsd41d.png?" />
+
+<h2>Conclusion</h2>
+
+<p>Hart's paper contains many more interesting techniques and ideas but we can't look at them all in this lesson. Maybe we will come back to it later and complete it if there is an interest from readers. We encourage you to read the paper or other articles on the topic of implicit modelling and try to implement some of the techniques we haven't studied in this lesson yourself. At least now you should have the basic knowledge required to explore this topic further.</p>
+
+<p>Some ideas you can try: add colors to the implicit surfaces and try to get them to blend when you use blending or mixing or soft-objects (add a random color to each blobby and see what happens in the blending regions). You can render more shapes, theres is even a method to compute triangles and quads. You can experiment with deforming methods (twisting, bending, etc.). The field of experimentation and exploration is limited but very wild in the case of implicit modeling. We will write another lesson on the topic but that will be devoted this time specifically to Metaballs (the original method proposed by Blinn) and show how to polygonize (create an object) out of the distance field.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='constructive-solid-geometry-blends-deformers.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 5 of  6</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='../../../code2e85.html?id=59&amp;origin=/lessons/advanced-rendering/rendering-distance-fields'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/advanced-rendering/rendering-distance-fields/blobbies by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:20:26 GMT -->
+</html>

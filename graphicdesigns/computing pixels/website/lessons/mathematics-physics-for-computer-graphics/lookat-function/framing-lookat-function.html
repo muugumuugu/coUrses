@@ -1,0 +1,307 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/mathematics-physics-for-computer-graphics/lookat-function/framing-lookat-function by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:45:32 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Placing a Camera: the LookAt Function (Framing: The LookAt Function)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='Matrix, LookAt, camera, cross product, transformation matrix, transform, camera-to-world, look-at, Gimbal lock'>
+<meta name='date' content='2016-12-30 10:40:50'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+	<!-- Open Graph data -->
+	<meta property='fb:app_id' content='1535346446701691'/>
+	<meta property='og:title' content='Placing a Camera: the LookAt Function'/>
+	<meta property='og:type' content='article'/>
+	<meta property='og:url' content='https://www.scratchapixel.com//lessons/mathematics-physics-for-computer-graphics/lookat-function'/>
+	<meta property='og:image' content='https://www.scratchapixel.com/images/design/logo_scratchapixel2015.png'/>
+	<meta property='og:description' content='Lesson summary: '/> 
+	<meta property='og:site_name' content='Scratchapixel'/>
+	<meta property='fb:admins' content='1260067275'/>
+	
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Placing a Camera: the LookAt Function</div><div style='width: 100%; margin: 0px; display: table; vertical-align: middle; border: 1px none red;'>
+			<div style='display: table-row; height: 30px;'>
+			<div style='margin: 0px; padding: 0px; border: 1px none blue ; display: table-cell; vertical-align: middle;'>
+				<a href='https://twitter.com/share' class='twitter-share-button' data-lang='en'>Tweet</a>
+			</div></div>
+			<div style='display: table-row; height: 30px;'>
+			<div style='padding: 0px; border: 1px none blue ; display: table-cell; vertical-align: middle;'>
+				<div style='margin-top: 5px;' class='fb-like' data-share='true' data-width='450' data-show-faces='true'></div>
+			</div></div></div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="framing-lookat-function.html"><b>Framing: The LookAt Function</b></a></div></div></div><span style='display: inline-block; width: 100%; margin: 0px 0px 10px 0px;'><i>Keywords: Matrix, LookAt, camera, cross product, transformation matrix, transform, camera-to-world, look-at, Gimbal lock.</i></span><div class="question">In this short lesson we will study a simple but useful method for moving 3D cameras around. You won't understand this lesson easily if you are not familiar with the concept of transformation matrix and cross product between vectors. Hopefully if that's not already the case, we recommend you to read the lesson called <a href="../geometry.html">Geometry</a> (entirely).</div>
+
+<h2>Moving the Camera</h2>
+
+<p>Being able to move the camera in a 3D scene is really essential. However in most of the lessons from Scratchapixel we usually  set the camera position and rotation in space (remember that cameras shouldn't be scaled), using a 4x4 matrix which is often labelled <span class="code-inline">camToWorld</span>. Remember that the camera in its default position is assumed to be centred at the origin and aligned along the negative z-axis. This is explained in detail in the lesson <a href="../../3d-basic-rendering/ray-tracing-generating-camera-rays/generating-camera-rays.html">Ray Tracing: Generating Camera Rays</a>. However, using a 4x4 matrix to set the camera position in the scene, is just not very friendly, unless we can access a 3D animation system such as for example Maya or Blender to set the camera and export its transformation matrix.</p>
+
+<p>Hopefully, we can use another method which is better than setting up the matrix directly and doesn't require an editor (though this is of course always better). This technique doesn't really have a name but programmers usually refer to it to it as the <b>Look-At</b> method. The idea of the method is simple. In order to set a camera position and orientation, all you really need is a point to set the camera position in space which we will refer to as the <b>from</b> point, and a point that defines what the camera is looking at. We will refer to this point as the <b>to</b> point.</p> 
+
+<img style="margin-bottom: 12px;" src="../../../images/upload/lookat/look-at-1d41d.png?" />
+
+<p>What's interesting is that from this pair of points, we can create a camera 4x4 matrix as we will demonstrate in this lesson.</p>
+
+<div class="question">The camera is aligned along the  negative z-axis. Does it mean I need to rotate the camera by 180 degrees along the y-axis or scale it up by -1 along the z-axis? Not at all. Transforming a camera is no different from transforming any other object in a scene. Keep in mind that in ray-tracing, we build the primary rays as if the camera was located in its default position. This is explained in the lesson <a href="../../3d-basic-rendering/ray-tracing-generating-camera-rays/generating-camera-rays.html">Ray Tracing: Generating Camera Rays</a>. This is when we actually reverse the direction of the rays. In other words, the z-coordinates of the rays' directions at this point are always negative: the camera in its default position, looks down along the negative z-axis. Those primary rays are then transformed by the camera-to-world matrix. Therefore, there is no need to account for the default orientation of the camera when the 4x4 camera-to-world matrix is built.</div>
+
+<h2>The Method</h2>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../../images/upload/lookat/look-at-2d41d.png?" />
+<p class="caption left">Figure 1: the local coordinate system of the camera aimed at a point.</p>
+</div>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../../images/upload/lookat/look-at-3d41d.png?" />
+<p class="caption left">Figure 2: computing the forward vector from the position of the camera and target point.</p>
+</div>
+
+<p>Remember that a 4x4 matrix encodes the 3-axis of a Cartesian coordinate system. Again if this is not obvious to you, please read the lesson on <a href="../geometry.html">Geometry</a>. Remember that there are two conventions you need to pay attention to when you deal with matrices and coordinate systems. For matrices you need to choose between the row-major and column-major representation. At Scratchapixel, we use a <b>row-major</b> notation. As for coordinate system, you need to choose between a right-hand and left-hand coordinate system. We use a <b>right-hand</b> coordinate system. The fourth row of the 4x4 matrix (in a row-major matrix) encodes the translation values.</p>
+
+$$
+\begin{matrix}
+\color{red}{Right_x}&\color{red}{Right_y}&\color{red}{Right_z}&0\\
+\color{green}{Up_x}&\color{green}{Up_y}&\color{green}{Up_z}&0\\
+\color{blue}{Forward_x}&\color{blue}{Forward_y}&\color{blue}{Forward_z}&0\\
+T_x&T_y&T_z&1
+\end{matrix}
+$$
+
+<p>How you name the axis of a Cartesian coordinate system depends on your preference, you can call them x, y and z but in this lesson for clarity, we will name them <b>right</b> (for x-axis), <b>up</b> (for the y-axis) and <b>forward</b> for the (z-axis). This is illustrated in figure 1. The method from building a 4x4 matrix from the from-to pair of points can be broken down in four steps:</p>
+
+<ul>
+<li><b>Step 1: compute the forward axis</b>. In figure 1 and 2 it is quite easy to see that the forward axis of the camera local coordinate system is aligned along the line segment defined by the points <i>from</i> and <i>to</i>. A little bit of geometry suffices to compute this vector. You just need to normalize the vector \({To-From}\) (mind the direction of this vector: it is \({To-From}\) not \({From-To}\)). This can be done with the following code snippet:
+
+<div name="code" class="code" style="margin-top: 12px;">Vec3f forward = Normalize(from - to);</div>
+
+We found one vector. Two left!
+
+</li>
+
+<li><b>Step 2: compute the right vector.</b> Recall from the lesson on Geometry that Cartesian coordinates are defined by three unit vectors that are perpendicular to each other. We also know that if we take two vectors \(A\) and \(B\), they can be seen as lying into a plane, and that the cross product of these two vectors create a third vector \(C\) perpendicular to that plane and thus also obviously perpendicular to \(A\) and \(B\). We can use this property to create our right vector. This idea here is to use some <i>arbitrary vector</i> and compute the cross vector between the forward vector and this arbitrary vector. The result is a vector that is necessarily perpendicular to the forward vector and that can be used in the construction of our Cartesian coordinate system as the right vector. The code for computing this vector is simple since it only implies a cross product between the forward vector and this arbitrary vector:
+
+<div name="code" class="code" style="margin-top: 12px;">Vec3f right = crossProduct(randomVec, forward);</div>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../../images/upload/lookat/look-at-4d41d.png?" />
+<p class="caption left">Figure 3: the vector (0,1,0) is in the plane defined by the forward and up vector. The vector perpendicular to this plane is thus the right vector.</p>
+</div>
+
+The question is now, how do we choose this arbitrary vector? Well this vector can't really be totally arbitrary which is the reason why we wrote the word in italic. Think about this: if the forward vector is (0,0,1), then the right vector ought to be (1,0,0). This can only be done if we choose as our arbitrary vector, the vector (0,1,0). Indeed: <span class="code-inline">(0,1,0) x (0,0,1) = (1,0,0)</span> where the sign <span class="code-inline">x</span> here accounts for the cross product. Remember that the equations to compute the cross-product are:
+
+$$
+\begin{array}{l}
+c_x = a_y * b_z - a_z * b_y,\\
+c_y = a_z * b_x - a_x * b_z,\\
+c_z = a_x * b_y - a_y * b_x\\
+\end{array}
+$$
+
+where \(a\) and \(b\) are two vectors and \(c\) is the result of the cross product of \(a\) and \(b\). When you look at figure 3, you can also notice that regardless of the forward vector's direction, the vector perpendicular to the plane defined by the forward vector and the vector (0,1,0) is always the right vector of the camera's Cartesian coordinate system. That is because the up vector of that coordinate system lies within that same plane as showed in figure 4. That's great because the vector (0,1,0) can clearly be used in place of what we called earlier our <i>arbitrary vector</i>. 
+
+<div class="question" style="margin-top: 12px">Note also from that observation that the right vector always lie within the xz-plane. How come you may ask? If the cameras has a roll wouldn't the right vector be in a different plane? That's actually true, but applying a roll to the camera is not something you can do directly with the look-at method. To add a camera roll, you would first need to create a matrix to roll the camera (rotate the camera around the z-axis) and then multiply this matrix by the camera-to-world matrix built with the look-at method.</div>
+
+Finally, here is the code to compute the right vector:
+
+<div name="code" class="code" style="margin-top: 12px;">Vec3f tmp(0, 1, 0);
+Vec3f right = crossProduct(Normalize(tmp), forward);</div>
+
+Note that we normalize the arbitrary vector just in case you would actually be using a vector that is different from (0,1,0). So in order to be on the safe side, we will normalise it. Also pay attention to the order of the vectors in the cross product. Keep in mind that the cross product is not commutative (it is actually anti-commutative, check the lesson on Geometry for more details). The best mnemonic way of remembering the right order, is to think of the cross product of the forward vector (0,0,1) with the up vector (0,1,0) we know it should give (1,0,0) and not (-1,0,0). If you know the equations of the cross-product, you should easily find out that the order is \(up \times forward\) and not the other way around.
+
+Great we have the forward and right vector. How do now find the up vector?
+</li>
+
+<li><b>Step 4: compute the up vector.</b> Well this is very simple, we have two orthogonal vectors, the forward and right vector, so computing the cross product between this two vectors will just give us the missing third vector, the up vector. Note that if the forward and right vector are normalized, then the resulting up vector computed from the cross product will be normalized too:
+
+<div name="code" class="code" style="margin-top: 12px;">Vec3f up = crossProduct(forward, right);</div>
+
+Here again, you need to be careful about the order of the vectors involved in the cross product. Great we now have the three vectors defining the camera coordinate system. Let's now build our final 4x4 camera-to-world matrix.
+
+</li>
+
+<li><b>Step 4: set the 4x4 matrix using the right, up and forward vector as from point.</b> All there is to do to complete the process is to build the camera-to-world matrix itself. For that, we just replace each row of the matrix with the right data:
+
+
+<ul style="margin-top:12px;">
+<li>Row 1: replace the first three coefficients of the row with the coordinates of the <i>right</i> vector,</li>
+<li>Row 2: replace the first three coefficients of the row with the coordinates of the <i>up</i> vector,</li>
+<li>Row 3: replace the first three coefficients of the row with the coordinates of the <i>forward</i> vector,</li>
+<li>Row 4: replace the first three coefficients of the row with the coordinates of the <i>from</i> point.</li>
+</ul>
+
+</li>
+</ul>
+
+<p>Again, if you are unsure about why we do that, check the lesson on Geometry. Finally here is the source code of the complete function. It computes and return a camera-to-world matrix from two arguments, the <i>from</i> and <i>to</i> points. Note that the function third parameter (called <i>tmp</i> in the following code) is the <i>arbitrary</i> vector used in the computation of the right vector. It is set with the default value of (0,1,0) but it can be changed if desired (hence the need to normalize it when used).</p>
+
+<div name="code" class="code">Matrix44f lookAt(const Vec3f& from, const Vec3f& to, const Vec3f& tmp = Vec3f(0, 1, 0))
+{
+    Vec3f forward = normalize(from - to);
+    Vec3f right = crossProduct(normalize(tmp), forward);
+    Vec3f up = crossProduct(forward, right);
+
+    Matrix44f camToWorld;
+
+    camToWorld[0][0] = right.x;
+    camToWorld[0][1] = right.y;
+    camToWorld[0][2] = right.z;
+    camToWorld[1][0] = up.x;
+    camToWorld[1][1] = up.y;
+    camToWorld[1][2] = up.z;
+    camToWorld[2][0] = forward.x;
+    camToWorld[2][1] = forward.y;
+    camToWorld[2][2] = forward.z;
+
+    camToWorld[3][0] = from.x;
+    camToWorld[3][1] = from.y;
+    camToWorld[3][2] = from.z;
+
+    return camToWorld;
+}</div>
+
+<h2>The Look-At Method Limitation</h2>
+
+<p>The method is very simple and works generally well. Though it has an Achilles heels (a weakness). When the camera is vertical looking straight down or straight up, the forward axis gets very close to the arbitrary axis used to compute the right axis. The extreme case is of course when the froward axis and this arbitrary axis  are perfectly parallel e.g. when the forward vector is either (0,1,0) or (0,-1,0). Unfortunately in this particular case, the cross product fails producing a result for the right vector. There is actually no real solution to this problem. You can either detect this case, and choose to set the vectors by hand (since you know what the configuration of the vectors should be anyway). A more elegant solution can be developed using quaternion interpolation.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 1 of  1</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/mathematics-physics-for-computer-graphics/lookat-function/framing-lookat-function by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:45:45 GMT -->
+</html>

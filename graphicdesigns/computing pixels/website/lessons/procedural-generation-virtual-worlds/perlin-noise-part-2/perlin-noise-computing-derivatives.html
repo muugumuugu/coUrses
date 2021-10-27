@@ -1,0 +1,542 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/perlin-noise-part-2/perlin-noise-computing-derivatives by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:22:16 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Perlin Noise: Part 2 (Computing Derivatives)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='Perlin noise, gradient noise, permutation, hashing function, derivatives, interpolant, height map, displacement'>
+<meta name='date' content='2016-05-28 15:53:04'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Perlin Noise: Part 2</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="perlin-noise.html">Perlin Noise</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="perlin-noise-terrain-mesh.html">Using Perlin Noise to Create a Terrain Mesh</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="perlin-noise-computing-derivatives.html"><b>Computing Derivatives</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="improved-perlin-noise.html">Improved Perlin Noise</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code333a.html?id=57&amp;origin=/lessons/procedural-generation-virtual-worlds/perlin-noise-part-2">Source Code</a></div></div></div><p>There is very few documents on the Web and few books that explain the Perlin noise method in an intuitive way; but finding information on how to compute Perlin noise derivatives (especially in an analytical way) is even harder. Though, for those of you who don't know what these derivatives are and why they are useful, let's first go through a quick introduction on derivatives.</p>
+
+<h2>A Quick Introduction to (Partial) Derivatives</h2>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" style="width: 300px;" src="../../../images/upload/noise-part-2/noise-derivative1d41d.png?" />
+<p class="caption left">Figure 1: computing the noise function variation along the horizontal and vertical axis using a discrete approach.</p>
+</div>
+
+<p>Derivatives of any function (whether it is a one-, two- or three-dimensional function) are very useful. But before we give an example, let's first review what they are. If you create an image of a 2D noise and apply some sort of regular grid on top of that image, then we may want to know by how much the noise function varies along the x and y direction at each point of the grid (figure 1). Maybe this idea sounds familiar already? Remember that in the previous chapter, we used the result of a 2D noise function to displace a mesh. But let's get back to what we are trying to achieve here: how do know the <b>rate of change</b> of our 2D noise function along the x- or y-axis? A very simple solution to this problem consists of taking the value of the noise at the point where you want to compute this variation (let's call this point \(Gn_x\)), the value of the noise at the point a step further to the right from \(Gn_x\) (let's call this second point \(Gn_{x+1}\)), and then subtract the second value from the first. Example: if at the grid position \(Gn_{11}\) the noise is equal to 0.1 and at that the grid position \(Gn_{12}\) the noise value is equal to 0.7, then we can assume that the noise has varied from \(Gn_{11}\) to \(Gn_{12}\) (along the x-axis) by 0.6 (figure 1). In equation form, we would write:</p>
+
+$$\Delta_x Gn_{11} = Gn_{12} - Gn_{11}.$$
+
+<div class="question">Of course to compute the rate of change along the y-axis, we would be doing the same thing but move a step downward. Our equation would look like \(\Delta_y Gn_{11} = Gn_{21} - Gn_{11}\).</div>
+
+<p>Technically it is best to normalize this difference so that we get consistent results regardless of the distance that separates two points on the grids (if the results are normalised, measurements made with different grid spacing can then be compared to each other). To normalize this result, we just need to divide the difference by the distance between \(G_{11}\) and \(G_{12}\). So if the distance between two points on the grid is 2 for example, then we would need to write:</p>
+
+$$\Delta_x Gn_{11} = {\dfrac{Gn_{12} - Gn_{11}}{2}}.$$
+
+<p>In mathematics this technique is called a <b>forward difference</b>. Forward because we take the next computed point and subtract the value at the current point from the value at the next point.</p>
+
+<div class="question">Backward differencing is also possible: you use the previous point instead of the next point. You can also use a <a href="https://en.wikipedia.org/wiki/Finite_difference">central difference</a>.</div>
+
+<p>Mathematically we can formalize this concept with the following equation:</p> 
+
+$$f'(x) = \lim_{h \to 0}{\dfrac{f(x+h) - f(x)}{h}}.$$
+
+<div class="question">The notation \(f'(x)\) means that this is the derivative of the function \(f(x)\).</div>
+
+<div class="captionImage right" style="width: 650px;">
+<img class="left" style="width: 650px;" src="../../../images/upload/noise-part-2/noise-derivative2d41d.png?" />
+<p class="caption left">Figure 2: the smaller the spacing, the more accurate the computation of the rate of change.</p>
+</div>
+
+<p>This means that we can compute the derivative of the function \(f(x)\) using the forward difference technique that we just introduced but that the value of this derivative will become more and more accurate as the distance between the two points becomes smaller (in theory \(h\) tends toward 0). When the spacing is large you get some sort of very crude value for what the derivative is at a given point \(x\) but as the spacing becomes small this approximation improves. In the case of our noise image, the spacing of the grid is pretty large, so in fact, you would get a much better approximation of the variation of the noise function at each point on the grid, if the grid spacing was smaller (figure 2).</p>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" style="width: 300px;" src="../../../images/upload/noise-part-2/noise-differential1d41d.png?" />
+<p class="caption left">Figure 3: computing the tangent at P using central difference works better if we take smaller values for \(h\).</p>
+</div>
+
+<p>This concept is more easily understood with a 1D example. Figure 3 shows the profile of one-dimensional function. Let's assume that we now want to know by how much this function varies within the proximity of P. Using the principle of forward differencing, we can take a point further down along the x-axis such as for example \(x_1\), compute the value of the function at that point and then subtract \(f(x_1)\) to \(f(x)\). Note that that when we trace a line from \(f(x)\) to\(f(x_1)\) that line is tangent to the function at \(x\)</b>. That's because in fact, the derivative of a one-dimensional function gives <b>the slope of the line tangent to the function where the function's derivative is being computed</b>. So now that we know how to geometrically interpret the derivative of a function, you can easily see that if we take a point further away than \(x_1\) such as for example \(x_2\), then the line between \(x\) and \(x_2\) is not "as tangent" to \(x\) than is the line \(x\)-\(x_1\). Conclusion, if you use forward difference to compute the derivative of a function, then the smaller the distance between \(x\) and \(x+h\) the better.</p>
+
+<p>What have we learned so far?</p>
+
+<ul>
+<li>We learned that the derivative \(f'(x)\) of a one-dimensional function \(f(x)\)  can be interpreted as the slope of the line tangent to the function \(f(x)\) at \(x\)</li>
+
+<div class="question">Beside the slope, the derivative \(f'(x)\) can also be considered as the instantaneous rate of change of the function \(f(x)\) at \(x\).</div>
+
+<li>We also learned that we could use a technique called forward difference (the general method is called finite difference) to compute a "approximation" of that slope, but also that this approximation gets better as \(h\) in the forward difference equation gets smaller.</li>
+</ul>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" style="width: 300px;" src="../../../images/upload/noise-part-2/noise-differential2d41d.png?" />
+<p class="caption left">Figure 4: visual representation of the function derivative or slope.</p>
+</div>
+
+<p>There is something really important to understand in order to make sense of how we will be using derivatives (actually partial derivatives) later on this chapter. So far, we explained that the derivative of a function can be interpreted as the slope of the function \(f(x)\) at any value of \(x\). The way we trace the tangent at \(x\) (where we computed the derivative of the function \(f(x)\)) is by simply drawing the line \(y = mx\) at the point on the function where we computed the derivative of the function. The value \(m\) here is of course the slope of the function derivative we computed. Why is this important? It's important because note that when \(x=1\) then \(y=m\). This means that using this observation, we can say that the 2D vector tangent to the curve at the point where we evaluated the derivative is equal to <span class="code-inline">Vec2f(1, m)</span>. Do you agree? Of course you then need to normalize this vector, but nonetheless note how this vector is tangent to the point where we evaluated the function's derivative (and that's what we want you to remember). It is important you understand this idea (which is illustrated in figure 4).</p>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" style="width: 300px;" src="../../../images/upload/noise-part-2/noise-normal-constd41d.png?" />
+<p class="caption left">Figure 5: computing the normal by taking the cross product of the tangent and bi-tangent.</p>
+</div>
+
+<p>You can see the 3D Perlin noise function as two 2D functions perpendicular to each other at the point where the derivative is computed. So you will have a 1D function to compute the derivative of the 2D function in the xy plane if you wish, and another 1D function to compute the derivative of 2D noise function in the yz plane as showed in figure 5. Now if we apply the technique we just learned to compute the tangent at each one of these functions, note that the two obtained tangents are perpendicular to each other. But more interestingly by now taking the cross product of these two vectors you get a vector which is in fact perpendicular to the plane tangent to the point where the 2D noise function derivative was originally computed (as shown again in figure 5). This vector is the <b>normal of our function at P</b>. Hopefully by now you start to get it. These derivatives are going to be useful to compute the normals of our mesh displaced by a 3D or 2D noise function.</p>
+
+<div class="important">This is an important result, because this is how we are going to compute the normal of a mesh displaced by a 3D noise function. We will evaluate the derivative of the function along the x-axis at a given point (say P), then compute the vector tangent to P along the x-axis (let's call this vector \(T_x\)). Then we will compute the derivative of the noise function along the z-axis at P, from there compute the tangent to P along the z-axis (let's call this vector \(T_z\)). Finally we will use the two vectors in a cross product to compute the normal at P:
+
+$$N_P = T_z \times T_x.$$
+
+</div>
+
+<p>This is simple and elegant. Now one remark and one question.</p>
+
+<p>Remark: note that we don't really compute the derivative of the noise function here. We sort of cheat by computing a derivative of the function along the x-axis and then another derivative along the z-axis. What's interesting when we do that is that only one of the quantities varies. For example when compute the derivative of the 3D noise function along the x-axis then of course the value we get doesn't change because of a variation of the noise along the z-axis (since we evaluate the noise function in the plane xy - aka there's no variation in z). In mathematics when you have a function with several variables but that you compute its derivative with respect to one of its variables only, with the others held constant, then we say that we compute the function's <b>partial derivatives</b>. Let's take an example, if you have the function:</p>
+
+$$f(x,y) = x^2 + xy + y^2$$
+
+<p>Then if you wish to compute the derivative of the function while holding \(y\) constant then you get:</p>
+
+$${\dfrac{f(x,y)}{\partial x}} = 2x + y,$$
+
+<p>which you can read as the function \(f(x,y)\) partial derivative with respect to \(x\). In other words, we ignore all the terms in which \(x\) doesn't show up such as \(y^2\) in our example (including any constant term), then compute the derivative of \(x\) for each term in which \(x\) shows up. For example, if in one of the terms we have a \(x^2y\) then we replace it in the partial derivative by \(2xy\). If we have \(xy\), then we replace the term in the partial derivative by \(y\). Simple?</p>
+
+<p>Question: how do we compute these partial derivatives then?</p>
+
+<div class="captionImage right" style="width: 400px;">
+<img class="left" style="width: 400px;" src="../../../images/upload/noise-part-2/perlin-noise-geom-derivd41d.png?" />
+<p class="caption left">Figure 6: xx.</p>
+</div>
+
+<p>One method consists of using the forward difference technique (which is why we learned about it at the beginning of this chapter). If we take the example of our displaced meshed, then we can compute the derivate along the x-axis at the vertex \(V_{x,z}\) by subtracting the derivate from the noise value at the vertex \(V_{x+1,z}\) from the noise value at the vertex \(V_{x,z}\) (figure 6). In other words we can write:</p>
+
+$$\partial Nx = N_{Vx+1,z} - N_{Vx,z}.$$
+
+<p>Where \(\partial Nx\) is the partial derivative of the noise function along the x-axis. Note that at this point in time, this is a real value, not a vector. We can similarly compute the partial derivative of the noise function along the z-axis:</p>
+
+$$\partial Nz = N_{Vx,z+1}  - N_{Vx,z} .$$
+
+<p>The question is now, how do we transform this real value (in other words a float) into a vector (the vector tangent to the noise function at the point where the derivative is computed along the x- and z-axis). Well this is simple. Remember that when we compute the partial derivative along the x-axis we work in the xy plane. Thus the z-coordinate of the vector tangent to the noise function along the x-axis is necessarily 0:</p>
+
+$$T_x = \{?, ?, 0\}.$$
+
+<p>To compute the other two coordinates, you need to look at figure 4 again where we explained that to compute the tangent to the function in a plane, you need to set the x coordinate to 1 and the y coordinate of the vector to function partial derivative value (if you want to compute the tangent of the vector in the yz plane then you need to set the z-coordinate of the tangent to 1, the y-coordinate of the vector to the function partial derivative with respect to z, and then the x-coordinate of the tangent vector to 0). Finally we have:</p>
+
+$$
+\begin{array}{l}
+T_x = \{1, Nx, 0\}\\
+T_z = \{0, Nz, 1\}.
+\end{array}
+$$
+
+<p>Finally to compute the normal of the vertex, all you need to do now is to compute the cross product of these two vectors (the result of the cross product will be correct even of the two input vectors are not normalized: the resulting vector will be perpendicular to the two input vectors, though it might not be normalized itself):</p>
+
+$$Normal_{Vx,z} = T_z \times T_x.$$
+
+<p>This technique works great but:</p>
+
+<ul>
+<li>First what happens when we want to compute the derivatives for the vertices at the edges of the grid? Well you can't.</li>
+<li>We also explained (figure 3) that the smaller the space between two samples when we compute the derivative using a forward difference, the more accurate the result. In other words the larger the space between the vertices, the less accurate the computation of the partial derivatives. Later on in this chapter we will show the difference between the partial derivative computed with a forward difference and the analytical solution that we are now going to study.</li>
+</ul>
+
+<h2>Analytical Partial Derivatives of the Perlin Noise Function</h2>
+
+<p>So there is a better way of computing these partial derivatives. This technique only relies on maths and provides an "accurate" solution (in the mathematical sense of the term). A quick reminder: the partial derivative of the following equation:
+
+$$f(x,y) = x^2 + xy + y^2$$
+
+<p>with respect to x is:</p>
+
+$${\dfrac{f(x,y)}{\partial x}} = 2x + y.$$
+
+<p>Now let's re-write the Noise function a little. Let's first replace all the dot products with letters (as shown below):</p>
+
+<div class="code">a = dot(c000, p000)
+b = dot(c100, p100)
+c = dot(c010, p010)
+d = dot(c110, p110) 
+e = dot(c001, p001)
+f = dot(c101, p101) 
+g = dot(c011, p011)
+h = dot(c111, p111)</div>
+
+<p>For the sake of the exercise let's recall that the parameters \(u\), \(v\) and \(w\) are computed as follows (we use the smoothstep function):</p>
+
+<div class="code">u = tx * tx * (3 - 2 * tx)
+v = ty * ty * (3 - 2 * ty)
+w = tz * tz * (3 - 2 * tz)</div>
+
+<p>Let's now write the different interpolations of the Perlin noise function into one single line (see the first chapter):</p>
+
+<div class="code">lerp(
+   lerp(
+       lerp(a, b, u),
+       lerp(c, d, u),
+       v)
+   lerp(
+       lerp(e, f, u),
+       lerp(g, h, u),
+       v),
+   w)</div>
+
+<p>Let's now replace the call to the <span class="code-inline">lerp(a, b, t)</span> function with its actual code (<span class="code-inline">a(1-t)+bt</span>) and develop:</p>
+
+<div class="code">((a(1 - u) + bu)(1 - v) + (c(1 - u) + du)v)(1 - w) +
+((e(1 - u) + fu)(1 - v) + (g(1 - u) + hu)v)w
+
+((a - au + bu)(1 - v) + (c - cu + du)v)(1 - w) +
+((e - eu + fu)(1 - v) + (g - gu + hu)v)w
+
+(a - au + bu - av + auv - buv + cv - cuv + duv)(1 - w) +
+(e - eu + fu - ev + euv - fuv + gv - guv + huv)w
+
+a - au + bu - av + auv - buv + cv - cuv + duv -
+aw + auw - buw + avw - auvw + buvw - cvw + cuvw - duvw +
+ew - euw + fuw - evw + euvw - fuvw + gvw - guvw + huvw</div>
+
+<p>And then finally regroup the terms as follows:</p>
+
+<div class="code">a + u(b - a) + v(c - a) + w(e - a) +
+uv(a + d - b - c) + uw(a + f - b - e) + vw(a + g - c - e) +
+uvw(b + c + e + h - a - d - f - g)</div>
+
+<p>As you can see (and as expected) this is a function of three variables: \(u\), \(v\) and \(w\). If we apply the technique we learned to compute the partial derivative of a function with respect to one of its variable, we need to remove all the terms that do not contain the variable in question, and then replace the variable by its derivative in the remaining terms. For example, if we wish to compute the noise function partial derivative with respect to \(u\) we get:</p>
+
+<div class="code">u'(b - a) +
+u'v(a + d - b - c) + u'w(a + f - b - e) +
+u'vw(b + c + e + h - a - d - f - g)
+
+u'((b - a) + v(a + d - b - c) + w(a + f - b - e) + vw(b + c + e + h - a - d - f - g))</div>
+
+<p>Similarly, the partial derivatives with respect to \(v\) and \(w\) are:</p>
+
+<div class="code">// partial derivative with respect to v
+v'(c - a) +
+uv'(a + d - b - c) + v'w(a + g - c - e) +
+uv'w(b + c + e + h - a - d - f - g)
+
+v'((c - a) + u(a + d - b - c) + w(a + g - c - e) + uw(b + c + e + h - a - d - f - g))
+
+// partial derivative with respect to w
+w'(e - a) +
+uw'(a + f - b - e) + vw'(a + g - c - e) +
+uvw'(b + c + e + h - a - d - f - g)
+
+w'((e - a)  + u(a + f - b - e) + v(a + g - c - e) + uv(b + c + e + h - a - d - f - g))</div>
+
+<p>The remaining question is what is the derivative of \(u'\), \(v'\) and \(w'\)? Well simple \(u\), \(v\) and \(w\) are computed as follows:</p>
+
+$$
+\begin{array}{l}
+u = 3tx^2 - 2tx^3\\
+v = 3ty^2 - 2ty^3\\
+w = 3tz^2 - 2tz^3\\
+\end{array}
+$$
+
+<p>Thus the derivatives of these functions are:</p>
+
+$$
+\begin{array}{l}
+u' = 6tx - 6tx^2\\
+v' = 6ty - 6ty^2\\
+w' = 6tz - 6tz^2\\
+\end{array}
+$$
+
+<p>Et voila! All you need to do now is compute these derivatives, and then construct the vectors tangent to the point where the function is evaluated using the technique we provided above. Here is a modified version of our <span class="code-inline">eval</span> function that evaluates the 3D noise function and its partial derivatives at a given location:</p>
+
+<div name="code" class="code">float eval(const Vec3f &p, Vec3f& derivs) const
+{
+    int xi = static_cast&ltint&gt(std::floor(p.x)) & tableSizeMask;
+    int yi = static_cast&ltint&gt(std::floor(p.y)) & tableSizeMask;
+    int zi = static_cast&ltint&gt(std::floor(p.z)) & tableSizeMask;
+ 
+    float tx = p.x - xi;
+    float ty = p.y - yi;
+    float tz = p.z - zi;
+ 
+    float u = smoothstep(tx);
+    float v = smoothstep(ty);
+    float w = smoothstep(tz);
+ 
+    float du = smoothstepDeriv(tx);
+    float dv = smoothstepDeriv(ty);
+    float dw = smoothstepDeriv(tz);
+ 
+    // gradients at the corner of the cell
+    const Vec3f &c000 = gradients[hash(xi, yi, zi)];
+    const Vec3f &c100 = gradients[hash(xi + 1, yi, zi)];
+    const Vec3f &c010 = gradients[hash(xi, yi + 1, zi)];
+    const Vec3f &c110 = gradients[hash(xi + 1, yi + 1, zi)];
+ 
+    const Vec3f &c001 = gradients[hash(xi, yi, zi + 1)];
+    const Vec3f &c101 = gradients[hash(xi + 1, yi, zi + 1)];
+    const Vec3f &c011 = gradients[hash(xi, yi + 1, zi + 1)];
+    const Vec3f &c111 = gradients[hash(xi + 1, yi + 1, zi + 1)];
+ 
+    // generate vectors going from the grid points to p
+    float x0 = tx, x1 = tx - 1;
+    float y0 = ty, y1 = ty - 1;
+    float z0 = tz, z1 = tz - 1;
+ 
+    Vec3f p000 = Vec3f(x0, y0, z0);
+    Vec3f p100 = Vec3f(x1, y0, z0);
+    Vec3f p010 = Vec3f(x0, y1, z0);
+    Vec3f p110 = Vec3f(x1, y1, z0);
+ 
+    Vec3f p001 = Vec3f(x0, y0, z1);
+    Vec3f p101 = Vec3f(x1, y0, z1);
+    Vec3f p011 = Vec3f(x0, y1, z1);
+    Vec3f p111 = Vec3f(x1, y1, z1);
+ 
+    float a = dot(c000, p000);
+    float b = dot(c100, p100);
+    float c = dot(c010, p010);
+    float d = dot(c110, p110);
+    float e = dot(c001, p001);
+    float f = dot(c101, p101);
+    float g = dot(c011, p011);
+    float h = dot(c111, p111);
+ 
+    float k0 = (b - a);
+    float k1 = (c - a);
+    float k2 = (e - a);
+    float k3 = (a + d - b - c);
+    float k4 = (a + f - b - e);
+    float k5 = (a + g - c - e);
+    float k6 = (b + c + e + h - a - d - f - g);
+ 
+    derivs.x = du *(k0 + v * k3 + w * k4 + v * w * k6);
+    derivs.y = dv *(k1 + u * k3 + w * k5 + u * w * k6);
+    derivs.z = dw *(k2 + u * k4 + v * k5 + u * v * k6);
+ 
+    return a + u * k0 + v * k1 + w * k2 + u * v * k3 + u * w * k4 + v * w * k5 + u * v * w * k6;
+}</div>
+
+<h2>Analytical Solution vs Forward Difference</h2>
+
+<p>We can now compete two versions of the displaced mesh, one using the geometric solution to compute the vertex normals of the mesh, and one using the analytic solution. To code to compute either one of these solutions is as follows:</p>
+
+<div name="code" class="code">int main(int argc, char **argv)
+{
+    PerlinNoise noise;
+
+    PolyMesh *poly = createPolyMesh(3, 3, 30, 30);
+
+    // displace and compute analytical normal using noise function partial derivatives
+    Vec3f derivs;
+    for (uint32_t i = 0; i < poly->numVertices; ++i) {
+        Vec3f p((poly->vertices[i].x + 0.5), 0, (poly->vertices[i].z + 0.5));
+        // displace current vertex
+        poly->vertices[i].y = noise.eval(p, derivs);
+#if ANALYTICAL_NORMALS
+        Vec3f tangent(1, derivs.x, 0); // tangent
+        Vec3f bitangent(0, derivs.z, 1); // bitangent
+        // equivalent to bitangent.cross(tangent)
+        poly->normals[i] = Vec3f(-derivs.x, 1, -derivs.z);
+        poly->normals[i].normalize();
+#endif
+    }
+
+#if !ANALYTICAL_NORMALS
+    // compute face normal if you want
+    for (uint32_t k = 0, off = 0; k < poly->numFaces; ++k) {
+        uint32_t nverts = poly->faceArray[k];
+        const Vec3f &va = poly->vertices[poly->verticesArray[off]];
+        const Vec3f &vb = poly->vertices[poly->verticesArray[off + 1]];
+        const Vec3f &vc = poly->vertices[poly->verticesArray[off + nverts - 1]];
+
+        Vec3f tangent = vb - va;
+        Vec3f bitangent = vc - va;
+
+        poly->normals[poly->verticesArray[off]] = bitangent.cross(tangent);
+        poly->normals[poly->verticesArray[off]].normalize();
+
+        off += nverts;
+    }
+#endif
+
+    poly->exportToObj();
+    delete poly;
+
+    return 0;
+}</div>
+
+<p>Here is an image of these two meshes with their associate vertex normals (displayed on the right):</p>
+
+<img class="left" style="width: 670px; margin-bottom: 12px;" src="../../../images/upload/noise-part-2/geom-vs-analytic-normalsd41d.png?" />
+
+<p>Note that the vertex normals are not defined at the edge of the mesh whose normals were computed using the forward difference method (geometric solution). Note also the directions of the vertex normals are significantly different between the two meshes (even though their shape is the same). This obviously causes the shading of the two meshes to be noticeably different as well (remember that normals are used in shading).</p>
+
+<div class="question">Note that you can replace the code:
+<br/>
+<div class="code">poly->normals[i] = bitangent.cross(tangent);</div>
+with:
+<br/>
+<div class="code">poly->normals[i] = Vec3f(-derivs.x, 1, -derivs.z);</div>
+
+Why? Because we know that:
+
+$$
+\begin{array}{l}
+Tx=\{1,Nx,0\}\\
+Tz=\{0,Nz,1\}.
+\end{array}
+$$
+
+If you replace these two vectors in the equation of the cross product:
+
+$$
+\begin{array}{l}
+x = va.y * vb.z - va.z * vb.y\\
+y = va.z * vb.y - va.x * vb.z\\
+z = va.x * vb.x - va.y * vb.x,
+\end{array}
+$$
+
+you will see that you will end up with:
+
+$$N = Tz \times Tx = \{-Nx, 1, -Nz\}$$
+
+</div></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='perlin-noise-terrain-mesh.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 3 of  5</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='improved-perlin-noise.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/perlin-noise-part-2/perlin-noise-computing-derivatives by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:22:22 GMT -->
+</html>

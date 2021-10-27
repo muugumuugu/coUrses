@@ -1,0 +1,486 @@
+<!--
+<html>
+<head>
+<title>Scratchapixel</title>
+
+<link rel="stylesheet" type="text/css" href="/css/scratchapixel2.css"/>
+<link rel="stylesheet" type="text/css" href="/css/page.css"/>
+<link rel="stylesheet" type="text/css" href="/css/code.css"/>
+<link href='http://fonts.googleapis.com/css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='http://fonts.googleapis.com/css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<script type="text/javascript"
+	src="/scratchapixelSDK.js">
+</script>
+
+</head>
+<html>
+<body onload="onload();">
+<div class="code-column">
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/code.php?id=26&origin=/lessons/3d-basic-rendering/rasterization-practical-implementation by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:11:19 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Rasterization: a Practical Implementation (source code)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='Rasterization: a Practical Implementation, source code'>
+<meta name='date' content=''>
+
+<link rel="stylesheet" type="text/css" href="css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="css/page.css"/>
+
+<link href='../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","mml2jax.html","asciimath2jax.html","MathMenu.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","AMSsymbols.html","noErrors.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+<link rel='stylesheet' type='text/css' href='css/responsive.css'/>
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='index-2.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div class='lesson-title' style='padding: 0px; margin: 20px 0px 10px 0px;'><a href='lessons/3d-basic-rendering/rasterization-practical-implementation.html'>Rasterization: a Practical Implementation</a></div><div style='box-sizing: border-box; padding: 20px 0px 0px 0px; display: inline-block; border-top: 1px none grey; width: 100%;'><div>This project contains the following files (right-click files you'd like to download):</div><a oncontextmenu='onMouseDownCodeCtxt(this, "code/upload/rasterization/raster3d.cpp")' style='display: inline-block; margin: 10px 10px 10px 0px; color: rgb(50, 100, 200);' href='code8a1f.html?id=26&amp;origin=/lessons/3d-basic-rendering/rasterization-practical-implementation&amp;src=0'>raster3d.cpp</a><a oncontextmenu='onMouseDownCodeCtxt(this, "code/upload/rasterization/cow.h")' style='display: inline-block; margin: 10px 10px 10px 0px; color: rgb(50, 100, 200);' href='code3a17.html?id=26&amp;origin=/lessons/3d-basic-rendering/rasterization-practical-implementation&amp;src=1'>cow.h</a><a oncontextmenu='onMouseDownCodeCtxt(this, "code/upload/rasterization/geometry.h")' style='display: inline-block; margin: 10px 10px 10px 0px; color: rgb(50, 100, 200);' href='codec5bd.html?id=26&amp;origin=/lessons/3d-basic-rendering/rasterization-practical-implementation&amp;src=2'>geometry.h</a><a oncontextmenu='onMouseDownCodeCtxt(this, "code/upload/rasterization/cow.obj")' style='display: inline-block; margin: 10px 10px 10px 0px; color: rgb(50, 100, 200);' href='code9916.html?id=26&amp;origin=/lessons/3d-basic-rendering/rasterization-practical-implementation&amp;src=3'>cow.obj</a></div><div name='code' class='code'>//[header]
+// A practical implementation of the rasterization algorithm.
+//[/header]
+//[compile]
+// Download the raster3d.cpp, cow.h and geometry.h files to the same folder.
+// Open a shell/terminal, and run the following command where the files are saved:
+//
+// c++ -o raster3d raster3d.cpp  -std=c++11 -O3
+//
+// Run with: ./raster3d. Open the file ./output.png in Photoshop or any program
+// reading PPM files.
+//[/compile]
+//[ignore]
+// Copyright (C) 2012  www.scratchapixel.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+//[/ignore]
+
+#include &quot;geometry.h&quot;
+#include &lt;fstream&gt;
+#include &lt;chrono&gt;
+
+#include &quot;cow.h&quot;
+
+static const float inchToMm = 25.4;
+enum FitResolutionGate { kFill = 0, kOverscan };
+
+//[comment]
+// Compute screen coordinates based on a physically-based camera model
+// http://www.scratchapixel.com/lessons/3d-basic-rendering/3d-viewing-pinhole-camera
+//[/comment]
+void computeScreenCoordinates(
+    const float &amp;filmApertureWidth,
+    const float &amp;filmApertureHeight,
+    const uint32_t &amp;imageWidth,
+    const uint32_t &amp;imageHeight,
+    const FitResolutionGate &amp;fitFilm,
+    const float &amp;nearClippingPLane,
+    const float &amp;focalLength,
+    float &amp;top, float &amp;bottom, float &amp;left, float &amp;right
+)
+{
+    float filmAspectRatio = filmApertureWidth / filmApertureHeight;
+    float deviceAspectRatio = imageWidth / (float)imageHeight;
+    
+    top = ((filmApertureHeight * inchToMm / 2) / focalLength) * nearClippingPLane;
+    right = ((filmApertureWidth * inchToMm / 2) / focalLength) * nearClippingPLane;
+
+    // field of view (horizontal)
+    float fov = 2 * 180 / M_PI * atan((filmApertureWidth * inchToMm / 2) / focalLength);
+    std::cerr &lt;&lt; &quot;Field of view &quot; &lt;&lt; fov &lt;&lt; std::endl;
+    
+    float xscale = 1;
+    float yscale = 1;
+    
+    switch (fitFilm) {
+        default:
+        case kFill:
+            if (filmAspectRatio &gt; deviceAspectRatio) {
+                xscale = deviceAspectRatio / filmAspectRatio;
+            }
+            else {
+                yscale = filmAspectRatio / deviceAspectRatio;
+            }
+            break;
+        case kOverscan:
+            if (filmAspectRatio &gt; deviceAspectRatio) {
+                yscale = filmAspectRatio / deviceAspectRatio;
+            }
+            else {
+                xscale = deviceAspectRatio / filmAspectRatio;
+            }
+            break;
+    }
+    
+    right *= xscale;
+    top *= yscale;
+    
+    bottom = -top;
+    left = -right;
+}
+
+//[comment]
+// Compute vertex raster screen coordinates.
+// Vertices are defined in world space. They are then converted to camera space,
+// then to NDC space (in the range [-1,1]) and then to raster space.
+// The z-coordinates of the vertex in raster space is set with the z-coordinate
+// of the vertex in camera space.
+//[/comment]
+void convertToRaster(
+    const Vec3f &amp;vertexWorld,
+    const Matrix44f &amp;worldToCamera,
+    const float &amp;l,
+    const float &amp;r,
+    const float &amp;t,
+    const float &amp;b,
+    const float &amp;near,
+    const uint32_t &amp;imageWidth,
+    const uint32_t &amp;imageHeight,
+    Vec3f &amp;vertexRaster
+)
+{
+    Vec3f vertexCamera;
+
+    worldToCamera.multVecMatrix(vertexWorld, vertexCamera);
+    
+    // convert to screen space
+    Vec2f vertexScreen;
+    vertexScreen.x = near * vertexCamera.x / -vertexCamera.z;
+    vertexScreen.y = near * vertexCamera.y / -vertexCamera.z;
+    
+    // now convert point from screen space to NDC space (in range [-1,1])
+    Vec2f vertexNDC;
+    vertexNDC.x = 2 * vertexScreen.x / (r - l) - (r + l) / (r - l);
+    vertexNDC.y = 2 * vertexScreen.y / (t - b) - (t + b) / (t - b);
+
+    // convert to raster space
+    vertexRaster.x = (vertexNDC.x + 1) / 2 * imageWidth;
+    // in raster space y is down so invert direction
+    vertexRaster.y = (1 - vertexNDC.y) / 2 * imageHeight;
+    vertexRaster.z = -vertexCamera.z;
+}
+
+float min3(const float &amp;a, const float &amp;b, const float &amp;c)
+{ return std::min(a, std::min(b, c)); }
+
+float max3(const float &amp;a, const float &amp;b, const float &amp;c)
+{ return std::max(a, std::max(b, c)); }
+
+float edgeFunction(const Vec3f &amp;a, const Vec3f &amp;b, const Vec3f &amp;c)
+{ return (c[0] - a[0]) * (b[1] - a[1]) - (c[1] - a[1]) * (b[0] - a[0]); }
+
+const uint32_t imageWidth = 640;
+const uint32_t imageHeight = 480;
+const Matrix44f worldToCamera = {0.707107, -0.331295, 0.624695, 0, 0, 0.883452, 0.468521, 0, -0.707107, -0.331295, 0.624695, 0, -1.63871, -5.747777, -40.400412, 1};
+
+const uint32_t ntris = 3156;
+const float nearClippingPLane = 1;
+const float farClippingPLane = 1000;
+float focalLength = 20; // in mm
+// 35mm Full Aperture in inches
+float filmApertureWidth = 0.980;
+float filmApertureHeight = 0.735;
+
+int main(int argc, char **argv)
+{
+    Matrix44f cameraToWorld = worldToCamera.inverse();
+
+    // compute screen coordinates
+    float t, b, l, r;
+    
+    computeScreenCoordinates(
+        filmApertureWidth, filmApertureHeight,
+        imageWidth, imageHeight,
+        kOverscan,
+        nearClippingPLane,
+        focalLength,
+        t, b, l, r);
+    
+    // define the frame-buffer and the depth-buffer. Initialize depth buffer
+    // to far clipping plane.
+    Vec3&lt;unsigned char&gt; *frameBuffer = new Vec3&lt;unsigned char&gt;[imageWidth * imageHeight];
+    for (uint32_t i = 0; i &lt; imageWidth * imageHeight; ++i) frameBuffer[i] = Vec3&lt;unsigned char&gt;(255);
+    float *depthBuffer = new float[imageWidth * imageHeight];
+    for (uint32_t i = 0; i &lt; imageWidth * imageHeight; ++i) depthBuffer[i] = farClippingPLane;
+
+    auto t_start = std::chrono::high_resolution_clock::now();
+    
+    // [comment]
+    // Outer loop
+    // [/comment]
+    for (uint32_t i = 0; i &lt; ntris; ++i) {
+        const Vec3f &amp;v0 = vertices[nvertices[i * 3]];
+        const Vec3f &amp;v1 = vertices[nvertices[i * 3 + 1]];
+        const Vec3f &amp;v2 = vertices[nvertices[i * 3 + 2]];
+        
+        // [comment]
+        // Convert the vertices of the triangle to raster space
+        // [/comment]
+        Vec3f v0Raster, v1Raster, v2Raster;
+        convertToRaster(v0, worldToCamera, l, r, t, b, nearClippingPLane, imageWidth, imageHeight, v0Raster);
+        convertToRaster(v1, worldToCamera, l, r, t, b, nearClippingPLane, imageWidth, imageHeight, v1Raster);
+        convertToRaster(v2, worldToCamera, l, r, t, b, nearClippingPLane, imageWidth, imageHeight, v2Raster);
+        
+        // [comment]
+        // Precompute reciprocal of vertex z-coordinate
+        // [/comment]
+        v0Raster.z = 1 / v0Raster.z,
+        v1Raster.z = 1 / v1Raster.z,
+        v2Raster.z = 1 / v2Raster.z;
+        
+        
+        // [comment]
+        // Prepare vertex attributes. Divde them by their vertex z-coordinate
+        // (though we use a multiplication here because v.z = 1 / v.z)
+        // [/comment]
+        Vec2f st0 = st[stindices[i * 3]];
+        Vec2f st1 = st[stindices[i * 3 + 1]];
+        Vec2f st2 = st[stindices[i * 3 + 2]];
+
+        st0 *= v0Raster.z, st1 *= v1Raster.z, st2 *= v2Raster.z;
+    
+        float xmin = min3(v0Raster.x, v1Raster.x, v2Raster.x);
+        float ymin = min3(v0Raster.y, v1Raster.y, v2Raster.y);
+        float xmax = max3(v0Raster.x, v1Raster.x, v2Raster.x);
+        float ymax = max3(v0Raster.y, v1Raster.y, v2Raster.y);
+        
+        // the triangle is out of screen
+        if (xmin &gt; imageWidth - 1 || xmax &lt; 0 || ymin &gt; imageHeight - 1 || ymax &lt; 0) continue;
+
+        // be careful xmin/xmax/ymin/ymax can be negative. Don't cast to uint32_t
+        uint32_t x0 = std::max(int32_t(0), (int32_t)(std::floor(xmin)));
+        uint32_t x1 = std::min(int32_t(imageWidth) - 1, (int32_t)(std::floor(xmax)));
+        uint32_t y0 = std::max(int32_t(0), (int32_t)(std::floor(ymin)));
+        uint32_t y1 = std::min(int32_t(imageHeight) - 1, (int32_t)(std::floor(ymax)));
+
+        float area = edgeFunction(v0Raster, v1Raster, v2Raster);
+        
+        // [comment]
+        // Inner loop
+        // [/comment]
+        for (uint32_t y = y0; y &lt;= y1; ++y) {
+            for (uint32_t x = x0; x &lt;= x1; ++x) {
+                Vec3f pixelSample(x + 0.5, y + 0.5, 0);
+                float w0 = edgeFunction(v1Raster, v2Raster, pixelSample);
+                float w1 = edgeFunction(v2Raster, v0Raster, pixelSample);
+                float w2 = edgeFunction(v0Raster, v1Raster, pixelSample);
+                if (w0 &gt;= 0 &amp;&amp; w1 &gt;= 0 &amp;&amp; w2 &gt;= 0) {
+                    w0 /= area;
+                    w1 /= area;
+                    w2 /= area;
+                    float oneOverZ = v0Raster.z * w0 + v1Raster.z * w1 + v2Raster.z * w2;
+                    float z = 1 / oneOverZ;
+                    // [comment]
+                    // Depth-buffer test
+                    // [/comment]
+                    if (z &lt; depthBuffer[y * imageWidth + x]) {
+                        depthBuffer[y * imageWidth + x] = z;
+                        
+                        Vec2f st = st0 * w0 + st1 * w1 + st2 * w2;
+                        
+                        st *= z;
+                        
+                        // [comment]
+                        // If you need to compute the actual position of the shaded
+                        // point in camera space. Proceed like with the other vertex attribute.
+                        // Divide the point coordinates by the vertex z-coordinate then
+                        // interpolate using barycentric coordinates and finally multiply
+                        // by sample depth.
+                        // [/comment]
+                        Vec3f v0Cam, v1Cam, v2Cam;
+                        worldToCamera.multVecMatrix(v0, v0Cam);
+                        worldToCamera.multVecMatrix(v1, v1Cam);
+                        worldToCamera.multVecMatrix(v2, v2Cam);
+                        
+                        float px = (v0Cam.x/-v0Cam.z) * w0 + (v1Cam.x/-v1Cam.z) * w1 + (v2Cam.x/-v2Cam.z) * w2;
+                        float py = (v0Cam.y/-v0Cam.z) * w0 + (v1Cam.y/-v1Cam.z) * w1 + (v2Cam.y/-v2Cam.z) * w2;
+                        
+                        Vec3f pt(px * z, py * z, -z); // pt is in camera space
+                        
+                        // [comment]
+                        // Compute the face normal which is used for a simple facing ratio.
+                        // Keep in mind that we are doing all calculation in camera space.
+                        // Thus the view direction can be computed as the point on the object
+                        // in camera space minus Vec3f(0), the position of the camera in camera
+                        // space.
+                        // [/comment]
+                        Vec3f n = (v1Cam - v0Cam).crossProduct(v2Cam - v0Cam);
+                        n.normalize();
+                        Vec3f viewDirection = -pt;
+                        viewDirection.normalize();
+                        
+                        float nDotView =  std::max(0.f, n.dotProduct(viewDirection));
+                        
+                        // [comment]
+                        // The final color is the reuslt of the faction ration multiplied by the
+                        // checkerboard pattern.
+                        // [/comment]
+                        const int M = 10;
+                        float checker = (fmod(st.x * M, 1.0) &gt; 0.5) ^ (fmod(st.y * M, 1.0) &lt; 0.5);
+                        float c = 0.3 * (1 - checker) + 0.7 * checker;
+                        nDotView *= c;
+                        frameBuffer[y * imageWidth + x].x = nDotView * 255;
+                        frameBuffer[y * imageWidth + x].y = nDotView * 255;
+                        frameBuffer[y * imageWidth + x].z = nDotView * 255;
+                    }
+                }
+            }
+        }
+    }
+    
+    auto t_end = std::chrono::high_resolution_clock::now();
+	auto passedTime = std::chrono::duration&lt;double, std::milli&gt;(t_end - t_start).count();
+	std::cerr &lt;&lt; &quot;Wall passed time:  &quot; &lt;&lt; passedTime &lt;&lt; &quot; ms&quot; &lt;&lt; std::endl;
+    
+    // [comment]
+    // Store the result of the framebuffer to a PPM file (Photoshop reads PPM files).
+    // [/comment]
+    std::ofstream ofs;
+    ofs.open(&quot;./output.ppm&quot;);
+    ofs &lt;&lt; &quot;P6\n&quot; &lt;&lt; imageWidth &lt;&lt; &quot; &quot; &lt;&lt; imageHeight &lt;&lt; &quot;\n255\n&quot;;
+    ofs.write((char*)frameBuffer, imageWidth * imageWidth * 3);
+    ofs.close();
+    
+    delete [] frameBuffer;
+    delete [] depthBuffer;
+    
+    return 0;
+}</div><!-- end of code --></div><!-- end of code-column -->
+</article>
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/code.php?id=26&origin=/lessons/3d-basic-rendering/rasterization-practical-implementation by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:11:19 GMT -->
+</html>

@@ -1,0 +1,301 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/advanced-rendering/bezier-curve-rendering-utah-teapot/bezier-surface by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:18:57 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>B&eacute;zier Curves and Surfaces: the Utah Teapot (B&eacute;zier Surfaces)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='B&eacute;zier curve, B&eacute;zier surface, parametric surface, Utah teapot, Newell, Bernstein polynomials, quadratic, cubic, B&eacute;zier basis matrix, De Casteljau algorithm, tesselation, Taylor series, forward difference, B&eacute;zier  patch normal'>
+<meta name='date' content='2015-10-08 15:06:53'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>B&eacute;zier Curves and Surfaces: the Utah Teapot</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="bezier-curve.html">B&eacute;zier Curve</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="bezier-surface.html"><b>B&eacute;zier Surfaces</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="fast-forward-differencing.html">Fast Forward Differencing</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="bezier-patch-normal.html">Calculating Normals of B&eacute;zier Surfaces</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="curves-as-geometry.html">Rendering Curves as Geometry: Hair Rendering</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code76b5.html?id=35&amp;origin=/lessons/advanced-rendering/bezier-curve-rendering-utah-teapot">Source Code</a></div></div></div><h2>B&eacute;zier  Surfaces</h2>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../../images/upload/bezier/beziersurfaced41d.png?" />
+<p class="caption left">Figure 1: a  B&eacute;zier patch and its 16 control points (here we have a just numbered the points on the left and on the right of the patch).</p>
+</div>
+
+<p>Once we understand the principle of B&eacute;zier  curve extending the same technique to B&eacute;zier  surface is really straightforward. Rather than having 4 points we will define the surface with 16 points which you can see as a grid of 4x4 control points. In the case of curves we had 1 parameter to move along the curve (t). In the case of surface we will need two: one to move in the u direction and one to move in the v direction (see figure 1). Both u and v are contained within the range [0,1]. You can see the process of going from (u, v) to 3D space as a remapping of the unit square (defined by u, v) into a smooth continuous surface within the tree dimensional space. intuitively, you can see that a  B&eacute;zier surface is made of many curves going along either the u or v direction. For instance, if we move in the v direction we need to interpolate the curves defined by the points 1, 2, 3, 4 and 5, 6, 7, 8 (and so on for the rest of the surface). If we move along the u direction, the curves defined by the points 1, 5, 9, 13 and 2, 6, 10, 14 need to be interpolated instead. More formally, a point on the B&eacute;zier surface depends of the parametric values u and v, and can be defined (equation 1) as a double sum of control points and coefficients ("a sum of  B&eacute;zier curves"):</p>
+
+$$P(u, v) = \sum_{i=0}^n \sum_{j=0}^m B_i^n(u) B_j^m(v)P_{ij}$$
+
+<p>where as for curves,</p>
+
+<p>$$B_i^n(u)=\left(\begin{array}{c}n\\i\end{array}\right) u^i(1-u)^{n-i}$$</p>
+
+<p>is a <b>Bernstein polynomial (equation 2)</b>,  and</p>
+
+$$\left(\begin{array}{c}n\\i\end{array}\right) = {n! \over {i!(n-i)!}}$$
+
+<p><span>is a <b>binomial coefficient</b> (equation 3). We can see easily see the similarities with curves.  If you are interested in the terminology, we say that a  </span>B&eacute;zier<span>  surface (or patch) is constructed as the <b>tensor product</b> of two  </span>B&eacute;zier<span>  curves.  Note that we will only consider bicubic  B&eacute;zier surface in this lesson, that is, surfaces for which n = 3 and m = 3. Therefore, the Bernstein polynomials (equation 4) are the same as with bicubic curves (we have four of them and they are the same for n and m. We just show the coefficients for u but the same equation are used for v):</span></p>
+
+$$\begin{array}{l} K_1(u) = (1 - t)^3\\ K_2(u) = 3(1 - t)^2 * t\\ K_3(u) = 3(1 - t) * t^2\\ K_4(u) = t^3   \end{array} $$
+
+<div class="question">
+If you try to develop equation 2 yourself to get to equation 4 remember that \(u^0=1\) and \((1-u)^0=1\). So for instance when i=0, and n=3, we can rewrite equation 2 as \(u^{i=0}(1-u)^{(n=3 - i = 0)}\) which is indeed the first line in equation 4: \(K_1(u)=(1-u)^3\).
+</div>
+
+<h2>Tesselating a B&eacute;zier Patch</h2>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../../images/upload/bezier/beziersurface1d41d.gif?" />
+<p class="caption left">Figure 2: computing the position on the surface of B&eacute;zier surface for a pair of (u, v) values. First we compute the fout control points of an auxillary curve along the v direction using the u parameters. We then find P along this curve using the v parameter.</p>
+</div>
+
+<p>B&eacute;zier  surface can be ray traced directly but the methods known haven't always been robust and can be slow. An easier solution (which is often the choice made by many renderers) is to convert B&eacute;zier patches to polygon grids. Evaluating the position of a point on the surface for a pair of values (u, v) is easy.  We need to treat each row of the 4x4 control point grid as individual bezier curves. We will use one of the parameters (u) to evaluate a position in 3D space along each one of these curves. From this process we obtain four points which we can look at as the four control points of another B&eacute;zier  curve oriented along the other direction (v). Using the second parameter v, we can evaluate the final position along this curve. This correspond to a point on the surface for a given pair of values (u, v). Similarly to curve, we will compute position at regular intervals of u, b which we can use at the vertices of polygon grid. The pseudocode looks like this:</p>
+
+<div name="code" class="code">point evaluateBezierSurface(point P[16], float u, float v)
+{
+    point Pu[4];
+    // compute 4 control points along u direction
+    for (int i = 0; i &lt; 4; ++i) {
+       point curveP[4];
+       curveP[0] = P[i * 4];
+       curveP[1] = P[i * 4 + 1];
+       curveP[2] = P[i * 4 + 2];
+       curveP[2] = P[i * 4 + 3];
+       Pu[i] = evalBezierCurve(curveP, u);
+    }
+    // compute final position on the surface using v
+    return evalBezierCurve(Pu, v);
+}</div>
+
+<p>Creating the grid once we have this function is straighforward. We need to decide how many rows and vertices of quads we want, which defines the number of steps we take in u and v, compute the vertices positions on the surface for these pairs of (u, v) values and connect these vertices to form the mesh (check the source code further down). The advantage of converting a B&eacute;zier  surface into a polygon grid is that we can adapt the number of polygons (the resolution of the grid) based on some criteria such as the curvature of the surface or its distance to the camera (a surface closer to the camera requires a higher definition. This is the principle of the REYES algorithm used by Pixar's renderer). What we render at the end is not the B&eacute;zier  surface. Instead we evaluate the B&eacute;zier  surface as a polygon mesh which we can ray trace as a mesh (as we did with the polygon sphere in lesson 10).</p>
+
+<h2>Source Code</h2>
+
+<p>The renderer needs to access the teapot data which we have saved in a separate file. The format is very similar to that of polygonal objects. We first have a series of vertices and 32 arrays of 16 integers which defines the position of the patches' control points in this array.  </p>
+
+<div name="code" class="code">// Teapot data
+const static uint16_t kTeapotNumPatches = 32;
+const static uint16_t kTeapotNumVertices = 306;
+uint32_t teapotPatches[kTeapotNumPatches][16] = {
+    {  1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,  15,  16},
+    ...
+    {270, 270, 270, 270, 300, 305, 306, 279, 297, 303, 304, 275, 294, 301, 302, 271}
+};
+ 
+float teapotVertices[kTeapotNumVertices][3] = {
+    { 1.4000,  0.0000,  2.4000},
+    ...
+    { 1.4250, -0.7980,  0.0000}
+};</div>
+
+<p>Finally, before the render starts, we need to convert each one of these  B&eacute;zier patches into a polygon grid. For each converted patch, we set the sixteen control points (lines 26-29), then construct a pair of (u, v) values for each vertex of the grid (we can control the resolution of the grid line 19) which is used to compute a position on the surface (line 33). The function returning this position, computes the four auxillary control points necesary to create a curve along the v direction, using the u parameter. We can then use the v parameter to compute the position on the surface along this curve. The rest of the code sets an array to connect the vertices together (lines 36-45), and pushes the resulting polygon mesh to the list of objects (line 47).</p>
+
+<div name="code" class="code">Vec3f evalBezierCurve(const Vec3f *P, const float &t)                                                                  
+{                                                                                                                                                                                                                                           
+    float b0 = (1 - t) * (1 - t) * (1 - t);                                                                       
+    float b1 = 3 * t * (1 - t) * (1 - t);                                                                         
+    float b2 = 3 * t * t * (1 - t);                                                                                                             
+    float b3 = t * t * t;                                                                                                                                                                                     
+    return P[0] * b0 + P[1] * b1 + P[2] * b2 + P[3] * b3;                     
+}                                                                                                                                                                                                                                           
+                                                                                                                                                                                                                                            
+Vec3f evalBezierPatch(const Vec3f *controlPoints, const float &u, const float &v)                                                                                                                                                                                                                                           
+{                                                                                                                                                                                                                                           
+    Vec3f uCurve[4];                                                                                                                                                                                         
+    for (int i = 0; i < 4; ++i) uCurve[i] = evalBezierCurve(controlPoints + 4 * i, u);                                                                                                                                                                                                                                   
+    return evalBezierCurve(uCurve, v);                                                                                                                                                                    
+}                                                                                                                                                                                                                                           
+                                                                                                                                                                                                                                            
+void generatePolyTeapot(const Matrix44f &o2w, std::vector&ltObject *&gt &objects)                                                                                      
+{                                                                                                                                                                                                                                           
+    uint32_t divs = 16;                                                                                                                                                                                       
+    Vec3f *P = new Vec3f[(divs + 1) * (divs + 1)];                                                                                                                             
+    uint32_t *nvertices = new uint32_t[divs * divs];                                                                                                                                                                                        
+    uint32_t *vertices = new uint32_t[divs * divs * 4];                                                                                                                                                      
+    Vec3f controlPoints[16];                                                                                                                                                                                 
+    for (int np = 0; np < kTeapotNumPatches; ++np) {                                                                                      
+        // set the control points for the current patch                                                                                                                                                    
+        for (uint32_t i = 0; i < 16; ++i)                                                                                                
+            controlPoints[i][0] = teapotVertices[teapotPatches[np][i] - 1][0],                                                                  
+            controlPoints[i][1] = teapotVertices[teapotPatches[np][i] - 1][1],                                                                  
+            controlPoints[i][2] = teapotVertices[teapotPatches[np][i] - 1][2];                                                                  
+        // generate grid                                                                                                                                                                                   
+        for (uint16_t j = 0, k = 0; j <= divs; ++j) {
+            for (uint16_t i = 0; i <= divs; ++i, ++k) {
+                P[k] = evalBezierPatch(controlPoints, i / (float)divs, j / (float)divs);
+            }
+        }
+        // face connectivity
+        for (uint16_t j = 0, k = 0; j < divs; ++j) {
+            for (uint16_t i = 0; i < divs; ++i, ++k) {
+                nvertices[k] = 4;
+                vertices[k * 4] = (divs + 1) * j + i;
+                vertices[k * 4 + 1] = (divs + 1) * (j + 1) + i;
+                vertices[k * 4 + 2] = (divs + 1) * (j + 1) + i + 1;
+                vertices[k * 4 + 3] = (divs + 1) * j + i + 1;
+            }
+        }
+ 
+        objects.push_back(new PolygonMesh(o2w, divs * divs, nvertices, vertices, P));
+    }
+ 
+    delete [] P;
+    delete [] nvertices;
+    delete [] vertices;
+}</div>
+
+<div class="question">
+<img class="right" src="../../../images/upload/bezier/newellteapot_smalld41d.png?" />
+The original teapot was much taller than the actual model. To get a render of the original teapot as designed by Newell, you need to scale it up by a factor of 4:3 along the y-axis. You also need to rotate the teapot along the z-axis by 90 degrees. In Newell's times, the z-axis and y-axis were swapped.
+<div style="clear: both;"></div><!-- don't change that this is to force the div to have same height than img -->
+</div>
+
+<img style="margin: 0px 0px 10px 0px; display: inline-block;" width="670px" class="left" src="../../../images/upload/bezier/teapotrenderd41d.png?" />
+
+<h2>What's Next?</h2>
+
+<p>In the next chapter, we will learn about another technique called fast forward differential to convert a  B&eacute;zier  patch into a grid. Nowadays this technique is not necessary: the conversion steps takes a fraction of the overall time it takes to render the frame. However when computers where slower, it was valuable to speed up this pre-process step.</p>
+
+<div class="question">
+Exercise: try to do a wireframe render of the teapot. Rather than rendering the surface of the patches, convert a series of lines in u and v along the surface of the patches into curves. Curves can be rendered as a polymesh. To do so, create a series of points along the lines and use these positions to create a polymesh in the shape of a tube (or more simply a stripe of quads following the curve's profile).
+</div></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='bezier-curve.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 2 of  6</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='fast-forward-differencing.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/advanced-rendering/bezier-curve-rendering-utah-teapot/bezier-surface by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:19:03 GMT -->
+</html>

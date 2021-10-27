@@ -1,0 +1,260 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/perlin-noise-part-2/perlin-noise-terrain-mesh by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:22:11 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Perlin Noise: Part 2 (Using Perlin Noise to Create a Terrain Mesh)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='Perlin noise, gradient noise, permutation, hashing function, derivatives, interpolant, height map, displacement'>
+<meta name='date' content='2016-05-28 15:53:04'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Perlin Noise: Part 2</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="perlin-noise.html">Perlin Noise</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="perlin-noise-terrain-mesh.html"><b>Using Perlin Noise to Create a Terrain Mesh</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="perlin-noise-computing-derivatives.html">Computing Derivatives</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="improved-perlin-noise.html">Improved Perlin Noise</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code333a.html?id=57&amp;origin=/lessons/procedural-generation-virtual-worlds/perlin-noise-part-2">Source Code</a></div></div></div><p>In this chapter, we will learn about a fun technique that consists of using a 2D Perlin noise to displace the vertex of a mesh to create a terrain. As we mentioned in the first lesson on noise, the noise function is a very useful "procedural texture" primitive from which more complex procedural textures can be created such as for example the fractal or the turbulence pattern. We will use the Perlin noise to start with, and then show an example of a terrain generated using a fractal pattern instead.</p>
+
+<p>This technique will be useful to better understand the importance of computing the derivatives of the Perlin noise function which is the topic of the next chapter.</p>
+
+<p>After reading this chapter, you will be able to reproduce the image below.</p>
+
+<img class="left" style="width: 670px;" src="../../../images/upload/noise-part-2/perlin-noise-terrain-mesh1d41d.png?" />
+
+<p>The idea behind this technique is very simple and similar to what we call <b>displacement mapping</b>. If you look at the grid from the top, you can more easily see that if you overlay the noise image onto the grid you get a perfect match: to each vertex of the grid corresponds a pixel in the noise image. As you know we can define the coordinates of the pixels in some sort of normal device coordinates (the pixel coordinates are then in the range [0,1]). The same can be done with the grid vertices: these are technically called <b>texture coordinates</b>. Let's look at the function we will be using to create the grid:</p>
+
+<div name="code" class="code">PolyMesh* createPolyMeshPlane(
+    uint32_t width = 1,
+    uint32_t height = 1,
+    uint32_t subdivisionWidth = 40,
+    uint32_t subdivisionHeight = 40)
+{
+    PolyMesh *poly = new PolyMesh;
+    poly->numVertices = (subdivisionWidth + 1) * (subdivisionHeight + 1);
+    poly->vertices = new Vec3f[poly->numVertices];
+    poly->st = new Vec2f[poly->numVertices];
+    float invSubdivisionWidth = 1.f / subdivisionWidth;
+    float invSubdivisionHeight = 1.f / subdivisionHeight;
+    for (uint32_t j = 0; j <= subdivisionHeight; ++j) {
+        for (uint32_t i = 0; i <= subdivisionWidth; ++i) {
+            poly->vertices[j * (subdivisionWidth + 1) + i] = Vec3f(width * (i * invSubdivisionWidth - 0.5), 0, height * (j * invSubdivisionHeight - 0.5));
+            poly->st[j * (subdivisionWidth + 1) + i] = Vec2f(i * invSubdivisionWidth, j * invSubdivisionHeight);
+        }
+    }
+
+    poly->numFaces = subdivisionWidth * subdivisionHeight;
+    poly->faceArray = new uint32_t[poly->numFaces];
+    for (uint32_t i = 0; i < poly->numFaces; ++i)
+        poly->faceArray[i] = 4;
+
+    poly->verticesArray = new uint32_t[4 * poly->numFaces];
+    for (uint32_t j = 0, k = 0; j < subdivisionHeight; ++j) {
+        for (uint32_t i = 0; i < subdivisionWidth; ++i) {
+            poly->verticesArray[k] = j * (subdivisionWidth + 1) + i;
+            poly->verticesArray[k + 1] = j * (subdivisionWidth + 1) + i + 1;
+            poly->verticesArray[k + 2] = (j + 1) * (subdivisionWidth + 1) + i + 1;
+            poly->verticesArray[k + 3] = (j + 1) * (subdivisionWidth + 1) + i;
+            k += 4;
+        }
+    }
+
+    return poly;
+}</div>
+
+<p>The texture coordinate of the vertex is computed line 16. This is also a space in which the coordinates are in the range [0,1]. The vertex in the upper left corner of the grid has the texture coordinates [0,0], while the vertex in the lower-right coordinate has the texture coordinate [1,1]. It becomes thus easy to use the vertex texture coordinates to do a lookup in the noise image.</p>
+
+<div class="important">Note that in this example, we use the noise image to read the values from the 2D noise function, but we could evaluate the 2D noise function directly if we wanted to. We just decided to re-use the array we created in the first chapter to output the result of the 2D noise function to an image file. When an image is used to displace the vertices of an object, we say that this image is a <b>height map</b>.</div>
+
+<p>In case of a height map, we generally use the brightness (the luminance for example) of the pixels' color to control the amplitude of displacement. Generally the brighter the pixel, the greater the displacement though of course you can map the pixel value to displacement in a completely different way if you wish. It all depends on the effect you intend to create. All you need to remember is that you use an image to somehow control the amount by which the vertices of the object are displaced or moved along for example their normal.</p>
+
+<div name="code" class="code">for (unsigned j = 0; j < imageHeight; ++j) {
+    for (unsigned i = 0; i < imageWidth; ++i) {
+        // Perlin noise is in the range [-1:1]
+        float perlinNoise = PerlinNoise::evalAtPoint(Vec3f(i, j, 0) * (1 / 128.f));
+        noiseMap[j * imageWidth + i] = (perlinNoise + 1) * 0.5;
+    }
+}
+
+// displace
+for (uint32_t i = 0; i < poly->numVertices; ++i) {
+    Vec2f st = poly->st[i];
+    uint32_t x = std::min(static_cast<uint32_t>(st.x * imageWidth), imageWidth - 1);
+    uint32_t y = std::min(static_cast<uint32_t>(st.y * imageHeight), imageHeight - 1);
+    poly->vertices[i].y = 2 * noiseMap[y * imageWidth + x] - 1;
+}</div>
+
+<p>Keep in mind that the values of the Perlin noise are in the range [-1,1]. But we remapped these values to the range [0,1] when we stored the values in the image buffer (line 5). Though the values are mapped again back to the range [-1,1] when we displace the vertices later on (line 15) because that way, the mesh will stay centred around the origin along the y-axis. We will either push the vertices upward (if the values are greater than 0) or downward (if the values are lower than 0) and if the value is 0, the vertex y-coordinate will stay 0.</p>
+
+<p>If you render this mesh with the noise image applied on top as a texture map, you should get something similar to the first image of this chapter. Note how the white/bright area of the noise image corresponds to bump in the mesh, while dark areas in the image corresponds to dents or valleys (and note how the amount of displacement is proportional to the pixel values).</p>
+
+<p>As mentioned in the introduction of this chapter, you can use more interesting procedural patterns to displace the mesh vertices, such as a fractal pattern which can be construct as a weighted sum of noise layers. Check the <a href="../../procedural-generation-vritual-worlds/procedural-patterns-noise-part-1/simple-pattern-examples">previous lesson on noise</a> to learn now to generate a fractal pattern using the noise function. Here is the code to generate the fractal image that was used to displace the mesh:</p>
+
+<div name="code" class="code">uint32_t numLayers = 5;
+float maxVal = 0;
+for (uint32_t j = 0; j < imageHeight; ++j) {
+    for (uint32_t i = 0; i < imageWidth; ++i) {
+        float fractal = 0;
+        float amplitude = 1;
+        Vec3f pt = Vec3f(i, j, 0) * (1 / 128.f);
+        for (uint32_t k = 0; k < numLayers; ++k) {
+            fractal += (1 + PerlinNoise::evalAtPoint(pt)) * 0.5 * amplitude;
+            pt *= 2;
+            amplitude *= 0.5;
+        }
+        if (fractal > maxVal) maxVal = fractal;
+        noiseMap[j * imageWidth + i] = fractal;
+    }
+}
+
+for (uint32_t i = 0; i < imageWidth * imageHeight; ++i)
+    noiseMap[i] /= maxVal;</div>
+
+<p>A fractal image generally contains details of higher frequency than in a single layer of noise. Thus, to see these details in the displacement, it is likely that you will have to increase the density of the mesh itself. Here is a render of the mesh displaced with a fractal image.</p>
+
+<img class="left" style="width: 670px;" src="../../../images/upload/noise-part-2/perlin-noise-terrain-mesh2d41d.png?" />
+
+<p>As suggested in the previous lesson, this technique can be used to generate realistic terrains (hopefully the image above is convincing enough). We can also use the noise function to create and animate water surfaces. In this example, the procedural pattern we used (a fractal) is pretty simple. You can play with the parameters a bit to modify the look of the terrain, but we will also learn in another lesson how to add effects such as erosion to increase the realism of the terrain.</p>
+
+<p>As a final note, we haven't computed the normal of the mesh after displacement. How do we do that? This is the topic of our next chapter. We will learn how to use the noise function derivatives to compute a "true" normal at the vertex position after displacement.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='perlin-noise.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 2 of  5</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='perlin-noise-computing-derivatives.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/perlin-noise-part-2/perlin-noise-terrain-mesh by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:22:16 GMT -->
+</html>

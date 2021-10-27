@@ -1,0 +1,289 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/rendering-3d-scene-overview/rendering-3d-scene by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:09:10 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Rendering an Image of a 3D Scene: an Overview (And It Follows with a 3D Scene)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='ray tracing, rasterization, rasterisation, pixel, discretisation, raster, aliasing, vector graphics, triangle, triangulation, smooth shading, sampling, tessellation, polygonal mesh, NURBS, subdivision surface, voxel, implicit surface, meatballs, bloodies, rendering primitive, perspective projection, foreshortening effect, orthographic projection, perspective divide, hidden surface elimination, hidden surface determination, hidden surface removal, occlusion culling, visible surface determination, shading, absorption, reflection, normal, scattering, shader, light transport, forward tracing, backward tracing, indirect diffuse, wireframe, frustum, screen space, raster space, depth sorting algorithm, acceleration structure, law of reflection, reflected direction, incident direction, Snell law, Fresnel equation, roughness, specular reflection, subsurface scattering, indirect diffuse, indirect specular, caustics, soft shadows, global illumination, radiosity, Monte Carlo ray tracing, primary ray, secondary ray, shadow ray, unidirectional path tracing, Appel, Whitted, photon mapping, albedo, energy conservation, physically plausible rendering, cosine law'>
+<meta name='date' content='2014-11-12 23:28:46'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Rendering an Image of a 3D Scene: an Overview</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="computer-discrete-raster.html">It All Starts with a Computer and a Computer Screen</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="rendering-3d-scene.html"><b>And It Follows with a 3D Scene</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="3d-rendering-overview.html">An Overview of the Rendering Process: Visibility and Shading</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="perspective-projection.html">Perspective Projection</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="visibility-problem.html">The Visibility Problem</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="light-simulator.html">A Light Simulator</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction-light-transport.html">Light Transport</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction-shading.html">Shading</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="summary-rendering.html">Summary and Other Considerations About Rendering</a></div></div></div><h2>And It Follows with a 3D Scene</h2>
+
+<p>Before we can speak about rendering, we need to consider what we are going to render, what we are looking at. If you have nothing to look at, there is nothing to render.</p>
+
+<p>The real world is made of objects having a very wild variety of shapes, appearances and structures. For example what's the difference between smoke, a chair and water making up the ocean? In computer graphics we generally like to see objects as either being solid or not. However in the real world the only thing that differentiates the two, is the density of matter making up these objects. Smoke is made of molecules loosely connected to each other and separated by a large amount of empty space, while wood making up a chair is made of molecules tightly packed into the smallest possible space. In CG though, we generally just need to define the object external shape (we will speak about how we render non solid objects later on in this lesson). How do we do that?</p>
+
+<p>In <a href="http://localhost/lessons/generic/get-started/gentle-introduction-to-computer-graphics-programming">the first lesson</a> of Scratchapixel, we already introduced the idea that to define shape within the memory of a computer, we needed to start defining the concept of point in 3D space. Generally, a point is defined as three floats within the memory of a computer, one for each of the three axis of the Cartesian coordinate system: the x-, y- and z-axis. From here, we can simply define several points in space and connect them to each other to define a surface (a polygon). Note that polygons should always be coplanar which means that all points making up a face or polygon should lie on the same plane. With three points, you can create the simplest possible shape of all: a <b>triangle</b>. You will see triangles used everywhere especially in ray-tracing because many different techniques have been developed to efficiently compute the intersection of a line with a triangle. When face or polygons have more than three points (also called vertices), it's not uncommon to convert these faces into triangles, a process called <b>triangulation</b>.</p>
+
+<div style="width: 530px;" class="captionImage right">
+<img class="left" src="../../../images/upload/rendering-3d-scene-overview/triangled41d.png?"/><p class="caption left">Figure 1: the basic brick of all 3D object is a triangle. A triangle can be created by connecting (in 2D or 3D) 3 points or vertices to each other. More complex shapes can be created by assembling triangles together.</p>
+</div>
+
+<p>We will explain later in this lesson, why converting geometry to triangles is a good idea. But the point here is that the simplest possible surface or object you can create is a triangle, and while a triangle on its own is not a very useful, you can though create more complex shapes from assembling triangles together. In many ways, this is what modeling is about. The process is very similar to putting bricks together to create more complex shapes and surfaces.</p>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left" src="../../../images/upload/rendering-3d-scene-overview/segmentd41d.png?"/><p class="caption left">Figure 2: to approximate a curved surface we sample the curve along the path of the curve and connect these samples to one another.</p>
+</div>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left" src="../../../images/upload/rendering-3d-scene-overview/tesselationd41d.png?"/><p class="caption left">Figure 3: you can use more triangles to improve the curvature of surfaces, but the geometry will becomes heavier to render.</p>
+</div>
+
+<div class="scratchquote">The world is not polygonal!</div>
+
+<p>Most people new to computer graphics often ask though, how can curved surfaces be created from triangles, when a triangle is clearly a flat and angular surface. First the way we actually define the surface of objects in CG (using triangles or polygons) is a very crude representation of reality. What may seem like a flat surface (for example the surface of a wall) to our eyes, is generally an incredible complex landscape at the microscopic level. Interestingly enough, the microscopic structure of objects has a great influence of their appearance, not on their overall shape. Something worth keeping in mind. But to come back to the main question, using triangles or polygons is indeed not the best way of representing curved surfaces. It actually gives a faceted look to objects, a little bit like a cut diamond (this facet look can be slightly improve with a technique called <b>smooth shading</b>, but smooth shading is just a trick we will learn about when we go to the lessons on shading). If you draw a smooth curve, you can approximate this curve by placing a few points along this curve and connecting these points with straight lines (which we call segments). To improve this approximation you can simply reduce the size of the segment (make them smaller) which is the same as creating more point along the curve. The process of actually placing points or vertices along a smooth surface is called <b>sampling</b> (the process of converting a smooth surface to a triangle mesh is called <b>tessellation</b>. We will explain further in this chapter how smooth surface can actually be defined). Similarly, with 3D shapes, we can create more and smaller triangles to better approximate curved surfaces. Of course, the more geometry (or triangles) we create, the longer it will take to render this object. Which is why, the art of rendering is often to find a tradeoff between the amount of geometry you use to approximate the curvature of object and the time it takes to render this 3D model. The amount of geometric detail you put in a 3D model also depends on how close you will see this model in your image. The closer you are to the object, the more details you may want to see. Dealing with model complexity is also a very large field of research in computer graphics (a lot of research has been done to find automatic/adaptive ways of adjusting the amount of triangles an object is made of depending on its distance to camera or to the curvature of the object).</p>
+
+<div class='question'>In other words, it is impossible to render a perfect circle or a perfect sphere with polygons or triangles. However, keep in mind that computers work on discrete structures, as do monitors. There is no reason for a renderer to be able to perfectly render shapes like circles if they'll just be displayed using a raster screen in the end. The solution (which has been around for decades now) is simply to use triangles that are smaller than a pixel, at which point no one looking at the monitor can tell that your basic primitive is a triangle. This idea has been used very widely in high-quality rendering software such as Pixar's RenderMan, and in the past decade, it has appeared in real-time applications as well (as part of the tessellation process).</div>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left" src="../../../images/upload/rendering-3d-scene-overview/bezierpatchd41d.png?"/><p class="caption left">Figure 4: a Bezier patch and its control points which is actually represented in this image by the orange net. Note how the resulting surface is actually not passing through the control points or vertices (excepted at the edge of the surface which is property of Bezier patches actually).</p>
+</div>
+
+<div style="width: 530px;" class="captionImage right">
+<img class="left" src="../../../images/upload/rendering-3d-scene-overview/subdivisiond41d.png?"/><p class="caption left">Figure 5: a cube turned into a sphere (almost a sphere) using the subdivision surface algorithm. The idea behind this algorithm is to create a smoother version of the original mesh by recursively subdividing it.</p>
+</div>
+
+<p>Polygonal meshes are easy which is why they are popular (most objects you see in CG feature films or video games are defined that way: as an assembly of polygons or triangles) however as suggested before, they are not great to model curved or organic surfaces. This became a particular issue, when computers started to be used to design manufactured objects such as cars (CAD). NURBS or Subdivision surfaces were designed to address this particular shortcoming. They are based on the idea that points only define a control mesh from which a perfect curved surface can be computed mathematically. The surface itself is purely the result of an equation thus it can not be rendered directly (nor is the control mesh which is only used as an input to the algorithm). It needs to be sampled, similarly to the way we sampled the curve earlier on (the points forming the base or input mesh are usually called control points. One of the characteristics of these techniques is that the resulting surface, in general, does not pass through these control points). The main advantage of this approach is that you need fewer points (fewer compared to the number of points required to get a smooth surface with polygons) to control the shape of a perfectly smooth surface, which can then be converted to a triangular mesh smoother than the original input control mesh. While it is obviously possible to create curved surfaces with polygons, editing them is far more time consuming (and still less accurate) than when similar shapes can be defined with just a few points as with NURBS and Subdivision surfaces. If they are superior, why are they not used everywhere? In fact they almost are. They are (slightly) more expansive to render than polygonal meshes because a polygonal mesh needs to be generated from the control mesh first (it takes an extra step), which is why they are not always used in video games (but many game engines such as the Cry Engine implement them), but they definitely are in films. NURBS are slightly more difficult to manipulate overall than polygonal meshes. Which is why artists generally use subdivision surfaces instead, but they are still used in design and CAD, where a high degree of precision is needed. Nurbs and Subdivisions surfaces will be studied in the Geometry section, however in a further lesson of this section, we will learn about Bezier curves and surfaces (to render the Utah teapot), which in way, are quite similar to NURBS.</p>
+
+<div class='question'>NURBS and Subdivision surfaces are not really similar. NURBS are indeed defined by a mathematical equation. They are actually part of a family of surfaces called parametric surfaces (see below). Subdivision surfaces are more the result of a 'process' applied to the input mesh, to smooth its surface by recursively subdividing it. Both techniques are detailed in the Geometry section.</div>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left" src="../../../images/upload/rendering-3d-scene-overview/volumed41d.png?"/><p class="caption left">Figure 6: to represent fluids such as smoke or liquids, we need to store information such the volume density in the cells of a 3D grid.</p>
+</div>
+
+<p>In most cases, 3D models are generated by hand. By hand, we mean that someone actually creates vertices in 3D space and connects them to each other to make up the faces of the object. However it is also possible to use a simulation software to generate geometry. This is generally how you create water, smoke or fire. Special programs simulate the way fluids move and generate a polygon mesh from this simulation. In the case of smoke or fire, the program will not generate a surface but a 3D dimensional grid (a rectangle or a box which is divided in equally spaced cells also called <b>voxels</b>). Each cell of this grid can be seen as a small volume of space which is either empty or occupied by smoke. Smoke is mostly defined by its density which is the information we will store in the cell. Density is just a float, but since we deal with a 3D grid, a 512x512x512 grid already consumes about 512Mb of memory (and we may need to store more data than just density such as the smoke or fire temperature, its color, etc.). The size of this grid is 8 times larger each time we double the grid resolution (a 1024x1024x1024 requires 4Gb of storage). Fluid simulation is computationally intensive, the simulation generates very large files and rendering the volume itself generally takes more time than rendering solid objects (we need to use a special algorithm known as ray-marching which we will briefly introduce in the next chapters). In the image above (figure 6), you can see a screen shot of a 3D grid created in Maya.</p>
+
+<p>When ray tracing is used, it is not always necessary to convert an object into a polygonal representation to render it. Ray tracing requires to compute the intersection of rays (which are simply lines) with the geometry making up the scene. Finding if a line (a ray) intersects a geometrical shape, can sometimes be done mathematically. This is either possible because:</p>
+
+<ul>
+<li>a <b>geometric solution</b> or,</li>
+<li>an <b>algebraic solution</b> exists to the ray-object intersection test. This is generally possible when the shape of the object can be defined mathematically, with an equation. More generally, you can see this equation, as a function representing a surface (such as the surface of a sphere) over all space. These surfaces are called <b>implicit surfaces</b> (or algebraic surfaces) because they are defined implicitly, by a function. The principle is very simple. Imagine you have two equations:
+$$
+\begin{array}{l}
+y = 2x + 2\\
+y = -2x.\\
+\end{array}
+$$
+
+<img class="right" src="../../../images/upload/rendering-3d-scene-overview/equationd41d.png?"/>
+
+You can see a plot of these two equations in the adjacent image. This is an example of a <a href="http://en.wikipedia.org/wiki/System_of_linear_equations">system of linear equations</a>. If you want to find out if the two lines defined by these equations meet in one point (which you can see as an intersection), then they must have one x for which the two equations gives the same y. Which you can write as:
+
+$$2x + 2 = -2x.$$
+
+<p>Solving for x, you get:</p>
+
+$$
+\begin{array}{l}
+4x + 2 = 0\\
+4x = -2\\
+x = -\dfrac{1}{2}\\
+\end{array}
+$$
+
+Because a ray can also be defined with an equation, the two equations, the equation of the ray and the equation defining the shape of the object, can be solved like any other system of linear equations. If a solution to this system of linear equations exists, then the ray intersects the object. 
+</li>
+</ul>
+
+<p>A very good and simple example a shape which intersection with a ray can be found using the geometric and the algebraic method, is a sphere. You can find both methods explained in the lesson <a href="https://www.scratchapixel.com/lessons/index.php">Rendering Simple Shapes</a>.</p>
+
+<div class='question'>Earlier on in the lesson, we mentioned that NURBS and Subdivision surfaces were also somehow defined mathematically. While this is true, there is a difference between NURBS and implicit surfaces (Subdivision surface can also be considered as a separate case, in which the base mesh is actually processed to produce a smoother and higher resolution mesh). NURBS are actually defined by what we call a parametric equation, an equation which is the function of one or several parameters. In 3D, the general form of this equation can be defined as follow:
+
+$$f(u,v) = (x(u,v), y(u,v), z(u,v)).$$
+
+The parameters u and v are generally in the range 0 to 1. An implicit surface is actually defined by a polynomial which is a function of three variables: x, y, and z.
+
+$$p(x, y, z) = 0.$$
+
+For example a sphere of radius R centred at the origin is defined parametrically with the following equation:
+
+$$f(\theta, \phi) = (\sin(\theta)\cos(\phi), \sin(\theta)\sin(\phi), \cos(\theta)).$$
+
+Where the parameters u and v are actually being replaced in this example by \(\theta\) and \(\phi\) respectively and where \(0 \leq \theta \leq \pi\) and \(0 \leq \phi \leq 2\pi\). The same sphere defined implicitly has the following form:
+
+$$x^2 + y^2 + z^2 - R^2 = 0.$$
+</div>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left" src="../../../images/upload/rendering-3d-scene-overview/metaballd41d.png?"/><p class="caption left">Figure 7: metaballs are useful to model organic shapes.</p>
+</div>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left" src="../../../images/upload/rendering-3d-scene-overview/booleand41d.png?"/><p class="caption left">Figure 8: example of constructive geometry. The volume defined by the sphere was removed from the cube. You can see the two original object on the left, and the resulting shape on the right.</p>
+</div>
+
+<p>Implicit surfaces are very useful in modeling but are not very common (and certainly less common than they used to). It is possible to use implicit surfaces to create more complex shapes (implicit primitives such as spheres, cubes, cones, etc. are combined through boolean operations), a technique called <a href='http://en.wikipedia.org/wiki/Constructive_solid_geometry'>constructive solid geometry</a> (or CSG). <a href='http://en.wikipedia.org/wiki/Metaballs'>Metaballs</a> (invented in the early 1980s by Jim Blinn) is another form of implicit geometry used to create organic shapes.</p>
+
+<p>The problem though with implicit surfaces, is that they are not easy to render. While it's often possible to ray trace them directly (we can compute the intersection of a ray with an implicit surface using an algebraic approach, as explained earlier), they first need to be converted to a mesh otherwise. The process of converting an implicit surface to a mesh is not as straightforward as with NURBS or Subdivision surface and require a special algorithm such as the <a href="http://en.wikipedia.org/wiki/Marching_cubes">marching cube</a> algorithm (proposed by Lorensen and Cline in 1987). It can also potentially lead to creating heavy meshes.
+
+<div class='question'>
+Check the section on Geometry, to read about these different topics in details.
+</div>
+
+<h2>Triangle as the Rendering Primitive</h2>
+
+<p>In this series of lessons, we will study an example of implicit surface with the ray-sphere intersection test. We will also see an example of parametric surface, with the Utah teapot, which is using Bezier surfaces. However, in general, most rendering API choses the solution of actually converting the different geometry types to a triangular mesh, and render the triangular mesh instead. This has several advantages. Supporting several geometry types such as polygonal meshes, implicitly or parametric surfaces requires to write a ray-object routine for each supported surface type. This is not only more code to write (with the obvious disadvantages it may have), but it is also difficult if you make this choice, to make these routines work in a general framework, which often results in downgrading the performance of the render engine.</p>
+
+<div class='question'>Keep in mind that rendering is more than just rendering 3D objects. It also needs to support many features such as motion blur, displacement, etc. Having to support many different geometry surfaces, means that each one of these surfaces needs to work with the entire set of supported features, which is much harder than if all surfaces are converted to the same rendering primitive, and if we make all the features work for this one single primitive only.</div>
+
+<p>You also generally get better performances if you limit your code to rendering one primitive only because you can focus all your efforts to render this one single primitive very efficiently. Triangles have generally been the preferred choice for ray tracing. A lot of research has been done in finding the best possible (fastest/least instructions, least memory usage and most stable) algorithm to compute the intersection of a ray with a triangle. However, other rendering APIs such as OpenGL also render triangles and triangles only, even though they don't use the ray tracing algorithm. Modern GPUs in general, are designed and optimized to perform a single type of rendering based on triangles. Someone (humorously) wrote on this topic:</p>
+
+<div class='scratchquote'>Because current GPUs are designed to work with triangles, people use triangles and so GPUs only need to process triangles, and so they're designed to process only triangles.</div>
+
+<p>Limiting yourself to rendering one primitive only, allows you to build common operations directly into the hardware (you can build a component which is extremely good at performing these operations). Generally, triangles are nice to work with for plenty of reasons (including those we already mentioned). They are always coplanar, they are easy to subdivide into smaller triangles yet they are indivisible. The maths to interpolate texture coordinates across a triangle are also simple (something we will be using later to apply a texture to the geometry). This doesn't mean that a GPU could not be designed to render any other kind of primitives efficiently (such as quads).</p>
+
+<h2>A 3D Scene is More Than Just Geometry</h2>
+
+<p>Typically though a 3D scene is more than just geometry. While geometry is the most important element of the scene, you also need a camera to look at the scene itself. Thus generally, a scene description also generally includes a camera. And a scene without any light would be black, thus a scene also needs lights. In rendering, all this information (the description of the geometry, the camera and the lights) are contained within a file called the scene file. The content of the 3D scene can also be loaded in the memory of a 3D package such as Maya or Blender. In this case, when a user clicks on the render button, a special program or plugin will go through each object contained in the scene, each light and export the whole lot (including the camera) directly to the renderer. Finally, you will also need to provide the renderer with some extra information such as the resolution of the final image, etc. These are usually called global render settings or options.</p>
+
+<h2>In Summary</h2>
+
+<p>What you should remember from this chapter is that, we first need to consider what a scene is made of before considering the next step, which is to create an image of that 3D scenes. A scene needs to contain three things: geometry (one or several 3D objects to look at), lights (without which the scene will be black) and a camera, to define the point of view from which the scene will be rendered. While many different techniques can be used to describe geometry (polygonal meshes, NURBS, subdivision surfaces, implicit surfaces, etc.) and while each one of these types may be rendered directly using the appropriate algorithm, it is easier and more efficient to only support one rendering primitive. In ray tracing and on modern GPUs, the preferred rendering primitive is the triangle. Thus, generally, geometry will be converted to triangular meshes before the scene gets rendered.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='computer-discrete-raster.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 2 of  9</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='3d-rendering-overview.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/rendering-3d-scene-overview/rendering-3d-scene by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:09:18 GMT -->
+</html>

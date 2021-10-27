@@ -1,0 +1,286 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1 by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 16:59:32 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Value Noise and Procedural Patterns: Part 1 (Introduction)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='value noise, procedural pattern generation, deterministic, random number generator, RNG, periodic, continuity, differentiability, sampling, aliasing, white noise, solid textures, permutation, hash table'>
+<meta name='date' content='2016-05-15 11:39:24'>
+
+<link rel="stylesheet" type="text/css" href="../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../css/page.css"/>
+
+<link href='../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../indexf17c.html","../../indexf17c.html","../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../indexf17c.html","../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+	<!-- Open Graph data -->
+	<meta property='fb:app_id' content='1535346446701691'/>
+	<meta property='og:title' content='Value Noise and Procedural Patterns: Part 1'/>
+	<meta property='og:type' content='article'/>
+	<meta property='og:url' content='https://www.scratchapixel.com//lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1'/>
+	<meta property='og:image' content='https://www.scratchapixel.com/images/design/logo_scratchapixel2015.png'/>
+	<meta property='og:description' content='Lesson summary: Procedural Patterns and Noise (part 1)'/> 
+	<meta property='og:site_name' content='Scratchapixel'/>
+	<meta property='fb:admins' content='1260067275'/>
+	
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Value Noise and Procedural Patterns: Part 1</div><div style='width: 100%; margin: 0px; display: table; vertical-align: middle; border: 1px none red;'>
+			<div style='display: table-row; height: 30px;'>
+			<div style='margin: 0px; padding: 0px; border: 1px none blue ; display: table-cell; vertical-align: middle;'>
+				<a href='https://twitter.com/share' class='twitter-share-button' data-lang='en'>Tweet</a>
+			</div></div>
+			<div style='display: table-row; height: 30px;'>
+			<div style='padding: 0px; border: 1px none blue ; display: table-cell; vertical-align: middle;'>
+				<div style='margin-top: 5px;' class='fb-like' data-share='true' data-width='450' data-show-faces='true'></div>
+			</div></div></div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="procedural-patterns-noise-part-1/introduction.html"><b>Introduction</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="procedural-patterns-noise-part-1/creating-simple-1D-noise.html">Creating a Simple 1D Noise</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="procedural-patterns-noise-part-1/creating-simple-2D-noise.html">Creating a Simple 2D Noise</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="procedural-patterns-noise-part-1/simple-pattern-examples.html">Simple Pattern Examples</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../code11bf.html?id=55&amp;origin=/lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1">Source Code</a></div></div></div><span style='display: inline-block; width: 100%; margin: 0px 0px 10px 0px;'><i>Keywords: value noise, procedural pattern generation, deterministic, random number generator, RNG, periodic, continuity, differentiability, sampling, aliasing, white noise, solid textures, permutation, hash table.</i></span><div class="scratchquote">
+"To the physicist, unpredictable changes of any quantity V varying in time t are known as noise." (The Science of Fractal Images, Richard F. Voss).
+</div>
+
+<p>This lesson explains the concept of noise in a very simple (almost naive) form. You will learn what noise is, what its properties are and what you can do with it. Noise is not a complicated concept to understand, but it has many subtleties. Using it right requires an understanding of how it works and how it is made. To create some images and experiment with various parameters, we will implement a simple (but fully functional) version of the noise known as <b>value noise</b>. Keep in mind while reading this lesson that we will be overlooking many techniques which are too complex to be fully studied here. This is just a brief <b>introduction</b> to noise and a few of its possible applications. The website offers many lessons where each topic mentioned in this lesson can be studied individually (aliasing, texture generation, complex noise functions, landscape cloud and water surface generation, as well as a few advanced programming techniques such bitwise arithmetic, hashing, etc.).</p>
+
+<h2>Historical Background</h2>
+
+<p>Noise was developed in the mid 80's as an alternative to using images for texturing objects. We can map objects with images to add visual complexity to their appearance. In CG this is known as texture mapping. However in the mid 80's, computers had a very limited memory and images used for texturing would not easily fit in RAM. People working in CG studios started to look for alternative solutions. Objects that were rendered with solid colors looked too clean. They needed something to break this clean look by modulating visual properties (color, shininess) of objects across their surface. In programming we usually use <b style="font-family: Ariel, sans-serif;">random number generators</b> whenever we need to create random numbers. However using a <b>RNG</b> (random number generator) to add variation to the appearance of a 3D object isn't sufficient. Random patterns we can observe in nature are usually smooth. Two points on the surface of a real object usually look almost the same when they are fairly close to each other. But two points on the surface of a same object which are far apart can look very different. In other words local changes are gradual, while global changes can be large. RNG do not have this property. Every time we call them they return numbers which are not related (uncorrelated) to each other. Therefore calling this function is likely to produce two very different numbers. This would be unsuitable for introducing a slight variation to the visual appearance of two points that are spatially close. Here is an example: let's observe the image of a real rock (figure 1 left) and let's assume that our task is to create a CG image that reproduces the look of this object. You can't use textures (the most obvious solution is to take this image and map it on a plane). All we have is a plane which without texturing, looks completely flat (uniform color). This example is interesting because we can observe that the rock pattern is made of three main colors: green, pink and grey. These colors are more or less distributed in equal amount across the surface of the rock. The first obvious solution to this problem is to open this image with Photoshop for instance, and to pick up each one of these three average colors in order to be able to reuse them in a program to procedurally generate a pattern that looks more or less similar to our reference picture. This is what the following code does. However for now all we can do to create variation from pixel to pixel is to use the C <span class="code-inline">drand48()</span> function which returns a random value in the range [0:1].</p>
+
+<div name="code" class="code">void GenerateRandPattern()
+{
+    unsigned imageWidth, imageHeight;
+    imageWidth = imageHeight = 512;
+    static const unsigned kNumColors = 3;
+    Color3f rockColors[ kNumColors ] = {
+        { 0.4078, 0.4078, 0.3764 },
+        { 0.7606, 0.6274, 0.6313 },
+        { 0.8980, 0.9372, 0.9725 } };
+    std::ofstream ofs( "./rockpattern.ppm" );
+    ofs << "P6\n" << imageWidth << " " << imageHeight << "\n255\n";
+    for ( int j = 0; j < imageWidth; ++j )
+    {
+        for ( int i = 0; i < imageHeight; ++i )
+        {
+            unsigned colorIndex = std::min( unsigned( drand48 () * kNumColors ), kNumColors - 1 );
+            ofs << uchar( rockColors[ colorIndex ][ 0 ] * 255 ) <<
+                   uchar( rockColors[ colorIndex ][ 1 ] * 255 ) <<
+                   uchar( rockColors[ colorIndex ][ 2 ] * 255 );
+        }
+    }
+    ofs.close();
+}</div>
+
+<div class="captionImage right" style="width: 531px;">
+<img class="left" src="../../images/upload/noise-part-1/pattern-gen-1d41d.png?" />
+<p class="caption left">Figure 1: on the left our sample pattern (photograph of a rock). In the middle, result of our program generating a random pattern from three colors picked up in the source image. On the right, a region of the middle image (10x10 pixels) have been copied and resized to a larger picture. We also applied a gaussian blur to the result in Photoshop to get a smoother result.</p>
+</div>
+
+<p>As you can see in the middle of figure 1, the result of this program is not convincing (in fact this pattern has a name; it is called <b>white noise</b>. We will explain what white noise is later, but for now just remember that it looks like the image in the middle of figure 1). We use a RNG to select a color for each pixel of the procedurally generated texture, which causes large variation from pixel to pixel. To improve the result, we copied a small region of the texture (10x10 pixels) which we resized (enlarged) to the dimension of the original image (256x256 pixels). Enlarging this portion of the frame will blur the pixels, but to make the result even smoother, we applied a gaussian blur on top in Photoshop. We haven't yet matched the reference image well, but as you can see, the resulting image (right image in figure 1) is already better than the original one (middle). Locally we do have small variations (small changes in color from pixel to color) while globally we do have large variations (mix of the three input colors).</p>
+
+<p>The conclusion of this experiment is that to create a smooth random pattern, we need to assign random values at fixed position on a grid which we call a <b>lattice</b> (in our example the grid corresponds to the pixel locations of our 10x10 input image) using a RNG, and blur these values using something equivalent to a gaussian blur (a smoothing function to blur these random values). In the next chapter we will show you how this can be implemented. But for now all you need to remember is that noise (within the context of computer graphics) is a function that blurs random values generated on a grid (which we often refer to as a lattice).</p>
+
+<p>The process we just described, is very similar to bilinear interpolation (see lesson on interpolation). In the following example (figure 2) we have created a 2D grid of size 10x10, set a random number at each vertex of the grid and used linear interpolation to render a larger image.</p>
+
+<div class="captionImage right" style="width: 531px;">
+<img class="left" src="../../images/upload/noise-part-1/linear-interpolationd41d.png?" />
+<p class="caption left">Figure 2: at each vertex of a 10x10 grid we generate a random number. We generate a bigger image (on the right) by interpolating these values. This can be done with linear interpolation.</p>
+</div>
+
+<p>As you can see the quality of the result is not very good. We have pointed out in the lesson on interpolation that that bilinear interpolation was the simplest possible technique for interpolating data and that to improve the quality of the result (if needed) it was possible to use interpolants (the function used to interpolate the data) of higher degrees. This will be explained in detail in the next chapter and we will be able to write a noise function that provides better results than this simple linear interpolation of 2D grid data.</p>
+
+<div class="question">
+<img class="captionImage right" src="../../images/upload/noise-part-1/tron-1982.png" />
+The most popular implementation of noise was written by Ken Perlin in 1983 (and is probably the first one of its kind) while he was working on the 1982 version of the film Tron (&copy; Walt Disney Pictures). If you go on his <a href="http://www.noisemachine.com/talk1">website</a> (or search for Ken Perlin in your favorite search engine), you will easily find a reference to the page where Ken Perlin himself gives the history of his noise pattern. Ken Perlin was awarded in 1997 with an Academy Award for Technical Achievement from the Academy of Motion Picture Arts and Sciences for his contribution to the film. He presented his work at Siggraph in 1984 and published a paper in 1985, "An Image Synthesiser" which is seminal in the field of texture synthesis. It is highly recommended that you read this paper if you are interested in learning about the basic of the noise function (and its development history). Perlin noise is explained in the lesson Noise Part 2.
+</div>
+
+<h2>The World of Procedural Texturing</h2>
+
+<p>The development of noise lead to a whole new area of research in computer graphics. Noise can be seen as a basic building block from which many interesting procedural textures (also called <b>solid textures</b>, see lesson on Texturing) can be generated. In the world of procedural texturing many types of textures can be generated which are not always trying to resemble natural patterns. It is quite simple for instance to write a program for generating a brick wall type of pattern. Some patterns can be regular, irregular or stochastic (non deterministic).</p>
+
+<div class="captionImage right" style="width: 531px;">
+<img class="left" style="width: 531px;" src="../../images/upload/noise-part-1/realpatternsd41d.png?" />
+<p class="caption left">Figure 3: many patterns found in the real word can be re-produced with procedural texturing. Noise can be used anywhere where these patterns exhibit some sort of randomness. It can also be used to vary the density of a volume to simulate clouds or to animate the surface of a plane to simulate a water surface.</p>
+</div>
+
+<p>Apart from regular patterns (which only obey geometric rules and are perfect in shape), all other patterns can use noise to introduce irregularities or drive the apparent randomness to the procedurally generated texture. After Ken Perlin introduced his version of the noise function, many people in the CG community started to use it for modeling complex materials, objects, such as terrains, clouds or animating water surfaces. Noise is not limited to changing the visual appearance of an object but can also be used for procedural modeling, to displace the surface of an object (for generating terrains) or controlling the density of a volume (cloud modeling). By offsetting the noise input from frame to frame, we can also use it for procedurally animating objects. It was the favourite method until the mid 90's for animating water surfaces (Jerry Tessendorf proposed a more realistic method in the late 90's. See the lesson on Animating Ocean Water).</p>
+
+<p>Some examples of simple solid textures (fractal) are given in the last chapter of this lesson. The lesson on Texture Synthesis will provide you with more information on this topic.</p>
+
+<h2>Main Advantage/Disadvantage of Noise</h2>
+
+<p>As we mentioned in the introduction noise has the advantage of being compact. It doesn't use a lot of memory compared to texture mapping and implementing a noise function is not very complex (a noise function requires little storage of data). From this very basic function, it is also possible to create a large variety of textures (we will give some examples in the last chapter of this lesson). Finally using noise to add texture to an object doesn't require any parametrisation of the surface which is usually needed for texture mapping (where we need texture coordinates).</p>
+
+<p>On the other hand, they are usually slower than texture mapping. The noise function requires the execution of quite a few math operations (even if they are simple there's quite a few of them) while texture mapping only requires access to the pixels of a texture (an image file) that is loaded in memory.</p>
+
+<h2>Properties of an Ideal Noise</h2>
+
+<p>If it is possible to list all the properties that an <b>ideal noise</b> should have, not every implementation of the noise function matches them all (and quite a few versions exist).</p>
+<p>Noise is <b>pseudo-random</b> and this is probably its main property. It looks random but is deterministic. Given the same input, it always returns the same value. If you render a image for a film several times, you want to noise pattern to be consistent/predictable. Or if you apply this noise pattern to a plane for example, you want that pattern to stay the same from frame to frame (even if the camera moves or the plane is transformed. The pattern sticks to the plane. We say that the function is <b>invariant</b>: it doesn't change under transformations).</p>
+
+<p>The noise function always returns a float no matter what the dimension of the input value is. The <b>dimension</b> of the point is given to the name of the noise. A 1D, 2D, 3D noise functions are functions taking 1D, 2D and 3D points as input parameters. There is even a 4D noise which takes a 3D point as input parameter and an additional float value which is used to animate the noise pattern over time (time varying solid texture). Examples of 1D and 2D noise are given in this lesson. 3D and 4D noise examples are given in the lesson Noise Part 2. In mathematical terms we say that the noise function is a mapping from Rn to R (where n is the dimension of the value passed to the noise function). It takes a n-dimensional point with real coordinates as input and returns a float. 1D noise is used for animating objects, 2D and 3D noise are used for texturing objects. 3D noise is particularly useful for modulating the density of volumes.</p>
+
+<p>Noise is <b>band limited</b>. Remember that noise is mainly a function, which you can see as a signal (if you plot the function you get a curve which is your signal). In signal processing it's possible to take a signal and convert it from spatial domain to frequency domain. This operation gives a result from which it is possible to see the different frequencies that a signal is made of. Don't worry too much if you don't understand yet what it means to go from spatial to frequency space (it is off topic here but you can check the lesson on Fourrier Transform). All you need to remember is that the noise function is potentially made of multiple frequencies (low frequencies account for large scale changes, high frequencies account for small changes). But one of these frequencies dominates all the others. And this one frequency defines both the visual and frequency (if you look at your signal in frequency space) appearance/characteristic of your noise function. Why should we care about the frequency of a noise function? When the noise is small in frame (imaging an object textured with noise far away from the camera) it becomes white noise again which is a cause of what we call in our jargon, <b>aliasing</b>. This is illustrated in figure 4.</p>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" style="width: 300px;" src="../../images/upload/noise-part-1/noise-aliasingd41d.gif?" />
+<p class="caption left">Figure 4: the noise pattern is applied to a large plane. With perspective, the noise in the distance (above the red line) becomes too small which creates a visual artefact known as aliasing. This artefact is usually particularly noticeable when the camera moves even slightly.</p>
+</div>
+
+<p>In the background of this image, neighbour pixels take random values. Not only this is not visually pleasant and realistic but if you render a sequence of images, the values of the pixels in this area will change drastically from frame to frame (figure 4). Aliasing is related to the topic of <b>sampling</b> which is a very large and very important topic in computer graphics. We invite you to read the lesson on sampling if you want to understand what's causing this unwanted effect.</p>
+
+<p>We mentioned that noise uses a smooth function to blur random values generated at lattice points. Functions in mathematics have properties. Two of them are of particular interest in the context of this lesson: <b>continuity</b> and <b>differentiability</b>. Explaining what these are is off topic here but with a simple example you will intuitively understand what they mean. A derivative is a line tangent to the profile of a curve as shown in figure 5. However, if the function is not continuous, computing this derivative is not possible (a function can also be continuous but not differentiable everywhere, as shown in figure 5 on the right). For reasons we will be explaining later, computing derivatives of the noise function will be needed in some places and it is best to choose a smooth function which is both continuous and differentiable. The original implementation of the noise function by Ken Perlin used a function which wasn't continuous and he suggested another one a few years later to correct this problem.</p>
+
+<div class="captionImage right" style="width: 531px;">
+<img class="left" src="../../images/upload/noise-part-1/func-derivatived41d.png?" />
+<p class="caption left">Figure 5: the derivative of a function at at the marked point is a line tangent to the curve passing through this point (left). Not all function are continuous. In the middle, the function is not defined between the two red dots and therefore is not continuous there. Finally (right), a function can be continuous but is not necessarily differentiable everywhere. The red dot indicates a point on the function where the derivative of the function can not be computed.</p>
+</div>
+
+<p>We should be able to find out the tangent anywhere on the noise curve. If there's a place on this curve where this tangent can't be found or where it changes abruptly, it causes what we call discontinuities.</p>
+
+<p>Finally when you look at the noise applied to an object, ideally you shouldn't see the repetition of the noise pattern. As we started to suggest, noise can only be computed from a grid of predefined size. In the example above we chose a 10x10 grid. If we were to compute noise outside the boundaries of that grid what would we do? Noise is like a tile, and to cover a larger area with tiles of a certain dimension, you would need to lay many of these tiles next to each other. But there would be two obvious problems with this approach. At the tiles boundaries the noise pattern would be discontinuous.</p>
+
+<p>// Figure 6 insert figure side by side many noise tiles repetition then periodioc but repetition.</p>
+
+<div class="captionImage right" style="width: 300px;">
+<img class="left" style="width: 300px;" src="../../images/upload/noise-part-1/noise-zoomd41d.gif?" />
+<p class="caption left">Figure 7: zooming out on a plane textured with noise. When we are far away the noise pattern becomes too small and turns into white noise (frame 6 and 7).</p>
+</div>
+
+<p>Ideally what you want is an invisible transition from tile to tile so you can cover an infinitely large area without ever seeing a seam. In CG when a 2D texture is seamless, it is said to be <b>periodic</b> in both direction (x and y). The word tileable is also sometimes used but is confusing. Any texture is tileable only it might not be seamless. Ideally your noise function should be designed so that the pattern is periodic. Furthermore because you have used many tiles with the same pattern on them, you might spot the repetition of that pattern. The solution to this problem is a bit harder to explain at this stage of the lesson. What you need to know for now is that the pattern created by the noise function has no large features (all the features have roughly the same size, remember what we said about the function being band limited). What that means is that if you zoom out you will not see the repetition of large features because they are not in the function. As for the other smaller features that the noise is made of, by the time you have zoomed out quite a lot, they are too small to be really seen. The trick (because it is one) for making the pattern invisible, is to make it large enough (make the grid of lattice points large enough) so that by the time you have it covered your entire screen, the features are to small in frame to be really seen. We will demonstrate this effect in the next chapter.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 1 of  5</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='procedural-patterns-noise-part-1/creating-simple-1D-noise.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1 by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 16:59:40 GMT -->
+</html>

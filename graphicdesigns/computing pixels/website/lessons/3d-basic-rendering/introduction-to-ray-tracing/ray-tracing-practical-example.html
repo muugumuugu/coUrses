@@ -1,0 +1,249 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-ray-tracing/ray-tracing-practical-example by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:08:40 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Introduction to Ray Tracing: a Simple Method for Creating 3D Images (Writing a Basic Ray Tracer)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='ray-tracing, perspective projection, conductor, dielectric, forward tracing, backward tracing, shadow ray, primary ray, eye ray, path tracing, reflection, refraction, Appel, Whitted, index of refraction, Fresnel equation, transmission, recursive, recursion depth, image file format'>
+<meta name='date' content='2014-10-30 18:10:05'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Introduction to Ray Tracing: a Simple Method for Creating 3D Images</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="how-does-it-work.html">How Does It Work?</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="raytracing-algorithm-in-a-nutshell.html">Raytracing Algorithm in a Nutshell</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="implementing-the-raytracing-algorithm.html">Implementing the Raytracing Algorithm</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="adding-reflection-and-refraction.html">Adding Reflection and Refraction</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="ray-tracing-practical-example.html"><b>Writing a Basic Ray Tracer</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code14ef.html?id=3&amp;origin=/lessons/3d-basic-rendering/introduction-to-ray-tracing">Source Code</a></div></div></div><p>We received quite a few emails from readers asking, "Well, if that's so easy to do, can't you provide us with a real example?" That was not the plan (since the idea is to write the renderer step-by-step) but we wrote a minimalistic ray-tracer which is about 300 hundred lines in about a couple of hours. Although we are not necessarily proud of that performance, we just wanted to show that when one knows these techniques well, implementing them is not difficult. The source code is available for download. We did not and will not spend time commenting this program. It was written fairly quickly so sure there is room for improvement. In this version of the raytracer we made the light visible (it's a sphere) so its reflection would appear in the reflective balls. When glass spheres are totally transparent (white) it is some times hard too see them, so in our example, we tinted them slightly (red). In the real world clear glass is not necessarily visible. It depends on the environment (have you ever walked into a door made out of glass?). Note that the resulting image is not completely accurate. The shadow under the transparent red sphere should not be completely opaque. We will learn in future lessons how we can easily correct this visual inaccuracy. We also implemented other features such as a fake fresnel (using the facing ratio) and refraction. All these things will be studied later so do not worry if you don't understand them clearly at the moment. At least, you now have a small program to play with.</p>
+<p>To compile the program download the source code to your hard drive. You will need a c++ compiler (we use <a href="http://gcc.gnu.org/">gcc</a> under Linux). This program doesn't need anything particular to get compiled. Take a Linux shell and type the following command where you file lives:</p>
+<p>
+<div name="code" class="code">c++ -O3 -o raytracer raytracer.cpp</div></p>
+<p>To create an image, run the program by typing ./raytracer in a shell. Wait a few seconds. When the program returns, you should have a file called untitled.ppm on your disk. You can open this file with Photoshop, Preview (on Mac) or Gimp (on Linux). Alternatively, check the lesson devoted to reading and displaying PPM images.</p>
+<p>Here is one possible implementation of the classical recursive ray-tracing algorithm in pseudo-code:</p>
+
+<div name="code" class="code">#define MAX_RAY_DEPTH 3
+ 
+color Trace(const Ray &ray, int depth)
+{
+    Object *object = NULL;
+    float minDist = INFINITY;
+    Point pHit;
+    Normal nHit;
+    for (int k = 0; k < objects.size(); ++k) { 
+        if (Intersect(objects[k], ray, &pHit, &nHit)) {
+            // ray origin = eye position of it's the prim ray
+            float distance = Distance(ray.origin, pHit);
+            if (distance < minDistance) { 
+                object = objects[i];
+                minDistance = distance;
+            }
+        }
+    }
+    if (object == NULL)
+        return 0;
+    // if the object material is glass, split the ray into a reflection
+    // and a refraction ray.
+    if (object->isGlass && depth < MAX_RAY_DEPTH) {
+        // compute reflection
+        Ray reflectionRay;
+        reflectionRay = computeReflectionRay(ray.direction, nHit);
+        // recurse
+        color reflectionColor = Trace(reflectionRay, depth + 1);
+        Ray refractioRay;
+        refractionRay = computeRefractionRay(
+            object->indexOfRefraction,
+            ray.direction,
+            nHit);
+        // recurse
+        color refractionColor = Trace(refractionRay, depth + 1);
+        float Kr, Kt;
+        fresnel(
+            object->indexOfRefraction, 
+            nHit,
+            ray.direction,
+            &Kr,
+            &Kt);
+        return reflectionColor * Kr + refractionColor * (1-Kr);
+    }
+    // object is a diffuse opaque object        
+    // compute illumination
+    Ray shadowRay;
+    shadowRay.direction = lightPosition - pHit;
+    bool isShadow = false;
+    for (int k = 0; k < objects.size(); ++k) {
+        if (Intersect(objects[k], shadowRay)) {
+            // hit point is in shadow so just return
+            return 0;
+        }
+    }
+    // point is illuminated
+    return object->color * light.brightness;  
+}
+ 
+// for each pixel of the image
+for (int j = 0; j < imageHeight; ++j) {
+    for (int i = 0; i < imageWidth; ++i) {
+        // compute primary ray direction
+        Ray primRay;
+        computePrimRay(i, j, &primRay);
+        pixels[i][j] = Trace(primRay, 0);
+    }
+}</div>
+
+<img style="float: left; margin: 0px 0px 10px 0px;" src="../../../images/upload/introduction-to-ray-tracing/raytrace1.png" width="670" />
+
+<h2>A Minimal Ray Tracer</h2>
+
+<img src="../../../images/upload/introduction-to-ray-tracing/aek.png" width="254" height="254" style="float: left; margin: 5px 10px 0px 0px;"/>
+
+<p>Many years ago, researcher Paul Heckbert wrote a ray tracer that could "fit on a bussiness card". The idea was to write a minimal ray tracer in C/C++, so small that he could print it out at the back of his business card (more information on this idea can be found in an article he wrote in Graphics Gems IV). Many programmers since then, have tried themselves to this coding exercise. Below, you can find a version written by <a href="http://www.cs.utah.edu/~aek/">Andrew Kensler</a>. The image on the left, is the result of his program. Note the depth of field effect (objects get blurred in the distance). It is quite amazing to be able to create a fairly complex image with such few lines of code.</p>
+
+<pre style="padding: 10px; width: 100%; font: 12px fixed, monospace; text-align: left; border-radius: 10px; background-color: rgb(200, 200, 200); white-space: pre-wrap; margin: 10px 0px 10px 0px; box-sizing: border-box;">#include &ltstdlib.h&gt   // card &gt aek.ppm
+#include &ltstdio.h&gt
+#include &ltmath.h&gt
+typedef int i;typedef float f;struct v{f x,y,z;v operator+(v r){return v(x+r.x,y+r.y,z+r.z);}v operator*(f r){return v(x*r,y*r,z*r);}f operator%(v r){return x*r.x+y*r.y+z*r.z;}v(){}v operator^(v r){return v(y*r.z-z*r.y,z*r.x-x*r.z,x*r.y-y*r.x);}v(f a,f b,f c){x=a;y=b;z=c;}v operator!(){return*this*(1/sqrt(*this%*this));}};i G[]={247570,280596,280600,249748,18578,18577,231184,16,16};f R(){return(f)rand()/RAND_MAX;}i T(v o,v d,f&t,v&n){t=1e9;i m=0;f p=-o.z/d.z;if(.01&ltp)t=p,n=v(0,0,1),m=1;for(i k=19;k--;)for(i j=9;j--;)if(G[j]&1&lt&ltk){v p=o+v(-k,0,-j-4);f b=p%d,c=p%p-1,q=b*b-c;if(q&gt0){f s=-b-sqrt(q);if(s&ltt&&s&gt.01)t=s,n=!(p+d*t),m=2;}}return m;}v S(v o,v d){f t;v n;i m=T(o,d,t,n);if(!m)return v(.7,.6,1)*pow(1-d.z,4);v h=o+d*t,l=!(v(9+R(),9+R(),16)+h*-1),r=d+n*(n%d*-2);f b=l%n;if(b&lt0||T(h,l,t,n))b=0;f p=pow(l%r*(b&gt0),99);if(m&1){h=h*.2;return((i)(ceil(h.x)+ceil(h.y))&1?v(3,1,1):v(3,3,3))*(b*.2+.1);}return v(p,p,p)+S(h,r)*.5;}i main(){printf("P6 512 512 255 ");v g=!v(-6,-16,0),a=!(v(0,0,1)^g)*.002,b=!(g^a)*.002,c=(a+b)*-256+g;for(i y=512;y--;)for(i x=512;x--;){v p(13,13,13);for(i r=64;r--;){v t=a*(R()-.5)*99+b*(R()-.5)*99;p=S(v(17,16,8)+t,!(t*-1+(a*(R()+x)+b*(y+R())+c)*16))*3.5+p;}printf("%c%c%c",(i)p.x,(i)p.y,(i)p.z);}}</pre>
+
+<p>To run the program, copy/paste the code in a text file (rename the file for instance minray.cpp or anything you like), then compile the code (<span class="code-inline">c++ -O3 -o min ray minray.cpp</span> or <span class="code-inline">clang++ -O3 -o min ray minray.cpp</span> if you prefer the clang compiler) and run it with the command line: <span class="code-inline">min ray > minray.ppm</span>. Rather than writing the final image data to disk which would make the code longer, the data is just written out to the standard output (the shell from which you are running the program) which we can redirect (with the sign >) to a file. The PPM file can be read with Photoshop.</p>
+
+<div class="question">This program is only presented here to show that the ray tracing algorithm can be implemented with very lines of code. Many of the techniques used in the code are explained in the next lessons of this section.</div></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='adding-reflection-and-refraction.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 5 of  6</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='../../../code14ef.html?id=3&amp;origin=/lessons/3d-basic-rendering/introduction-to-ray-tracing'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-ray-tracing/ray-tracing-practical-example by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:08:45 GMT -->
+</html>

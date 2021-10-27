@@ -1,0 +1,360 @@
+<!--
+<html>
+<head>
+<title>Scratchapixel</title>
+
+<link rel="stylesheet" type="text/css" href="/css/scratchapixel2.css"/>
+<link rel="stylesheet" type="text/css" href="/css/page.css"/>
+<link rel="stylesheet" type="text/css" href="/css/code.css"/>
+<link href='http://fonts.googleapis.com/css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='http://fonts.googleapis.com/css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<script type="text/javascript"
+	src="/scratchapixelSDK.js">
+</script>
+
+</head>
+<html>
+<body onload="onload();">
+<div class="code-column">
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/code.php?id=9&origin=/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle&src=0 by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 19:00:39 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Ray Tracing: Rendering a Triangle (source code)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='Ray Tracing: Rendering a Triangle, source code'>
+<meta name='date' content=''>
+
+<link rel="stylesheet" type="text/css" href="css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="css/page.css"/>
+
+<link href='../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","mml2jax.html","asciimath2jax.html","MathMenu.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","AMSsymbols.html","noErrors.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+<link rel='stylesheet' type='text/css' href='css/responsive.css'/>
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='index-2.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div class='lesson-title' style='padding: 0px; margin: 20px 0px 10px 0px;'><a href='lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle.html'>Ray Tracing: Rendering a Triangle</a></div><div style='box-sizing: border-box; padding: 20px 0px 0px 0px; display: inline-block; border-top: 1px none grey; width: 100%;'><div>This project contains the following files (right-click files you'd like to download):</div><a oncontextmenu='onMouseDownCodeCtxt(this, "code/upload/ray-triangle/raytri.cpp")' style='display: inline-block; margin: 10px 10px 10px 0px; color: rgb(50, 100, 200);' href='codee259.html?id=9&amp;origin=/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle&amp;src=0'>raytri.cpp</a><a oncontextmenu='onMouseDownCodeCtxt(this, "code/upload/ray-triangle/geometry.h")' style='display: inline-block; margin: 10px 10px 10px 0px; color: rgb(50, 100, 200);' href='code80b7.html?id=9&amp;origin=/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle&amp;src=1'>geometry.h</a></div><div name='code' class='code'>//[header]
+// A simple program that uses ray-tracing to render a single triangle
+//[/header]
+//[compile]
+// Download the raytri.cpp and geometry.h files to a folder.
+// Open a shell/terminal, and run the following command where the files is saved:
+//
+// c++ -o raytri raytri.cpp -O3 -std=c++11 -DMOLLER_TRUMBORE
+//
+// Run with: ./raytri. Open the file ./out.png in Photoshop or any program
+// reading PPM files.
+//[/compile]
+//[ignore]
+// Copyright (C) 2012  www.scratchapixel.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+//[/ignore]
+
+#include &lt;cstdio&gt;
+#include &lt;cstdlib&gt;
+#include &lt;memory&gt;
+#include &lt;vector&gt;
+#include &lt;utility&gt;
+#include &lt;cstdint&gt;
+#include &lt;iostream&gt;
+#include &lt;fstream&gt;
+#include &lt;cmath&gt;
+#include &lt;limits&gt;
+#include &lt;random&gt;
+
+#include &quot;geometry.h&quot;
+
+constexpr float kEpsilon = 1e-8;
+
+inline
+float deg2rad(const float &amp;deg)
+{ return deg * M_PI / 180; }
+
+inline
+float clamp(const float &amp;lo, const float &amp;hi, const float &amp;v)
+{ return std::max(lo, std::min(hi, v)); }
+
+// [comment]
+// The main ray-triangle intersection routine. You can test both methoods: the
+// geometric method and the Moller-Trumbore algorithm (use the flag -DMOLLER_TRUMBORE
+// when you compile.
+// [/comment]
+bool rayTriangleIntersect(
+    const Vec3f &amp;orig, const Vec3f &amp;dir,
+    const Vec3f &amp;v0, const Vec3f &amp;v1, const Vec3f &amp;v2,
+    float &amp;t, float &amp;u, float &amp;v)
+{
+#ifdef MOLLER_TRUMBORE
+    Vec3f v0v1 = v1 - v0;
+    Vec3f v0v2 = v2 - v0;
+    Vec3f pvec = dir.crossProduct(v0v2);
+    float det = v0v1.dotProduct(pvec);
+#ifdef CULLING
+    // if the determinant is negative the triangle is backfacing
+    // if the determinant is close to 0, the ray misses the triangle
+    if (det &lt; kEpsilon) return false;
+#else
+    // ray and triangle are parallel if det is close to 0
+    if (fabs(det) &lt; kEpsilon) return false;
+#endif
+    float invDet = 1 / det;
+
+    Vec3f tvec = orig - v0;
+    u = tvec.dotProduct(pvec) * invDet;
+    if (u &lt; 0 || u &gt; 1) return false;
+
+    Vec3f qvec = tvec.crossProduct(v0v1);
+    v = dir.dotProduct(qvec) * invDet;
+    if (v &lt; 0 || u + v &gt; 1) return false;
+    
+    t = v0v2.dotProduct(qvec) * invDet;
+    
+    return true;
+#else
+    // compute plane's normal
+    Vec3f v0v1 = v1 - v0;
+    Vec3f v0v2 = v2 - v0;
+    // no need to normalize
+    Vec3f N = v0v1.crossProduct(v0v2); // N
+    float denom = N.dotProduct(N);
+    
+    // Step 1: finding P
+    
+    // check if ray and plane are parallel ?
+    float NdotRayDirection = N.dotProduct(dir);
+    if (fabs(NdotRayDirection) &lt; kEpsilon) // almost 0
+        return false; // they are parallel so they don't intersect ! 
+
+    // compute d parameter using equation 2
+    float d = N.dotProduct(v0);
+    
+    // compute t (equation 3)
+    t = (N.dotProduct(orig) + d) / NdotRayDirection;
+    // check if the triangle is in behind the ray
+    if (t &lt; 0) return false; // the triangle is behind
+ 
+    // compute the intersection point using equation 1
+    Vec3f P = orig + t * dir;
+ 
+    // Step 2: inside-outside test
+    Vec3f C; // vector perpendicular to triangle's plane
+ 
+    // edge 0
+    Vec3f edge0 = v1 - v0; 
+    Vec3f vp0 = P - v0;
+    C = edge0.crossProduct(vp0);
+    if (N.dotProduct(C) &lt; 0) return false; // P is on the right side
+ 
+    // edge 1
+    Vec3f edge1 = v2 - v1; 
+    Vec3f vp1 = P - v1;
+    C = edge1.crossProduct(vp1);
+    if ((u = N.dotProduct(C)) &lt; 0)  return false; // P is on the right side
+ 
+    // edge 2
+    Vec3f edge2 = v0 - v2; 
+    Vec3f vp2 = P - v2;
+    C = edge2.crossProduct(vp2);
+    if ((v = N.dotProduct(C)) &lt; 0) return false; // P is on the right side;
+
+    u /= denom;
+    v /= denom;
+
+    return true; // this ray hits the triangle
+#endif
+}
+
+int main(int argc, char **argv)
+{
+    Vec3f v0(-1, -1, -5);
+    Vec3f v1( 1, -1, -5);
+    Vec3f v2( 0,  1, -5);
+    
+    const uint32_t width = 640;
+    const uint32_t height = 480;
+    Vec3f cols[3] = {{0.6, 0.4, 0.1}, {0.1, 0.5, 0.3}, {0.1, 0.3, 0.7}};
+    Vec3f *framebuffer = new Vec3f[width * height];
+    Vec3f *pix = framebuffer;
+    float fov = 51.52;
+    float scale = tan(deg2rad(fov * 0.5));
+    float imageAspectRatio = width / (float)height;
+    Vec3f orig(0);
+    for (uint32_t j = 0; j &lt; height; ++j) {
+        for (uint32_t i = 0; i &lt; width; ++i) {
+            // compute primary ray
+            float x = (2 * (i + 0.5) / (float)width - 1) * imageAspectRatio * scale;
+            float y = (1 - 2 * (j + 0.5) / (float)height) * scale;
+            Vec3f dir(x, y, -1);
+            dir.normalize();
+            float t, u, v;
+            if (rayTriangleIntersect(orig, dir, v0, v1, v2, t, u, v)) {
+                // [comment]
+                // Interpolate colors using the barycentric coordinates
+                // [/comment]
+                *pix = u * cols[0] + v * cols[1] + (1 - u - v) * cols[2];
+                // uncomment this line if you want to visualize the row barycentric coordinates
+                //*pix = Vec3f(u, v, 1 - u - v);
+            }
+            pix++;
+        }
+    }
+    
+    // Save result to a PPM image (keep these flags if you compile under Windows)
+    std::ofstream ofs(&quot;./out.ppm&quot;, std::ios::out | std::ios::binary);
+    ofs &lt;&lt; &quot;P6\n&quot; &lt;&lt; width &lt;&lt; &quot; &quot; &lt;&lt; height &lt;&lt; &quot;\n255\n&quot;;
+    for (uint32_t i = 0; i &lt; height * width; ++i) {
+        char r = (char)(255 * clamp(0, 1, framebuffer[i].x));
+        char g = (char)(255 * clamp(0, 1, framebuffer[i].y));
+        char b = (char)(255 * clamp(0, 1, framebuffer[i].z));
+        ofs &lt;&lt; r &lt;&lt; g &lt;&lt; b;
+    }
+
+    ofs.close();
+
+    delete [] framebuffer;
+
+    return 0;
+}</div><!-- end of code --></div><!-- end of code-column -->
+</article>
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/code.php?id=9&origin=/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle&src=0 by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 19:00:39 GMT -->
+</html>

@@ -1,0 +1,417 @@
+<!--
+<html>
+<head>
+<title>Scratchapixel</title>
+
+<link rel="stylesheet" type="text/css" href="/css/scratchapixel2.css"/>
+<link rel="stylesheet" type="text/css" href="/css/page.css"/>
+<link rel="stylesheet" type="text/css" href="/css/code.css"/>
+<link href='http://fonts.googleapis.com/css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='http://fonts.googleapis.com/css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<script type="text/javascript"
+	src="/scratchapixelSDK.js">
+</script>
+
+</head>
+<html>
+<body onload="onload();">
+<div class="code-column">
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/code.php?id=24&origin=/lessons/3d-basic-rendering/3d-viewing-pinhole-camera by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:10:42 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>3D Viewing: the Pinhole Camera Model (source code)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='3D Viewing: the Pinhole Camera Model, source code'>
+<meta name='date' content=''>
+
+<link rel="stylesheet" type="text/css" href="css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="css/page.css"/>
+
+<link href='../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","mml2jax.html","asciimath2jax.html","MathMenu.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","AMSsymbols.html","noErrors.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+<link rel='stylesheet' type='text/css' href='css/responsive.css'/>
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='index-2.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div class='lesson-title' style='padding: 0px; margin: 20px 0px 10px 0px;'><a href='lessons/3d-basic-rendering/3d-viewing-pinhole-camera.html'>3D Viewing: the Pinhole Camera Model</a></div><div style='box-sizing: border-box; padding: 20px 0px 0px 0px; display: inline-block; border-top: 1px none grey; width: 100%;'><div>This project contains the following files (right-click files you'd like to download):</div><a oncontextmenu='onMouseDownCodeCtxt(this, "code/upload/cameras/pinhole.cpp")' style='display: inline-block; margin: 10px 10px 10px 0px; color: rgb(50, 100, 200);' href='code8cf6.html?id=24&amp;origin=/lessons/3d-basic-rendering/3d-viewing-pinhole-camera&amp;src=0'>pinhole.cpp</a><a oncontextmenu='onMouseDownCodeCtxt(this, "code/upload/cameras/geometry.h")' style='display: inline-block; margin: 10px 10px 10px 0px; color: rgb(50, 100, 200);' href='code7c24.html?id=24&amp;origin=/lessons/3d-basic-rendering/3d-viewing-pinhole-camera&amp;src=1'>geometry.h</a><a oncontextmenu='onMouseDownCodeCtxt(this, "code/upload/cameras/boat.obj")' style='display: inline-block; margin: 10px 10px 10px 0px; color: rgb(50, 100, 200);' href='code2de9.html?id=24&amp;origin=/lessons/3d-basic-rendering/3d-viewing-pinhole-camera&amp;src=2'>boat.obj</a></div><div name='code' class='code'>//[header]
+// This program implements a physical pinhole camera model similar to the model
+// used in popular 3D packages such as Maya.
+//[/header]
+//[compile]
+// Download the pinhole.cpp and geometry.h files to the same folder.
+// Open a shell/terminal, and run the following command where the files are saved:
+//
+// c++ pinhole.cpp -o pinhole -std=c++11
+//
+// Run with: ./pinhole. Open the file ./pinhole.svg in any Internet browser to see
+// the result.
+//[/compile]
+//[ignore]
+// Copyright (C) 2012  www.scratchapixel.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+//[/ignore]
+
+#include &lt;cstdio&gt;
+#include &lt;cstdlib&gt;
+#include &lt;cmath&gt;
+
+#include &quot;geometry.h&quot;
+
+#include &lt;fstream&gt;
+
+//[comment]
+// List of vertices making up the object
+//[/comment]
+const Vec3f verts[146] = {
+    {  -2.5703,   0.78053,  -2.4e-05}, { -0.89264,  0.022582,  0.018577},
+    {   1.6878, -0.017131,  0.022032}, {   3.4659,  0.025667,  0.018577},
+    {  -2.5703,   0.78969, -0.001202}, { -0.89264,   0.25121,   0.93573},
+    {   1.6878,   0.25121,    1.1097}, {   3.5031,   0.25293,   0.93573},
+    {  -2.5703,    1.0558, -0.001347}, { -0.89264,    1.0558,    1.0487},
+    {   1.6878,    1.0558,    1.2437}, {   3.6342,    1.0527,    1.0487},
+    {  -2.5703,    1.0558,         0}, { -0.89264,    1.0558,         0},
+    {   1.6878,    1.0558,         0}, {   3.6342,    1.0527,         0},
+    {  -2.5703,    1.0558,  0.001347}, { -0.89264,    1.0558,   -1.0487},
+    {   1.6878,    1.0558,   -1.2437}, {   3.6342,    1.0527,   -1.0487},
+    {  -2.5703,   0.78969,  0.001202}, { -0.89264,   0.25121,  -0.93573},
+    {   1.6878,   0.25121,   -1.1097}, {   3.5031,   0.25293,  -0.93573},
+    {   3.5031,   0.25293,         0}, {  -2.5703,   0.78969,         0},
+    {   1.1091,    1.2179,         0}, {    1.145,     6.617,         0},
+    {   4.0878,    1.2383,         0}, {  -2.5693,    1.1771, -0.081683},
+    {  0.98353,    6.4948, -0.081683}, { -0.72112,    1.1364, -0.081683},
+    {   0.9297,     6.454,         0}, {  -0.7929,     1.279,         0},
+    {  0.91176,    1.2994,         0}
+};
+
+const uint32_t numTris = 51;
+
+//[comment]
+// Triangle index array. A triangle has 3 vertices. Each successive group of 3
+// integers in this array represent the positions of the vertices in the vertex
+// array making up one triangle of that object. For example, the first 3 integers
+// from this array, 8/7/9 represent the positions of the vertices making up the
+// the first triangle. You can access these vertices with the following code:
+//
+//     verts[8]; /* first vertex  */
+//
+//     verts[7]; /* second vertex */
+//
+//     verts[9]; /* third vertex  */
+//
+// 6/5/5 are the positions of the vertices in the vertex array making up the second
+// triangle, and so on.
+// To find the indices of the n-th triangle, use the following code:
+//
+//     tris[n * 3];     /* index of the first vertex in the verts array */
+//
+//     tris[n * 3 + 1]; /* index of the second vertexin the verts array */
+//
+//     tris[n * 3 + 2]; /* index of the third vertex in the verts array */
+//[/comment]
+const uint32_t tris[numTris * 3] = {
+     4,   0,   5,   0,   1,   5,   1,   2,   5,   5,   2,   6,   3,   7,   2,
+     2,   7,   6,   5,   9,   4,   4,   9,   8,   5,   6,   9,   9,   6,  10,
+     7,  11,   6,   6,  11,  10,   9,  13,   8,   8,  13,  12,  10,  14,   9,
+     9,  14,  13,  10,  11,  14,  14,  11,  15,  17,  16,  13,  12,  13,  16,
+    13,  14,  17,  17,  14,  18,  15,  19,  14,  14,  19,  18,  16,  17,  20,
+    20,  17,  21,  18,  22,  17,  17,  22,  21,  18,  19,  22,  22,  19,  23,
+    20,  21,   0,  21,   1,   0,  22,   2,  21,  21,   2,   1,  22,  23,   2,
+     2,  23,   3,   3,  23,  24,   3,  24,   7,  24,  23,  15,  15,  23,  19,
+    24,  15,   7,   7,  15,  11,   0,  25,  20,   0,   4,  25,  20,  25,  16,
+    16,  25,  12,  25,   4,  12,  12,   4,   8,  26,  27,  28,  29,  30,  31,
+    32,  34,  33
+};
+
+//[comment]
+// Compute the 2D pixel coordinates of a point defined in world space. This function
+// requires the point original world coordinates of course, the world-to-camera
+// matrix (which you can get from computing the inverse of the camera-to-world matrix,
+// the matrix transforming the camera), the canvas dimension and the image width and
+// height in pixels.
+//
+// The canvas coordinates (bottom, left, top, right) are also passed to the function
+// so we can test the point raster coordinates against the canvas coordinates. If the
+// point in raster space lies within the canvas boundaries, the function returns true,
+// false otherwise.
+//[/comment]
+bool computePixelCoordinates(
+    const Vec3f &amp;pWorld,
+    const Matrix44f &amp;worldToCamera,
+    const float &amp;b,
+    const float &amp;l,
+    const float &amp;t,
+    const float &amp;r,
+    const float &amp;near,
+    const uint32_t &amp;imageWidth,
+    const uint32_t &amp;imageHeight,
+    Vec2i &amp;pRaster)
+{
+    Vec3f pCamera;
+    worldToCamera.multVecMatrix(pWorld, pCamera);
+    Vec2f pScreen;
+    pScreen.x = pCamera.x / -pCamera.z * near;
+    pScreen.y = pCamera.y / -pCamera.z * near;
+    
+    Vec2f pNDC;
+    pNDC.x = (pScreen.x + r) / (2 * r);
+    pNDC.y = (pScreen.y + t) / (2 * t);
+    pRaster.x = (int)(pNDC.x * imageWidth);
+    pRaster.y = (int)((1 - pNDC.y) * imageHeight);
+
+    bool visible = true;
+    if (pScreen.x &lt; l || pScreen.x &gt; r || pScreen.y &lt; b || pScreen.y &gt; t)
+        visible = false;
+
+    return visible;
+}
+//[comment]
+// Settings of the physical camera model:
+//
+// - focal length in millimetre
+//
+// - film dimensions (width and height in inches)
+//
+// Other settings:
+//
+// - clipping planes (the canvas is positionned at the near clipping plane)
+//
+// - image dimensions in pixels
+//
+// - fit film mode (overscan or fit)
+//[/comment]
+float focalLength = 35; // in mm
+// 35mm Full Aperture in inches
+float filmApertureWidth = 0.825;
+float filmApertureHeight = 0.446;
+static const float inchToMm = 25.4;
+float nearClippingPlane = 0.1;
+float farClipingPlane = 1000;
+// image resolution in pixels
+uint32_t imageWidth = 512;
+uint32_t imageHeight = 512;
+
+enum FitResolutionGate { kFill = 0, kOverscan };
+FitResolutionGate fitFilm = kOverscan;
+
+int main(int argc, char **argv)
+{
+    //[comment]
+    // First compute the canvas coordinates. The canvas is positionned by choice,
+    // at the near clipping plane. By changing the near clipping plane value, you
+    // will change the position of the canvas, but this won't change the output of the
+    // program.
+    //[/comment]
+    float filmAspectRatio = filmApertureWidth / filmApertureHeight;
+    float deviceAspectRatio = imageWidth / (float)imageHeight;
+
+    float top = ((filmApertureHeight * inchToMm / 2) / focalLength) * nearClippingPlane;
+    float right = ((filmApertureWidth * inchToMm / 2) / focalLength) * nearClippingPlane;
+
+    float xscale = 1;
+    float yscale = 1;
+
+    switch (fitFilm) {
+        default:
+        case kFill:
+            if (filmAspectRatio &gt; deviceAspectRatio) {
+                xscale = deviceAspectRatio / filmAspectRatio;
+            }
+            else {
+                yscale = filmAspectRatio / deviceAspectRatio;
+            }
+            break;
+        case kOverscan:
+            if (filmAspectRatio &gt; deviceAspectRatio) {
+                yscale = filmAspectRatio / deviceAspectRatio;
+            }
+            else {
+                xscale = deviceAspectRatio / filmAspectRatio;
+            }
+            break;
+    }
+
+    right *= xscale;
+    top *= yscale;
+
+    float bottom = -top;
+    float left = -right;
+    
+    printf(&quot;Screen window coordinates: %f %f %f %f\n&quot;, bottom, left, top, right);
+    printf(&quot;Film Aspect Ratio: %f\nDevice Aspect Ratio: %f\n&quot;, filmAspectRatio, deviceAspectRatio);
+    printf(&quot;Angle of view: %f (deg)\n&quot;, 2 * atan((filmApertureWidth * inchToMm / 2) / focalLength) * 180 / M_PI);
+
+    //[comment]
+    // Project the triangles vertices onto the plane. If at least one of the vertices lies outside
+    // the canvas boundaries (if the function computePixelCoordinates returns false), the triangle
+    // is drawn in red and black otherwise. The result is store in a SVG file.
+    //[/comment]
+    std::ofstream ofs;
+    ofs.open(&quot;./pinhole.svg&quot;);
+    ofs &lt;&lt; &quot;&lt;svg version=\&quot;1.1\&quot; xmlns:xlink=\&quot;http://www.w3.org/1999/xlink\&quot; xmlns=\&quot;http://www.w3.org/2000/svg\&quot; width=\&quot;&quot; &lt;&lt; imageWidth &lt;&lt; &quot;\&quot; height=\&quot;&quot; &lt;&lt; imageHeight &lt;&lt; &quot;\&quot;&gt;&quot; &lt;&lt; std::endl;
+    Matrix44f cameraToWorld(-0.95424, 0, 0.299041, 0, 0.0861242, 0.95763, 0.274823, 0, -0.28637, 0.288002, -0.913809, 0, -3.734612, 7.610426, -14.152769, 1);
+    Matrix44f worldToCamera = cameraToWorld.inverse();
+    float canvasWidth = 2, canvasHeight = 2;
+    for (uint32_t i = 0; i &lt; numTris; ++i) {
+        const Vec3f &amp;v0World = verts[tris[i * 3]];
+        const Vec3f &amp;v1World = verts[tris[i * 3 + 1]];
+        const Vec3f &amp;v2World = verts[tris[i * 3 + 2]];
+        Vec2i v0Raster, v1Raster, v2Raster;
+
+        bool visible = true;
+        visible &amp;= computePixelCoordinates(v0World, worldToCamera, bottom, left, top, right, nearClippingPlane, imageWidth, imageHeight, v0Raster);
+        visible &amp;= computePixelCoordinates(v1World, worldToCamera, bottom, left, top, right, nearClippingPlane, imageWidth, imageHeight, v1Raster);
+        visible &amp;= computePixelCoordinates(v2World, worldToCamera, bottom, left, top, right, nearClippingPlane, imageWidth, imageHeight, v2Raster);
+        
+        int val = visible ? 0 : 255;
+        ofs &lt;&lt; &quot;&lt;line x1=\&quot;&quot; &lt;&lt; v0Raster.x &lt;&lt; &quot;\&quot; y1=\&quot;&quot; &lt;&lt; v0Raster.y &lt;&lt; &quot;\&quot; x2=\&quot;&quot; &lt;&lt; v1Raster.x &lt;&lt; &quot;\&quot; y2=\&quot;&quot; &lt;&lt; v1Raster.y &lt;&lt; &quot;\&quot; style=\&quot;stroke:rgb(&quot; &lt;&lt; val &lt;&lt; &quot;,0,0);stroke-width:1\&quot; /&gt;\n&quot;;
+        ofs &lt;&lt; &quot;&lt;line x1=\&quot;&quot; &lt;&lt; v1Raster.x &lt;&lt; &quot;\&quot; y1=\&quot;&quot; &lt;&lt; v1Raster.y &lt;&lt; &quot;\&quot; x2=\&quot;&quot; &lt;&lt; v2Raster.x &lt;&lt; &quot;\&quot; y2=\&quot;&quot; &lt;&lt; v2Raster.y &lt;&lt; &quot;\&quot; style=\&quot;stroke:rgb(&quot; &lt;&lt; val &lt;&lt; &quot;,0,0);stroke-width:1\&quot; /&gt;\n&quot;;
+        ofs &lt;&lt; &quot;&lt;line x1=\&quot;&quot; &lt;&lt; v2Raster.x &lt;&lt; &quot;\&quot; y1=\&quot;&quot; &lt;&lt; v2Raster.y &lt;&lt; &quot;\&quot; x2=\&quot;&quot; &lt;&lt; v0Raster.x &lt;&lt; &quot;\&quot; y2=\&quot;&quot; &lt;&lt; v0Raster.y &lt;&lt; &quot;\&quot; style=\&quot;stroke:rgb(&quot; &lt;&lt; val &lt;&lt; &quot;,0,0);stroke-width:1\&quot; /&gt;\n&quot;;
+    }
+    ofs &lt;&lt; &quot;&lt;/svg&gt;\n&quot;;
+    ofs.close();
+    
+    return 0;
+}</div><!-- end of code --></div><!-- end of code-column -->
+</article>
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/code.php?id=24&origin=/lessons/3d-basic-rendering/3d-viewing-pinhole-camera by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:10:42 GMT -->
+</html>

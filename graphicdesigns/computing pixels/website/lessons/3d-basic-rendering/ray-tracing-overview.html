@@ -1,0 +1,461 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-overview by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 16:47:18 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>An Overview of the Ray-Tracing Rendering Technique (Overview of the Ray-Tracing Rendering Technique)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='ray-tracing, primary ray, camera ray, eye ray, secondary ray, diffuse ray, reflection ray, refraction ray, shader, ray, illumination model, triangle, recursion, light transport, visibility, Whitted-style ray-tracing'>
+<meta name='date' content='2014-08-15 10:34:46'>
+
+<link rel="stylesheet" type="text/css" href="../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../css/page.css"/>
+
+<link href='../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../indexf17c.html","../../indexf17c.html","../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../indexf17c.html","../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+	<!-- Open Graph data -->
+	<meta property='fb:app_id' content='1535346446701691'/>
+	<meta property='og:title' content='An Overview of the Ray-Tracing Rendering Technique'/>
+	<meta property='og:type' content='article'/>
+	<meta property='og:url' content='https://www.scratchapixel.com//lessons/3d-basic-rendering/ray-tracing-overview'/>
+	<meta property='og:image' content='https://www.scratchapixel.com/images/design/logo_scratchapixel2015.png'/>
+	<meta property='og:description' content='Lesson summary: This lesson marks the beginning of a series of lessons in which we will study techniques specific to ray-tracing. In this lesson, we will quickly review the principle of ray-tracing and learn how to use the technique by implementing a simple light-transport algorithm developed by Turner Whitted to simulate reflections and refractions.'/> 
+	<meta property='og:site_name' content='Scratchapixel'/>
+	<meta property='fb:admins' content='1260067275'/>
+	
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>An Overview of the Ray-Tracing Rendering Technique</div><div style='width: 100%; margin: 0px; display: table; vertical-align: middle; border: 1px none red;'>
+			<div style='display: table-row; height: 30px;'>
+			<div style='margin: 0px; padding: 0px; border: 1px none blue ; display: table-cell; vertical-align: middle;'>
+				<a href='https://twitter.com/share' class='twitter-share-button' data-lang='en'>Tweet</a>
+			</div></div>
+			<div style='display: table-row; height: 30px;'>
+			<div style='padding: 0px; border: 1px none blue ; display: table-cell; vertical-align: middle;'>
+				<div style='margin-top: 5px;' class='fb-like' data-share='true' data-width='450' data-show-faces='true'></div>
+			</div></div></div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="ray-tracing-overview/ray-tracing-rendering-technique-overview.html"><b>Overview of the Ray-Tracing Rendering Technique</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="ray-tracing-overview/light-transport-ray-tracing-whitted.html">Light Transport Algorithms and Ray-Tracing: Whitted Ray-Tracing</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../code99af.html?id=8&amp;origin=/lessons/3d-basic-rendering/ray-tracing-overview">Source Code</a></div></div></div><span style='display: inline-block; width: 100%; margin: 0px 0px 10px 0px;'><i>Keywords: ray-tracing, primary ray, camera ray, eye ray, secondary ray, diffuse ray, reflection ray, refraction ray, shader, ray, illumination model, triangle, recursion, light transport, visibility, Whitted-style ray-tracing.</i></span><div class="scratchquote">One problem with discussing ray-tracing is that ray-tracing is an overloaded term.</div>
+
+<p>Ray-tracing is a technique for computing the visibility between points. Light transport algorithms are designed to simulate the way light propagates through space (while interacting with objects). They are used (in short) to compute the color of a point in the scene. Do not mix ray-tracing with light transport algorithms. They are two different things. Ray-tracing is not a light-transport algorithm. It is only a technique to compute visibility between points.</p>
+
+<div class="scratchquote">Given a set of obstacles in the Euclidean space, two points in the space are said to be visible to each other, if the line segment that joins them does not intersect any obstacles. (definition of <a href="http://en.wikipedia.org/wiki/Visibility_(geometry)">visibility</a> on Wikipedia)</div>
+
+<h2>An Overview on the Ray-Tracing Rendering Technique</h2>
+
+<div style="width: 300;" class="captionImage right">
+<img class="left"  src="../../images/upload/ray-tracing-refresher/rt-setupd41d.png?"/><p class="caption left">Figure 1: "sliding" a raster image in front of the camera image plane.</p>
+</div>
+
+<div style="width: 450;" class="captionImage right">
+<img class="left"  src="../../images/upload/ray-tracing-refresher/rt-setup2d41d.png?"/><p class="caption left">Figure 2: a ray can hit or miss the scene geometry.</p>
+</div>
+
+<p>In the first lesson of this section we have already quickly introduced you to the concept of rendering in general and how to produce images of 3D scenes using ray-tracing in particular. We have mentioned the ray-tracing technique in other lessons such as the lesson <a href="rendering-3d-scene-overview.html">Rendering an Image of a 3D Scene</a> and <a href="rasterization-practical-implementation.html">Rasterization: a Practical Implementation</a> but the goal in these lessons was more to highlight the differences between the rasterization and the ray-tracing techniques, which are the main two common frameworks (or rendering techniques) for rendering images of 3D objects.</p>
+
+<p>Shall we re-introduce the ray-tracing rendering technique one more time? You should already be familiar with the concept but this lesson is the first in a series in which we will study techniques that are specific to ray-tracing so it seems like a good idea to review one more time what the method is about, how it works, the basic principles of the technique, and what they main differences between rasterization and ray-tracing are.</p>
+
+<p>Ray-tracing is all about rays, and rays is one of the main topics of this lesson. We will learn what they are and how they can be defined in programming. As we know by now, a <b>raster image</b> is made out of pixels. One way of producing an image of a 3D scene, is to actually somehow "slide" this raster image along the image plane of our virtual camera (figure 1), and shoot rays though each pixel in the image, to find which part of the scene each pixel covers. The way we do that, is simply by casting a ray originating from the eye (the camera position) and passing through the centre of each pixel. We then find what object (or objects) from the scene, these rays intersect. If a pixel "sees" something surely it sees the object that is right in front of it in the direction pointed by that ray. The ray direction as we just mentioned can simply be constructed by tracing a line from the camera's origin to the pixel centre and then extending than line into the scene (figure 2).</p>
+
+<p>Now that we know "what" a pixel sees, all we need to do, is repeat this process for every pixel in the image. By setting up the pixel color with the color of the object that each ray passing through the centre of each pixel intersects, then we can form an image of the scene as seen from a particular viewpoint. Note that this method requires to loop over all the pixels in the image and cast a ray into the scene for each one of these pixels. The second step, the intersection step, requires to loop over all the objects in the scene to test if a ray intersects any of these objects. Here is an implementation of this technique in pseudo-code:</p>
+
+<div name="code" class="code">// loop over all pixels
+Vec3f *framebuffer = new Vec3f[imageWidth * imageHeight];
+for (int j = 0; j < imageHeight; ++j) {
+    for (int i = 0; i < imageWidth; ++i) {
+        for (int k = 0; k < numObjectsInScene; ++k) {
+            Ray ray = buildCameraRay(i, j);
+            if (intersect(ray, objects[k]) {
+                // do complex shading here but for now basic (just constant color)
+                framebuffer[j * imageWidth + i] = objects[k].color;
+            }
+            else {
+                // or don't do anything and leave it black
+                framebuffer[j * imageWidth + i] = backgroundColor;
+            }
+        }
+    }
+}</div>
+
+<p>Note that some of the rays might not intersect any geometry at all. For example if you look at figure 2, one of the rays does not intersect the sphere. In this particular case, we generally leave the pixel's color black or set it up to any other color we want the background to be (line 10).</p>
+
+<div style="width: 300;" class="captionImage right">
+<img class="left"  src="../../images/upload/ray-tracing-refresher/rt-lookd41d.png?"/><p class="caption left">Figure 3: trying to recreate reality is difficult.</p>
+</div>
+
+<p>Note also that in the code above, we set the pixel color with the object color at the intersection point. Though objects from the real world don't look flat. They have complex appearances or looks (which is very hard to reproduce convincingly in painting for example - and that is because the appearance of objects is generally visually very complex). Their brightness changes depending on the amount of light they receive, some are shiny, some are matte, etc. The goal of photorealistic rendering is not only to depict accurately the geometry as seen from a given viewpoint (and solve the visibility problem) but also to simulate the appearance of objects convincingly. Thus, most likely this process involves something more complicated than just returning a constant color (which is what we have done in the code above). In computer graphics, the task of defining the object's actual color <b>at any given point on its surface</b> (knowing that this color changes depending as we just said on external parameters such as how much light an object receives as we all internal parameters such as how shiny or matter the object is) is called <b>shading</b>. It will take quite a few more lessons before we can start studying shading, but it is important that you know about it at this stage.</p>
+
+<p>Ray-tracing is said to be <b>image centric</b>. The outer loops iterate over all the pixels in the image and the inner loop iterates over the objects in the scene. The rasterization algorithm in comparison, is object centric. It requires to loop over all the geometric primitives in the scene (the outer loop), project these primitives onto the screen and then loop over all pixels in the image to find which one of these pixels overlap the screen projected geometry (the inner loop). The inner and outer loop in the two algorithms are swapped. Here is a quick implementation of the rasterization loops in pseudo-code (you can find a complete description of this algorithm in the lesson <a href="rasterization-practical-implementation.html">Rasterization: a Practical Implementation</a>).</p>
+
+<div name="code" class="code">// loop over all pixels
+Vec3f *framebuffer = new Vec3f[imageWidth * imageHeight];
+for (int k = 0; k < numObjectsInScene; ++k) {
+    // project object onto the scene using perspective projection
+    ...
+    for (int j = 0; j < imageHeight; ++j) {
+        for (int i = 0; i < imageWidth; ++i) {
+            if (pixelCoversGeometry(i, j, objects[k]) {
+                framebuffer[j * imageWidth + i] = objects[k].color;
+            }
+        }
+    }
+}</div>
+
+<p>As mentioned several times in the previous lessons, both rasterization and ray-tracing can be used to solve the visibility problem. Though remember that the rendering process is a two steps process: it includes visibility and shading. Rasterization is good for visibility (and much faster than ray-tracing) but not as good as ray-tracing when it comes to shading. Ray-tracing on the other hand can be used for both.</p>
+
+<div class="important">
+
+<div style="width: 300;" class="captionImage right">
+<img class="left"  src="../../images/upload/ray-tracing-refresher/rt-ray-tracing-pointsd41d.png?"/><p class="caption left">Figure 4: computing the visibility between points is easy with ray-tracing.</p>
+</div>
+
+<p>What are going to explain is pretty central to rendering, so take a moment to read it carefully. Often you will read that ray-tracing is better than rasterization for shading but most text books fail to explain why. (Almost) everything in rendering is about computing the visibility between a point in space and the first visible surface in a given direction, or the visibility between two points. The former is used to solve the visibility problem, the latter to solve things such as shadowing. Rasterization (combined with the depth-buffer algorithm) is very good to find the first visible surface, but is inefficient to solve the visibility between two points. Ray-tracing on the other end, can handle both cases efficiently. Finding the first visible surface is useful to solve the visibility problem. Thus both ray-tracing and rasterization do a good job at that. Shading on the other hand, requires to solve visibility between surfaces. This is used to compute shadows, soft shadows when area lights are used, and more generally global illumination effects such as reflection, refraction, indirect reflections and indirect diffuse. For this particular part of the rendering process, ray-tracing is thus more efficient than rasterization. But keep in mind that any technique that computes the visibility between points can be used for shading and solving the visibility problem. It doesn't have to either be ray-tracing or rasterization but ray-tracing is somehow the lazy way of doing it, though it comes at a price as we will see at the end of this chapter. We will come back on this important concept in the next chapter when we will talk about light transport algorithms.</p> 
+</div>
+
+<p>Ray-tracing sounds like a much better method than rasterization when you look at it that way, though the main issue with ray-tracing is that it involves to compute the intersection of rays with geometry which is a costly operation (i.e. slow). In real-time graphics applications, speed is more important than photo-realism which is why GPUs use rasterization. When photo-realism is more important than speed, ray-tracing is a much better choice, though it is harder to produce images with ray-tracing at interactive frame rates and even less so at real-time frame rates.</p>
+
+<div class="scratchquote">"Ray tracing isn't too slow; computers are too slow." (Kajiya 1986)</div>
+
+<p>In summary, using ray-tracing to compute photo-realistic images of 3D objects can be decomposed in essentially three steps:</p>
+
+<ul>
+<li>Casting Rays: cast a ray for each pixel in the image</li>
+<li>Ray-Geometry Intersection: test if a ray intersects any of the objects in the scene (this requires to loop over all the objects for each cast ray).</li>
+<li>Shading: find out what the object "looks like" at the intersection point between the ray and the object (if an intersection has occurred).</li>
+</ul>
+
+<p>Let's now review these steps one by one.</p>
+
+<h2>Casting Rays into the scene</h2>
+ 
+<p>The first thing we need to do in order to create an image in ray-tracing, is to cast a ray for each pixel in the image. These rays are called <b>camera</b> or <b>primary rays</b> (because they are simply the first rays we will cast into the scene). As we will see later in this lesson, more rays can be spawned from primary rays. These other rays are called <b>secondary rays</b>. They are used to find if a given point in the scene is in shadow or to compute shading effects such as reflection or refraction. When a primary ray is cast into the scene, the next step is to find if it intersects any object in the scene.</p>
+
+<p>When primary rays are used to solve the visibility problem, we can use the term <b>ray-casting</b>.</p>
+
+<p>Generating primary or camera rays is the topic of the next lesson (<a href="ray-tracing-generating-camera-rays.html">Ray-Tracing: Generating Camera Rays</a>).
+ 
+<h2>Testing for Ray-Geometry Intersections</h2>
+ 
+<p>Testing if a ray intersects any object in the scene requires to loop over all the objects in the scene and test the current object against the ray.</p>
+
+<div name="code" class="code">Ray ray = buildCameraRay(i, j);
+for (int k = 0; k < numObjects; ++k) {
+    if (intersect(ray, objects[k]) {
+        // this ray intersects objects[k]
+    }
+}</div>
+
+<p>Geometry in 3D can be defined in many different ways. Simple shapes such as sphere, disks, planes can be defined mathematically, or parametrically. The shapes of more complex objects can only be described using polygon meshes, subdivisions surfaces or NURBS surfaces (or something equivalent).</p>
+ 
+<div style="width: 300;" class="captionImage right">
+<img class="left"  src="../../images/upload/ray-tracing-refresher/rt-triangulationd41d.png?"/><p class="caption left">Figure 5:  triangulated meshes are easier to ray-trace than other types of geometry.</p>
+</div>
+
+<p>The first category of objects (objects represented mathematically) can often be tested for a ray intersection using a geometric or an analytical approach. The ray-sphere intersection test for example can be resolved using both approaches. This is the topic of the lesson <a href="../../indexf17c.html">Ray-Tracing: Rendering Simple Shapes</a>.</p>
+ 
+<p>The main problem with the second category of objects is that a ray-geometry intersection methods needs to be implemented for each supported type of surface. NURBS surfaces for example can be ray-traced directly though the solution for doing so is very different from the solution being used to test the intersection between a ray and a polygon mesh. Thus, if you want to support all geometry types (subdivision surface, NURBS, polygon mesh), you need to write one ray-geometry intersection routine per supported type of geometry. This potentially adds a fair degree of complexity to the program's code. The alternative solution (which is the approach chosen by almost ever professional program) is to convert each geometry type into the same internal representation, which in almost 99% of the cases, is going to be a triangulated polygon mesh. Ray-tracing loves triangles!</p>
+ 
+<p>Why triangles? As suggested, first, it is a better approach to convert the different geometry types to the same internal geometry representation (a process also called tessellation), and it happens that converting almost any type of surface to a polygon mesh is generally easy. From there, converting a polygonal mesh to a triangulated mesh is also pretty straightforward (the only difficulty is with concave polygons). Though triangles are also advantageous because they can be used as a the basic geometric primitive in both ray-tracing and rasterization. Why do both algorithms love triangles is because they have interesting geometrical properties that other types don't have. They are co-planar which is not necessarily the case of faces with more than three vertices. Computing their barycentric coordinates using the edge function approach which we described in <a href="rasterization-practical-implementation/rasterization-stage.html">the lesson on rasterization</a> is also straightforward. Barycentric coordinates play an important role in shading.</p>
+ 
+<p>For this reason, a lot of research went into finding the best possible method for testing if a ray intersects a triangle. This problem can be solved geometrically but this is not necessarily the fastest method. Other methods using algebraic solutions have been developed over time. A good ray-triangle intersection routine is one that is both fast and numerically stable. This topic will be studied in the lesson <a href="ray-tracing-rendering-a-triangle.html">Ray-Tracing: Rendering a Triangle</a>.</p>
+ 
+<p>Polygonal meshes or other types of surfaces are thus converted to triangles. This can be done either before you load the geometry into the memory of your program (in your modeling tool, before you export the mesh to the renderer), or while you load the geometry at render time. We will use the second option in this series of lessons. Note though that now, not only each camera ray needs to be tested against each object in the scene, but also against each individual triangle making up each polygon object in the scene. In other words, the loops now looks like the following:</p>
+ 
+<div name="code" class="code">for (int j = 0; j < imageHeight; ++j) {
+    for (int i = 0; i < imageWidth; ++i) {
+        for (int k = 0; k < numObjects; ++k) {
+            for (int n = 0; n < objects[k].numTriangles; ++n) {
+                Ray ray = buildCameraRay(i, j);
+                if (intersect(ray, objects[k].triangles[n])) {
+                    framebuffer[j * imageWidth + i] = shade(ray, objects[k], n);
+                }
+            }
+        }
+    }
+}</div>
+ 
+<p>What this practically means, is that the time it takes to render a scene in ray-tracing is directly proportional to the number of triangles the scene contains. This is not necessarily the case with rasterization. Of course the more triangles you have with a rasterizer the longer it takes to render the frame, though many of these triangles can be thrown away before the render even starts (for example the triangles facing away from the camera if back face culling is on). This is not possible in ray-tracing for a reason we will explain in the shading part of this chapter. All triangles need to be stored in memory and each one of them need to be tested when a ray is cast into the scene. The high-computational cost of ray-tracing (and the fact that render time grows linearly with the number of triangles the scene contains) is one of the algorithm main curses.</p>
+
+<h3>The Trace Function</h3>
+
+<p>In ray-tracing the inner loops (the loop over all the objects and all the triangles each object contains) are generally moved to a function which is typically called <span class="code-inline">trace()</span>. The function returns true if an object/triangle was intersected and false otherwise.</b>
+ 
+<div name="code" class="code">bool trace(
+    const Vec3f& rayOrigin, const Vec3f &rayDirection,
+    const Object* objects, const uint32_t &numObjects,
+    uint32_t &objectIndex,
+    uint32_t &triangleIndex
+)
+{
+    bool intersect = false;
+    for (uint32_t k = 0; k < numObjects; ++k) {
+        for (uint32_t n = 0; n < objects[k].numTriangles; ++n)) {
+            if (rayTriangleIntersect(rayOrigin, rayDirection, objects[k].triangles[n]) {
+                intersect |= true;
+                objectIndex = k;
+                triangleIndex = n;
+            }
+        }
+    }
+   
+    return intersect;
+}
+ 
+int main(...)
+{
+    ...
+    uint32_t objectIndeix, triangleIndex;
+    for (int j = 0; j < imageHeight; ++j) { 
+        for (int i = 0; i < imageWidth; ++i) { 
+            if (trace(rayOrigin, rayDirection,   objects, numObjects, objectIndex, triangleIndex)) {
+                framebuffer[j * imageWidth + i] = shade(rayOrigin, rayDirection, objects[objectIndex], triangleIndex); 
+            } 
+        } 
+    }
+    ...
+   return 0; 
+}</div>
+ 
+<div style="width: 300;" class="captionImage right">
+<img class="left"  src="../../images/upload/ray-tracing-refresher/rt-multi-trianglesd41d.png?"/><p class="caption left">Figure 6: a ray can intersect several objects.</p>
+</div>
+
+<p>As you can see in figure 6 though, a ray may intersect several triangles. With rasterization, we solve this problem using a depth-buffer. In ray-tracing, we solve this problem by simply creating a variable in the <span class="code-inline">trace()</span> function that keeps track of the closest distance between the ray origin and the intersection point while we iterate over the objects' triangles. When an intersection is found, the distance \(t\) to the triangle is tested against this variable (let's call it \(t_{nearest}\)) which is originally set to infinity (a very large number).  If \(t\) is smaller than \(t_{nearest}\) then \(t_{nearest}\) is set to \(t\). In the end, when all the triangles of all the objects have been tested, \(t_{nearest}\) contains the distance to the closest triangle that the ray intersected if any (we will need to access this triangle again at the shading stage, so we also store some information about that triangle such as the object it belongs to as well as its index in that object's triangle list).</p>
+ 
+<div class="question">We will talk about rays in more details in the next lesson, though let's just say that a ray is defined by its origin and its (normalized) direction. Then the distance \(t\) defines the distance from a point along the ray to the ray's origin. The 3D position of this point on the ray can be found using the following code:
+<div name="code" class="code">Vec3f P = rayOrigin + t * rayDirection;</div>
+</div>
+ 
+<div name="code" class="code"> bool trace(
+    const Vec3f& rayOrigin, const Vec3f &rayDirection,
+    const Object* objects, const uint32_t &numObjects,
+    uint32_t &objectIndex,
+    uint32_t &triangleIndex,
+    float &tNearest
+)
+{
+    tNearest = INFINITY; // initialize to infinity
+    bool intersect = false;
+    for (uint32_t k = 0; k < numObjects; ++k) {
+        for (uint32_t n = 0; n < objects[k].numTriangles; ++n) {
+            float t;
+            if (rayTriangleIntersect(rayOrigin, rayDirection, objects[k].triangles[n], t) && t < tNearest) {
+                objectIndex = k;
+                triangleIndex = n;
+                tNearest = t; // update tNearest with the distance to the closest intersect point found so far
+                intersect |= true;
+            }
+        }
+    }
+   
+    return intersect;
+}</div>
+
+<div style="width: 300;" class="captionImage right">
+<img class="left"  src="../../images/upload/ray-tracing-refresher/rt-geometry-datad41d.png?"/><p class="caption left">Figure 7: geometry information such as normals or texture coordinates is used in shading.</p>
+</div>
+ 
+<p>At the shading stage, we will need to access some information about the topology of the surface at the intersection point, such as the position of the intersection point itself (generally denoted <b>P</b>), but also the normal of the surface at the intersection point (the surface orientation which is generally denoted <b>N</b>) as well as its texture coordinates (the <b>st</b> or <b>uv</b> coordinates). Other quantities may be needed such as the surface derivatives at the intersection but this is an advanced topic. Finding the normal of the surface at the intersection point is often simple. For triangles, we just need to compute the cross product between two edges of the intersected triangles. For spheres, if we know the position of sphere centre (let's call it C), we just need to compute the vector ||P-C||. More information on this topic can be found in the next lessons.</p>
+ 
+<h2>Shading</h2>
+
+<div style="width: 300;" class="captionImage right">
+<img class="left"  src="../../images/upload/ray-tracing-refresher/rt-glass-balld41d.png?"/><p class="caption left">Figure 8: distortion effect is caused by the phenomenon of refraction.</p>
+</div>
+ 
+<p>Even though ray-tracing has a high computational cost compared to other approaches such as rasterization, it also has advantages that makes it far more appealing than other rendering techniques. This is particularly true when it comes to shading.</p>
+ 
+<p>Once we found the object that a ray intersects, we then need to find out what the color of the object is at the intersection point. The color of objects or their intensity generally varies greatly across the surface of any object. This is due to change in lighting as well as the fact that the texture of objects changes across their surface. The color of an object at any point on its surface is "just" the result of the way the object returns or reflects light that impinges on its surface towards the observer. The color at the intersection point depends on:</p>
+
+<div style="width: 300;" class="captionImage right">
+<img class="left"  src="../../images/upload/ray-tracing-refresher/rt-gathering-lightd41d.png?"/><p class="caption left">Figure 9: of all the light that is falling on the surface at P, how much of that light is reflected towards the observer?</p>
+</div>
+
+<ul>
+<li>How much light (in the real world the concept of light color and intensity are actually one and the same) impinges on the object surface (at the intersection point but also away from the point if the surface is transparent or translucent but that is an advanced topic).</li>
+<li>The direction of that light.</li>
+<li>The property of the surface itself, notably its color.</li>
+<li>The observer position. Most surfaces don't reflect light equally in all directions. Thus the amount of reflected light is likely to change with the camera or observer's position.</li>
+</ul>
+ 
+<p>We will review this process in detail when get to the lessons on shading. For now, all we want you to note, is that beside the property of the object (such as its color), shading has very much to do with "gathering" information about light that falls on the object surface. In nature, this process can be described as "light rays" emitted from light sources (or indirectly by other surfaces in the scene that reflect light rays of light sources towards other surfaces, a process known as indirect lighting), falling on the surface of objects and being reflected back into the scene. Some of these reflected rays will hit more surfaces and will be reflected again in turn. Other rays, might reach the observer's eyes or the camera. In the real word, light travels from light sources to the eye (figure 8). Though in ray-tracing we generally choose to trace the path of light rays back from the eye to the surface, and then from the surface to the light source, a process which we call <b>backward tracing</b> because it follows the natural propagation of light backward (figure 9).</p>
+ 
+<div class="scratchquote">In an obvious approach to ray tracing, light rays emanating from a source are traced through their paths until they strike the viewer. Since only a few will reach the viewer, this approach is wasteful. In a second approach suggested by Appel, rays are traced in the opposite direction -- from the viewer to the objects in the scene." An Improved Illumination Model for Shaded Display. Turner Whitted, 1980.</div>
+
+<div style="width: 300;" class="captionImage right">
+<img class="left"  src="../../images/upload/ray-tracing-refresher/rt-shader-brdfd41d.png?"/><p class="caption left">Figure 10: the function of an illumination model is to define how much light is reflected in the direction \(\omega_o\) based on the surface properties such as its color, light intensity and the incident light direction \(\omega_i\).</p>
+</div>
+ 
+<p>We won't explain how shading works in this chapter or this lesson, though we will provide some information about light transport algorithms in the next chapter. The function of a light transport algorithm is to simulate the way light (in the form of energy) is distributed through the scene. How is a given material reflecting this light back into the environment, is defined by a mathematical model, or <b>illumination model</b> in computer graphics (if you heard the term BRDF before this is more or less what the role of that BRDF is). The <a href="http://en.wikipedia.org/wiki/Phong_reflection_model">Phong model</a> (which is well known) is an example of illumination model. Illumination models are generally implemented in what we call shaders. Shaders are generally implemented as some sort of function that takes as input the incident light direction \(\omega_i\) (the Greek letter omega) and intensity, the direction from which the material is looked at \(\omega_o\), and return based on the material properties and the illumination model being used, the amount of incident light that is reflected in the direction \(\omega_o\).</p>
+
+<div style="width: 300;" class="captionImage right">
+<img class="left"  src="../../images/upload/ray-tracing-refresher/rt-light-pathd41d.png?"/><p class="caption left">Figure 11: primary and secondary rays (reflection and shadow rays).</p>
+</div>
+
+<div style="width: 300;" class="captionImage right">
+<img class="left"  src="../../images/upload/ray-tracing-refresher/rt-shadow2d41d.png?"/><p class="caption left">Figure 12: shadow rays.</p>
+</div>
+
+<p>Again, don't worry too much about shading, light transport algorithm, shaders, BRDFs and illumination models for now. All these concepts will be explained in details in the lessons on shading. What is important to note in the context of this lesson, is that shading involves to simulate the way light energy is distributed through the scene. One of the most natural way of looking at this problem, is in terms of light rays. For example we may want to follow the path of a light ray that is emitted by a light source, then reflected by a diffuse object towards a mirror and then finally reflected by this mirror towards the eye. Since in CG we prefer to use backward tracing, we would actually follow the path of that light ray the other way around. We would trace a light ray from the eye to the mirror, then cast a reflection ray (the direction of a reflection ray can easily be computed using the well known reflection law which we will study in the lessons on shading). This ray would intersect the diffuse object. We would finally cast a ray from the diffuse object to the light. All the rays we cast after the primary rays (the ray from the mirror surface to the diffuse object and the ray from the diffuse object to the light) are called <b>secondary rays</b>. Secondary rays often have names of their own: for example the ray cast from the mirror is called a <b>reflection ray</b>, and the ray cast towards the light is called a <b>shadow ray</b>. The main goal of this ray, is to find if the point on the diffuse object is in the shadow of the light (if the shadow ray intersects an object on its way to the light, then the point is in shadow).</p>
+
+<p>Note that each one of these secondary rays involves to compute the visibility between two points. For example when we cast a reflection ray from the mirror into the scene, we want to compute the first visible surface that the reflection ray will eventually intersect (which in our example is the diffuse object). When we cast a shadow ray, we want to find if this shadow ray intersects another object before reaching the light. And <b>the easiest way of computing visibility between two points, as you can guess, is of course to use ray-tracing</b>.</p>
+
+<div class="question">Ray-tracing has always been known for being the best solution to generate photo-realistic images of 3D objects, though keep in mind that until recently (up to the late 1990s early 2000s), the technique itself was considered way too expensive for being used in anything else than some research projects. Keep in mind also that computer resources increased but that the complexity of the scenes that are being rendered increases as well. Thus the actual time it takes to render these scenes hasn't changed much over the years. This effect is known as the <a href="rendering-3d-scene-overview/light-simulator.html">Blinn's law</a>.</div>
+
+<p>In conclusion we can say that <b>any light transport algorithm that requires heavy computation of visibility (such as when reflection or shadow rays are cast into the scene) is likely to be more efficient with raytracing</b>. Q.E.D. (<i>quod erat demonstrandum</i>, meaning "which had to be proven").</p>
+
+<h2>Ray-Tracing: the Challenges</h2>
+
+<p>Ray-tracing is very simple in its principle and "easy" to implement. The most complicated part of the process is to write code or routines to compute the intersection of rays with objects. This problem is often solved using either a geometric or analytical solutions, both implies a lot of mathematics. The main issue though beside the maths, is that computing these intersection tests is also often an expensive process. Though despite this main disadvantage the technique is elegant in its simplicity and make it possible to solve both visibility and shading in one unified framework.</p>
+
+<p>When we say ray-tracing is easy to implement, we should probably precise though that developing a production ray-tracer is a very complex task. Implementing a basic prototype is simple but making the technique robust so that it can be used on large production, is a very challenging problem. A production ray-tracing needs to support many features such as displacement, motion-blur, programmable shading, etc. Many of these features are hard to get working efficiently in ray-tracing. Ray-tracing comes with a whole set of problems the rasterization algorithm doesn't have. These problems are difficult to solve efficiently. One of the main problems with ray-tracing is that it requires all the scene geometry to be stored in memory while the image is being rendered. This is not necessarily the case with rasterization: once we know that an object won't be visibly anywhere else on the screen we can throw it away (and remove it from memory). Triangles facing away from the camera can also be thrown away if back-face culling is on. In ray-tracing, even if an object is not visible in the scene, it might cast shadows on over objects visible by the camera, and thus need to be kept in memory until the last pixel in the image is processed. With production scenes containing millions of triangles, the amount of memory that is required to store the data can become a problem.</p>
+
+<div style="width: 300;" class="captionImage right">
+<img class="left"  src="../../images/upload/ray-tracing-refresher/rt-mem-consumingd41d.png?"/><p class="caption left">Figure 13: ray-tracing is very memory consuming.</p>
+</div>
+
+<p>The ray-intersection step as mentioned in this lesson is the most expensive part of the rendering process in ray-tracing. Making the ray-geometry routine fast is generally not enough. Ray-tracers use what we call <b>acceleration structures</b> to speed up the process. Acceleration structures are spatial structures used to "sort" the geometry in space to avoid having to test all the objects in the scene for each cast ray. Acceleration structures won't be studied in this introduction on rendering, but you will find lessons on the topic in the ray-tracing advanced section. They work well and help to speed up ray-tracing by a great factor but they also use a lot of memory which adds up to the memory that is being already used to store the geometry.</p>
+
+<p>Finally you also need to store information related to the motion of objects. This increase even further the amount of memory needed to store the scene data. All in all, ray-tracers generally use for the same scene far more memory than a rasterizer. Ray-tracing is useful to produce more realistic image but at the expense of being slower and using more memory than a program based on the rasterization algorithm. The algorithm is simple conceptually, but very hard to get working reliably and efficiently on very large and complex scenes with complex shading.</p>
+
+<h2>Ray-Tracing on the GPU?</h2>
+
+<p>The ray-tracing algorithm was first successfully ported on the GPU in the mid-90. Quite a lot of research has been made in this area, though the ray-tracing algorithm is not yet natively supported by most consumer graphics card (hardware to accelerate ray-tracing has been around for a very long while). It is very likely that GPUs will support ray-tracing natively in the years to come. Though as mentioned above, it needs to overcome issues such as memory management, etc. which as you know with ray-tracing is a more difficult problem than with rasterization.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 1 of  3</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='ray-tracing-overview/light-transport-ray-tracing-whitted.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-overview by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 16:47:31 GMT -->
+</html>

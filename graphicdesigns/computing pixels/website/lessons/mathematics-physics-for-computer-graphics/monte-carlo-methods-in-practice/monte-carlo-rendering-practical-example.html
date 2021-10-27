@@ -1,0 +1,360 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/mathematics-physics-for-computer-graphics/monte-carlo-methods-in-practice/monte-carlo-rendering-practical-example by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:07:04 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Monte Carlo Methods in Practice (Monte Carlo in Rendering (A Practical Example))</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='Monte Carlo simulation, Monte Carlo integration, random numbers, variance reduction, Quasi Monte Carlo'>
+<meta name='date' content='2015-04-18 15:13:02'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Monte Carlo Methods in Practice</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="monte-carlo-methods.html">Monte Carlo Methods</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="monte-carlo-simulation.html">Monte Carlo Simulation</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="monte-carlo-integration.html">Monte Carlo Integration</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="monte-carlo-rendering-practical-example.html"><b>Monte Carlo in Rendering (A Practical Example)</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="generating-random-numbers.html">Generating Random Numbers</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="variance-reduction-methods.html">Variance Reduction Methods: a Quick Introduction to Importance Sampling</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction-quasi-monte-carlo.html">Variance Reduction Methods: a Quick Introduction to Quasi Monte Carlo</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../codea0b6.html?id=31&amp;origin=/lessons/mathematics-physics-for-computer-graphics/monte-carlo-methods-in-practice">Source Code</a></div></div></div><h2>Rendering the McBeth Chart using Monte Carlo Integration</h2>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left" src="../../../images/upload/monte-carlo-methods-practice/SPD01d41d.png?" />
+<p class="caption left">Figure 1: SPD of three different objects.</p>
+</div>
+
+<p>In lesson 5 (Colors and Digital Images) we explained that colors could be represented as curve giving the amount of light at each wavelength (denoted with the greek letter lambda \(\lambda\)) in the visible spectrum (these curves are called spectral power distribution or SPD). Examples of such curves for three different materials are shown in figure 1. As you can see, these curves can be interpreted as a function of wavelength: f(\(\lambda\)). Generally, the visible spectrum is considered to be within the interval 380 to 730 nanometers. To convert this curve back to tristimulus values X, Y and Z, we need to calculate three one-dimensional integrals:</p>
+
+$$
+\begin{array}{l}X = \int_{\lambda1}^{\lambda2} spd(\lambda) \bar X(\lambda) d\lambda\\Y = \int_{\lambda1}^{\lambda2} spd(\lambda) \bar Y(\lambda) d\lambda\\Z = \int_{\lambda1}^{\lambda2} spd(\lambda) \bar Z(\lambda) d\lambda
+\end{array}.
+$$
+
+<p>Where the functions \(\bar X, \bar Y, \bar Z\) are the CIE standard observer color matching functions. The resulting tristimulus values X, Y and Z can then be converted to RGB. We explained this process in details in the lesson on <a href="../../../indexf17c.html">Color and Digital Images</a>.</p>
+
+<p>Hopefully, you have guessed that we were going to use Monte Carlo integration to solve these integrals. The SPDs we will be using are the spectral data for each of the 24 different colors used on a McBeth chart. Spectral data for these colors are readily available on the web. If you remember what we said about Monte Carlo integration in the previous chapter, this estimator is defined as:</p>
+
+$$\langle F^N \rangle = (b-a) \dfrac{1}{N} \sum_{i=0}^{N-1} f(X_i).$$
+
+<p>In our example, the interval [a,b] is &nbsp;[380,730] the range of wavelength defining the visible spectrum. To approximate the XYX values for each color of this color checker, we need to choose a random wavelength within this interval, evaluate and multiply with each other the spd and the color matching functions at this random wavelength, repeat this process N times (where N is the number of samples), sum up all the results, divide the final number by N, and multiply it by (b-a). In pseudo-code we get:</p>
+
+<div name="code" class="code">int N = 32;
+float lambdaMin = 380, lambdaMax = 730;
+float X = 0, Y = 0, Z = 0;
+for (int i = 0; i &lt; N; ++i) { // for each sample
+    // select a random wavelength
+    float lambda = lambdaMin + drand48() * (lambdaMax - lambdaMin); 
+    // evaluate the sod and the color matching function at this wavelength,
+    // multiply the results, and add the contribution of this samples to the others
+    X += spd(lambda) * CIE_X(lambda);
+    Y += spd(lambda) * CIE_Y(lambda);
+    Z += spd(lambda) * CIE_Z(lambda);
+}
+// complete the integral, multiply by (b-a) and divide by N
+X *= (lambdaMax - lambdaMin) / N;
+Y *= (lambdaMax - lambdaMin) / N;
+Z *= (lambdaMax - lambdaMin) / N;</div>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left" src="../../../images/upload/monte-carlo-methods-practice/mcbethchartd41d.png?" />
+<p class="caption left">Figure 2: a real McBeth chart used in film and photography.</p>
+</div>
+
+<p>Simple? Indeed. To illustrate what variance is, we will actually render each color of the MacBeth chart as a 64x64 square using MC integration for each pixel of that square (each pixel of a color bucket, is obtained by running a new Monte Carlo simulation and therefore each pixel is likely to be "slightly" different than the others. How different depends mostly on the number of samples N used in the simulation). Our final goal is to recreate something that looks like a real McBeth chart, but CG generated (and using Monte Carlo integration of course). In lesson 5, we provided the source code of a small program rendering a McBeth chart using a Riemann sum to compute the integrals. We will start from this program as it already contains the spectral data for the McBeth chart as well as the CIE color matching functions. The heart of the code is really the function in which the Monte Carlo integration is done.</p>
+
+<div name="code" class="code">unsigned int N = 32;
+ 
+inline float linerp(const float *f, const short &i, const float &t, const int &max)
+{ return f[i] * (1 - t) + f[std::min(max, i + 1)] * t; }
+ 
+void monteCarloIntegration(const short &curveIndex, float &X, float &Y, float &Z)
+{
+    float S = 0; // sum, used to normalize XYZ values
+    for (int i = 0; i < N; ++i) {
+        float lambda = drand48() * (lambdaMax - lambdaMin);
+        float b = lambda / 10;
+        short j = (short)b;
+        float t = b - j;
+        // interpolate
+        float fx = linerp(spd[curveIndex], j, t, nbins - 1);
+        b = lambda / 5;
+        j = (short)b;
+        t = b - j;
+        X += linerp(CIE_X, j, t, 2 * nbins - 1) * fx;
+        Y += linerp(CIE_Y, j, t, 2 * nbins - 1) * fx;
+        Z += linerp(CIE_Z, j, t, 2 * nbins - 1) * fx;
+        S += linerp(CIE_Y, j, t, 2 * nbins - 1);
+    }
+    // sum, normalization factor
+    S *= (lambdaMax - lambdaMin) / N;
+    // integral = (b-a) * 1/N * sum_{i=0}^{N-1} f(X_i) and normalize
+    X *= (lambdaMax - lambdaMin) / N / S;
+    Y *= (lambdaMax - lambdaMin) / N / S;
+    Z *= (lambdaMax - lambdaMin) / N / S;
+}</div>
+
+<p>As you can see with this code, we first sample a random value for the wavelength contained in the interval [380,730] (line 10). we need to convert this random wavelength to an index for performing a lookup into the CIE color matching functions (sampled every 5 nm) and McBeth spectral data (sampled every 10 nm) 1-D tables. Because the wavelength may fall between two samples in the table, it is best to perform a linear interpolation (interpolate the two nearest samples). Finally X, Y and Z are updated with the value of the CIE color matching function and spectral data at this wavelength (line 19-21). Because these values will need to be normalized (check lesson 5), we also need to compute the integral of the CIE color matching function corresponding to the Y component. Here as well, we can use a Monte Carlo integration (line 22). Finally, the X, Y and Z values are multiplied by (b-a) (in this example the minimum and maximum wavelength), and divided by N (line 27-29). We also have to normalise them but this has nothing to do with a MC integration (it is just part of the process of converting spectral data to XYZ).</p>
+
+<div name="code" class="code">const double XYZ_to_RGB[][3] = {
+    { 2.3706743, -0.9000405, -0.4706338},
+    {-0.5138850,  1.4253036,  0.0885814},
+    { 0.0052982, -0.0146949,  1.0093968}
+};
+ 
+void XYZtoRGB(const float &X, const float &Y, const float &Z, float &r, float &g, float &b)
+{
+    r = std::max(0., X * XYZ_to_RGB[0][0] + Y * XYZ_to_RGB[0][1] + Z * XYZ_to_RGB[0][2]);
+    g = std::max(0., X * XYZ_to_RGB[1][0] + Y * XYZ_to_RGB[1][1] + Z * XYZ_to_RGB[1][2]);
+    b = std::max(0., X * XYZ_to_RGB[2][0] + Y * XYZ_to_RGB[2][1] + Z * XYZ_to_RGB[2][2]);
+}
+ 
+int main(int argc, char **argv)
+{
+    ...
+    for (int y = 0, pixIndex = 0; y < height; ++y) {
+        short row = (short)(y / squareSize);
+        for (int x = 0; x < width; ++x, pixIndex++) {
+            short column = (short)(x / squareSize);
+            // compute each pixel of the square
+            float X = 0, Y = 0, Z = 0;
+            monteCarloIntegration(row * 6 + column, X, Y, Z);
+            float r, g, b;
+            XYZtoRGB(X, Y, Z, r, g, b);
+            buffer[pixIndex][0] += r;
+            buffer[pixIndex][1] += g;
+            buffer[pixIndex][2] += b;
+        }
+    }
+    ...
+}</div>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left" src="../../../images/upload/monte-carlo-methods-practice/cgmcbethchartd41d.png?" />
+<p class="caption left">Figure 3: a computer generated McBeth chart using monte carlo integration (N = 32).</p>
+</div>
+
+<p>The main function of the program loops over each pixel of the frame. For each pixel, it computes the row and column this pixel corresponds to in the McBeth chart (the squares of the chart are organised as a series of 4 rows and 6 columns. You can see an example of McBeth chart in figure 2). The spectral data of that color will be used to compute a value for X, Y and Z (line 22 and 23). Then they are converted to RGB values, a process which we also explained in lesson 5. Finally, these RGB values are stored in buffer which is then save to disk once all the pixels are processed (you screen is likely to expect your image to be in sRGB so we also apply a gamma to the pixel values before storing them to disk). The result for 32 samples can be see in figure 3. Now as you can see the result is far from being bad, but the image is quite noisy! This is the famous variance, we have been talking about since lesson 16. Or what you call maybe more commonly noise when you look at your renders.</p>
+
+<h2>Example of Progressive Rendering</h2>
+
+<p>To demonstrate another very nice property of monte carlo integration, we will modify our program so that it keeps refining the result by computing as many version of this image as we want (we will call these images passes) and averaging their results. In way, it is the same as increasing the number of samples N. However if had increased N to 4096 for instance, the image might have taken a much longer time to render (in fact, technically 128 times longer than an image for which N = 32). Thus when N is small, we can see a result right away, and if we like what we see after this quick first pass, then we can the let the program run and compute more passes, until we are eventually satisfied with the image quality (that is when you think the noise is not distracting anymore). This method is known as <b>progressive rendering</b>. Imagine you need to deliver a sequence of images by a certain time. If X is the number of minutes you get when you divide the total number of rendering time you have by the total number of images you need to render, then you can let your program render each one of these images for no longer than X minutes. That way, you are certain that all your images will be rendered on time. They might have some noise, but you will have a complete sequences of images to look at and, in some circumstances, this often better than having an incomplete sequence of images even if they look much better. The fact that render time is predictable, is generally useful in a production environment. Also, if you like the sequence of images that you get after X hours of render time, you can re-launch the sequence and let it refine for another X number of hours. Rather than rendering each image from scratch again, the program can simply start from the existing renders and keep refining them by adding more passes. Therefore, no rendering resources is wasted! These are some of the great benefits of progressive rendering.</p>
+
+<p>More formally, remember than a Monte Carlo integration is just like computing the sample mean of a random variable. In lessons 16, we explained in details that these samples means (which are themselves random numbers) can also be averaged to produce more accurate results. In this example, a pass is nothing else than a sample mean. And the result of these passes can be averaged to produced a more accurate result (as with sample means). Which is why Monte Carlo integration makes progressive rendering possible.</p>
+
+<p>We have implemented a basic form a progressive rendering in our program. This time we won't display the result in an OpenGL window. The program runs entirely in a shell. It will keep rendering passes and accumulating the results to the buffer, until the user terminates the program (using ctrl-c). The program will catch this signal and will call a function in which we will save the result of the buffer to disk before quitting. Note that in fact, after each passe, we will actually convert the content of the buffer to a proper an image in which the content of the buffer is divided by the total number of passes (the buffer is like an accumulation buffer). It is the content of the image which is saved to disk, not the buffer. Here is the source code:</p>
+
+<div name="code" class="code">void handler(int s)
+{
+    printf("Saving image after %d passes\n", npasses);
+    std::ofstream ofs;
+    ofs.open("./mcbeth.ppm");
+    ofs << "P6\n" << width << " " << height << "\n255\n";
+    for (uint32_t i = 0; i < width * height; ++i) {
+        unsigned char r, g, b;
+        r = (unsigned char)(std::min(1.f, pixels[i][0]) * 255);
+        g = (unsigned char)(std::min(1.f, pixels[i][1]) * 255);
+        b = (unsigned char)(std::min(1.f, pixels[i][2]) * 255);
+        ofs << r << g << b;
+    }
+    ofs.close();
+    exit(0);
+}
+ 
+int main(int argc, char **argv)
+{
+    pixels = new color[width * height];
+    memset(pixels, 0x0, sizeof(color) * width * height);
+    buffer = new color [width * height];
+    memset(buffer, 0x0, sizeof(color) * width * height);
+    struct sigaction sigIntHandler;
+    sigIntHandler.sa_handler = handler;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+    sigaction(SIGINT, &sigIntHandler, NULL);
+    static const float gamma = 1 / 2.2;
+    while (1) {
+        for (int y = 0, pixIndex = 0; y < height; ++y) {
+            short row = (short)(y / squareSize);
+            for (int x = 0; x < width; ++x, pixIndex++) {
+                short column = (short)(x / squareSize);
+                // compute each pixel of the square
+                float X = 0, Y = 0, Z = 0;
+                monteCarloIntegration(row * 6 + column, X, Y, Z);
+                float r, g, b;
+                XYZtoRGB(X, Y, Z, r, g, b);
+                buffer[pixIndex][0] += r;
+                buffer[pixIndex][1] += g;
+                buffer[pixIndex][2] += b;
+            }
+        }
+        npasses++;
+        for (uint32_t i = 0; i < width * height; ++i) {
+            pixels[i][0] = powf(buffer[i][0] / npasses, gamma);
+            pixels[i][1] = powf(buffer[i][1] / npasses, gamma);
+            pixels[i][2] = powf(buffer[i][2] / npasses, gamma);
+        }
+        printf("npasses %3d (num samples %5d)\n", npasses, npasses * N);
+    }
+    delete [] pixels;
+    delete [] buffer;
+    return 0;
+}</div>
+
+<p>Let's look at some results. The following sequence of images shows the result after 1, 8, 16 and 32 passes (this corresponds to 32, 256, 512 and 1024 samples respectively).</p>
+
+<img style="width: 670px;" class="left" src="../../../images/upload/monte-carlo-methods-practice/cgmcbethchart1d41d.png?"/>
+
+<p>Obviously, as expected the noise is reduced as the number of passes (i.e. the number of samples) increases. By zooming out on a section of these images, we can see the noise better. Keep in mind that in Monte Carlo, you need 4 times as many samples to reduce the noise (or variance) by 2.</p>
+
+<img style="width: 670px;" class="left" src="../../../images/upload/monte-carlo-methods-practice/cgmcbethchart2d41d.png?" />
+
+<p>As suggested already a couple of times throughout this lesson, the art of Monte Carlo rendering is mostly about finding ways of reducing this noise. We will talk about variance reduction techniques later in this lesson.</p>
+
+<h2>Conclusion</h2>
+
+<p>Hopefully, with this exercise you better understand what Monte Carlo integration is, which as you can see is not only a simple idea but also really straightforward to implement. You also have a simple program that demonstrates the concept of progressive rendering (which is only possible because of the nature of the Monte Carlo algorithm). You hopefully now have a better understanding of where the noise (or variance if you use the correct technical term) comes from in your renders. And if you see this noise in our 3D renders, you can be sure that the renderer that produced this image, uses some sort of Monte Carlo integration.</p>
+
+<h2>Exercice</span></h2>
+
+<p>Adapt the program to display the image each time a new passes is added in an OpenGL window.</p>
+
+<p>Adapt the program to stop the render after a given time.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='monte-carlo-integration.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 4 of  8</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='generating-random-numbers.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/mathematics-physics-for-computer-graphics/monte-carlo-methods-in-practice/monte-carlo-rendering-practical-example by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:07:10 GMT -->
+</html>

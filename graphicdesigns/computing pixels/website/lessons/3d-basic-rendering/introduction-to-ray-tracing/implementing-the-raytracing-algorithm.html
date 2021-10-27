@@ -1,0 +1,229 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-ray-tracing/implementing-the-raytracing-algorithm by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:08:30 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Introduction to Ray Tracing: a Simple Method for Creating 3D Images (Implementing the Raytracing Algorithm)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='ray-tracing, perspective projection, conductor, dielectric, forward tracing, backward tracing, shadow ray, primary ray, eye ray, path tracing, reflection, refraction, Appel, Whitted, index of refraction, Fresnel equation, transmission, recursive, recursion depth, image file format'>
+<meta name='date' content='2014-10-30 18:10:05'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Introduction to Ray Tracing: a Simple Method for Creating 3D Images</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="how-does-it-work.html">How Does It Work?</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="raytracing-algorithm-in-a-nutshell.html">Raytracing Algorithm in a Nutshell</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="implementing-the-raytracing-algorithm.html"><b>Implementing the Raytracing Algorithm</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="adding-reflection-and-refraction.html">Adding Reflection and Refraction</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="ray-tracing-practical-example.html">Writing a Basic Ray Tracer</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code14ef.html?id=3&amp;origin=/lessons/3d-basic-rendering/introduction-to-ray-tracing">Source Code</a></div></div></div><div style="width: 370px;" class="captionImage right">
+<img width="370" class="left" src="../../../images/upload/introduction-to-ray-tracing/lightingnoshadow.gif" />
+<p class="caption left">Figure 1: we shoot a primary ray through the center of the pixel to check for a possible object intersection. When we find one we then cast a shadow ray to find out if the point is illuminated or in shadow.</p>
+</div>
+
+<div style="width: 370px;" class="captionImage right">
+<img width="370" class="left" src="../../../images/upload/introduction-to-ray-tracing/lightingshadow.gif" />
+<p class="caption left">Figure 2: the small sphere cast a shadow on the large sphere. The shadow ray intersects the small sphere before it gets to the light.</p>
+</div>
+
+<div style="width: 370px;" class="captionImage right">
+<img width="370" class="left" src="../../../images/upload/introduction-to-ray-tracing/pixelrender.gif" />
+<p class="caption left">Figure 3: to render a frame, we shoot a primary ray for each pixel of the frame buffer</p>
+</div>
+
+<p>We have covered everything there is to say! We are now prepared to write our first ray-tracer. You should now be able to guess how the ray-tracing algorithm works.</p>
+
+<p>First of all, take a moment to notice that the propagation of light in nature is just a countless number of rays emitted from light sources that bounce around until they hit the surface of our eye. Ray-tracing is, therefore, elegant in the way that it is based directly on what actually happens around us. Apart from the fact that it follows the path of light in the reverse order, it is nothing less that a perfect nature simulator.</p>
+
+<p>The ray-tracing algorithm takes an image made of pixels. For each pixel in the image, it shoots a primary ray into the scene. The direction of that primary ray is obtained by tracing a line from the eye to the center of that pixel. Once we have that primary ray's direction set, we check every object of the scene to see if it intersects with any of them. In some cases, the primary ray will intersect more than one object. When that happens, we select the object whose intersection point is the closest to the eye. We then shoot a shadow ray from the intersection point to the light (Figure 6, top). If this particular ray does not intersect an object on its way to the light, the hit point is illuminated. If it does intersect with another object, that object casts a shadow on it (figure 2).</p>
+
+<p>If we repeat this operation for every pixel, we obtain a two-dimensional representation of our three-dimensional scene (figure 3).</p>
+
+<p>Here is an implementation of the algorithm in pseudocode:</p>
+
+<div name="code" class="code">for (int j = 0; j < imageHeight; ++j) {
+    for (int i = 0; i < imageWidth; ++i) {
+        // compute primary ray direction
+        Ray primRay;
+        computePrimRay(i, j, &primRay);
+        // shoot prim ray in the scene and search for intersection
+        Point pHit;
+        Normal nHit;
+        float minDist = INFINITY;
+        Object object = NULL;
+        for (int k = 0; k < objects.size(); ++k) {
+            if (Intersect(objects[k], primRay, &pHit, &nHit)) {
+                float distance = Distance(eyePosition, pHit);
+                if (distance < minDistance) {
+                    object = objects[k];
+                    minDistance = distance; // update min distance
+                }
+            }
+        }
+        if (object != NULL) {
+            // compute illumination
+            Ray shadowRay;
+            shadowRay.direction = lightPosition - pHit;
+            bool isShadow = false;
+            for (int k = 0; k < objects.size(); ++k) {
+                if (Intersect(objects[k], shadowRay)) {
+                    isInShadow = true;
+                    break;
+                }
+            }
+        }
+        if (!isInShadow)
+            pixels[i][j] = object->color * light.brightness;
+        else
+            pixels[i][j] = 0;
+    }
+}</div>
+
+<p>The beauty of ray-tracing, as one can see, is that it takes just a few lines to code; one could certainly write a basic ray-tracer in 200 lines. Unlike other algorithms, such as a scanline renderer, ray-tracing takes very little effort to implement.</p>
+
+<p>This technique was first described by Arthur Appel in 1969 by a paper entitled "Some Techniques for Shading Machine Renderings of Solids". So, if this algorithm is so wonderful why didn't it replace all the other rendering algorithms? The main reason, at the time (and even today to some extent), was speed. As Appel mentions in his paper:</p>
+
+<div class="scratchquote">"This method is very time consuming, usually requiring for useful results several thousands times as much calculation time as a wire frame drawing. About one half of of this time is devoted to determining the point to point correspondence of the projection and the scene."</div>
+
+<p>In other words, it is slow (but as Kajiya - one of the most influential researchers of all computer graphics history -once said: "ray tracing is not slow - computers are"). It is extremely time consuming to find the intersection between rays and geometry. For decades, the algorithm's speed has been the main drawback of ray-tracing. However, as computers become faster, it is less and less of an issue. Although one thing must still be said: comparatively to other techniques, like the z-buffer algorithm, ray-tracing is still much slower. However, today, with fast computers, we can compute a frame that used to take one hour in a few minutes or less. In fact, real-time and interactive ray-tracers are a hot topic.</p>
+
+<p>To summarize, it is important to remember (again) that the rendering routine can be looked at as two separate processes. One step determines if a point is visible at a particular pixel (the visibility part), the second shades that point (the shading part). Unfortunately, both of the two steps require expensive and time consuming ray-geometry intersection tests. The algorithm is elegant and powerful but forces us to trade rendering time for accuracy and vise versa. Since Appel published his paper a lot of research has been done to accelerate the ray-object intersection routines. By combining these acceleration schemes with the new technology in computers, it has become easier to use ray-tracing to the point where it has been used in nearly every production rendering software.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='raytracing-algorithm-in-a-nutshell.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 3 of  6</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='adding-reflection-and-refraction.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-ray-tracing/implementing-the-raytracing-algorithm by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:08:35 GMT -->
+</html>

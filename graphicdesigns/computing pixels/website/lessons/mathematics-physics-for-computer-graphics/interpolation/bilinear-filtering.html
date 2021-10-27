@@ -1,0 +1,232 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/mathematics-physics-for-computer-graphics/interpolation/bilinear-filtering by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:07:38 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Interpolation (Bilinear Filtering)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='interpolation, lerp, linear interpolation, bilinear interpolation, trilinear interpolation, smoothstep'>
+<meta name='date' content='2016-05-27 16:33:47'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Interpolation</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction.html">Introduction</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="bilinear-filtering.html"><b>Bilinear Filtering</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="trilinear-interpolation.html">Trilinear Interpolation</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../codedcd8.html?id=56&amp;origin=/lessons/mathematics-physics-for-computer-graphics/interpolation">Source Code</a></div></div></div><h2>Bilinear Interpolation</h2>
+<div class="captionImage right" style="width: 300px;">
+<img class="left" src="../../../images/upload/interpolation/bilinearfig.png" width="300" height="300" />
+<p class="caption left">Figure 1: bilinear interpolation. We perform two linear interpolations first to compute a and b and then we interpolate a and b to find c.</p>
+</div>
+
+<p>Bilinear interpolation is used when we need to know values at random position on a regular 2D grid. Note that this grid can as well be an image or a texture map. In our example we are interested in finding a value at the location marked by the green dot (c which has coordinates cx, cy). To compute a value for c we will first perform two linear interpolations (see introduction) in one direction (x direction) to get b and a. To do so we will linearly interpolate c00-c10 and c01-c11 to get a and b using tx (where tx=cx). Then we will linearly interpolate a-b along the second direction (y-axis) to get c using ty (ty=cy). Whether you start interpolating the first two values along the x-axis or along the y-axis doesn't make any difference. In our example we start by interpolating c00-c10 and c01-c11 to get a and b. We could as well have interpolated c00-c01 and c10-c11 using ty then interpolated the result (a and b) using tx. To make the code easier to debug and write though it is recommended to follow the axis order (x, y and z for trilinear interpolation).</p>
+
+<p>When you perform linear interpolation, it is generally a good idea to check in the code that t is not greater than 1 or lower than 0 and to check that the point your are trying to evaluate is not outside the limits of your grid (if the grid has a resolution NxM you may need to create (N+1)x(M+1) vertices or NxM vertices and assume your grid has a resolution of (N-1)x(M-1). Both techniques work it is a matter of preference).</p>
+
+<p>Contrary to what the name suggests, bilinear interpolation is not a linear process but the product of two linear functions. The function is linear if the sample point lies on one of the edges of the cell (line c00-c10 or c00-c01 or c01-c11 or c10-c11). Everywhere else it is quadratic.</p>
+
+<p>In the following example (complete source code is available for download) we create an image by interpolating the values (colours) of a grid for each pixel of that image. Many of the image pixels have coordinates which do not overlap the grids coordinates. We use a bilinear interpolation to compute interpolated colours at these "pixel" positions.</p>
+
+<div name="code" class="code">float bilinear(
+   const float &tx, 
+   const float  &ty, 
+   const Vec3f &c00, 
+   const Vec3f &c10,
+   const Vec3f &c01,
+   const Vec3f &c11)
+{
+#if 1
+    float  a = c00 * (1 - tx) + c10 * tx;
+    float  b = c01 * (1 - tx) + c11 * tx;
+    return a * (1) - ty) + b * ty;
+#else
+    return (1 - tx) * (1 - ty) * c00 + 
+        tx * (1 - ty) * c10 +
+        (1 - tx) * ty * c01 +
+        tx * ty * c11;
+#endif
+}
+ 
+void testBilinearInterpolation()
+{
+    // testing bilinear interpolation
+    int imageWidth = 512;
+    int gridSizeX = 9, gridSizeY = 9;
+    Vec3f *grid2d = new Vec3f[(gridSizeX + 1) * (gridSizeY + 1)]; // lattices
+    // fill grid with random colors
+    for (int j = 0, k = 0; j <= gridSizeY; ++j) {
+        for (int i = 0; i <= gridSizeX; ++i, ++k) {
+            grid2d[j * (gridSizeX + 1) + i] = Vec3f(drand48(), drand48(), drand48());
+        }
+    }
+    // now compute our final image using bilinear interpolation
+    Vec3f *imageData = new Vec3f[imageWidth*imageWidth], *pixel = imageData;
+    for (int j = 0; j < imageWidth; ++j) {
+        for (int i = 0; i < imageWidth; ++i) {
+            // convert i,j to grid coordinates
+            T gx = i / float(imageWidth) * gridSizeX; // be careful to interpolate boundaries
+            T gy = j / float(imageWidth) * gridSizeY; // be careful to interpolate boundaries
+            int gxi = int(gx);
+            int gyi = int(gy);
+            const Vec3f & c00 = grid2d[gyi * (gridSizeX + 1) + gxi];
+            const Vec3f & c10 = grid2d[gyi * (gridSizeX + 1) + (gxi + 1)];
+            const Vec3f & c01 = grid2d[(gyi + 1) * (gridSizeX + 1) + gxi];
+            const Vec3f & c11 = grid2d[(gyi + 1) * (gridSizeX + 1) + (gxi + 1)];
+            *(pixel++) = bilinear(gx - gxi, gy - gyi, c00, c10, c01, c11);
+        }
+    }
+    saveToPPM("../../../indexf17c.html", imageData, imageWidth, imageWidth);
+    delete [] imageData;    
+}</div>
+
+<div class="captionImage right" style="width: 400px;">
+<img class="left" style="width: 400px;" src="../../../images/upload/interpolation/inputbilinear.png" />
+<img class="left" style="width: 400px;" src="../../../images/upload/interpolation/bilinear.png" />
+<p class="caption left">Figure 2: each black dot in the first image represents a vertex on the grid (the resolution of the grid is 10x10 cells which means 11x11 vertices). The second image is the result of interpolating the grid vertex data to compute the the pixel colours of a 512x512 image.</p>
+</div>
+
+<p>The bilinear function is a template so you can interpolate data of any type (float, colour, etc.). Notice also that the function can compute the same result in two different ways. The first method (line xx to xx) is more readable, but some people prefer to you use the second method (line xx to xx) because the interpolation can be seen as a weighted sum of the four vertices (weighted because c00, c01, c10 and c11 are multiplied by some coefficients. For instance <span class="code-inline">(1 - tx) * (1 - ty)</span> is the weighting coefficient for c00).</p>
+
+<p>The advantage of bilinear interpolation is that it is fast and simple to implement. However, If you look at the second image from figure 2, you will see that bilinear interpolation creates some patterns which are not necessarily acceptable depending on what you intend to use the result of the interpolation for. If you need a better result you will need to use more advanced interpolation techniques involving interpolation functions of degree two or more (such as the smoothstep function for example which is used in for generating procedural noise as described in the lesson <a href="https://www.scratchapixel.com/lessons/procedural-generation-vritual-worlds%20/procedural-patterns-noise-part-1/index.php">Procedural Patterns and Noise: Part 1</a>).</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='introduction.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 2 of  4</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='trilinear-interpolation.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/mathematics-physics-for-computer-graphics/interpolation/bilinear-filtering by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:07:49 GMT -->
+</html>

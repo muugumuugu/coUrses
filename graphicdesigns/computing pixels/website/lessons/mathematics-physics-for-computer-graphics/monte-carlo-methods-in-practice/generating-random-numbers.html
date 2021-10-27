@@ -1,0 +1,246 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/mathematics-physics-for-computer-graphics/monte-carlo-methods-in-practice/generating-random-numbers by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:07:10 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Monte Carlo Methods in Practice (Generating Random Numbers)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='Monte Carlo simulation, Monte Carlo integration, random numbers, variance reduction, Quasi Monte Carlo'>
+<meta name='date' content='2015-04-18 15:13:02'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Monte Carlo Methods in Practice</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="monte-carlo-methods.html">Monte Carlo Methods</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="monte-carlo-simulation.html">Monte Carlo Simulation</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="monte-carlo-integration.html">Monte Carlo Integration</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="monte-carlo-rendering-practical-example.html">Monte Carlo in Rendering (A Practical Example)</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="generating-random-numbers.html"><b>Generating Random Numbers</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="variance-reduction-methods.html">Variance Reduction Methods: a Quick Introduction to Importance Sampling</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction-quasi-monte-carlo.html">Variance Reduction Methods: a Quick Introduction to Quasi Monte Carlo</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../codea0b6.html?id=31&amp;origin=/lessons/mathematics-physics-for-computer-graphics/monte-carlo-methods-in-practice">Source Code</a></div></div></div><div class="question">
+The topic of random number generators is also related to the concept of noise generation. However, we won't be talking about noise in this lesson (noise as in the noise of the street, not the noise in your image produced by Monte Carlo methods). <a href="../../../indexf17c.html">A "basic" lesson on noise</a> already exists in the advanced section and this (fascinating) topic will be further developed in the future.
+</div>
+
+<h2>Generating (Pseudo-)Random Numbers on a Computer</h2>
+
+<p>This chapter will be short. We don't intend, at least in this version of the lesson, to talk about the topic of random number generator in very much detail. However, because Monte Carlo methods rely mostly on being able to generate random numbers (often with a given PDF), it is really important to mention that having a good random number generator is important to guarantee the quality of the output of Monte Carlo method. We will explain what a good random number generator is in a moment, and explain briefly how these generators work.</p>
+
+<p>The fact is, generating random numbers is a prerequisite to using any of the Monte Carlo methods in a computer program. So how do you generate random numbers? True random numbers (true as in <b>unpredictable</b>) can actually be generated with a computer! Imagine for instance a device that would measure a natural phenomenon which is itself random (such as the temperature of your cpu or the number of times you typed the letter 'a' on your keyboard in the last 10 seconds) and convert this measure to a digit that the computer can use as a random number. As random as these natural phenomena truly are, it is not hard to understand why such a device would be ideal for providing random numbers to a program. Beside being too slow for a computer, the main problem of such a system is that the random values that we get from monitoring these "real world" random variables, doesn't necessarily map properly to the type of random variable a computer program needs. As the Russian mathematician Ilya M. Sobol puts it:</p>
+
+<div class="scratchquote">"A random variable that satisfactorily describes a physical quantity in one type of phenomenon may prove unsatisfactory when used to describe the same quantity in other phenomena".</div>
+
+<p>Furthermore, the quality of the numbers produced by such device would be hard to check. And maybe most importantly, it may be advantageous to "lock" the sequence of generated random numbers, so that each time the program is run, the same numbers are produced in the same order. You might think, well that's not really random then? You are right they are in fact <b>deterministic</b> which sounds really like the opposite of random, which is why we call such system <b>pseudorandom</b>&nbsp;generator rather than random. They produce numbers which are still randomly distributed, but their values and the order in which they are produced is always the same. In rendering, this property is very important. If you use Monte Carlo methods to produce an image, a "repeatable" random number generator (it would pseudorandom then), allows to lock the noise pattern in the image. "Repeatability" of the results in a production environment, is an absolute necessity. Thus, any random number generator that relies on a physical device (and they do exist, we will talk about them later in this chapter), however probably "truly random", is actually not always ideal. To summarize "controllable and repeatable randomness" is generally what we are truly after.</p>
+
+<p>Generally, you can use three different approach to get random numbers in a program. You can use pre-generated sequences of random numbers stored in tables (an old but very easy to implement method if one day you have to quickly write something of your own), you can use a (true-)random number generator or a pseudorandom number generator.</p>
+
+<h2>Tables of Random Numbers</h2>
+
+<img class="right" src="../../../images/upload/monte-carlo-methods-practice/lotod41d.png?" />
+
+<p>The principle is very simple and is similar to the way lottery numbers are generated. If you write each number from 0 to 99 (say) on a card, put all the cards in a hat shake it and draw all the cards from this hat one by one, you end up with a sequence of 100 random numbers. To use these numbers in a program, you can store them in memory (in the same order in which they were picked from the hat) and create a global variable to keep track the next random number that can be used from that table. This is simple, of course, but there is two difficulties with this approach. The sequence of number needs to be truly random (you don't shake the hat very well, and many of the numbers end up in increasing order). And it is hard to guarantee that the physical device used in generating these numbers, produces sequences with the desired probability distribution (you can use statistical tests to check whether your sequence of random numbers has some desired properties such for instance whether the numbers are truly independent and identically distributed or i.i.d.). Furthermore, the sequence of random numbers is limited in size.</p>
+
+<div name="code" class="code">short rand[100] = {16, 55, 30, 12, 3, 92, ... };
+int counter = 0;
+int N = 32;
+for (int i = 0; i &lt; N; ++i) {
+    short randNumber = rand[counter++];
+    ...
+}</div>
+
+<p>In 1955, Rand Corporation released a sequence of 1 million random digits. It is the longest sequence of random numbers ever published (look for "A MILLION Random Digits WITH 100,000 Normal Deviates", on the Rand Corporation website).</p>
+
+<div class="scratchquote">Abstract: not long after research began at RAND in 1946, the need arose for random numbers that could be used to solve problems of various kinds of experimental probability procedures. These applications, called Monte Carlo methods, required a large supply of random digits and normal deviates of high quality, and the tables presented here were produced to meet those requirements. This book was a product of RAND's pioneering work in computing, as well a testament to the patience and persistence of researchers in the early days of RAND. The tables of random numbers in this book have become a standard reference in engineering and econometrics textbooks and have been widely used in gaming and simulations that employ Monte Carlo trials. Still the largest published source of random digits and normal deviates, the work is routinely used by statisticians, physicists, polltakers, market analysts, lottery administrators, and quality control engineers.
+</div>
+
+<img style="width: 670px;" class="left" src="../../../images/upload/monte-carlo-methods-practice/randd41d.png?"/>
+
+<h2>(True-)Random Number Generator</h2>
+
+<p>As its name suggests, a random number generator produces truly random numbers (as in "you will never know what you will get" or in more formal terms, the results are <b>unpredictable</b>). These are generally produced by physical devices also known as <a href="http://en.wikipedia.org/wiki/Noise_generator">noise generator</a> which are coupled with a computer. In computing, an apparatus that produces random numbers from a physical process is called a <a href="http://en.wikipedia.org/wiki/Hardware_random_number_generator">hardware random number generator</a> or TRNG (for true random number generator).</p>
+
+<p>As mentioned before, if "true" randomness is required, these generators are good but they present some difficulties of their own. First as mentioned, noise is generated by a physical device (such as a vacuum diode) and the resulting analog signal needs to be converted somehow to a sequence of digits (a sequence of 0 and 1 which can then be interpreted as digits). This is not necessarily a trivial tasks. Plus, these generators don't necessary produce random numbers as quickly as the program needs them (or put it differently, it is hard to synchronize the calls of the program to the random number generator with the output of the hardware noise generator). They can also suffer from hardware failures and the quality of the sequence they produce is hard to check (they can suffer from bias, which happens when they statistically produce more 0s than 1s).</p>
+
+<h2>(Pseudo-)random Number Generator</h2>
+
+<div class="scratchquote">"Anyone who considers arithmetical methods of producing random digits is, of course, in a state of sin." John von Neumann.</div>
+
+<p>As long as the random numbers produced by a system can be checked by some tests that proof that they have the same "statistical" properties than a truly random variable (such as being uniformly distributed for example), the mean by which these numbers are generated doesn't really matter. Computers are deterministic in nature so producing truly random numbers with a computer is challenging as we mentioned before, which is why we generally resort to using noise generators (which we talked about earlier on) if we need "true" randomness. However, what we can do on a computer, is develop some sort of algorithm for generating a sequence of numbers that approximates the properties of random numbers. When numbers are produced by some sort of algorithm or formula that simulates the values of a random variable X, they are called pseudorandom numbers. And the algorithm is called a <b>pseudorandom number generator</b> (or <b>PRNG</b>). The term "simulate" here is important: it simply means that the algorithm can generate sequences of numbers which have statistical properties that are similar (and this can be tested) to that of the random variable we want to simulate. For instance if we need to simulate a random variable X with probability distribution D, then we will need to test whether the sequence of numbers produced by our PRNG has the same distribution.</p>
+
+<p>Before it gets too abstract, let's give a practical example of such generator. One of the first PRNG algorithms was actually proposed by John von Neumann himself. It is called the <b><a href="http://en.wikipedia.org/wiki/Middle-square_method">middle-square method</a></b>. This method is presented as an example but don't use it in production. The idea is very simple. We start with a four digit number such as \(n_0 = 0.4872\). If we square this number we get the eight-digit number 0.69<b>7997</b>13. If we now take out the middle four digits of this number, we get \(n_1 = 0.7997\). If we square this number we get 0.89<b>4259</b>47. Once again we take out the middle four digits to find the next number in our sequence: \(n_2 = 0.4259\). If we keep repeating this process again and again, we get the following sequence of numbers: \(n_0\) = 0.4872, \(n_1\) = 0.7997, \(n_2\) = 0.4259, \(n_3\) = 0.2610, \(n_4\) = 0.0881, \(n_5\) = 0.6816, etc. The following small program is a quick implementation of this algorithm (it only compute the first 10 "random numbers" of the sequence).</p>
+
+<div name="code" class="code">int main(int argc, char **argv)
+{
+    float seed = 0.4872, rand = seed;
+    int seqlength = 10;
+    while (seqlength--) {
+        printf("%0.4f\n", rand);
+        rand = sqrtf(rand);
+        rand = ((int)((rand * 100 - (int)(rand * 100)) * 10000)) / 10000.f;
+    }
+    return 0;
+}</div>
+
+<p>Again, this algorithm is too limited to be actually really useful. For example the program doesn't work if the seed is 0. Better algorithms exist and we will briefly talk about them in a moment. But for now, let's discuss the pros and cons of PRNG. In computing, at least for people writing programs using Monte Carlo methods, pseudorandom generators are generally the preferred choice. First a software solution is generally better than a hardware one, because it's more reliable, easier to integrate to other programs, and because they can be programmed, they can generate sequences of random numbers in a predictable manner (and the statistical properties of these pseudorandom numbers are also predictable. They need to be checked only once which is not the case of numbers produced by noise generators). In other words they are deterministic, which as we explained before, is useful to "lock" the output of a process based on a random number generator (which is the case of Monte Carlo ray tracing). PRNG algorithms are also generally pretty fast and fit in just a few lines of code. Note that all these algorithms can be seeded. In other words, you can intialize them with a number, and the sequence of resulting numbers depends on this seed.</p>
+
+<p>The main disadvantage is that the sequences produced by these algorithm are <b>periodic</b>. Why? Because each number depends on the previous number in the sequence. We can write this as:</p>
+
+$$x_n = F(x_{n - 1}).$$
+
+<p>The precision of any number in the memory of a computer is limited by the number of bytes used to store this number. If the number of bytes is fixed, only a finite number of "numbers" can be generated. Therefore, it is expected that sooner or later, one of the generated number (let's call this number \(x_L\)) will coincide with one of the numbers already generated in the sequence (let's call this number \(x_N\)). The period of the sequence would then be L - N (the period is the number of values in the sequence before the sequence repeats itself). Should we care about this? The period of the C library function drand48() for example is \(2^{48}\ = 281474976710656\). This is a very big number, and some of the more recent generators have even longer periods so unless the number of random numbers generated by your program exceeds this period (which is unlikely to happen), you shouldn't probably care.</p>
+
+<div class="question">
+Two of the most popular algorithms for PRNG are the Linear congruential generator on which the C library function drand48 is based and the Mersenne Twister algorithm (which is implemented in the "random" C++11 library - see below). We will explain how these algorithms work in a future revision of this lesson (and once all the lessons of the basic section are completed).
+</div>
+
+<h2>The C++11 Random Library</h2>
+
+<p>It is quite useful and important to know the function from the C/C++ libraries you can use to generate pseudorandom numbers. For a long time you could only use functions such as drand48(). It produces (almost) uniformly distributed random numbers in the interval [0,1]. If you wanted to generated random numbers with any other distribution you had to write you own!&nbsp;</p>
+
+<p>Hopefully, the latest C++ standard (<a href="http://en.wikipedia.org/wiki/C++11">C++11</a>), now comes with a random library. It provides a pseudorandom generator which is made of two parts. The first part is called the generator engine. It generates the numbers (you can choose among three different algorithms for generating these numbers) and the second part controls the distribution of the outcome (uniform, poisson, normal, etc.).</p>
+
+<div name="code" class="code">#include &lt;random&gt;
+#include &lt;functional&gt;
+ 
+std::uniform_int_distribution&lt;int&gt; distribution(0, 99);
+std::mt19937 engine; // Mersenne twister MT19937
+auto generator = std::bind(distribution, engine);
+int random = generator(); // Generate a uniform integral variate between 0 and 99.
+int random2 = distribution(engine); // Generate another sample directly using the distribution and the engine objects.</div></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='monte-carlo-rendering-practical-example.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 5 of  8</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='variance-reduction-methods.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/mathematics-physics-for-computer-graphics/monte-carlo-methods-in-practice/generating-random-numbers by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:07:16 GMT -->
+</html>

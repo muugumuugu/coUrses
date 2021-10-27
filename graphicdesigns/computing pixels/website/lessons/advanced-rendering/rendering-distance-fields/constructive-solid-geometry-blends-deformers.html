@@ -1,0 +1,292 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/advanced-rendering/rendering-distance-fields/constructive-solid-geometry-blends-deformers by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:20:16 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Rendering Implicit Surfaces and Distance Fields: Sphere Tracing (Constructive Solid Geometry, Blends and Deformers)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='distance field, implicit function, sphere tracing, CSG, Constructive Solid Geometry, ray marching, implicit surfaces, gradient, level surface, level set, blobbies, soft objects, meatballs'>
+<meta name='date' content='2016-11-27 15:56:09'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Rendering Implicit Surfaces and Distance Fields: Sphere Tracing</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction.html">Introduction</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="maths-behind-sphere-tracing.html">Maths Behind Sphere-Tracing</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="basic-sphere-tracer.html">A Simple Sphere-Tracer</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="constructive-solid-geometry-blends-deformers.html"><b>Constructive Solid Geometry, Blends and Deformers</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="blobbies.html">Blobbies</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code2e85.html?id=59&amp;origin=/lessons/advanced-rendering/rendering-distance-fields">Source Code</a></div></div></div><p>We can mathematically combine and manipulate implicit surfaces in all sort of ways to create shapes that would be extremely hard to produce with more traditional modeling methods (especially polygons). Generally the method of assembling shapes to create more complex shapes is called <b>constructive solid geometry</b> or <b>CSG</b>. CSG is a method of what we call procedural modelling. You don't model shapes by moving vertices by hand, but by combining simple shapes using mathematics and automated processes.</p>
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="width: 400px;" src="../../../images/upload/distance-fields/sphere-tracing-uniond41d.png?" />
+<p class="caption left">Figure 1: union.</p>
+</div>
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="width: 400px;" src="../../../images/upload/distance-fields/sphere-tracing-substractd41d.png?" />
+<p class="caption left">Figure 2: subtraction.</p>
+</div>
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="width: 400px;" src="../../../images/upload/distance-fields/sphere-tracing-intersectiond41d.png?" />
+<p class="caption left">Figure 3: intersection.</p>
+</div>
+
+<p>Let's take a few basic examples. One of the most basic operations is to add two objects together something that is best described in mathematics with the <i>union</i> operator. You can achieve this effect by just returning the minimum distance to the two objects you wish to combine as shown in figure 1.</p>
+
+<p>You can also subtract the volume of a shape from another, something that again in mathematics might be best described with a <i>set difference</i> operator (in plain English a subtraction). To do so, you first need to invert the sign of the distance estimator of the first shape. If you look at figure 2, you can see that the inside of the sphere now returns positive signed distance to the surface, and any point outside of the sphere will return a negative signed distance. Then take the maximum of the two distances. With this effect, you can create a hole in the second object that has the shape of the first object.</p>
+
+<p>Finally our last basic example will consist of computing the surface resulting of the <i>intersection</i> of two surfaces. To do so (as illustrated in figure 3) just use the largest distance (using the <i>max</i> operator).</p>
+
+<p>What these operations have in common is that that they use what we call <b>boolean operators</b>.</p>
+
+<p>But these are just a few examples.</p>
+
+<div class="important">What you need to see and realise is that you can use pretty much any mathematical function you want on these distances, in order to create all sort of pretty cool effects. So literally anything you can imagine from using a cosine, an exponential function, or a modulo operator can be used ...</div>
+
+<p>Since we just mentioned the modulo operator, take a moment to think about the type of effect you will get if you apply a modulo operator to the distance to an object? Something like <span class="code-inline">distance % 10</span> for example. Well this will have for effect to duplicate the object in every direction to infinity. You operate on the object space. You can also deform that space to create all sort of effects like twisting and bending (using sine and cosine).</p>
+
+<img class="left" style="margin-bottom: 12px;" src="../../../images/upload/distance-fields/sphere-tracing-boolopd41d.png?" />
+
+<div style="width: 400px;" class="captionImage right">
+<img class="left" style="width: 400px;" src="../../../images/upload/distance-fields/sphere-trace-mixd41d.png?" />
+<p class="caption left">Figure 4: mixing a cube and a sphere.</p>
+</div>
+
+<p>You can combine all these effects but more importantly when it comes to CSG, you are not limited to two objects. You can for example compute the intersection of two objects and combine the resulting shape with a third object, etc. People working on solid geometry, call this a CSG tree. Computing or evaluating these trees efficiently is a topic of research.</p>
+
+<p>The two effect will study in this chapter is morphing or mixing and blending. The idea of morphing (mixing) is to create a shape that is somewhere in between the first and the second shape. For example you can morph between a sphere and cube (figure 4). The process to do so is very simple, you just (linearly) mix the distances to the two objects:</p>
+
+<div class="code">float dist = distanceToA * (1 - mixValue) + distanceToB * mixValue</div>
+
+<p>Where <span class="code-inline">mixValue</span> is a float contained in the range [0,1].</p>
+
+<p>The effect of blending is more interesting. The idea is that when you compute the union between two objects you get sharp edges where the two objects intersect. If you want to create like a welding effect, this is not desirable. What you want is some sort of smooth transition between one surface to the other, in areas where the two surfaces are close to each other. Interesting enough many of the equations you will find in papers on implicit surfaces that relate to blending equation "just don't work". We don't know if these are just typos that kept being repeated from paper to paper but that's bad and frustrating. Let's give credit to Inigo Quilez for sharing on his <a href="http://www.iquilezles.org/www/articles/smin/smin.htm">website</a> a few blending functions that just work. In the code below we implemented the exponential version. We might explain this function in a future revision of this lesson; for now we will only provide the code (see below the implementation chapter).</p>
+
+<img class="left" src="../../../images/upload/distance-fields/sphere-trace-blendd41d.png?" />
+
+<h2>Implementation</h2>
+
+<p>The code we provide to implement some of these ideas is rather basic and straightforward. Though from a programming standing note that we use a pattern called a <i>functor</i> in programming (this method is also a form of what we call generic programming). All the functions to operate on the two distances are actually defined into classes (or more exactly structure in this case). This allows us to eventually store within these classes member variables such as a blending factor as in the case of the <span class="code-inline">blendFunc</span> structure for instance. But more importantly because these are classes or structures, they define a type and as such they can be used in template class (note that the CSG class is a template and that the first template parameter is one of these structures in which we implement the function that operates on the distance via the <span class="code-inline">()</span> operator) . If you are unfamiliar with this patter, we recommend you to read about it on the web. This code also uses some nice features from the more advanced C++ standards such as the variadic arguments <span class="code-inline">Args&& ... args</span> and the <span class="code-inline">using</span> directive that can be used instead of <span class="code-inline">typedef</span>. Time to progress with your C++ coding skills!</p>
+
+<div name="code" class="code">struct unionFunc
+{
+    float operator() (float a, float b) const { return std::min(a, b); }
+};
+
+struct subtractFunc
+{
+    float operator() (float a, float b) const { return std::max(-a, b); }
+};
+
+struct intersectionFunc
+{
+    float operator() (float a, float b) const { return std::max(a, b); }
+};
+
+struct blendFunc
+{
+    blendFunc(const float &_k) : k(_k) {}
+    float operator() (float a, float b) const
+    {
+        float res = exp(-k * a) + exp(-k * b);
+        return -log(std::max(0.0001f, res)) / k;
+    }
+    float k;
+};
+
+struct mixFunc
+{
+    mixFunc(const float &_t) : t(_t) {}
+    float operator() (float a, float b) const
+    {
+        return a * (1 - t) + b * t;
+    }
+    float t;
+};
+
+template&lttypename Op, typename ... Args&gt
+class CSG : public ImplicitShape
+{
+public:
+    CSG(
+        const std::shared_ptr&ltImplicitShape&gt s1,
+        const std::shared_ptr&ltImplicitShape&gt s2,
+        Args&& ... args) : op(std::forward&ltArgs&gt(args) ...), shape1(s1), shape2(s2)
+    {}
+    float getDistance(const Vec3f& from) const
+    {
+        return op(shape1-&gtgetDistance(from), shape2-&gtgetDistance(from));
+    }
+    Op op;
+    const std::shared_ptr&ltImplicitShape&gt shape1, shape2;
+};
+
+using Union = CSG&ltunionFunc&gt;
+using Subtract = CSG&ltsubtractFunc&gt;
+using Intersect = CSG&ltintersectionFunc&gt;
+using Blend = CSG&ltblendFunc, float&gt;
+using Mix = CSG&ltmixFunc, float&gt;
+
+std::vector&ltstd::shared_ptr&ltImplicitShape&gt&gt makeScene()
+{
+    std::vector&ltstd::shared_ptr&ltImplicitShape&gt&gt shapes;
+
+#if 0
+    shapes.push_back(std::make_shared&ltPlane&gt(Vec3f(0, 1, 0), Vec3f(0, -2, 0)));
+    shapes.push_back(std::make_shared&ltBlend&gt(
+        std::make_shared&ltCube&gt(Vec3f(1.5)),
+        std::make_shared&ltTorus&gt(2, 0.65), 5));
+#elif 0
+    shapes.push_back(std::make_shared&ltBlend&gt(
+        std::make_shared&ltPlane&gt(Vec3f(0, 1, 0), Vec3f(0, 0, 0)),
+        std::make_shared&ltTorus&gt(2, 0.65), 5));
+#else
+    shapes.push_back(std::make_shared&ltPlane&gt(Vec3f(0, 1, 0), Vec3f(0, -2, 0)));
+    shapes.push_back(std::make_shared&ltMix&gt(
+        std::make_shared&ltCube&gt(Vec3f(1)),
+        std::make_shared&ltSphere&gt(Vec3f(0), 1), 0.5));
+#endif
+
+    return shapes; 
+}</div></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='basic-sphere-tracer.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 4 of  6</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='blobbies.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/advanced-rendering/rendering-distance-fields/constructive-solid-geometry-blends-deformers by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:20:21 GMT -->
+</html>

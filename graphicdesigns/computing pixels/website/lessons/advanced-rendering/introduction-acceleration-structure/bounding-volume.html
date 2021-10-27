@@ -1,0 +1,297 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/advanced-rendering/introduction-acceleration-structure/bounding-volume by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:19:29 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Introduction to Acceleration Structures (Bounding Volume)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='ray-tracing, bounding box, grid, BVH, space partitioning data structure, k-d tree, octree, spatial division, spatial coherence, space tracing, 3D-Digital Differential Analyser, DDA'>
+<meta name='date' content='2015-10-08 15:12:09'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Introduction to Acceleration Structures</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction.html">Introduction</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="bounding-volume.html"><b>Bounding Volume</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="bounding-volume-hierarchy-BVH-part1.html">Bounding Volume Hierarchy: BVH (part 1)</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="bounding-volume-hierarchy-BVH-part2.html">Bounding Volume Hierarchy: BVH (part 2)</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="grid.html">Grid</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="what-else.html">What Else?</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code022f.html?id=36&amp;origin=/lessons/advanced-rendering/introduction-acceleration-structure">Source Code</a></div></div></div><h2>Bounding Box</h2>
+
+<p>The simplest method to accelerate ray tracing can't necessarily be considered as an acceleration structure, however this is certainly the simplest way to cut down render times. Each one of the grid from the teapot has potentially more than a hundred triangles: with 8 divisions, the grid contains 128 triangles, which requires a similar number of intersection test for each ray cast into the scene. What we can do instead, is ray trace a box containing all the vertices of the grid. Such box is called a <b>bounding volume</b>:<b> </b>it is the tightest possible volume (a box in that case but it could also be a sphere) surrounding the grid. Figure 1 shows the bounding boxes of each one of the 32 B&eacute;zier patches making up the teapot model.</p>
+
+<div style="width: 450px;" class="captionImage right">
+<img class="left" style="width: 450px;" src="../../../images/upload/acceleration-structure/teapotbboxd41d.gif?" />
+<p class="caption left">Figure 1: bounding boxes of the B&eacute;zier patches making up Newell's Teapot.</p>
+</div>
+
+<div style="width: 450px;" class="captionImage right">
+<img class="left" style="width: 450px;" src="../../../images/upload/acceleration-structure/bboxisectd41d.png?" />
+<p class="caption left">Figure 2: bounding boxes enclosing a patch from the teapot model are tested for an intersection with a ray. Geometry contained by the bounding volumes which are not intersected by the ray can be safely rejected.</p></div>
+
+<p>We can first test if the ray intersects this box, and if it doesn't, we know for sure that it can't intersect the geometry contained in this bounding volume (figure 2). If we can ignore the triangles from this bounding box, we save 128 ray-triangle intersection tests. Considering that many of the bounding boxes from the scene are likely to fail this test as well, overall, we can save a significant number of calls to the ray-triangle routine. If the ray intersects the bounding box though, all the triangles contained in the volume will have to be tested for an intersection with this ray. In figure 2, we can see a ray intersecting the bounding boxes of the B&eacute;zier patches making up the teapot model. Only colored boxes are intersected by the ray, and only the grids contained by these boxes will be tested for an intersection with the ray. Patches contained by the boxes which are not intersected can be safely rejected.</p>
+
+<p>The following pseudocode illustrates this process:</p>
+
+<div name="code" class="code">for (each object in scene) {
+    if (intersect(ray, object-&gt;boundingBox) == true) {
+        for (each triangle in object) {
+            if (intersect(ray, triangle) == true) {
+                // the ray intersects the triangle 
+                ...
+            }
+        }
+    }
+}</div>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left" src="../../../images/upload/acceleration-structure/bboxd41d.png?" />
+<p class="caption left">Figure 3: the bounding box of the Ape model (courtesy of <a href="http://">Kenichi Nishida</a>).</p>
+</div>
+
+<p>Calculating a bounding box for an object is very simple. We can loop over all the vertices making up the mesh to find the minimum and maximum value for each of the point's coordinate (the xyz points position). These values form what we call the object's minimum and maximum extent and define the two corners of the bounding box (see figure 3). The bounding box of an object is usually computed when the object is built (for instance in the constructor of the polygon mesh class) and stored in a member variable of the object's class (each primitive type may require a different method to compute this bounding box. The bounding volume of a quadratic sphere for instance can be computed from its radius). The following code snippet from the ray tracer shows how we compute the bounding box of a polygon object (line 13). The bbox variable is a member variable of the base Object class (the code is available in the last chapter of this lesson).</p>
+
+<div name="code" class="code">class PolygonMesh : public Object
+{
+public:
+    PolygonMesh(
+        const Matrix44f &o2w, 
+        const uint32_t &np, const uint32_t *nv, const uint32_t *v, 
+        const Vec3f *pts, const Vec3f *nors = NULL) : 
+        Object(o2w), ntris(0), tris(NULL), P(NULL), N(NULL)
+    {
+        ...
+        for (uint32_t i = 0; i < maxVertIndex + 1; ++i) {
+            objectToWorld.multVecMatrix(pts[i], P[i]);
+            bbox.extendBy(P[i]);
+        }
+        ...
+    }
+};
+ 
+template&lttypename T, uint32_t D&gt
+class Box
+{
+public:
+    ...
+    void extendBy(const Vec&ltT, D&gt &pt)
+    {
+        for (size_t i = 0; i < D; ++i) {
+            if (pt[i] < bounds[0][i]) bounds[0][i] = pt[i];
+            if (pt[i] > bounds[1][i]) bounds[1][i] = pt[i];
+        }
+    }
+    ...
+};</div>
+
+<p>The rest of the code is very simple. We will use the ray-box intersection routine we have studied in lesson 7 (Intersecting Simple Shape):</p>
+
+<div name="code" class="code">uint64_t numRayBoxTests = 0;
+
+
+template&lttypename T, uint32_t D&gt
+bool Box<T, D>::intersect(const Ray&ltT&gt &r) const
+{
+    __sync_fetch_and_add(&numRayBoxTests, 1);
+    ...
+    return true;
+}</div>
+
+<p>We use the same as with the ray-triangle intersection method to count the number of times the ray-box intersection method has been called. A global variable <span class="code-inline">numRayBoxTests</span> declared in the box.cpp file is incremented using an atomic add operation each time the box intersect method is called. The final value is printed out at the end of the render with the other statistics.</p>
+
+<p>We also created an <span class="code-inline">AccelerationStructure</span> base class which behaves very similarly to an objects. It holds an <span class="code-inline">intersect</span> method looping over all the objects from the scene (line 5). We first test for an intersection between the ray and the bounding box of the current object (line 7). If the test is successful, the ray is then tested against the object contained by the box (line 9). The rest of the code is very similar to the implementation of the trace function from lesson 11. Each time a triangle is intersected, we need to update the closest distance to the intersection point (lines 10-11) and keep a pointer to the intersected object (line 12):</p>
+
+<div name="code" class="code">const Object* AccelerationStructure::intersect(const Ray&ltfloat&gt &ray, IsectData &isectData) const
+{
+    float tClosest = ray.tmax;
+    Object *hitObject = NULL;
+    for (size_t i = 0; i < rc->objects.size(); ++i) {
+        Ray<float> r(ray);
+        if (rc->objects[i]->bbox.intersect(r)) {
+            IsectData isectDataCurrent;
+            if (rc->objects[i]->intersect(ray, isectDataCurrent)) {
+                if (isectDataCurrent.t < tClosest && isectDataCurrent.t > ray.tmin) { 
+                    isectData = isectDataCurrent; 
+                    hitObject = rc->objects[i];
+                    tClosest = isectDataCurrent.t;
+                }
+            }
+        }
+    }
+ 
+    return (tClosest < ray.tmax) ? hitObject : NULL;
+}</div>
+
+<p>Finally we need to update the trace function. Rather than looping over all the objects from the scene, we just need to call the <span class="code-inline">intersect</span> method from the <span class="code-inline">AccelerationStructure</span> class. If this method returns a valid pointer to an object from the scene, an intersection occurred and we can set the color of the pixel with the intersected object's color:</p>
+
+<div name="code" class="code">template&lttypename T&gt
+void trace(const Ray&ltT&gt ray, const RenderContext *rc, Spectrum &s)
+{
+    IsectData isectData;
+    const Object *hitObject = NULL;
+    if ((hitObject = rc->accelStruct->intersect(ray, isectData)) != NULL)
+        s.xyz = hitObject->color;
+    else
+        s.xyz = rc->backgroundColor;
+}</div>
+
+<p>If we render the scene we used in the previous chapter, we now get the following statistics:</p>
+
+<div class="code-basic">Render time                                 : 3.96 (sec)
+Total number of triangles                   : 16384
+Total number of primary rays                : 307200
+Total number of ray-triangles tests         : 129335296
+Total number of ray-triangles intersections : 111889
+Total number of ray-box tests               : 9830400
+</div>
+
+<p>Render time was reduced by a factor of about 34. Logically the ratio between the number of ray-triangle tests performed with and without this basic acceleration structure is about the same: 38. The two number are not exactly the same because of the extra time it now takes to compute the ray-box intersections (9.83 million times). However the benefits we get from using this scheme largely outweighs the additional work these tests require.</p>
+
+<p>The technique presented in this chapter works well in the case of the teapot because the model contains many grids whose resolution (in terms of polygon count) is reasonably low. The ape model on the other hand, is very complex and is made of one single piece. If we were to render this object, we would only save time when the primary rays don't intersect its bounding box (which is, for a typical frame, maybe less than a third of the total number of pixels). For all the over rays, we would still have to perform an intersection test against the hundred thousand triangles making up the model. In that particular case, the bounding box method would only bring a small benefit compared to the brute force approach. It is simple and fast to implement but is clearly not adapted to all situations and for this reason it is not considered as a very good acceleration method.</p>
+
+<div class="question">
+The idea of using a bounding volume to accelerate ray tracing is quite old. It is hard to find exactly who and when the idea was proposed. In a paper from 1980 entitled "A 3-Dimensional Representation for Fast Rendering of Complex Scenes", the authors Ruben and Whitted already speak about the possibility of using a hierarchy of such bounding volumes for "fast" rendering (see references section at the end of this lesson).
+</div>
+
+<h2>What's Next?</h2>
+
+<p>In the next chapter we will present a technique presented by Kajiya and Kay in 1986 to accelerate ray tracing. This method is based on what's now known as <b>bounding voume hierarchy </b>(or <b>BVH</b>).</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='introduction.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 2 of  7</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='bounding-volume-hierarchy-BVH-part1.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/advanced-rendering/introduction-acceleration-structure/bounding-volume by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:19:34 GMT -->
+</html>

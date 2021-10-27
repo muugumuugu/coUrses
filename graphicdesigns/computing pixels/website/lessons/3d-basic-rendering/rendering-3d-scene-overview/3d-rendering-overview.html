@@ -1,0 +1,272 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/rendering-3d-scene-overview/3d-rendering-overview by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:09:18 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Rendering an Image of a 3D Scene: an Overview (An Overview of the Rendering Process: Visibility and Shading)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='ray tracing, rasterization, rasterisation, pixel, discretisation, raster, aliasing, vector graphics, triangle, triangulation, smooth shading, sampling, tessellation, polygonal mesh, NURBS, subdivision surface, voxel, implicit surface, meatballs, bloodies, rendering primitive, perspective projection, foreshortening effect, orthographic projection, perspective divide, hidden surface elimination, hidden surface determination, hidden surface removal, occlusion culling, visible surface determination, shading, absorption, reflection, normal, scattering, shader, light transport, forward tracing, backward tracing, indirect diffuse, wireframe, frustum, screen space, raster space, depth sorting algorithm, acceleration structure, law of reflection, reflected direction, incident direction, Snell law, Fresnel equation, roughness, specular reflection, subsurface scattering, indirect diffuse, indirect specular, caustics, soft shadows, global illumination, radiosity, Monte Carlo ray tracing, primary ray, secondary ray, shadow ray, unidirectional path tracing, Appel, Whitted, photon mapping, albedo, energy conservation, physically plausible rendering, cosine law'>
+<meta name='date' content='2014-11-12 23:28:46'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Rendering an Image of a 3D Scene: an Overview</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="computer-discrete-raster.html">It All Starts with a Computer and a Computer Screen</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="rendering-3d-scene.html">And It Follows with a 3D Scene</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="3d-rendering-overview.html"><b>An Overview of the Rendering Process: Visibility and Shading</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="perspective-projection.html">Perspective Projection</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="visibility-problem.html">The Visibility Problem</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="light-simulator.html">A Light Simulator</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction-light-transport.html">Light Transport</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="introduction-shading.html">Shading</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="summary-rendering.html">Summary and Other Considerations About Rendering</a></div></div></div><p>An image of a 3D scene can be generated in multiply ways, but of course any way you choose should produce the same image for any given scene. In most cases, the goal of rendering is to create a photo-realistic image (non-photorealistic rendering or NPR is also possible). But what does it mean, and how can this be achieved? Photorealistic means essentially that we need to create an image so "real" that it looks like a photograph or (if photography didn't exist) that it would actually look like reality to our eyes (like the reflection of the world off the surface of a mirror). How do we that? By understanding the laws of physics that make objects appear the way they do, and simulating these laws on the computer. In other words, rendering is nothing else than simulating the laws of physics responsible for making up the world we live in, as it appears to us. There are many laws contributing to making up this world, but fewer do contribute to the way it looks. For example gravity, which plays a role in making objects fall (gravity is used in solid body simulation), has little to do with the way an orange looks like. Thus, in rendering, we will be interested in what makes objects look like the way they do, which is essentially the result of the way light propagates through space and interacts with objects (or matter more precisely). This is exactly what we will be simulating.</p>
+
+<h2>Perspective Projection and the Visibility Problem</h2>
+
+<p>But first, we need to understand and reproduce the way objects look like to our eyes. No so much in terms of their appearance but more in terms of their shape and their size with respect to their distance to the eye. The human eyes is an optical system which converges light rays (light reflected from object) to a focus point.</p>
+
+<div style="width: 530px;" class="captionImage right">
+<img class="left" src="../../../images/upload/rendering-3d-scene-overview/perspective1d41d.png?"/><p class="caption left">Figure 1: the human eyes is an optical system which converges light rays (light reflected from object) to a focus point. As a result, by geometric construction, objects which are further away from our eyes, do appear smaller than those which are at close distance.</p>
+</div>
+
+<p>As a result, by geometric construction, objects which are further away from our eyes, do appear smaller than those which are at close distance (assuming all objects have the same size). Or to say it differently, an object appears smaller as we move away from it. Again this is the pure result of the way our eyes are designed. But because we are accustomed to see the world that way, it makes sense to produce images which have the same effect: something called the <b>foreshortening effect</b>. Cameras and photographic lenses were designed to produce images of that sort. More than simulating the laws of physics, photorealistic rendering, is also about simulating the way our vision system works. We need to produce images of the world on a flat surface, similar to the way images are created in our eyes (which is mostly the result of the way our eyes are designed - we are not too sure about how it works in the brain but this is not really important for us).</p>
+
+<p>How do we do that? A basic method consists of tracing lines from the corner of objects to the eye and finding the intersection of these lines with the surface of an imaginary canvas (a flat surface on which the image will be drawn, such as a sheet of paper or the surface of the screen) perpendicular to the line of sight (figure 2).</p>
+
+<div style="width: 530px;" class="captionImage right">
+<img class="left" src="../../../images/upload/rendering-3d-scene-overview/perspective2d41d.png?"/><p class="caption left">Figure 2: to create an image of the box, we trace lines from the corners of the object to the the eye. We then connect the points where these lines intersect an imaginary plane (the canvas) to recreate the edges of the cube. This is an example of perspective projection.</p>
+</div>
+
+<p>These intersection points can then be connected to each other, to recreate the edges of the objects. The process by which a 3D point is projected onto the surface of the canvas (by the process we just described) is called <b>perspective projection</b>. Figure 3 shows what a box looks like when this technique is used to "trace" an image of that object on a flat surface (the canvas).</p>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left" src="../../../images/upload/rendering-3d-scene-overview/perspective3d41d.png?"/><p class="caption left">Figure 3: image of a cube created using perspective projection.</p>
+</div>
+
+<p>This sort of rendering in computer graphics is called a wireframe, because only the edges of the objects are actually drawn. This image though is not photo real. If the box was opaque, the front faces of the box (at most three of these faces) should occlude or hide the rear ones, which is clearly not the case in this image (and if more objects were in the scene, they would potentially occlude each other). Thus, one of the problems we need to figure out in rendering, is not only how we should be projecting the geometry onto the scene, but also how we should determine which part of the geometry is visible and which part is hidden, something known as the visibility problem (determining which surfaces and parts of surfaces are not visible from a certain viewpoint). This process in computer is known under many names: <b>hidden surface elimination</b>, <b>hidden surface determination</b> (also known as hidden surface removal, <b>occlusion culling</b> and <b>visible surface determination</b>. Why so many names? Because this is one of the first major problems in rendering, and for this particular reason, a lot of research was made in this area in the early ages of computer graphics (and a lot of different names were given to the different algorithms that resulted from this research). Because it requires to find out whether a given surface is hidden or visible, you can look at the problem in two different ways: do I design an algorithm that looks for hidden surfaces (and remove them) or do I design one in which I focus on finding the visible ones. Of course, this should produce the same image at the end, but can lead to designing different algorithms (in which one might be better than the others).</p>
+
+<p>The visibility problem can solved in many different ways, but they generally fall within two main categories. In historical-chronological order:</p>
+
+<ul>
+<li>Rasterization,</li>
+<li>Ray-tracing.</li>
+</ul>
+
+<p>Rasterization is not a common name, but for those of you who are already familiar with hidden surface elimination algorithms, it includes the z-buffer and painter's algorithms among others. Almost all graphics cards (GPUs) use an algorithm from this category (likely z-buffering). Both methods will be detailed in the next chapter.</p>
+
+<h2>Shading</h2>
+
+<p>Even though we haven't really explained how the visibility problem can be solved, lets assume for now that we know how to flatten a 3D scene onto a flat surface (using perspective projection) and determine which part of the geometry is visible from a certain viewpoint. This is a big step towards generating a photorealistic image but what else do we need? Objects are not only defined by their shape but also by their appearance (this time not in terms of how big they appear on the scene, but in terms of their look, their color, their texture, how bright they are). Furthermore objects are actually only visible to the human eye because light is bouncing of their surface. How can we define what the appearance of an object is? The appearance of an object can be defined as the way the material this object is made of, interacts with light itself. Light is emitted by light sources (such as the sun, a light bulb, the flame of a candle, etc.) and travels in straight line. When it comes in contact with an object, two things might happen to it. It can either be absorbed by the object or it can be reflected back into the environment. When light is reflected off the surface of an object, it keeps traveling (potentially in a different direction than the direction it came from initially) until it either comes in contact with another object (in which case the process repeats, light is either absorbed or reflected) or or reach our eyes (when it reaches out eyes, the photoreceptors the surface of the eye is made of convert light into an electrical signal which is sent to the brain).</p>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left" src="../../../images/upload/rendering-3d-scene-overview/lemond41d.png?"/><p class="caption left">Figure 4: an object appears yellow under white light because it absorbs most of the blue light and reflects green and red light which combined together form a yellow color.</p>
+</div>
+
+<ul>
+<li><b>Absorption</b> gives objects their unique color. White light (check the lesson on color in the section Introduction to Computer Graphics) is composed of all colors making up the visible spectrum. When white light strikes an object, some of these light colors are absorbed while the others are reflected back. Mixed together, these reflected colors define the color of the object. Under sunlight, if an object appears yellow, you can assume that it absorbs blue light and reflects a combination of red and green light, which combined together form the yellow color. A black object absorbs all light colors. A white object reflects them all. The color of an object, is absolutely unique to the way the material this object is made of absorbs light (it is a unique property of that material).</li>
+
+<li><b>Reflection</b>. We already know that an object reflects light colors which it doesn't absorb, but in which direction is this light reflected? It happens that the answer to this question is both simple and very complex. At the object level, light behaves no differently than a tennis ball when it bounces back from the surface of a solid object. It simply travels along a direction similar to the direction it came in, but flipped around a vector perpendicular to the orientation of the surface at the impact point. In computer graphics we call this direction a <b>normal</b>: the outgoing direction is a <b>reflection</b> of the incoming direction with respect to the normal. At the atomic level, when a photon interacts with an atom, the photon can either be absorbed or re-emitted by the atom in any new random direction. The re-emission of a photon by an atom is called <b>scattering</b>. We will speak about this term again in a very short while.</li>
+</ul>
+
+<p>In CG, we generally won't try to simulate the way light interacts with atoms, but the way it behaves at the object level. However things are not that simple. Because if the maths involved in computing the new direction of a tennis ball bouncing of the surface of an object are simple, the problem is that surfaces at the microscopic level (not the atomic level) are generally not flat at all, which actually causes light to bounce in all sort of (almost random in some cases) directions. From the distance we generally look at common objects (a car, a pillow, a fruit), we don't see the microscopic structure of objects, although it has a considerable impact on the way it reflects light and thus the way they look. However, we are obviously not going to represent objects at the microscopic level, for obvious reasons (the amount of geometry needed would simply not fit within the memory of any conventional or non conventional for that matter, computer). What do we do then? The solution to this problem is to come with another mathematical model, for simulating the way light interacts with any given material at the microscopic level. This, in short, is the role played by what we call a <b>shader</b> in computer graphics. A shader, is an implementation of a mathematical model designed to simulate the way light interacts with matter at the microscopic level.</p>
+
+<h2>Light Transport</h2>
+
+<p>Rendering is mostly about simulating the way light travels in space. Light is emitted from light sources, is reflected of the surface of objects, and some of that light eventually reaches our eyes. This is how and why we see objects around us. As mentioned in the introduction to ray tracing, it is not very efficient to follow the path of light form a light source to the eye. When a photon hits an object, we do not know the direction this photon will have after it has been reflected off the surface of the object. It might travel towards the eyes, but since the eye is itself very small, it is actually more likely to miss it. While it's not impossible to write an program in which we simulate the transport of light as it occurs in nature (this method is called <b>forward tracing</b>), it is in fact, as mentioned before, never done in practice, because of its inefficiency.</p>
+
+
+<div style="width: 530px;" class="captionImage right">
+<img class="left" src="../../../images/upload/rendering-3d-scene-overview/lighttransportd41d.png?"/><p class="caption left">Figure 5: in the real world, light travel travels from light sources (the sun, light bulbs, the flame of a candle, etc.) to the eye. This is called forward tracing (left). However, in computer graphics and rendering, it's more efficient to simulate the path of light the other way around, from the eye, to the object, to the light source. This is called backward tracing.</p>
+</div>
+
+<p>A much more efficient solution, is to follow the path of light, the other way around, from the eye to the light source. Because we follow the natural path of light backward, we call this approach <b>backward tracing</b>.</p>
+
+<div class='question'>Both terms are sometimes swapped in the CG literature. Almost all renderers follow light from the eye to the emission source. Because in CG it is the 'default' implementation, some people call prefer to call this method, forward tracing. However in Scratchapixel, we will use forward for the when light goes from the source to the eye, and backward when we follow its path the other way around.</div>
+
+<p>The main point here, is that rendering is for the most part about simulating the way light propagates through space. This is not a simple problem, not because we don't understand it well, but because if we were to simulate what truly happens in nature, there would be so many photons (or light particles) to follow the path of, that it would take a very long time to get an image. Thus in practice, we follow the path of very few photons instead, just to keep the render time down, but obviously the final image is not as accurate as it would, if the paths of all photons were simulated. Finding a good tradeoff between photo-realism and render time is really the crux in rendering. In rendering, a </b>light transport algorithm</b> is an algorithm designed to simulate the way light travels in space in order to produce an image of a 3D scene that matches "reality" as closely as possible.</p>
+
+<p>When light bounces off of a diffuse surface and illuminates other objects around them, we call this effect <b>indirect diffuse</b>. Light can also be reflected off the surface of shiny objects, creating caustics (the disco ball effect). Unfortunately it is very hard to come up with a algorithm capable of simulating all these effects at once (using a single light transport algorithm to simulate them all). It is in practice, often necessary to simulate these effects independently.</p>
+
+<p>Light transport is central to rendering and is a very large field of research.</p>
+
+<h2>Summary</h2>
+
+<p>In this chapter, we learned that rendering can essentially be seen as essential a two steps process:</p>
+<ul>
+<li>The perspective projection and visibility problem on one hand,</li>
+<li>And the simulation of light (light transport) as well the simulation of the appearance of objets (shading) on the other.</li>
+</ul>
+
+<div class="question">Have you ever heard the term <b>graphics or rendering pipeline</b>? The term is more often used in the context of real-time rendering APIs (such as OpenGL, DirectX or Metal). The rendering process as explained in this chapter, can be decomposed into at least two steps, visibility and shading. Both steps though can be decomposed into more smaller steps or stages (which is the term more commonly used). Steps are stages are generally executed in a sequential order (the input of a any given stage generally depends on the output of the preceding stage). This sequence of stages forms what we call the rendering pipeline.</div>
+
+<p>It is really important that you always keep this distinction in mind. When you study a particular technique always try to think wether it relates to one of the other. Most lessons from this section (and the advanced rendering section) fall within one of these categories:</p>
+
+<table class='table-basic'>
+<tr>
+<th>Projection/Visibility Problem</th>
+<th>Light Transport/Shading</th>
+</tr>
+<tr>
+<td>
+<ul stytle="vertical-align: top;">
+<li>Perspetive Projection Matrix</li>
+<li>Rays and Cameras</li>
+<li>Rendering a Triangle with Ray Tracing</li>
+<li>Rendering Simple Shapes with Ray Tracing</li>
+<li>Rendering a Mesh Using Ray Tracing</li>
+<li>Transform Objects using Matrices</li>
+<li>Rendering the Utah Teapot</li>
+<li>The REYES algorithm: an Example of Rasterisation</li>
+</ul>
+</td>
+<td style="vertical-align: top;">
+<ul>
+<li>The Rendering Equation</li>
+<li>Example of a Light Transport Algorithm: Path Tracing</li>
+<li>Area Lights</li>
+<li>Shaders and BRDFs</li>
+<li>Texturing</li>
+<li>(Motion Blur)</li>
+<li>(Depth of Field)</li>
+</ul>
+</td>
+</tr>
+</table>
+
+<p>We will briefly detail both steps in the next chapters.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='rendering-3d-scene.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 3 of  9</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='perspective-projection.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/rendering-3d-scene-overview/3d-rendering-overview by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:09:24 GMT -->
+</html>

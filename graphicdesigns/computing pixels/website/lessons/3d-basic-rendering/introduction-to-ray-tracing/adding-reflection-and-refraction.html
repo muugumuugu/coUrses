@@ -1,0 +1,199 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-ray-tracing/adding-reflection-and-refraction by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:08:35 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Introduction to Ray Tracing: a Simple Method for Creating 3D Images (Adding Reflection and Refraction)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='ray-tracing, perspective projection, conductor, dielectric, forward tracing, backward tracing, shadow ray, primary ray, eye ray, path tracing, reflection, refraction, Appel, Whitted, index of refraction, Fresnel equation, transmission, recursive, recursion depth, image file format'>
+<meta name='date' content='2014-10-30 18:10:05'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Introduction to Ray Tracing: a Simple Method for Creating 3D Images</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="how-does-it-work.html">How Does It Work?</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="raytracing-algorithm-in-a-nutshell.html">Raytracing Algorithm in a Nutshell</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="implementing-the-raytracing-algorithm.html">Implementing the Raytracing Algorithm</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="adding-reflection-and-refraction.html"><b>Adding Reflection and Refraction</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="ray-tracing-practical-example.html">Writing a Basic Ray Tracer</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code14ef.html?id=3&amp;origin=/lessons/3d-basic-rendering/introduction-to-ray-tracing">Source Code</a></div></div></div><p>The other advantage of ray-tracing is that, by extending the idea of ray propagation, we can very easily simulate effects <b>like reflection</b> and <b>refraction</b>, both of which are handy in simulating glass materials or mirror surfaces. In a 1979 paper entitled "An Improved Illumination Model for Shaded Display",<b> Turner Whitted</b> was the first to describe how to extend Appel's ray-tracing algorithm for more advanced rendering. Whitted's idea extended Appel's model of shooting rays to incorporate computations for both reflection and refraction.</p>
+
+<img width="300" class="right" src="../../../images/upload/introduction-to-ray-tracing/boule-neige.png" />
+
+<p>In optics, reflection and refraction are well known phenomena. Although a whole later lesson is dedicated to reflection and refraction, we will look quickly at what is needed to simulate them. We will take the example of a glass ball, an object which has both refractive and reflective properties. As long as we know the direction of the ray intersecting the ball, it is easy to compute what happens to it. Both reflection and refraction directions are based on the normal at point of intersection and the direction of the incoming ray (the primary ray). To compute the refraction direction we also need to specify the <b>index of refraction</b> of the material. Although we said earlier that rays travel on a straight line, we can visualize refraction as the ray being bent. When a photon hits an object of a different medium (and thus a different index of refraction), its direction changes. The science of this will be discussed in more depth later. As long as we remember that these two effects depend of the normal vector and the incoming ray direction, and that refraction depends of the refractive index of the material we are ready to move on.</p>
+
+<p>Similarly, we must also be aware of the fact that an object like a glass ball is reflective and refractive at the same time. We need to compute both for a given point on the surface, but how do we mix them together? Do we take 50% of the reflection result and mix it with 50% of the refraction result? Unfortunately, it is more complicated than that. The mixing of values is dependent upon the angle between primary ray (or viewing direction) and both the normal of the object and the index of refraction. Fortunately for us, however, there is an equation that calculates precisely how each should be mixed. This equation is know as the <b>Fresnel equation</b>. To remain concise, all we need to know, for now, is that it exists and it will be useful in the future in determining the mixing values.</p>
+
+<div class="captionImage right" style="width: 450px;">
+<img class="left" style="width: 450px;" src="../../../images/upload/introduction-to-ray-tracing/reflectionrefraction.gif" />
+<p class="caption left">Figure 1: using optical laws to compute reflection and refraction rays</p>
+</div>
+
+<p>So let's recap. How does the Whitted algorithm work? We shoot a primary ray from the eye and the closest intersection (if any) with objects in the scene. If the ray hits an object which is not a diffuse or opaque object, we must do extra computational work. To compute the resulting color at that point on, say for example, the glass ball, you need to compute the reflection color and the refraction color and mix them together. Remember, we do that in three steps. Compute the reflection color, compute the refraction color, and then apply the Fresnel equation.</p>
+
+<ul>
+<li>
+<p>First we compute the reflection direction. For that we need two items: the normal at the point of intersection and the primary ray's direction. Once we obtain the reflection direction, we shoot a new ray in that direction. Going back to our old example, let's say the reflection ray hits the red sphere. Using Appel's algorithm, we find out how much light reaches that point on the red sphere by shooting a shadow ray to the light. That obtains a color (black if it is shadowed) which is then multiplied by the light intensity and returned to the glass ball's surface.</p>
+</li>
+<li>
+<img class="right" src="../../../images/upload/introduction-to-ray-tracing/glassball.png" />
+<p>Now we do the same for the refraction. Note that, because the ray goes through the glass ball it is said to be a <b>transmission ray</b> (light has traveled from one side of the sphere to other; it was transmitted). To compute the transmission direction we need the normal at the hit point, the primary ray direction, and the refractive index of the material (in this example it may be something like 1.5 for glass material). With the new direction computed, the refractive ray continues on its course to the other side of the glass ball. There again, because it changes medium, the ray is refracted one more time. As you can see in the adjacent image, the direction of the ray changes when the ray enters and leaves the glass object. Refraction takes place every time there's a change of medium and that two media, the one the ray exits from and the one it gets in, have a different index of refraction. As you probably know the refraction index of air is very close to 1 and the refraction index of glass is around 1.5). Refraction has for effect to bend the ray slightly. This process is what makes objects appear shifted when looking through or at objects of different refraction indexes. Let's imagine now that when the refracted ray leaves the glass ball it hits a green sphere. There again we compute the local illumination at the point of intersection between the green sphere and refracted ray (by shooting a shadow ray). The color (black if it is shadowed) is then multiplied by the light intensity and returned to the glass ball's surface</p>
+</li>
+<li>
+<p>Lastly, we compute the Fresnel equation. We need the refractive index of the glass ball, the angle between the primary ray, and the normal at the hit point. Using a dot product (we will explain that later), the Fresnel equation returns the two mixing values.</p>
+</li>
+</ul>
+<div>
+<p>Here is some pseudo code to reinforce how it works:</p>
+</div>
+
+<div name="code" class="code">// compute reflection color
+color reflectionCol = computeReflectionColor();
+// compute refraction color
+color refractionCol = computeRefractionColor();
+float Kr; // reflection mix value
+float Kt; // refraction mix value
+fresnel(refractiveIndex, normalHit, primaryRayDirection, &Kr, &Kt);
+// mix the two
+color glassBallColorAtHit = Kr * reflectionColor + (1-Kr) * refractionColor;</div>
+
+<p>One last, beautiful thing about this algorithm is that it is <b>recursive</b> (that is also a curse in a way, too!). In the case we have studied so far, the reflection ray hits a red, opaque sphere and the refraction ray hits a green, opaque, and diffuse sphere. However, we are going to imagine that the red and green spheres are glass balls as well. To find the color returned by the reflection and the refraction rays, we would have to follow the same process with the red and the green spheres that we used with the original glass ball. This is a serious drawback of the ray tracing algorithm and can actually be nightmarish in some cases. Imagine that our camera is in a box which has only reflective faces. Theoretically, the rays are trapped and will continue bouncing off of the box's walls endlessly (or until you stop the simulation). For this reason, we have to set an arbitrary limit that prevents the rays from interacting, and thus recursing endlessly. Each time a ray is either reflected or refracted its depth is incremented. We simply stop the recursion process when the ray depth is greater than the maximum recursion depth.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='implementing-the-raytracing-algorithm.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 4 of  6</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='ray-tracing-practical-example.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-ray-tracing/adding-reflection-and-refraction by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:08:40 GMT -->
+</html>

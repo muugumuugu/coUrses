@@ -1,0 +1,219 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-ray-tracing/raytracing-algorithm-in-a-nutshell by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:08:25 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Introduction to Ray Tracing: a Simple Method for Creating 3D Images (Raytracing Algorithm in a Nutshell)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='ray-tracing, perspective projection, conductor, dielectric, forward tracing, backward tracing, shadow ray, primary ray, eye ray, path tracing, reflection, refraction, Appel, Whitted, index of refraction, Fresnel equation, transmission, recursive, recursion depth, image file format'>
+<meta name='date' content='2014-10-30 18:10:05'>
+
+<link rel="stylesheet" type="text/css" href="../../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../../css/page.css"/>
+
+<link href='../../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../../indexf17c.html","../../../indexf17c.html","../../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../../indexf17c.html","../../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Introduction to Ray Tracing: a Simple Method for Creating 3D Images</div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="how-does-it-work.html">How Does It Work?</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="raytracing-algorithm-in-a-nutshell.html"><b>Raytracing Algorithm in a Nutshell</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="implementing-the-raytracing-algorithm.html">Implementing the Raytracing Algorithm</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="adding-reflection-and-refraction.html">Adding Reflection and Refraction</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="ray-tracing-practical-example.html">Writing a Basic Ray Tracer</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../../code14ef.html?id=3&amp;origin=/lessons/3d-basic-rendering/introduction-to-ray-tracing">Source Code</a></div></div></div><p>The phenomena described by Ibn al-Haytham explains why we see objects. Two interesting remarks can be made based on his observations: firstly, without light we cannot see anything and secondly, without objects in our environment, we cannot see light. If we were to travel in intergalactic space, that is what would typically happen. If there is no matter around us, we cannot see anything but darkness even though photons are potentially moving through that space.</p>
+
+<h2>Forward Tracing</h2>
+
+<div style="width: 450px;" class="captionImage right">
+<img class="left" style="width: 450px;" src="../../../images/upload/introduction-to-ray-tracing/lighttoeyebounce.png" />
+<p class="caption">Figure 1: countless photons emitted by the light source hit the green sphere, but only one will reach the eye's surface.</p>
+</div>
+
+<p>If we are trying to simulate the light-object interaction process in a computer generated image, then there is another physical phenomena which we need to be aware of. Compared to the total number of rays reflected by an object, only a select few of them will ever reach the surface of our eye. Here is an example. Imagine we have created a light source which emits only one single photon at a time. Now let's examine what happens to that photon. It is emitted from the light source and travels in a straight line path until it hits the surface of our object. Ignoring photon absorption, we can assume the photon is reflected in a random direction. If the photons hits the surface of our eye, we "see" the point where the photon was reflected from (figure 1).</p>
+
+<div class="question">
+<img class="left" src="../../../images/upload/introduction-to-ray-tracing/paperstruct.png" width="200" height="600" /><p>QUESTION FROM A READER: above you claim that "each point on an illuminated area or object radiates (reflects) light rays in every direction." Doesn't this contradict ''random''?</p>
+<p>ANSWER: explaining why light is reflected in every possible direction is a off-topic for this particular lesson (one can refer to the lesson on light-matter interaction for a complete explanation). However, to answer your question briefly: yes and no. Of course in nature, a real photon is reflected by a real surface in a very specific direction (and therefore not a random one) defined by the geometry's topology and the photon incoming direction at the point of intersection. The surface of a diffuse object appears smooth if we look at it with our eyes. Although if we look at it with a microscope, we realize that the micro-structure is very complex and not smooth at all. The image on the left is a photograph of paper with different magnification scales. Photons are so small that they are reflected by the micro-features and shapes on the object's surface. If a beam of light hits the surface of this diffuse object, photons contained within the volume of the beam will hit very different parts of the micro-structure and, therefore, will be reflected in lots of different directions. So many, that we say, "every possible direction". If we want to simulate this interaction between the photons and the micro-structure, we shoot rays in random directions, which, statistically speaking, is about the same as if they were reflected in every possible direction.</p>
+
+<p>Sometimes the structure of the material at the macro level is organized in patterns which can cause the surface of an object to reflect light in particular directions. This is described as an anisotropic reflection and will be explained in details in the lesson on light-materials interaction. The macro structure of the material can also be the cause of unusual visual effects such as irridescence which we can observe of butterflies wings for instance.</p>
+</div>
+
+<p>We can now begin to look at the situation in terms of computer graphics. First, we replace our eyes with an image plane composed of pixels. In this case, the photons emitted will hit one of the many pixels on the image plane, increasing the brightness at that point to a value greater than zero. This process is repeated multiple times until all the pixels are adjusted, creating a computer generated image. This technique is called <b>forward ray-tracing</b> because we follow the path of the photon forward from the light source to the observer.</p>
+
+<p>However do you see a potential problem with this approach?</p>
+
+<p>The problem is the following: in our example we assumed that the reflected photon always intersected the surface of the eye. In reality, rays are essentially reflected in every possible direction, each of which have a very, very small probability of actually hitting the eye. We would potentially have to cast zillions of photons from the light source to find only one photon that would strike the eye. In nature this is how it works, as countless photons travel in all directions at the speed of light. In the computer world, simulating the interaction of that many photons with objects in a scene is just not practical solution for reasons we will now explain.</p>
+
+<p>So you may think: "Do we really need to shoot photons in random directions? Since we know the eye's position, why not just send the photon in that direction and see which pixel in the image it passes through, if any?" That would certainly be one possible optimization, however we can only use this method for certain types of material. For reasons we will explain in a later lesson on light-matter interaction, directionality is not important for diffuse surfaces. This is because a photon that hits a diffuse surface can be reflected in any direction within the hemisphere centered around the normal at the point of contact. However, if the surface is a mirror, and does not have diffuse characteristics, the ray can only be reflected in a very precise direction; the mirrored direction (something which we will learn how to compute later on). For this type of surface, we can not decide to artificially change the direction of the photon if it's actually supposed to follow the mirrored direction. Meaning that this solution is not completely satisfactory.</p>
+
+<div class="question">
+<p>QUESTION FROM A READER: "Is the eye really only a point receptor, or does it have a surface area? Even if the receiving surface is very very small, it still has an area and therefore is larger than a point. If the receiving area is larger than a point then surely the surface will receive more than just 1 out of the zillions of rays?"</p>
+<br/>
+<p>ANSWER: the reader is correct. An eye is not a point receptor, but a surface receptor like the film or CCD in your camera. Because this lesson is just an introduction to the ray-tracing algorithm, this topic is too complex to be explained in detail. Both cameras and the human eye have a lens that focuses reflected light rays onto a surface behind it. If the lens had a very small radius (which is not technically the case) in theory we could say that the light reflected off of an object could only come from one single direction. That is how pinhole cameras work. We will talk about them in the lesson on cameras.</p>
+</div>
+
+<p>Even if we do decide to use this method, with a scene made up of diffuse objects only, we would still face one major problem. We can visualize the process of shooting photons from a light into a scene as if you were spraying light rays (or small particles of paint) onto an object's surface. If the spray is not dense enough, some areas would not be illuminated uniformly.</p>
+
+<p>Imagine that we are trying to paint a teapot by making dots with a white marker pen onto a black sheet of paper (consider every dot to be a photon). As we see in the image below, to begin with only a few photons intersect with the teapot object, leaving many uncovered areas. As we continue to add dots, the density of photons increases until the teapot is "almost" entirely covered with photons making the object more easily recognisable.</p>
+
+<img class="right"  style="width: 450px;"  src="../../../images/upload/introduction-to-ray-tracing/teapotracing.gif" />
+
+<p>But shooting 1000 photons, or even X times more, will never truly guarantee that the surface of our object will be totally covered with photons. That's a major drawback of this technique. In other words, we would probably have to let the program run until we decide that it had sprayed enough photons onto the object's surface to get an accurate representation of it. This implies that we would need watch the image as it's being rendered in order to decide when to stop the application. In a production environment, this simply isn't possible. Plus, as we will see, the most expensive task in a ray-tracer is finding ray-geometry intersections. Creating many photons from the light source is not an issue, but, having to find all of their intersections within the scene would be prohibitively expensive.</p>
+
+<p>Conclusion: <b>Forward ray-tracing</b> (or <b>light tracing</b> because we shoot rays from the light) makes it technically possible simulate the way light travels in nature on a computer. However, this method, as discussed, is not efficient or practical. In a seminal paper entitled "An Improved Illumination Model for Shaded Display" and published in 1980, Turner Whitted (one of the earliest researchers in computer graphics) wrote:</p>
+
+<div class="scratchquote">"In an obvious approach to ray tracing, light rays emanating from a source are traced through their paths until they strike the viewer. Since only a few will reach the viewer, this approach is wasteful. In a second approach suggested by Appel, rays are traced in the opposite direction, from the viewer to the objects in the scene".</div>
+
+<p>We will now look at this other mode, Whitted talks about.</p>
+
+<h2>Backward Tracing</h2>
+
+<div style="width: 450px;" class="captionImage right">
+<img class="left"  style="width: 450px;"  src="../../../images/upload/introduction-to-ray-tracing/tracefromeyetolight.gif" />
+<p class="caption left">Figure 2: backward ray-tracing. We trace a ray from the eye to a point on the sphere, then a ray from that point to the light source.</p>
+</div>
+
+<p>Instead of tracing rays from the light source to the receptor (such as our eye), we trace rays backwards from the receptor to the objects. Because this direction is the reverse of what happens in nature, it is fittingly called <b>backward ray-tracing</b> or <b>eye tracing</b> because we shoot rays from the eye position?(figure 2). This method provides a convenient solution to the flaw of forward ray-tracing. Since our simulations cannot be as fast and as perfect as nature, we must compromise and trace a ray from the eye into the scene. If the ray hits an object then we find out how much light it receives by throwing another ray (called a light or shadow ray) from the hit point to the scene's light. Occasionally this "light ray" is obstructed by another object from the scene, meaning that our original hit point is in a shadow; it doesn't receive any illumination from the light. For this reason, we don't name these rays light rays?but instead <b>shadow rays</b>. In CG literature, the first ray we shoot from the eye into the scene is called a <b>primary ray</b>, <b>visibility ray,</b> or <b>camera ray.</b></p>
+
+<div class="question">
+<p>If in this lesson we have used forward tracing to describe the situation where rays are cast from the light as opposed to backward tracing where rays are shot from the camera. However some authors use these terms the other way around. Forward tracing means to them shooting rays from the camera because it is the most common path tracing techniques used in CG. To avoid confusion you can also use the term light and eye tracing which are more explicit These terms are more often used in the context of bi-directional path tracing (see the Light Transport section).</p>
+</div>
+
+<h2>Conclusion</h2>
+
+<p>In computer graphics the concept of shooting rays either from the light or from the eye is called <b>path tracing</b>. The term ray-tracing can also be used but the concept of path tracing suggests that this method of making computer generated images relies on following the path from the light to the camera (or vice versa). By doing so in an physically realistic way, we can easily simulate optical effects such caustics or the reflection of light by other surface in the scene (indirect illumination). These topics will be discussed in other lessons.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'><p><a href='how-does-it-work.html'><i style='float: left;' class='material-icons'>arrow_back</i>Previous Chapter</a></p></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 2 of  6</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='implementing-the-raytracing-algorithm.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-ray-tracing/raytracing-algorithm-in-a-nutshell by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 17:08:30 GMT -->
+</html>

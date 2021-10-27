@@ -1,0 +1,213 @@
+
+<!-- 
+NEED TO INSERT THE BODY AND ALL THE USEFUL STUFF HERE
+-->
+
+<html>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 16:48:38 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<!-- title should be set at this point in page.php -->
+<title>Ray Tracing: Rendering a Triangle (Why Are Triangles Useful?)</title>
+
+<meta name='author' content="Scratchapixel">
+<meta name='copyright' content="&copy; 2009-2016 Scratchapixel">
+<meta name='keywords' content='ray-triangle intersection test, ray-tracing, barycentric coordinates, back-face culling, scalar triple product, determinant, M&ouml;ller-Trumbore algorithm'>
+<meta name='date' content='2014-08-15 10:34:46'>
+
+<link rel="stylesheet" type="text/css" href="../../css/scratchapixel.css"/>
+<link rel="stylesheet" type="text/css" href="../../css/page.css"/>
+
+<link href='../../../fonts.googleapis.com/css16e1.css?family=Noto+Sans' rel='stylesheet' type='text/css'/>
+<link href='../../../fonts.googleapis.com/css9908.css?family=Open+Sans:700,400,300' rel='stylesheet' type='text/css'/>
+
+<!-- using the material icons from Google http://google.github.io/material-design-icons/ -->
+<link rel="stylesheet" href="../../../fonts.googleapis.com/icone91f.css?family=Material+Icons">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config(
+	{tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+	displayAlign: "left",
+	displayIndent: "1em",
+	"HTML-CSS": { scale: 90 },
+	jax: ["input/TeX","input/MathML","input/AsciiMath","output/HTML-CSS","output/NativeMML"],
+	extensions: ["tex2jax.js","../../indexf17c.html","../../indexf17c.html","../../indexf17c.html","MathZoom.js"],
+	TeX: {
+		extensions: ["AMSmath.js","../../indexf17c.html","../../indexf17c.html","noUndefined.js"]
+	}}
+);
+</script>
+
+<script type="text/javascript" src="../../../cdn.mathjax.org/mathjax/latest/MathJaxdda6.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<script type="text/javascript"
+	src="../../scratchapixelSDK.js">
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','../../../www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42771397-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<!-- 
+https://developers.facebook.com/docs/plugins/share-button/
+Include the JavaScript SDK on your page once, ideally right after the opening <body> tag.
+-->
+
+<script>
+  window.fbAsyncInit = function() {
+	FB.init({
+	  appId      : '1535346446701691',
+	  xfbml      : true,
+	  version    : 'v2.1'
+	});
+  };
+
+  (function(d, s, id){
+	 var js, fjs = d.getElementsByTagName(s)[0];
+	 if (d.getElementById(id)) {return;}
+	 js = d.createElement(s); js.id = id;
+	 js.src = "../../../connect.facebook.net/en_US/sdk.js";
+	 fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+	!function(d,s,id) {
+		var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;
+			js.src="../../../platform.twitter.com/widgets.js";
+			fjs.parentNode.insertBefore(js,fjs);
+		}
+	}(document,"script","twitter-wjs");
+</script>
+
+
+	<!-- Open Graph data -->
+	<meta property='fb:app_id' content='1535346446701691'/>
+	<meta property='og:title' content='Ray Tracing: Rendering a Triangle'/>
+	<meta property='og:type' content='article'/>
+	<meta property='og:url' content='https://www.scratchapixel.com//lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle'/>
+	<meta property='og:image' content='https://www.scratchapixel.com/images/design/logo_scratchapixel2015.png'/>
+	<meta property='og:description' content='Lesson summary: In this lesson, we will learn about a couple of techniques to compute the intersection of a ray with a single triangle.'/> 
+	<meta property='og:site_name' content='Scratchapixel'/>
+	<meta property='fb:admins' content='1260067275'/>
+	
+</head>
+
+<style>
+.full-page1
+{
+	position: relative;
+	margin: 0; padding: 0; 
+	width: 100%; 
+	border: 1px solid red;
+	color: white;
+}
+
+.full-page-header-table1
+{
+	display: table; 
+	width: 100%;
+	border: 1px solid orange;
+}
+</style>
+
+<div style='display: table; width: 100%;'>
+	<!-- 
+		This should be the content of the top menu bar. So if you want to reuse
+		this, just create a table div above and insert the section.
+		The height here doesn't mater because it's controlled by the inner table.
+-->
+<div style='display: table-row;  height: 40px; width: 100%; background-color: #1565C0; color: white;'>
+	<!-- we center the cell in the middle of the row -->
+	<div style='display: table-cell; width: 100%; border: 1px none orange; vertical-align: middle; text-align: center;'>
+		
+		<div style='display: inline-block; position: relative; border: 1px none black; width: 670px; margin: 0 auto; padding: 0;'>			
+			<!-- 
+				This is our logo 
+			-->
+			<div style='display: inline-block; border: 2px none green;'>
+				<span style='font-size: 18px; font-weight: 800;'><a href='../../indexf17c.html' style='text-decoration: none; color: white;'>Scratchapixel 2.0</a></span>
+			</div>
+			<!-- 
+				This is login 
+				The only way you can vertically center stuff here is by forcing the height of the div
+				and the eight of the text to be the same
+			-->
+			<div style='border: 2px none green; position: absolute; right: 0;  top: 0; bottom: 0px; height: 20px; line-height: 20px; margin: auto 0;'>
+				<a style="color: white; text-decoration: none;" href="https://www.facebook.com/v2.5/dialog/oauth?client_id=1682406642074489&amp;state=6241aa28239e903f6cad376e5bc19dd1&amp;response_type=code&amp;sdk=php-sdk-5.4.0&amp;redirect_uri=https%3A%2F%2Fwww.scratchapixel.com%2Ffb-callback.php%3F&amp;scope=email">Sign in</a>			</div>
+			
+		</div>
+	</div>
+</div></div>
+
+<body onload="onload();">
+
+<div id='fb-root'></div> <!-- that's required by FB -->
+<div class="page-content">
+<article><div id='sap-root'></div><!-- that's needed by scratchapixel see onload() --><div class='lesson-title'>Ray Tracing: Rendering a Triangle</div><div style='width: 100%; margin: 0px; display: table; vertical-align: middle; border: 1px none red;'>
+			<div style='display: table-row; height: 30px;'>
+			<div style='margin: 0px; padding: 0px; border: 1px none blue ; display: table-cell; vertical-align: middle;'>
+				<a href='https://twitter.com/share' class='twitter-share-button' data-lang='en'>Tweet</a>
+			</div></div>
+			<div style='display: table-row; height: 30px;'>
+			<div style='padding: 0px; border: 1px none blue ; display: table-cell; vertical-align: middle;'>
+				<div style='margin-top: 5px;' class='fb-like' data-share='true' data-width='450' data-show-faces='true'></div>
+			</div></div></div><div class='chapter-table'><div class='chapter-row'><div class='chapter-cell'><b>Contents</b></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="ray-tracing-rendering-a-triangle/why-are-triangles-useful.html"><b>Why Are Triangles Useful?</b></a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="ray-tracing-rendering-a-triangle/geometry-of-a-triangle.html">Geometry of a Triangle</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="ray-tracing-rendering-a-triangle/ray-triangle-intersection-geometric-solution.html">Ray-Triangle Intersection: Geometric Solution</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="ray-tracing-rendering-a-triangle/single-vs-double-sided-triangle-backface-culling.html">Single vs Double Sided Triangle and Backface Culling</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="ray-tracing-rendering-a-triangle/barycentric-coordinates.html">Barycentric Coordinates</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="ray-tracing-rendering-a-triangle/moller-trumbore-ray-triangle-intersection.html">M&ouml;ller-Trumbore algorithm</a></div></div><div class='chapter-row'><div class='chapter-cell'><a style='text-decoration: none;' href="../../code83cd.html?id=9&amp;origin=/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle">Source Code</a></div></div></div><span style='display: inline-block; width: 100%; margin: 0px 0px 10px 0px;'><i>Keywords: ray-triangle intersection test, ray-tracing, barycentric coordinates, back-face culling, scalar triple product, determinant, M&ouml;ller-Trumbore algorithm.</i></span><p>In theory, solving ray and triangle intersections is not all that difficult. What makes the ray-triangle intersection complex is the multitude of different cases that we must account for. To write a robust routine that handles all these cases quickly and efficiently can be tricky. For this reason, the topic has been the subject of a lot of research and debate in the CG community. It is also generally one of the most important and critical routines in a ray-tracer. In this lesson we will stick to the basic techniques; foundations upon which more advanced methods are built.</p>
+
+<h2>Geometric Primitives</h2>
+
+<p>A <b>geometric primitive</b> is a representation of a 3D object in a rendering program. For example, if we want to represent a sphere, we can define it by the position of its center, and its radius as explained in the <a href="minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection.html">previous lesson</a>. Complex objects, similarly, can be modeled by more complex geometric primitives like <b>polygons</b>, <b>NURBS or Bezier patches</b>, <b>subdivision surfaces</b> etc. Each one of them is useful for representing certain types of 3D objects. For example, NURBS are good for objects with smooth surfaces. Polygons, on the other hand, are useful for geometric shapes like buildings. Triangles are not really a geometry type of their own. Rather, they are a subset of the polygon primitive type. We will see in a later lesson that a polygonal object, though, is easily convertible into triangles.</p>
+
+<h2>Why Do We Like Triangles so Much?</h2>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left" src="../../images/upload/ray-triangle/triangle1.png" />
+<p class="caption left">Figure 1: geometry of a triangle. A triangle is defined by three vertices which defines a plane. The normal is perpendicular to this plane. A ray (in yellow) intersects this triangle.</p>
+</div>
+
+<p>Computing the intersection of a ray with a primitive such as a sphere, is not difficult. However, since it is difficult to model most 3D objects with spheres alone, it is necessary to use some other types of primitive to represent more complex objects (objects of arbitrary shape). Nothing stops us from using polygonal meshes or NURBS surfaces with our renderer, but computing the intersection of a ray with these primitive can be difficult and slow. On the other hand, computing the intersection of a ray with a triangle is a fairly simple operation which can also be well optimized. It may not be as fast as computing an intersection between a ray and a sphere, but at least it will be better than rendering the intersection of ray with a NURBS surface. This is a compromise we are willing to make.</p>
+
+<p>Instead of working with complex primitives such as NURBS or Bezier patches, we can convert every object into a triangle mesh and compute the intersection of a ray with every triangle in this mesh. By doing so, we reduce the ray-object intersection to a single, advantageously fast, routine. Converting a Bezier patch into a triangle mesh is a much simpler task than computing multiple ray-Bezier patch intersections. In our code, the consequence of this strategy is that every time we implement a new geometric primitive type, we will have to write a routine that will convert that type into a triangle mesh as opposed to write a routine to compute the intersection of a ray with this primitive. All the objects of a scene will be therefore internally represented as triangle meshes. Most ray-tracers (at least production ones) use this approach.</p>
+
+<h2>What Is a Triangle?</h2>
+
+<div style="width: 300px;" class="captionImage right">
+<img class="left" src="../../images/upload/ray-triangle/triangulated.png" />
+<p class="caption left">Figure 2: a quad is not necessarily coplanar is the four vertices it is made of are not lying in the same plane (as depicted on the right). To solve this problem we can triangulate quads as we know that triangles are necessarily coplanar (on the left the right quad is converted into two triangles).</p>
+</div>
+
+<p>A triangle is defined by three vertices (or points) whose positions are defined in three-dimensional space (figure 1). One point can only represent a location in space. With two points, we can define a line. With three points, we can define a surface (and a plane). By construction, a triangle is coplanar; the three vertices define a plane and all three vertices lie in the same plane. This is not necessarily the case for polygons with more than three vertices; four points define a quad even when these four points are not in the same plane (which is entirely possible). However, we can convert the quad into two coplanar triangles as depicted in figure 2. This technique can be applied to polygon which an arbitrary number of vertices: this process is call triangulation (we will be learn about rendering polygon meshes in the next lesson).</p>
+
+<h2>How Do We Compute the Intersection of a Ray With a Triangle?</h2>
+
+<p>Over the few decades, several algorithms have been developed to compute the intersection between a ray and a triangle (research on this topic is still going and papers keep being published on a regular basis). In this lesson, we will teach two of these techniques. The first technique requires just basic logic and elementary linear algebra to implement. The second technique, considered as one of the fastest ray-triangle intersection algorithm, was proposed by M&ouml;ller-Trumbore in 1997 in a paper titled, "Fast, minimum storage ray-triangle intersection". Although it requires a more advanced understanding of linear algebra, we will do our best to work through it.</p>
+
+<p>We can decompose the ray-triangle intersection test into a two steps problem:</p>
+
+<ul>
+<li>Does the ray intersect the plane defined by the triangle?</li>
+<li>If so, does the intersection point lie inside the triangle?</li>
+</ul>
+
+<p>Let's see how we can answer these two questions.</p></article></div><!-- end of page-content -->
+			<div class='footer-prev-next'>
+			<div class='footer-column'><div class='footer-prev-next-row'>
+				<div class='footer-prev-next-cell' style='text-align: left;'></div>
+				<div class='footer-prev-next-cell' style='text-align: center;'><p>Chapter 1 of  7</p></div>
+				<div class='footer-prev-next-cell' style='text-align: right;'><p><a href='ray-tracing-rendering-a-triangle/geometry-of-a-triangle.html'>Next Chapter <i style='float: right;' class='material-icons'>arrow_forward</i></a></p></div>
+			</div></div>
+			</div>
+
+</body>
+
+<!-- Mirrored from www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 16:48:42 GMT -->
+</html>
