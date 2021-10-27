@@ -1,0 +1,89 @@
+####################################
+#Day 4
+#Visualizing data and using libraries
+# https://www.mailman.columbia.edu/sites/default/files/media/fdawg_ggplot2.html
+
+# For these excercises, please go ahead to install ggplot2; you need network access!
+install.packages("ggplot2")
+
+# Tell R that we're going to use functions from ggplot2
+library(ggplot2)
+
+# Let's get to know the iris data set, frequently used for visualization exercises:
+summary(iris)
+
+# Let's see the top of the table:
+head(iris)
+
+# Let's see the bottom of the table:
+tail(iris)
+
+### Scatterplot
+
+# How does "base" R scatterplot the sepal values?
+plot(x=iris$Sepal.Length, y=iris$Sepal.Width, 
+     xlab="Sepal Length", ylab="Sepal Width",  main="Sepal Length-Width")
+
+# Let's repeat this plot, this time using ggplot2
+scatter = ggplot(data=iris, aes(x = Sepal.Length, y = Sepal.Width, color = Species))
+scatter + geom_point()
+
+# The "grammar of graphics" allows us to build a figure progressively.
+# "Geoms" are ways to produce an image from data points: boxplots, histograms, points...
+# "Aesthetics" are the way those elements are displayed: shape, linetype, labels...
+
+# Let's add an element to the prior graph, a linear model by species
+scatter + geom_point() +
+  geom_smooth(method="lm")
+
+### Let's shift to a boxplot, a recommended way to show a distribution of values
+
+# "Base" graphics in R uses its equation language.
+# That first part means "sepal length is a function of species."
+boxplot(Sepal.Length~Species,data=iris, 
+        xlab="Species", ylab="Sepal Length", main="Iris Boxplot")
+
+# ggplot uses a geom_boxplot to represent this type of graph
+box = ggplot(data=iris, aes(x=Species, y=Sepal.Length))
+box + geom_boxplot(aes(fill=Species))
+
+# We can also add statistical characterization to this graph:
+box + geom_boxplot(aes(fill=Species)) +
+  stat_summary(fun.y=mean, geom="point", shape=5, size=4)
+
+# The stat_summary element computes the mean by species and visualizes it as a big diamond.
+
+# Let's do that again, this time jittering all the data points instead of the stats
+box + geom_boxplot(aes(fill=Species)) + 
+  geom_jitter();
+
+
+### We have already seen histograms, but we can use them here, too.
+
+# "Base" graphics makes this call quite easy:
+hist(iris$Sepal.Width, xlab="Sepal Width", ylab="Frequency", main="Histogram of Sepal Width")
+
+# The ggplot2 version is also pretty straightforward
+histogram = ggplot(data=iris, aes(x=Sepal.Width))
+histogram + geom_histogram(binwidth=0.2)
+
+# ggplot2 also lets us see how much each species contributes to each bar!
+histogram + geom_histogram(binwidth=0.2, color="black", aes(fill=Species))
+
+### Grand finale
+
+# We have produced some pretty images.  Let's export a PDF that contains all three, one to each page
+
+pdf(file="output.pdf")
+scatter = ggplot(data=iris, aes(x = Sepal.Length, y = Sepal.Width, color = Species))
+scatter + geom_point() +
+  geom_smooth(method="lm")
+box = ggplot(data=iris, aes(x=Species, y=Sepal.Length))
+box + geom_boxplot(aes(fill=Species)) + 
+  geom_jitter();
+histogram = ggplot(data=iris, aes(x=Sepal.Width))
+histogram + geom_histogram(binwidth=0.2, color="black", aes(fill=Species))
+dev.off()
+
+#pdf() is just one of several output devices.  You could instead write a bitmap with png().
+#dev.off() specifies that we're done with all the drawing instructions for our output and need to finalize.

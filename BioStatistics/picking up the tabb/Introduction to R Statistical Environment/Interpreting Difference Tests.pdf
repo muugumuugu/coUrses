@@ -1,0 +1,115 @@
+####################################
+#Day 5
+#Interpreting statistical tests
+
+TTestPercent = function(n=3,diff=0) {
+   RandomAs = matrix(rnorm(n*100,mean=10),ncol=n);
+   RandomBs = matrix(rnorm(n*100,mean=10+diff),ncol=n);
+   Randoms = cbind(RandomAs,RandomBs);
+   PVals = apply(Randoms,1,function(x) t.test(x[1:n],x[(n+1):(2*n)])$p.value);
+   Significants = subset(PVals,PVals<0.05);
+   return(length(Significants));
+}
+
+# This version of the code is easier to understand, without "apply!"
+TTestPercent = function(n=3,diff=0) {
+   RandomAs = matrix(rnorm(n*100,mean=10),ncol=n);
+   RandomBs = matrix(rnorm(n*100,mean=10+diff),ncol=n);
+   PVals = rep(NA,100)
+   for (counter in 1:100) {
+      PVals[counter] = t.test(RandomAs[counter,],RandomBs[counter,])$p.value;
+   }
+   Significants = subset(PVals,PVals<0.05);
+   return(length(Significants));
+}
+
+# Let's have a quick refresher on the appearance of the normal distribution
+x <- seq(-4, 4, length=1000)
+hx <- dnorm(x)
+plot(x,hx,type="l")
+abline(v=0,col="purple");
+abline(v=1,col="red")
+abline(v=-1,col="red")
+abline(v=2,col="blue")
+abline(v=-2,col="blue")
+
+# If two cohorts differ in their mean values by one standard deviation, how do these two groups compare to each other?
+x <- seq(-4, 5, length=1000)
+hx <- dnorm(x)
+ix <- dnorm(x-1)
+plot(x,hx,type="l",col="black")
+lines (x,ix,type="l",col="red")
+abline(v=0,col="black");
+abline(v=1,col="red");
+
+# If two cohorts differ in their mean values by two standard deviation, how do these two groups compare to each other?
+x <- seq(-4, 6, length=1000)
+hx <- dnorm(x)
+ix <- dnorm(x-2)
+plot(x,hx,type="l",col="black")
+lines (x,ix,type="l",col="red")
+abline(v=0,col="black");
+abline(v=2,col="red");
+
+# If we perform 100 T tests with three replicates in two cohorts that are from distributions with the same mean, how many will be called "significant" differences (p-value below 0.05)?
+TTestPercent(n=3,diff=0)
+
+# Do we get the same number of false positives every time?
+TTestPercent(n=3,diff=0)
+TTestPercent(n=3,diff=0)
+TTestPercent(n=3,diff=0)
+TTestPercent(n=3,diff=0)
+TTestPercent(n=3,diff=0)
+TTestPercent(n=3,diff=0)
+TTestPercent(n=3,diff=0)
+TTestPercent(n=3,diff=0)
+TTestPercent(n=3,diff=0)
+TTestPercent(n=3,diff=0)
+
+# What if a real difference exists between the two cohorts, but it is a relatively small one?
+TTestPercent(n=3,diff=1)
+TTestPercent(n=3,diff=1)
+TTestPercent(n=3,diff=1)
+TTestPercent(n=3,diff=1)
+TTestPercent(n=3,diff=1)
+TTestPercent(n=3,diff=1)
+TTestPercent(n=3,diff=1)
+TTestPercent(n=3,diff=1)
+TTestPercent(n=3,diff=1)
+TTestPercent(n=3,diff=1)
+
+# Does it help to detect a small difference if we have more replicates?
+TTestPercent(n=5,diff=1)
+TTestPercent(n=5,diff=1)
+TTestPercent(n=5,diff=1)
+TTestPercent(n=5,diff=1)
+TTestPercent(n=5,diff=1)
+TTestPercent(n=5,diff=1)
+TTestPercent(n=5,diff=1)
+TTestPercent(n=5,diff=1)
+TTestPercent(n=5,diff=1)
+TTestPercent(n=5,diff=1)
+
+# Let's examine a larger difference, once again with only three replicates.
+TTestPercent(n=3,diff=2)
+TTestPercent(n=3,diff=2)
+TTestPercent(n=3,diff=2)
+TTestPercent(n=3,diff=2)
+TTestPercent(n=3,diff=2)
+TTestPercent(n=3,diff=2)
+TTestPercent(n=3,diff=2)
+TTestPercent(n=3,diff=2)
+TTestPercent(n=3,diff=2)
+TTestPercent(n=3,diff=2)
+
+# Let's now look for that bigger difference with more replicates in hand.
+TTestPercent(n=5,diff=2)
+TTestPercent(n=5,diff=2)
+TTestPercent(n=5,diff=2)
+TTestPercent(n=5,diff=2)
+TTestPercent(n=5,diff=2)
+TTestPercent(n=5,diff=2)
+TTestPercent(n=5,diff=2)
+TTestPercent(n=5,diff=2)
+TTestPercent(n=5,diff=2)
+TTestPercent(n=5,diff=2)

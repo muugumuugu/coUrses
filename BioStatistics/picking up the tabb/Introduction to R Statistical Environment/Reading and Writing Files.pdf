@@ -1,0 +1,72 @@
+####################################
+#Day 2
+#Reading and writing files
+
+### I make a table of "quiz scores" for our exercise
+#Create a vector of names.
+Names = sort(c("Bongani","Lindelwa","Themba","Dumisa","Thandiwe","Olwethu","Khwezi"));
+#How well do these students typically do on quizzes?
+Averages = rnorm(7, mean=0.8, sd=0.1)
+#Make a matrix to store the quiz results.
+QuizScores = matrix(NA,nrow=7,ncol=10,dimnames=list(Names,c("Q1","Q2","Q3","Q4","Q5","Q6","Q7","Q8","Q9","Q10")))
+#For each student, simulate ten scores from the Poisson distribution.
+for (student in 1:7) {
+  QuizScores[student,] = rpois(10, lambda=Averages[student]*40)
+}
+#Write the table to disk
+write.table(QuizScores,file="QuizScores.tsv",sep="\t")
+#As a reminder, what type of data did we write to the file?
+class(QuizScores)
+
+#Try to import this table into Excel.  Note the header row is shifted.
+
+#Read the table from disk
+Quizzes = read.table(file="QuizScores.tsv",sep="\t",header=T)
+#What type of data did we read from the file?
+class(Quizzes)
+
+#Which quiz gave the students the most trouble?
+summary(Quizzes)
+
+#Compute an average for each student
+QuizAverages = rowMeans(Quizzes)
+#Build a new version of this table, this time including QuizAverages
+QuizzesPlusAverages = cbind(Quizzes,QuizAverages)
+
+#Let's pull out the grades for Bongani (row 1)
+BonganiRow = Quizzes[1,]
+#Show all Bongani's quiz scores, from lowest to highest
+sort(BonganiRow)
+
+###The above example is a simple matrix.  Let's write a data.frame instead.
+# Use the same vector of names as above
+Names
+Sex = c("f","m","m","f","f","f","m");
+Height = rnorm(7,mean=169,sd=10);
+Weight = rnorm(7,mean=60.7,sd=5);
+Systolic = rnorm(7,mean=110,sd=15);
+Diastolic = rnorm(7,mean=70,sd=10);
+Vitals = data.frame(Names,Sex,Height,Weight,Systolic,Diastolic);
+# Write the data.frame to disk
+write.table(Vitals,file="Vitals.tsv",sep="\t")
+
+summary(Vitals)
+# When we examine the summary for Names and for Sex, we get a different output
+# than when we look at those vectors alone:
+summary(Names)
+summary(Sex)
+# What does it mean to be a factor?
+
+###It is possible to save objects rather than write text tables
+save(Vitals,file="Vitals.RData")
+load("Vitals.Rdata")
+
+###It is possible to read data directly from Microsoft Excel files!
+# First, install the "readxl" library (THIS REQUIRES NETWORK)
+install.packages("readxl")
+# Inform R that you will use functions from readxl
+library(readxl)
+# Our example XLSX includes two worksheets
+# Be sure you change current directory to the one containing this xlsx!
+Inventory = read_excel("20190226-Inventory.xlsx",sheet="Inventory")
+Prices = read_excel("20190226-Inventory.xlsx",sheet="Prices")

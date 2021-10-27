@@ -1,0 +1,78 @@
+# Generate strings of random letters, to length x
+randomString <- function(x) {
+  a <-sample(letters, x, replace = TRUE)
+  b <-paste(a, collapse="")
+  return(b)
+}
+
+# Simulate gene expression data for 1000 genes in two cohorts of 5 replicates.
+numGenes <- 1000
+numReps <- 5
+# We should have one really differential gene for how many total genes?
+sameToDiffRatio <- 10
+# Set up empty data structures to fill.
+GeneNames <- rep(NA,numGenes);
+Reds <- matrix(NA, ncol= numReps, nrow= numGenes);
+Yellows <- matrix(NA, ncol= numReps, nrow= numGenes);
+# Simulate data for an individual gene.
+for (i in 1:numGenes) {
+  GeneNames[i] <- randomString(5);
+  ThisMean <- rexp(1);
+  # If this gene number divided by sameToDiffRatio gives no remainder, this is a differential gene
+  if (i%%sameToDiffRatio) ThisLogFoldChange=0 else ThisLogFoldChange=rnorm(1);
+  # Convert the log fold change to a linear scale one
+  ThisLinearFoldChange=exp(ThisLogFoldChange);
+  # We know that (A+B)/2 = Mean, and we know A/B = FoldChange...
+  ThisBMean = (2*ThisMean)/(1+ThisLinearFoldChange);
+  ThisAMean = ThisLinearFoldChange * ThisBMean;
+  # How noisy are the data?  This determines standard deviation.
+  ThisSD = ThisMean/10;
+  repsA <- rnorm(numReps, mean=ThisAMean,sd=ThisSD);
+  repsB <- rnorm(numReps, mean=ThisBMean,sd=ThisSD);
+  Reds[i,] <- repsA;
+  Yellows[i,] <- repsB;
+  # If we want to check how different the sampling made the FoldChange from our target...
+  EmpiricalFoldChange <- sum(Reds[i,])/sum(Yellows[i,]);
+  cat(GeneNames[i],"\t",ThisMean,"\t",ThisLinearFoldChange,"\t",EmpiricalFoldChange,"\t",ThisAMean,"\t",ThisBMean,"\n");
+#  cat(Reds[i,],"\t",Yellows[i,],"\n");
+}
+# Build a data frame and write it to disk with headers
+fullDF <- data.frame(GeneNames,Reds,Yellows);
+colnames(fullDF) <- c("Gene","Red1","Red2","Red3","Red4","Red5","Yellow1","Yellow2","Yellow3","Yellow4","Yellow5");
+write.table(fullDF,file="20180227-Sim-GeneExpress.txt");
+
+# Read the table into memory.
+GeneExp <- read.table("20180227-Sim-GeneExpress.txt",header=T);
+# Compute Student's T-Test p-values for all rows.
+GEPVals <- apply(GeneExp[-1],1,function(x) t.test(x[1:5],x[6:10])$p.value)
+# Compute log fold changes for all rows.
+GELogFoldChanges <- apply(GeneExp[-1],1,function(x) log(sum(x[1:5])/sum(x[6:10])))
+# Apply Benjamini-Hochberg (FDR) multiple testing correction
+GEAdjPVals <- p.adjust(GEPVals, method="fdr")
+# Use "base" graphics to plot fold changes and adjusted p-values.
+plot(GELogFoldChanges, -log(GEAdjPVals), ylab="negative log p-value", xlab="log fold changes")
+# We must ignore any p-values that have too high a p-value.
+abline(h=-log(0.05))
+# Biologists frequently ignore any changes of less than two-fold in expression.
+abline(v=log(2))
+abline(v=log(1/2))
+
+
+# Now do it in ggplot2
+library(ggplot2)
+LogTwoFold <- log(2)
+# Create a vector of judgments; does each gene pass our p-value and fold change requirements?
+GEThreshold <- abs(GELogFoldChanges)>LogTwoFold & GEAdjPVals < 0.05
+# Stitch all the information into a single object
+GEDF <- data.frame(GeneExp,GEPVals,GELogFoldChanges,GEAdjPVals,GEThreshold);
+# Produce a volcano plot, coloring on basis of judgment.
+g <- ggplot(data=GEDF,
+	aes(x=GELogFoldChanges, y=-log(GEAdjPVals), color=GEThreshold))+
+	geom_point()+
+	theme(legend.position="none")+
+	xlab("log fold changes")+
+	ylab("negative log p-value")
+# Add a horizontal line to show threshold p-value,
+# and add two vertical lines to show threshold fold changes.
+g + geom_hline(yintercept=-log(0.05)) + geom_vline(xintercept=LogTwoFold) + geom_vline(xintercept=log(1/2))
+
