@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Deploying Node Bot to EC2 | Daniel Shiffman</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    
+    
+    <script src="js/jquery.js"></script>
+    <script src="js/main.js"></script>
+    
+</head>
+
+
+  <body>
+
+    
+
+
+      <link rel="stylesheet" type="text/css" href="css/prism.css">
+<link rel="stylesheet" type="text/css" href="css/highlight.css">
+<link rel="stylesheet" type="text/css" href="css/a2z.css">
+<script src="js/blog.js"></script>
+<script src="js/prism.js"></script>
+
+<section class="left-container out a2z">
+  <h1>Programming from A to Z</h1>
+  <p><br/>
+
+    <a href="index.html" class="body-link primary">about</a> 
+    <a href="../A2Z-F16/README.md" class="body-link primary">syllabus</a>
+    <a href="../A2Z-F16" class="body-link primary">All example source code</a>
+
+  </p>
+  <span class="line-charm first"></span>
+  <div class="content-wrapper article a2z">
+    <iframe width="525" height="300" src="https://www.youtube.com/embed/26bajyD4fLg?list=PLRqwX-V7Uu6atTSxoRiVnSuOn6JHnq2yV" frameborder="0" allowfullscreen=""></iframe>
+
+<h2 id="notes-on-deploying-to-ec2">Notes on Deploying to EC2</h2>
+
+<h3 id="creating-a-server-instance">Creating a server instance</h3>
+
+<ul>
+  <li>Go to the <a href="https://aws.amazon.com/ec2/">Amazon EC2 Page</a> and sign up for an account.</li>
+  <li>Navigate to the <a href="https://console.aws.amazon.com/console/home">Amazon web services console</a>.</li>
+  <li>Click on “EC2” (top left of page).</li>
+  <li>Select “Launch Instance”.</li>
+  <li>Select “Ubuntu Server 14.04 LTS (HVM), SSD Volume Type - ami-5189a661”.  (You are welcome to use others, but this one worked for me to run both node and Java.)</li>
+</ul>
+
+<p><img src="images/ubuntu.png" alt="ubuntu" /></p>
+
+<ul>
+  <li>Pick “General Purpose” (free tier micro)</li>
+  <li>Select “Review and Launch”</li>
+  <li>Launch!</li>
+  <li>You’ll then see a prompt about your “key/pair”.  The key pair consists of a public key that AWS stores, and a private key file that you store.  They come together in a file “something.pem” which you will need in order to login to your account.  Select “create new pair” and enter a title for your key/pair.</li>
+</ul>
+
+<p><img src="images/keypair.png" alt="keypair" /></p>
+
+<ul>
+  <li>Select “Download Key Pair”.  The file will download to your computer.  Save this file! You’ll need it for future steps.</li>
+  <li>Now click “Launch Instances”.</li>
+  <li>Now you should see a message that “Your instances are launching” (it may take a few minutes before they are available.)</li>
+  <li>Select “View Instances”.</li>
+</ul>
+
+<p><img src="images/instance.png" alt="instance" /></p>
+
+<ul>
+  <li>You should see your instance listed like above.  Now it’s time to connect!</li>
+  <li>Navigate terminal to the directory where you have your “pem” file.  First you must make sure your key is not “publicly” viewable.  This has to do with file permissions.</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">$ chmod 400 yourkeyfile.pem</code></pre></figure>
+
+<ul>
+  <li>Login using the key with the following command:</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">$ ssh -i "yourkeyfile.pem" ubuntu@52.33.245.123</code></pre></figure>
+
+<p>Replace “52.33.245.123” with your “public IP” as shown in your EC2 console.</p>
+
+<ul>
+  <li>Your terminal should then show that you have connectd.</li>
+</ul>
+
+<h3 id="installing-node-and-running-your-bot">Installing node and running your bot</h3>
+
+<ul>
+  <li>Install node:</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">$ sudo apt-get update
+$ sudo apt-get install nodejs
+$ sudo apt-get install npm
+$ sudo ln -s `which nodejs` /usr/bin/node</code></pre></figure>
+
+<ul>
+  <li>Install the node package dependencies (specified in your package.json file):</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">$ npm install</code></pre></figure>
+
+<ul>
+  <li>Upload your node application to the server.  You can do this with SFTP software like Cyberduck.  The key is selecting “Use Public Key Authentification” rather than enter a password.  See the configuration below.</li>
+</ul>
+
+<p><img src="images/cyberduck.png" alt="cyberduck" /></p>
+
+<ul>
+  <li>Once your files are uploaded you’ll want to check and make sure your bot works, i.e.</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">$ node bot.js</code></pre></figure>
+
+<ul>
+  <li>The bot will only run while you have terminal open.  In order for it to run after you’ve logged out of your EC2 instance and closed your computer, you can use a node module called “forever”.</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">$ sudo npm install forever -g
+$ forever start bot.js</code></pre></figure>
+
+<p>If you want to specify the logging files for any console output:</p>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">$ forever -o out.log -e err.log start bot.js</code></pre></figure>
+
+<p>And you can also stop, restart, and list as follows:</p>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">$ forever stop bot.js
+$ forever restart bot.js
+$ forever list
+$ forever stopall</code></pre></figure>
+
+<h3 id="using-processingjava">Using Processing/Java</h3>
+
+<p>This comes from the <a href="https://github.com/processing/processing/wiki/Running-without-a-Display">headless Processing wiki</a>.</p>
+
+<ul>
+  <li>Install Java.</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">$ sudo apt-get install default-jre</code></pre></figure>
+
+<p>It may be that the default JRE is not compatible in which case you can try:</p>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">$ sudo apt-add-repository ppa:webupd8team/java
+$ sudo apt-get update
+$ sudo apt-get install oracle-java8-installer</code></pre></figure>
+
+<ul>
+  <li>Install packages that create a “fake” display for Processing to render to.</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">$ sudo apt-get install xvfb libxrender1 libxtst6 libxi6</code></pre></figure>
+
+<ul>
+  <li>Create that “fake” display.</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">$ sudo Xvfb :1 -screen 0 1024x768x24
+$ export DISPLAY=":1"</code></pre></figure>
+
+<p>This will also only run for as long as you have terminal open. To have it run in the background while you launch your bot:</p>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">$ sudo nohup Xvfb :1 -screen 0 1024x768x24 &amp;
+$ export DISPLAY=":1"</code></pre></figure>
+
+<ul>
+  <li>Instead of using <code class="language-plaintext highlighter-rouge">processing-java</code> you can simply export your Processing sketch as a linux application from the PDE itself.  You’ll end up with a “application.linux64” folder which is what you’ll want to include with your node app and upload.  The node code can then instead be:</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// You could use 'pwd' to determine the absolute path</span>
+<span class="kd">var</span> <span class="nx">cmd</span> <span class="o">=</span> <span class="dl">'</span><span class="s1">folder/sketchname</span><span class="dl">'</span><span class="p">;</span>
+<span class="nx">exec</span><span class="p">(</span><span class="nx">cmd</span><span class="p">,</span> <span class="nx">processing</span><span class="p">);</span></code></pre></figure>
+
+<ul>
+  <li>If your sketch needs to read from, or write to, the server, you may need to change the file permissions to allow it read/write. For example, with a linux application, cd into the application the folder and type:</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">sudo ./'your_applications_name'</code></pre></figure>
+
+<ul>
+  <li>If the application ran successfully, you should see the console output, provided you sketch has any.  If not:</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">chmod 777 'your_applications_name'</code></pre></figure>
+
+
+  </div>
+</section>
+<button class="mobile-quick-links" aria-controls="quicklinks-section" aria-haspopup="true" id="quicklinks-btn">VIEW QUICK LINKS</button>
+<aside class="right-container quick-links out" id="quicklinks-section">
+  <div class="quick-link">
+    <a href="index.html" class="secondary">About the course</a>
+  </div>
+  <h3>Tutorials</h3>
+  <div class="quick-link">
+    <a href="intro.html" class="secondary">Introduction - p5.js, JavaScript, and Strings</a>
+  </div>
+  <div class="quick-link">
+    <a href="regex.html" class="secondary">Regular Expressions</a>
+  </div>
+  <div class="quick-link">
+    <a href="closures.html" class="secondary">Closures</a>
+  </div>
+  <div class="quick-link">
+    <a href="data-apis.html" class="secondary">Libraries, Data, and APIs</a>
+  </div>
+  <div class="quick-link">
+    <a href="server-node.html" class="secondary">Server-side programming with node.js</a>
+  </div>
+  <div class="quick-link">
+    <a href="twitter-bots.html" class="secondary">Twitter API and bots with node.js</a>
+  </div>
+  <div class="quick-link">
+    <a href="bot-ec2.html" class="secondary">Deploy Bot to Amazon EC2</a>
+  </div>
+  <div class="quick-link">
+    <a href="bot-heroku.html" class="secondary">Deploy Bot to Heroku</a>
+  </div>
+  <div class="quick-link">
+    <a href="text-analysis.html" class="secondary">Text Analysis</a>
+  </div>
+  <div class="quick-link">
+    <a href="markov.html" class="secondary">N-Grams and Markov Chains</a>
+  </div>
+  <div class="quick-link">
+    <a href="cfg.html" class="secondary">Context-Free Grammar</a>
+  </div>
+  <div class="quick-link">
+    <a href="node-api.html" class="secondary">Creating an API in Node</a>
+  </div>
+  <div class="quick-link">
+    <a href="firebase.html" class="secondary">Database as Service: Firebase</a>
+  </div>
+  <div class="quick-link">
+    <a href="chrome-ext.html" class="secondary">Chrome Extensions</a>
+  </div>
+</aside>
+
+
+    <footer class="left-container about out">
+    <div class="content-wrapper article">
+        <p>Source code for this website can be found on <a href="https://github.com/shiffman/shiffman.net/" target="_blank">Github</a>.</p>
+    </div>
+</footer>
+
+
+<script>
+
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-94163-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </body>
+
+</html>

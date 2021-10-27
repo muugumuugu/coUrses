@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>JavaScript Closures | Daniel Shiffman</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    
+    
+    <script src="js/jquery.js"></script>
+    <script src="js/main.js"></script>
+    
+</head>
+
+
+  <body>
+
+    
+
+
+      <link rel="stylesheet" type="text/css" href="css/prism.css">
+<link rel="stylesheet" type="text/css" href="css/highlight.css">
+<link rel="stylesheet" type="text/css" href="css/a2z.css">
+<script src="js/blog.js"></script>
+<script src="js/prism.js"></script>
+
+<section class="left-container out a2z">
+  <h1>Programming from A to Z</h1>
+  <p><br/>
+
+    <a href="index.html" class="body-link primary">about</a> 
+    <a href="../A2Z-F16/README.md" class="body-link primary">syllabus</a>
+    <a href="../A2Z-F16" class="body-link primary">All example source code</a>
+
+  </p>
+  <span class="line-charm first"></span>
+  <div class="content-wrapper article a2z">
+    <head>
+<script language="javascript" type="text/javascript" src="js/p5.js"></script>
+<script language="javascript" type="text/javascript" src="js/p5.dom.js"></script>
+<script language="javascript" type="text/javascript" src="js/closure.js"></script>
+</head>
+
+<h2 id="closures">Closures</h2>
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/-jysK0nlz7A" frameborder="0" allowfullscreen=""></iframe>
+
+<h3 id="examples">Examples</h3>
+<ul>
+  <li>Closure Basics — <a href="../A2Z-F17/week3-closures/00_closure_basics">source code</a></li>
+  <li><a href="../A2Z-F17/week3-closures/00_closure_basics/">Closure for Animation 1</a> — <a href="../A2Z-F17/week3-closures/01_closure_for_animation">source code</a></li>
+  <li><a href="../A2Z-F17/week3-closures/01_closure_for_animation/">Closure for Animation 2</a> — <a href="../A2Z-F17/week3-closures/02_closure_for_animation_part2">source code</a></li>
+  <li><a href="../A2Z-F17/week3-closures/03_closure_animation_while_API_loading/">Closure with API call and animation while loading</a> — <a href="../A2Z-F17/week3-closures/03_closure_animation_while_API_loading">source code</a></li>
+  <li><a href="../A2Z-F17/week3-closures/04_closure_delay_API_calls/">Closure with loop through many delayed API calls</a> — <a href="../A2Z-F17/week3-closures/04_closure_delay_API_calls">source code</a></li>
+</ul>
+
+<h3 id="related-references">Related references</h3>
+<ul>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Closures">Mozilla Closure page</a></li>
+  <li><a href="http://eloquentjavascript.net/03_functions.html#h_hOd+yVxaku">Eloquent JavaScript section</a></li>
+</ul>
+
+<h3 id="closures-1">Closures</h3>
+
+<p>Closures are a key aspect of the JavaScript programming language.</p>
+
+<blockquote>
+  <p>Closures are functions that refer to independent (free) variables (variables that are used locally, but defined in an enclosing scope). In other words, these functions ‘remember’ the environment in which they were created.—<a href="https://shiffman.net/a2z/closures/href=&quot;]https://developer.mozilla.org/en-US/docs/Web/JavaScript/Closures">Mozilla Developer Network</a></p>
+</blockquote>
+
+<p>This page offers a cursory overview of the idea of a closure along with a couple scenarios particularly relevant to the examples for this course.</p>
+
+<p>Variable scoping is key to the idea of closures.  Lets briefly look at how variables are scoped in a JavaScript function.</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Global variable! Available everywhere!</span>
+<span class="kd">var</span> <span class="nx">x</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>  
+
+<span class="kd">function</span> <span class="nx">logXY</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// Local only to the logXY() function!</span>
+  <span class="kd">var</span> <span class="nx">y</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
+
+  <span class="c1">// Both variables are available here!</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">x</span> <span class="o">+</span> <span class="dl">'</span><span class="s1">,</span><span class="dl">'</span> <span class="o">+</span> <span class="nx">y</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// Executing the function logXY()</span>
+<span class="nx">logXY</span><span class="p">();</span>
+
+<span class="c1">// Result: 100,50</span></code></pre></figure>
+
+<p><code class="language-plaintext highlighter-rouge">x</code> is a global variable so its viewable both outside of and inside <code class="language-plaintext highlighter-rouge">logXY()</code>.  <code class="language-plaintext highlighter-rouge">y</code> is local only to <code class="language-plaintext highlighter-rouge">logXY()</code> and is therefore only available inside <code class="language-plaintext highlighter-rouge">logXY()</code>.</p>
+
+<p>Now let’s adjust the scenario above as follows:</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Global variable</span>
+<span class="kd">var</span> <span class="nx">logAgain</span><span class="p">;</span>
+
+<span class="kd">function</span> <span class="nx">setup</span><span class="p">()</span> <span class="p">{</span>
+
+  <span class="c1">// Local variable! Only available in setup.</span>
+  <span class="kd">var</span> <span class="nx">x</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>  
+
+  <span class="c1">// logXY() local to setup() only!</span>
+  <span class="kd">function</span> <span class="nx">logXY</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// Local only to the logXY() function!</span>
+    <span class="kd">var</span> <span class="nx">y</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
+    <span class="c1">// Both variables are available here!</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">x</span> <span class="o">+</span> <span class="dl">'</span><span class="s1">,</span><span class="dl">'</span> <span class="o">+</span> <span class="nx">y</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="c1">// Assign logXY to logAgain</span>
+  <span class="nx">logAgain</span> <span class="o">=</span> <span class="nx">logXY</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">mousePressed</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">logAgain</span><span class="p">();</span>
+  <span class="c1">// Result: 100,50</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>If you are used to programming languages like Java or C++, the variable <code class="language-plaintext highlighter-rouge">x</code>, for example, is local only to <code class="language-plaintext highlighter-rouge">setup()</code>.  So once <code class="language-plaintext highlighter-rouge">setup()</code> finishes executing its no longer needed and goes away!  So when <code class="language-plaintext highlighter-rouge">logAgain()</code> is called later in <code class="language-plaintext highlighter-rouge">mousePressed()</code>, there should be nothing storing a reference to <code class="language-plaintext highlighter-rouge">x</code> and the result should be <code class="language-plaintext highlighter-rouge">undefined</code>.</p>
+
+<p>But it’s not!</p>
+
+<p>This is the magic of JavaScript.  Whenever a function is declared, a “closure” which stores both a reference to the function as well as all variables currently in scope for that function is maintained.  One way to think about this is that scope isn’t just about where in the code things are declared, but it’s also about when things actually happen.  So while <code class="language-plaintext highlighter-rouge">x</code> and <code class="language-plaintext highlighter-rouge">y</code>’s scope are limited to <code class="language-plaintext highlighter-rouge">setup()</code>, they also extend beyond <code class="language-plaintext highlighter-rouge">setup()</code> to anytime that <code class="language-plaintext highlighter-rouge">logXY()</code> function is called.</p>
+
+<p>This idea of keeping scope for “later” is crucial for callbacks and becomes relevant for scenarios like animation and API callbacks.  Let’s look at animation first.</p>
+
+<h3 id="closure-for-animation">Closure for Animation</h3>
+
+<p>Let’s say you have a DOM element.</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">p</span> <span class="o">=</span> <span class="nx">createP</span><span class="p">(</span><span class="nx">count</span><span class="p">);</span></code></pre></figure>
+
+<p>And let’s say you want to use <code class="language-plaintext highlighter-rouge">setInterval()</code> to change the element’s count every N millseconds.</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Call countIt every 100 milliseconds</span>
+<span class="nx">setInterval</span><span class="p">(</span><span class="nx">countIt</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+
+<span class="c1">// Increase the count and set the new content</span>
+<span class="kd">function</span> <span class="nx">countIt</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">count</span><span class="o">++</span><span class="p">;</span>
+  <span class="nx">p</span><span class="p">.</span><span class="nx">html</span><span class="p">(</span><span class="nx">count</span><span class="p">);</span>
+<span class="p">}</span></code></pre></figure>
+
+<div id="count1" class="box"></div>
+
+<p>Now let’s say you wanted to do the same for more than one paragraph, and have the second paragraph keep its own “count”.  Sure you could create <code class="language-plaintext highlighter-rouge">count1</code> and <code class="language-plaintext highlighter-rouge">count2</code> and call <code class="language-plaintext highlighter-rouge">setInterval()</code> twice.  But better yet, you could use a closure!</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">p1</span> <span class="o">=</span> <span class="nx">createP</span><span class="p">(</span><span class="dl">'</span><span class="s1">0</span><span class="dl">'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">p2</span> <span class="o">=</span> <span class="nx">createP</span><span class="p">(</span><span class="dl">'</span><span class="s1">0</span><span class="dl">'</span><span class="p">);</span>
+<span class="nx">animate</span><span class="p">(</span><span class="nx">p1</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+<span class="nx">animate</span><span class="p">(</span><span class="nx">p2</span><span class="p">,</span> <span class="mi">50</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">animate</span><span class="p">(</span><span class="nx">elt</span><span class="p">,</span> <span class="nx">howlong</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// A closure!</span>
+  <span class="c1">// Even though count has local scope</span>
+  <span class="c1">// increment() is called later by setInterval()</span>
+  <span class="c1">// and so count is maintained by increment()'s "closure"</span>
+  <span class="c1">// oh and "elt" and "howlong" too!</span>
+  <span class="kd">var</span> <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+  <span class="kd">function</span> <span class="nx">increment</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">count</span> <span class="o">=</span> <span class="nx">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="nx">elt</span><span class="p">.</span><span class="nx">html</span><span class="p">(</span><span class="nx">count</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="nx">setInterval</span><span class="p">(</span><span class="nx">increment</span><span class="p">,</span> <span class="nx">howlong</span><span class="p">);</span>
+<span class="p">}</span></code></pre></figure>
+
+<div id="count2" class="box"></div>
+<div id="count3" class="box"></div>
+
+<h3 id="closure-for-api-callback">Closure for API callback</h3>
+
+<p>Closures are also helpful when querying APIs.  Let’s say for example, you have several DOM elements, each associated with a particular term.  And whenever you click on any of the elements, you want to make an API call with the associated term.</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">words</span> <span class="o">=</span> <span class="p">[</span><span class="dl">'</span><span class="s1">rainbow</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">heart</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">sparkle</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">canteen</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">ridiculous</span><span class="dl">'</span><span class="p">];</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">words</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="nx">createA</span><span class="p">(</span><span class="dl">'</span><span class="s1">#</span><span class="dl">'</span><span class="p">,</span> <span class="nx">words</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+  <span class="c1">// When you click the link, call queryAPI</span>
+  <span class="nx">a</span><span class="p">.</span><span class="nx">mousePressed</span><span class="p">(</span><span class="nx">queryAPI</span><span class="p">);</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>Now the idea here is that the <code class="language-plaintext highlighter-rouge">queryAPI</code> function would connect to the API itself.</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">queryAPI</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="dl">'</span><span class="s1">http://api.madeup.com/?q=</span><span class="dl">'</span> <span class="o">+</span> <span class="nx">___________</span><span class="p">;</span>
+  <span class="nx">loadJSON</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="nx">gotData</span><span class="p">);</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>Ooops!  There’s no reference to the particular word associated with the element that was clicked on. (While yes, there are ways to get access to that word from the DOM element itself for the purpose of demonstrating the closure I’ll skip that as an option.)</p>
+
+<p>Here what you may be thinking the following: “I want to pass an argument to <code class="language-plaintext highlighter-rouge">queryAPI</code>. In other words, you want to execute the callback <code class="language-plaintext highlighter-rouge">queryAPI</code> with the value stored in <code class="language-plaintext highlighter-rouge">words[i]</code>.  But you can’t.  That is, unless you use a closure!</p>
+
+<p>Here, the technique is to instead call a function where the callback is defined as a closure that maintains a reference to the particular term associated with the callback.  In other words;</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">words</span> <span class="o">=</span> <span class="p">[</span><span class="dl">'</span><span class="s1">rainbow</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">heart</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">sparkle</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">canteen</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">ridiculous</span><span class="dl">'</span><span class="p">];</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">words</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="nx">createA</span><span class="p">(</span><span class="dl">'</span><span class="s1">#</span><span class="dl">'</span><span class="p">,</span> <span class="nx">words</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+  <span class="nx">assignQuery</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">words</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>And then the <code class="language-plaintext highlighter-rouge">assignQuery</code> pairs the value in <code class="language-plaintext highlighter-rouge">words[i]</code> with the <code class="language-plaintext highlighter-rouge">mousePressed</code> event for the DOM element.</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">assignQuery</span><span class="p">(</span><span class="nx">elt</span><span class="p">,</span> <span class="nx">word</span><span class="p">)</span> <span class="p">{</span>
+
+  <span class="c1">// This hasn't changed!</span>
+  <span class="nx">elt</span><span class="p">.</span><span class="nx">mousePressed</span><span class="p">(</span><span class="nx">queryAPI</span><span class="p">);</span>
+
+  <span class="c1">// Neither has this!  But because of the closure</span>
+  <span class="c1">// we now have a reference to the word</span>
+  <span class="kd">function</span> <span class="nx">queryAPI</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="dl">'</span><span class="s1">http://api.madeup.com/?q=</span><span class="dl">'</span> <span class="o">+</span> <span class="nx">word</span><span class="p">;</span>
+    <span class="nx">loadJSON</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="nx">gotData</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>If the <code class="language-plaintext highlighter-rouge">gotData()</code> function is also defined inside <code class="language-plaintext highlighter-rouge">assignQuery()</code> then it can also make use of the closure maintaining a reference to the DOM element and associated word.</p>
+
+<p>Again, the key here is that while the scope of <code class="language-plaintext highlighter-rouge">elt</code> and <code class="language-plaintext highlighter-rouge">word</code> is defined locally to <code class="language-plaintext highlighter-rouge">assignQuery</code>, event though <code class="language-plaintext highlighter-rouge">queryAPI</code> may happen later whenever the user clicks the mouse, long after <code class="language-plaintext highlighter-rouge">assignQuery</code> was executed, that scope is maintained by the <code class="language-plaintext highlighter-rouge">queryAPI</code>’s closure which maintains a reference to all variables within its own scope.</p>
+
+<p>Here is the a <a href="https://shiffman.net/a2z/closures/13_closure_animation_while_API_loading/">full example that queries wordnik</a> and returns substitutes a “related” in the DOM element.  And the <a href="../A2Z-F15/week8/13_closure_animation_while_API_loading">source code</a>.  The example also uses the “animation” closure to count while waiting for data back from the API.</p>
+
+<h3 id="exercise-ideas">Exercise ideas</h3>
+
+<h4 id="1-closure-with-settimeout">1: Closure with setTimeout()</h4>
+
+<p>Use a closure to create 100 DOM elements with <code class="language-plaintext highlighter-rouge">setTimeout()</code>.  Here is code that doesn’t make use of a closure and does not work properly.</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">setTimeout</span><span class="p">(</span><span class="nx">makeElt</span><span class="p">,</span> <span class="nx">i</span> <span class="o">*</span> <span class="mi">100</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">makeElt</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">createDiv</span><span class="p">(</span><span class="dl">'</span><span class="s1">Number: </span><span class="dl">'</span> <span class="o">+</span> <span class="nx">i</span><span class="p">);</span>
+<span class="p">}</span></code></pre></figure>
+
+<h4 id="2-closure-to-animate-a-dom-element">2: Closure to animate a DOM element.</h4>
+
+<p>Use a closure to animate a DOM element in some way with the <code class="language-plaintext highlighter-rouge">style()</code> function.  (Fill in the blanks).</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">animate</span><span class="p">(</span><span class="nx">_______</span><span class="p">)</span> <span class="p">{</span>
+
+  <span class="nx">______________________________</span><span class="p">;</span>
+
+  <span class="nx">setInterval</span><span class="p">(</span><span class="nx">________</span><span class="p">,</span> <span class="nx">________</span><span class="p">);</span>
+
+  <span class="kd">function</span> <span class="nx">_______</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">______</span><span class="p">.</span><span class="nx">style</span><span class="p">(</span><span class="nx">________</span><span class="p">,</span> <span class="nx">________</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>Then assign the function to a single element:</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">animate</span><span class="p">(</span><span class="nx">elt</span><span class="p">);</span></code></pre></figure>
+
+<p>Then start animating elements only once you click on them:</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">elt</span><span class="p">.</span><span class="nx">mousePressed</span><span class="p">(</span><span class="nx">_________</span><span class="p">);</span>
+
+<span class="kd">function</span><span class="p">(</span><span class="nx">__________</span><span class="p">)</span> <span class="p">{</span>
+
+<span class="p">}</span></code></pre></figure>
+
+<p>Now make many elements, each that start animating when you click on them.  Do you need a closure now that you are looping through the elements? (Hint: yes, you do except for the fact the p5.js will assign the <code class="language-plaintext highlighter-rouge">this</code> keyword to the element in a <code class="language-plaintext highlighter-rouge">mousePressed</code> callback.)</p>
+
+<p>Finally, can you get your <code class="language-plaintext highlighter-rouge">animate()</code> function to return a reference to the interval so that you can start and stop the animation when you click on it?  This one is hard!</p>
+
+<h4 id="3-closure-for-an-api-call">3: Closure for an API call.</h4>
+
+<p>Use a closure to make an API call to openweathermap.org.  Send openweathermap a zip code and when the weather is returned, create a DOM element with that zip code and the weather data.  Here is some code to help you get started.</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">zip</span> <span class="o">=</span> <span class="dl">'</span><span class="s1">10003</span><span class="dl">'</span><span class="p">;</span>
+
+<span class="nx">assignQuery</span><span class="p">(</span><span class="nx">zip</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">assignQuery</span><span class="p">(</span><span class="nx">_________</span><span class="p">)</span> <span class="p">{</span>
+
+  <span class="nx">loadJSON</span><span class="p">(</span><span class="nx">_________</span><span class="p">,</span> <span class="nx">_________</span><span class="p">);</span>
+
+  <span class="kd">function</span> <span class="nx">_________</span><span class="p">(</span><span class="nx">_________</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">_____________________________________________</span>
+    <span class="nx">_____________________________________________</span>
+    <span class="c1">// etc.</span>
+  <span class="p">}</span>
+
+<span class="p">}</span></code></pre></figure>
+
+<p>Now can you make this work with multiple zip codes?  Can you make buttons for each zip code that when you click on each button an API call is made for a particular zip code?</p>
+
+  </div>
+</section>
+<button class="mobile-quick-links" aria-controls="quicklinks-section" aria-haspopup="true" id="quicklinks-btn">VIEW QUICK LINKS</button>
+<aside class="right-container quick-links out" id="quicklinks-section">
+  <div class="quick-link">
+    <a href="index.html" class="secondary">About the course</a>
+  </div>
+  <h3>Tutorials</h3>
+  <div class="quick-link">
+    <a href="intro.html" class="secondary">Introduction - p5.js, JavaScript, and Strings</a>
+  </div>
+  <div class="quick-link">
+    <a href="regex.html" class="secondary">Regular Expressions</a>
+  </div>
+  <div class="quick-link">
+    <a href="closures.html" class="secondary">Closures</a>
+  </div>
+  <div class="quick-link">
+    <a href="data-apis.html" class="secondary">Libraries, Data, and APIs</a>
+  </div>
+  <div class="quick-link">
+    <a href="server-node.html" class="secondary">Server-side programming with node.js</a>
+  </div>
+  <div class="quick-link">
+    <a href="twitter-bots.html" class="secondary">Twitter API and bots with node.js</a>
+  </div>
+  <div class="quick-link">
+    <a href="bot-ec2.html" class="secondary">Deploy Bot to Amazon EC2</a>
+  </div>
+  <div class="quick-link">
+    <a href="bot-heroku.html" class="secondary">Deploy Bot to Heroku</a>
+  </div>
+  <div class="quick-link">
+    <a href="text-analysis.html" class="secondary">Text Analysis</a>
+  </div>
+  <div class="quick-link">
+    <a href="markov.html" class="secondary">N-Grams and Markov Chains</a>
+  </div>
+  <div class="quick-link">
+    <a href="cfg.html" class="secondary">Context-Free Grammar</a>
+  </div>
+  <div class="quick-link">
+    <a href="node-api.html" class="secondary">Creating an API in Node</a>
+  </div>
+  <div class="quick-link">
+    <a href="firebase.html" class="secondary">Database as Service: Firebase</a>
+  </div>
+  <div class="quick-link">
+    <a href="chrome-ext.html" class="secondary">Chrome Extensions</a>
+  </div>
+</aside>
+
+
+    <footer class="left-container about out">
+    <div class="content-wrapper article">
+        <p>Source code for this website can be found on <a href="https://github.com/shiffman/shiffman.net/" target="_blank">Github</a>.</p>
+    </div>
+</footer>
+
+
+<script>
+
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-94163-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </body>
+
+</html>

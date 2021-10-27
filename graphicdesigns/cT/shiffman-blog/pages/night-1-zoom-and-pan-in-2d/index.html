@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Night #1: Zoom and Pan in 2D | Daniel Shiffman</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="../../../../../css/main.css">
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../../../apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../../../favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../../../favicon-16x16.png">
+    <link rel="manifest" href="../../../../../site.webmanifest">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+    <script src="../../../../../js/main.js"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    <script>
+      (adsbygoogle = window.adsbygoogle || []).push({
+        google_ad_client: "ca-pub-9064317682916014",
+        enable_page_level_ads: true
+      });
+    </script>
+</head>
+
+
+  <body>
+
+    <!--[if lt IE 7]>
+    <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+<![endif]-->
+<nav id="global-nav" aria-label="Main navigation">
+  <ul class="nav-links">
+    <li><a href="../../../../../index.html" class="nav-logo">DANIEL <br>SHIFFMAN</a></li>
+    <span class="line-charm"></span>
+    <li><a href="../../../../../books/index.html">BOOKS</a></li>
+    <li><a href="../../../../../videos/index.html">VIDEOS</a></li>
+    <li><a href="../../../../../learning/index.html">LEARNING</a></li>
+    <li><a href="../../../../../about/index.html">ABOUT</a></li>
+    <span class="line-charm"></span>
+    <li><a href="http://twitter.com/shiffman" target="_blank">TWITTER</a></li>
+    <li><a href="http://github.com/shiffman" target="_blank">GITHUB</a></li>
+    <li><a href="https://www.patreon.com/codingtrain?ty=h" target="_blank">PATREON</a></li>
+  </ul>
+</nav>
+<div id="container">
+  <button aria-controls="global-nav" aria-haspopup="true" tabindex="2" id="menu-button">
+    <span class="menu-icon" aria-hidden="true">
+      <img src="../../../../../images/nav-btn.svg" alt="Menu toggle" />
+    </span>
+  </button>
+</div>
+<!-- <span class="mobile-quick-links">VIEW QUICK LINKS</span> -->
+
+
+      <link rel="stylesheet" type="text/css" href="../../../../../css/prism.css">
+<link rel="stylesheet" type="text/css" href="../../../../../css/highlight.css">
+
+<main class="left-container out blog">
+    <div class="content-wrapper article blog">
+
+        <span class="line-charm first"></span>
+        <p class="date">Dec 20, 2011</p>
+        <h1 class="no-btm">Night #1: Zoom and Pan in 2D</h1>
+        <script src="http://www.shiffman.net/javascript/processing-1.4.1.min.js" type="text/javascript"></script>
+
+<p>This came up in my course &#8220;Introduction to Computational Media&#8221; this year.  How does one pan and/or zoom in a 2D Processing world?  We could certainly introduce P3D into the mix, but there is a nice, elegant way we can create the effect of panning and zooming and still live in 2D.  Here&#8217;s how it works.</p>
+<p>First, you need to make sure you translate to the center of your window.</p>
+
+<figure class="highlight"><pre><code class="language-java" data-lang="java">  <span class="n">translate</span><span class="o">(</span><span class="n">width</span><span class="o">/</span><span class="mi">2</span><span class="o">,</span> <span class="n">height</span><span class="o">/</span><span class="mi">2</span><span class="o">);</span></code></pre></figure>
+
+<p>Then you can use the <a href="http://processing.org/learning/basics/scale.html">scale()</a> function to scale the world according to a percentage (i.e. 2.0 is 200%, 0.5 is 50%).  We&#8217;ll use a variable called zoom.</p>
+
+<figure class="highlight"><pre><code class="language-java" data-lang="java">  <span class="kt">float</span> <span class="n">zoom</span> <span class="o">=</span> <span class="mf">1.5</span><span class="o">;</span>  <span class="c1">// 150%</span>
+  <span class="n">scale</span><span class="o">(</span><span class="n">zoom</span><span class="o">);</span></code></pre></figure>
+
+<p>Then we can translate additionally to pan according to some offset.</p>
+
+<figure class="highlight"><pre><code class="language-java" data-lang="java">  <span class="kt">float</span> <span class="n">offsetX</span> <span class="o">=</span> <span class="mi">100</span><span class="o">;</span>  <span class="c1">// Some arbitrary offset</span>
+  <span class="kt">float</span> <span class="n">offsetY</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+  <span class="n">translate</span><span class="o">(</span><span class="n">offsetX</span><span class="o">,</span><span class="n">offsetY</span><span class="o">);</span></code></pre></figure>
+
+<p>Here is an example (running in processing.js) that allows the user to pan around a design by dragging the mouse, and zoom in and out using key presses.</p>
+<p><script type="application/processing" data-processing-target="processing-canvas">
+// The scale of our world
+float zoom;
+// A vector to store the offset from the center
+PVector offset;
+// The previous offset
+PVector poffset;
+// A vector for the mouse position
+PVector mouse;
+void setup() {
+  size(586, 293);
+  zoom = 1.0;
+  offset = new PVector(0, 0);
+  poffset = new PVector(0, 0);
+  smooth();
+}
+void draw() {
+  background(50);
+  pushMatrix();
+  // Everything must be drawn relative to center
+  translate(width/2, height/2);
+  // Use scale for 2D "zoom"
+  scale(zoom);
+  // The offset (note how we scale according to the zoom)
+  translate(offset.x, offset.y);
+  // An arbitrary design so that we have something to see!
+  randomSeed(1);
+  for (int i = 0; i < 500; i++) {
+    stroke(255);
+    fill(255, 50);
+    rectMode(CENTER);
+    float h = 100;
+    if (random(1) < 0.5) {
+      rect(random(-h, h), random(-h, h), 12, 12);
+    } 
+    else {
+      ellipse(random(-h, h), random(-h, h), 12, 12);
+    }
+  }
+  popMatrix();
+  // Draw some text (not panned or zoomed!)
+  fill(255);
+  text("a: zoom innz: zoom outndrag mouse to pan", 10, 32);
+}
+// Zoom in and out when the key is pressed
+void keyPressed() {
+  if (key == 'a') {
+    zoom += 0.1;
+  } 
+  else if (key == 'z') {
+    zoom -= 0.1;
+  }
+  zoom = constrain(zoom, 0, 100);
+}
+// Store the mouse and the previous offset
+void mousePressed() {
+  mouse = new PVector(mouseX, mouseY);
+  poffset.set(offset);
+}
+// Calculate the new offset based on change in mouse vs. previous offsey
+void mouseDragged() {
+  offset.x = (mouseX - mouse.x)/zoom + poffset.x;
+  offset.y = (mouseY - mouse.y)/zoom + poffset.y;
+}
+</script>
+<canvas id="processing-canvas"> </canvas>
+</p>
+<p>Source: <a href="../../../../../wp/wp-content/uploads/2011/02/PanZoom2D.zip">PanZoom2D.zip</a></p>
+<p>&lt;/script&gt;</p>
+
+
+    </div>
+</main>
+
+<aside class="right-container quick-links out">
+  <h5>HIGHLIGHTED TUTORIALS</h5>
+
+  <div class="quick-link">
+      <a href="../../../../../p5/kinect/index.html" class="secondary">Microsoft Kinect with Processing</a>
+  </div>
+
+
+    <!-- <h5>LATEST POSTS</h5>
+	
+	    <div class="quick-link">
+	        <a href="/2014/11/01/gsoc-2014/" class="secondary">Google Summer of Code 2014</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/2014/01/01/happynewyear/" class="secondary">Happy 2014!</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/2013/09/24/gsoc/" class="secondary">Processing Google Summer of Code</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/2013/08/01/video-lesson-documentation/" class="secondary">Video Lesson Documentation</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2012/03/01/box2d-blob-skeleton/" class="secondary">Box2D Blob Skeleton</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2011/12/28/night-8-rendering-out-as-image-sequence/" class="secondary">Night #8: Rendering an image sequence</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2011/12/27/night-7-nature-of-code-excerpts/" class="secondary">Night #7: Nature of Code excerpts</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2011/12/26/night-6-image-sequence-object-with-variable-speed/" class="secondary">Night #6: Image Sequence Object (with variable speed)</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/25/night-5-thread-in-processing/" class="secondary">Night #5: thread() in Processing</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/23/night-4-sorting-the-vertices-of-a-polygon/" class="secondary">Night #4: Sorting the Vertices of a Polygon</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/22/night-3-regular-expressions-in-processing/" class="secondary">Night #3: Regular Expressions in Processing</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/21/night-2-fade-sound-in-and-out-using-minim/" class="secondary">Night #2: Fade Sound In and Out Using Minim</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/20/night-1-zoom-and-pan-in-2d/" class="secondary">Night #1: Zoom and Pan in 2D</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/12/20/hanukkah-8-nights-of-processing/" class="secondary">Hanukkah: 8 Nights of Processing</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/04/26/opencv-matching-faces-over-time/" class="secondary">OpenCV Matching Faces Over Time</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2011/02/28/revisiting-flight404-particles/" class="secondary">Revisiting Flight404 Particles</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/processing.org/2011/02/13/asteroids-spaceship/" class="secondary">Asteroids Spaceship</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/nature%20of%20code/processing.org/2011/02/10/nature-of-code-book-pvector-spring-example/" class="secondary">Nature of Code book: PVector Spring example</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/02/03/rotate-a-vector-processing-js/" class="secondary">Rotate a Vector (Processing.js!)</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/book/2011/01/28/the-economics-of-self-publishing-via-kickstarter-so-far/" class="secondary">The Economics of Self-Publishing via Kickstarter (so far)</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/opencv/2011/01/23/how-to-build-opencv-static-libraries-mac-os-x/" class="secondary">How to Build OpenCV Static Libraries Mac OS X (10.5 compatible!)</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/01/21/nature-of-code-book-on-kickstarter/" class="secondary">Nature of Code book on Kickstarter</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/kinect/processing.org/2011/01/15/kinect-library-tutorial-and-documentation-page/" class="secondary">Kinect Library Tutorial and Documentation Page</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/general/2011/01/13/new-kinect-example-average-point-tracking/" class="secondary">New Kinect Example Average Point Tracking</a>
+	    </div>
+    
+	    <div class="quick-link">
+	        <a href="/kinect/library/processing.org/2010/12/18/updated-kinect-library-for-processing/" class="secondary">Updated Kinect Library for Processing</a>
+	    </div>
+    
+    <div class="quick-link">
+        <a href="/blog.html" class="secondary">SEE ALL</a>
+    </div> -->
+</aside>
+
+<script src="../../../../../js/blog.js"></script>
+<script src="../../../../../js/prism.js"></script>
+
+
+    <footer class="left-container about out">
+    <div class="content-wrapper article">
+        <p>Source code for this website can be found on <a href="https://github.com/shiffman/shiffman.net/" target="_blank">Github</a>.</p>
+    </div>
+</footer>
+
+
+<script>
+
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-94163-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </body>
+
+</html>
