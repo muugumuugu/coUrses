@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3" />
+<link rel="stylesheet" href="../../css/main-16.css" />
+<link rel="apple-touch-icon" sizes="180x180" href="../../img/icons/apple-touch-icon.png?v=7kb27Qjm9N" />
+<link rel="icon" type="image/png" sizes="32x32" href="../../img/icons/favicon-32x32.png?v=7kb27Qjm9N" />
+<link rel="icon" type="image/png" sizes="16x16" href="../../img/icons/favicon-16x16.png?v=7kb27Qjm9N" />
+<link rel="manifest" href="../../img/icons/manifest.json?v=7kb27Qjm9N" />
+<link rel="mask-icon" href="../../img/icons/safari-pinned-tab.svg?v=7kb27Qjm9N" color="#333333" />
+<link rel="shortcut icon" href="../../img/icons/favicon.ico?v=7kb27Qjm9N" />
+<meta name="msapplication-config" content="img/icons/browserconfig.xml?v=7kb27Qjm9N" />
+<meta name="theme-color" content="#ffffff" />
+<title>Volumetric Light &middot; inconvergent</title>
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@inconvergent" />
+<meta name="twitter:domain" content="inconvergent.net" />
+<meta name="twitter:creator" content="@inconvergent" />
+<meta property="og:image" content="img/writing/volume/20210503-190827-9d800f7-d793b43b.png" />
+<meta name="twitter:image0" content="img/writing/volume/20210503-190827-9d800f7-d793b43b.png" />
+<meta property="og:title" content="Volumetric Light &middot; inconvergent" />
+<meta property="og:site_name" content="inconvergent.net" />
+<meta property="og:url" content="2021/volumetric-light/" />
+<link rel="canonical" href="index.html" />
+<meta property="og:type" content="website" />
+<meta property="og:description" content="An algorithm for volumetric light simulation." />
+<meta name="description" content="An algorithm for volumetric light simulation." />
+<meta name="google-site-verification" content="KymIUCYkzGHgYeDgr3pIZyz63dwmhDhNkNj9Yd1IIfM" />
+<link rel="alternate" type="application/atom+xml" href="../../atom.xml" />
+
+<meta name="pinterest" content="nopin" />
+
+<meta name="author" content="inconvergent, anders hoff" />
+<meta name="keywords" content="generative, art, generative art, algorithm, algorithms, inconvergent, anders hoff, computational, lisp, common lisp, python, mathematics, biology, patterns, rules" />
+<link href="https://fonts.googleapis.com/css?family=Inconsolata|Open+Sans|Open+Sans+Condensed:300&display=swap" rel="stylesheet">
+</head>
+<body>
+<!--googleoff: all-->
+<div class="wide">
+<div class="site-title">
+<header>
+<a title="inconvergent.net" href="../../index.html">inconvergent</a>
+</header>
+</div>
+</div>
+<!--googleon: all-->
+<main>
+<article itemscope itemtype="https://schema.org/Article">
+<meta itemprop="headline" content="Volumetric Light">
+<meta itemprop="datePublished" content="2021-05-03" />
+<meta itemprop="dateModified" content="2021-05-03" />
+<div itemscope itemprop="author" itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<div itemscope itemprop="publisher" itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<div itemprop="image" itemscope itemtype="https://schema.org/ImageObject">
+<meta itemprop="url" content="img/writing/volume/20210503-190827-9d800f7-d793b43b.png">
+<meta itemprop="width" content="800">
+<meta itemprop="height" content="800">
+</div>
+<!--googleon: all-->
+<div class="text">
+<h1 class="dark"><a href="index.html">Volumetric Light</a></h1>
+
+<p>For a while I have been thinking about how to make some kind of
+volumetric light effect. There are a lot of resources on things like this,
+but I have avoided doing any research on this on purpose. Figuring out how
+something works on my own is an interesting challenge, and it sometimes
+yields idiosyncratic results and/or interesting mistakes. </p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="The Architect is Losing his Mind" />
+<meta itemprop="artMedium" content="digital" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<img src="../../img/writing/volume/20210503-190827-9d800f7-d793b43b.png" itemprop="image" alt="Volumetric light" title="Volumetric light" />
+<div class="cred">Volumetric light</div>
+</div>
+<div class="text">
+<p>The following is a description of the algorithm I worked out recently.
+Since I don't really know how this is achieved in mainstream
+implementations, this isn't a description of how to properly and
+efficiently create volumetric light. But it should serve as an introduction
+to a possible approach.</p>
+<p>My implementation uses a <a href="https://iquilezles.untergrund.net/www/articles/raymarchingdf/raymarchingdf.htm">raymarcher</a>
+on <a href="https://en.wikipedia.org/wiki/Signed_distance_function">signed
+distance functions (SDF)</a>, but you should be able to adapt this to a
+<a href="https://en.wikipedia.org/wiki/Ray_tracing_(graphics)">ray
+tracing</a> approach as well. Provided you have, or can create, the
+prerequisite functions listed below.</p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="The Architect is Losing his Mind" />
+<meta itemprop="artMedium" content="digital" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<img src="../../img/writing/volume/20210503-120215-a9e30f2-31adda9d.gif" itemprop="image" alt="Volumetric light animation" title="Volumetric light animation" />
+<div class="cred">Volumetric light animation</div>
+</div>
+<div class="text">
+<p>We assume that everything happens in world space. That means you might
+have to figure out how to get the world coordinate of each pixel, as well
+as points on the geometry surface. In addition, this approach was made
+using an <a href="https://en.wikipedia.org/wiki/Isometric_projection">isometric
+projection</a>. It should work for other projections as well, but you
+might have to make some adaptations.</p>
+<p>To get started, we assume that we have these functions: </p>
+<ul>
+<li><code>march(i, j)</code>, which returns the world space coordinate of
+the point on the surface geometry seen by pixel, <code>[i, j]</code>;</li>
+<li><code>clear_path(a, b)</code>, checks whether there is any obstructing
+geometry between <code>a</code> and <code>b</code>;</li>
+<li><code>pix_position(i, j)</code>, returns the world coordinate of pixel
+<code>[i, j]</code>;</li>
+<li><code>length(a)</code>, returns the length of vector <code>a</code>;</li>
+<li><code>line_sample(a, b)</code>, returns a random point on the line
+<code>[a, b]</code>;</li>
+<li><code>pow(a, b)</code>, returns <code>a</code> to the power of
+<code>b</code>.</li>
+</ul>
+<p>The final requirement is a function, <code>light_sample()</code>, that can
+generate random coordinates inside the light source. A good alternative is
+a function that generates random points inside a cube. You can probably get
+interesting results with different light distributions as well.</p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="The Architect is Losing his Mind" />
+<meta itemprop="artMedium" content="digital" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<img src="../../img/writing/volume/20210503-093158-a9e30f2-f4f11f17.png" itemprop="image" alt="Volumetric light rendering" title="Volumetric light rendering" />
+<div class="cred">Volumetric light rendering</div>
+</div>
+<div class="text">
+<p>The following algorithm is repeated for every pixel in the rendering. It
+assumes that there is a single light source. Adapting to multiple sources
+only requires minor changes.</p>
+<p>The pseudo code for the algorithm is as follows:</p>
+<pre>p = pix_position(i, j)
+hit = march(i, j)
+d = distance(hit, p)
+
+<span>start with a black pixel value.</span>
+pix_value = 0
+
+<span>n is the number of samples per pixel, e.g., 10</span>
+repeat n:
+  sample = line_sample(p, hit)
+  light = light_sample()
+
+  <span>check if the point inside the light </span>
+  <span>source is visible from the point on</span>
+  <span>the line from the pixel</span>
+  if clear_path(sample, light):
+    pix_value += d / pow(1 + distance(sample, light), 2)
+
+<span>the result should be scaled so that it lies</span>
+<span>between 0 and 1, adjust light_strength accordingly</span>
+pix_value *=  light_strength/n</pre>
+<p><code>pix_value</code> is the amount of light at the pixel in
+question, as a value between 0 and 1. You might have to scale things
+differently, depending on your geometry and scene layout. But this should be
+a pretty good start.</p>
+<p>This pseudo code assumes that every pixel hits a point on the geometry. This
+might not be the case. How to solve this depends on your approach, but on
+alternative is to have a very large plane behind the scene. Either parallel
+to the floor or to the camera plane. Adjusting the distance and orientation
+of this plane will affect the intensity of the light.</p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="The Architect is Losing his Mind" />
+<meta itemprop="artMedium" content="digital" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<img src="../../img/writing/volume/20210503-154540-a9e30f2-2baa9578.png" itemprop="image" alt="Higher sampling rate" title="Higher sampling rate" />
+<div class="cred">Higher sampling rate</div>
+</div>
+<div class="text">
+<p>To reduce the amount of grain in the result, you can increase the value of
+<code>n</code>. You might also want to introduce some kind of <a href="https://en.wikipedia.org/wiki/Spatial_anti-aliasing">anti-aliasing</a>.
+A very naive approach is to repeat the process multiple times per pixel,
+while shifting the starting point slightly inside the pixel square, then take
+the average of these values.</p>
+<p>As a final challenge, it should be possible to combine this approach with
+the depth of field effect described in this <a href="../../2019/depth-of-field/index.html">earlier post</a>.</p>
+</div>
+</article>
+</main>
+<!--googleoff: all-->
+<footer class="footer">
+<small>
+© 2014-2021 anders hoff
+<br>⁂
+</small>
+</footer>
+</body>
+</html>

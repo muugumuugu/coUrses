@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3" />
+<link rel="stylesheet" href="../../css/main-16.css" />
+<link rel="apple-touch-icon" sizes="180x180" href="../../img/icons/apple-touch-icon.png?v=7kb27Qjm9N" />
+<link rel="icon" type="image/png" sizes="32x32" href="../../img/icons/favicon-32x32.png?v=7kb27Qjm9N" />
+<link rel="icon" type="image/png" sizes="16x16" href="../../img/icons/favicon-16x16.png?v=7kb27Qjm9N" />
+<link rel="manifest" href="../../img/icons/manifest.json?v=7kb27Qjm9N" />
+<link rel="mask-icon" href="../../img/icons/safari-pinned-tab.svg?v=7kb27Qjm9N" color="#333333" />
+<link rel="shortcut icon" href="../../img/icons/favicon.ico?v=7kb27Qjm9N" />
+<meta name="msapplication-config" content="img/icons/browserconfig.xml?v=7kb27Qjm9N" />
+<meta name="theme-color" content="#ffffff" />
+<title>Shepherding Random Growth &middot; inconvergent</title>
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@inconvergent" />
+<meta name="twitter:domain" content="inconvergent.net" />
+<meta name="twitter:creator" content="@inconvergent" />
+<meta property="og:image" content="img/shepherding/growth-head-1.png" />
+<meta name="twitter:image0" content="img/shepherding/growth-head-1.png" />
+<meta property="og:title" content="Shepherding Random Growth &middot; inconvergent" />
+<meta property="og:site_name" content="inconvergent.net" />
+<meta property="og:url" content="2016/shepherding-random-growth/" />
+<link rel="canonical" href="index.html" />
+<meta property="og:type" content="website" />
+<meta property="og:description" content="An introduction to Differential Growth Algorithms" />
+<meta name="description" content="An introduction to Differential Growth Algorithms" />
+<meta name="google-site-verification" content="KymIUCYkzGHgYeDgr3pIZyz63dwmhDhNkNj9Yd1IIfM" />
+<link rel="alternate" type="application/atom+xml" href="../../atom.xml" />
+
+<meta name="pinterest" content="nopin" />
+
+<meta name="author" content="inconvergent, anders hoff" />
+<meta name="keywords" content="generative, art, generative art, algorithm, algorithms, inconvergent, anders hoff, computational, lisp, common lisp, python, mathematics, biology, patterns, rules" />
+<link href="https://fonts.googleapis.com/css?family=Inconsolata|Open+Sans|Open+Sans+Condensed:300&display=swap" rel="stylesheet">
+</head>
+<body>
+<!--googleoff: all-->
+<div class="wide">
+<div class="site-title">
+<header>
+<a title="inconvergent.net" href="../../index.html">inconvergent</a>
+</header>
+</div>
+</div>
+<!--googleon: all-->
+<main>
+<article itemscope itemtype="https://schema.org/Article">
+<meta itemprop="headline" content="Shepherding Random Growth">
+<meta itemprop="datePublished" content="2016-11-8" />
+<meta itemprop="dateModified" content="2016-11-9" />
+<div itemscope itemprop="author" itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<div itemscope itemprop="publisher" itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<div itemprop="image" itemscope itemtype="https://schema.org/ImageObject">
+<meta itemprop="url" content="img/shepherding/growth-head-1.png">
+<meta itemprop="width" content="800">
+<meta itemprop="height" content="800">
+</div>
+<div class="text">
+<h1 class="dark"><a href="index.html">Shepherding Random
+Growth</a></h1>
+</div>
+<div class="text">
+<div id="sections" class="show">
+<!--googleoff: all-->
+<h2>Sections</h2>
+<ol>
+<li><a href="index.html#introduction">Introduction</a></li>
+<li><a href="index.html#uniform">Uniform</a></li>
+<li><a href="index.html#curvature">Curvature</a></li>
+<li><a href="index.html#more-nodes">More Nodes</a></li>
+<li><a href="index.html#history">History</a></li>
+<li><a href="index.html#end">End</a></li>
+</ol>
+</div>
+<div id="introduction" class="show">
+<h2>Introduction</h2>
+<!--googleon: all-->
+<p>This is the third part of a series of texts on various methods for
+creating generative art with random numbers. The first part is <a href="../shepherding-random-numbers/index.html">Shepherding Random
+Numbers</a>, and the second part is <a href="../shepherding-random-grids/index.html">Shepherding Random
+Grids</a>. This text does not rely too heavily on the
+previous ones, but I recommend looking at them even
+so.</p>
+<p>In this part I will describe a simple form of differential growth. I
+have written about this technique previously in my essay <a href="../../generative/index.html">On Generative Algorithms</a>.
+Specifically in the following sections: <a href="../../generative/differential-line/index.html">Differential
+Line</a>, <a href="../../generative/differential-mesh/index.html">Differential
+Mesh</a>, <a href="generative/differential-mesh-ed/">Differential
+Mesh 3d</a>. Moreover, several other people have done
+similar work. My favorites are <a href="http://n-e-r-v-o-u-s.com/projects/sets/floraform/">Floraform</a>
+by <a href="http://n-e-r-v-o-u-s.com/">Nervous
+System</a>, and <a href="http://www.andylomas.com/cellularFormImages.html">Cellular
+Forms</a> by <a href="http://www.andylomas.com/">Andy
+Lomas</a>.</p>
+<p><em>This text relies on Javascript animations (Canvas). They should work
+on most devices, but please let me know if you experience any
+issues.</em></p>
+<p><em>You can click or tap all animations to restart them.</em></p>
+<h2>Growth</h2>
+<p>Differential Growth is a way in which biological systems develop shape.
+By controlling the rate at which different parts of a surface grows, you
+can control the shape it grows into.</p>
+<p>In this case we will consider lines, not surfaces. However the principle
+is similar. Some good examples of shapes that inspired this particular
+system are walnuts, flower petals and the layers of cabbage.</p>
+<p>While differential growth in nature is a multi-layered and complicated
+process, it can be simulated with only a few factors:</p>
+<ul>
+<li><strong>Nodes and Edges</strong>: nodes are connected to a certain
+number of neighboring nodes through edges.</li>
+<li><strong>Attraction</strong>: connected nodes will try to maintain a
+reasonably close proximity to each other. In the figure below
+attraction happens between connected nodes in the loop.</li>
+<li><strong>Rejection</strong>: nodes will try to avoid being too close
+to surrounding nodes (within a certain distance). Rejection fores are
+indicated by <span style="color: #0aa;">cyan</span> lines in the figure
+below.</li>
+<li><strong>Splits</strong>: If an edges gets too long, a new node will
+be injected at the middle of the edge.</li>
+<li><strong>Growth</strong>: in addition to the splits, new nodes are
+injected according to some growth scheme. I will describe this further
+soon.</li>
+</ul>
+</div>
+</div>
+<div class="canvas-container" id="container-introduction"></div>
+<div class="text">
+<div id="uniform" class="show">
+<h2>Uniform</h2>
+<p>The simplest kind of growth scheme is to randomly select an edge, and
+insert a new node at the middle of it. To reduce clutter, you should avoid
+inserting nodes if the edge is too short. This will tend to lead to
+collisions.</p>
+<p>The intensity at which new nodes are inserted will greatly impact the
+rate of growth as well as the shape, so there are a number of things to
+experiment with.</p>
+</div>
+</div>
+<div class="canvas-container" id="container-uniform"></div>
+<div class="text">
+<div id="curvature" class="show">
+<h2>Curvature</h2>
+<p><em>This section is a little more technical.</em></p>
+<p>So far the growth has been uniform. One way of introducing some
+variation in growth is to prioritize parts of the structure where the <a href="https://en.wikipedia.org/wiki/Curvature">curvature</a>
+of the surface (line) is greater. Below we indicate the curvature with
+<span style="color: #0aa;">cyan</span> circles. Larger circles indicate
+greater (estimated) curvature.</p>
+<p>One way to estimate how much the line bends at a given point is to
+compare an edge to one of it's neighbouring edges. The greater the angle
+between them, the greater the curvature. The value I display in the figure
+below is the following: for <a href="http://mathworld.wolfram.com/NormalizedVector.html<Paste>">normalized</a>
+vectors (edges) <em>a</em> and <em>b</em>, the curvature is
+1-abs(dot(<em>a</em>, <em>b</em>)). I should point out that this is not
+how you calculate the actual curvature.</p>
+<p>The next challenge is to sample edges to split such that we tend to split
+edges that have greater curvature. If we use the formula listed above, we
+will get a number for the curvature between which ranges between 0 and 1. We
+then generate a random number (from a uniform distribution) between 0 and 1.
+We only split the edge if the edge is sufficiently long, and if this random
+number is less than the value of the curvature. That way, greater curvatures
+will tend to be selected more frequently. We can repeat this process for
+every edge, in every iteration.</p>
+</div>
+</div>
+<div class="canvas-container" id="container-curvature"></div>
+<div class="text">
+<div id="more-nodes" class="show">
+<h2>More Nodes</h2>
+<p>This process is quite computationally intensive. The most costly
+operation is to find nodes that are in the vicinity of a given node, so
+that you can calculate the <em>rejection</em> forces. A useful tip for
+implementing this in an efficient manner is to use <a href="https://en.wikipedia.org/wiki/K-d_tree">k-d
+trees</a> for looking up nearby nodes. Most k-d tree
+implementation will let you look up all entries within a
+certain radius of a given point, which happens to be
+exactly what you want in this case.</p>
+<p>Below is a structure that will grow a little more intricate than the
+previous samples.</p>
+</div>
+</div>
+<div class="canvas-container" id="container-more-nodes"></div>
+<div class="text">
+<div id="history" class="show">
+<h2>History</h2>
+<p>By drawing strokes along the outline of the structure as it grows, we
+get a radically different result. You should also note that we are not
+restricted to closed loops, you can easily extend this logic to work with
+lines, or perhaps even grids?</p>
+</div>
+</div>
+<div class="canvas-container" id="container-history"></div>
+<div class="text">
+<div id="end" class="hide">
+<h2>End</h2>
+<p>Hopefully this was an understandable intro to the idea of differential
+growth.</p>
+<p>You can also extend this to surfaces. The major difference is that you
+will have to handle a triangular mesh structure of some kind, which is a
+little more complicated.</p>
+<p>Finally, if you would like to read up on the actual biological
+processes, I'd suggest starting with <a href="https://en.wikipedia.org/wiki/Morphogenesis">Morphogenesis</a>.</p>
+</div>
+</div>
+<script src="bin/app.bundle.js"></script>
+</article>
+</main>
+<!--googleoff: all-->
+<footer class="footer">
+<small>
+© 2014-2021 anders hoff
+<br>⁂
+</small>
+</footer>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3" />
+<link rel="stylesheet" href="../../css/main-16.css" />
+<link rel="apple-touch-icon" sizes="180x180" href="../../img/icons/apple-touch-icon.png?v=7kb27Qjm9N" />
+<link rel="icon" type="image/png" sizes="32x32" href="../../img/icons/favicon-32x32.png?v=7kb27Qjm9N" />
+<link rel="icon" type="image/png" sizes="16x16" href="../../img/icons/favicon-16x16.png?v=7kb27Qjm9N" />
+<link rel="manifest" href="../../img/icons/manifest.json?v=7kb27Qjm9N" />
+<link rel="mask-icon" href="../../img/icons/safari-pinned-tab.svg?v=7kb27Qjm9N" color="#333333" />
+<link rel="shortcut icon" href="../../img/icons/favicon.ico?v=7kb27Qjm9N" />
+<meta name="msapplication-config" content="img/icons/browserconfig.xml?v=7kb27Qjm9N" />
+<meta name="theme-color" content="#ffffff" />
+<title>Depth of Field &middot; inconvergent</title>
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@inconvergent" />
+<meta name="twitter:domain" content="inconvergent.net" />
+<meta name="twitter:creator" content="@inconvergent" />
+<meta property="og:image" content="img/writing/depth-of-field/20190324-095603-b88a268-32aeb54c.png" />
+<meta name="twitter:image0" content="img/writing/depth-of-field/20190324-095603-b88a268-32aeb54c.png" />
+<meta property="og:title" content="Depth of Field &middot; inconvergent" />
+<meta property="og:site_name" content="inconvergent.net" />
+<meta property="og:url" content="2019/depth-of-field/" />
+<link rel="canonical" href="index.html" />
+<meta property="og:type" content="website" />
+<meta property="og:description" content="Depth of Field from random sampling" />
+<meta name="description" content="Depth of Field from random sampling" />
+<meta name="google-site-verification" content="KymIUCYkzGHgYeDgr3pIZyz63dwmhDhNkNj9Yd1IIfM" />
+<link rel="alternate" type="application/atom+xml" href="../../atom.xml" />
+
+<meta name="pinterest" content="nopin" />
+
+<meta name="author" content="inconvergent, anders hoff" />
+<meta name="keywords" content="generative, art, generative art, algorithm, algorithms, inconvergent, anders hoff, computational, lisp, common lisp, python, mathematics, biology, patterns, rules" />
+<link href="https://fonts.googleapis.com/css?family=Inconsolata|Open+Sans|Open+Sans+Condensed:300&display=swap" rel="stylesheet">
+</head>
+<body>
+<!--googleoff: all-->
+<div class="wide">
+<div class="site-title">
+<header>
+<a title="inconvergent.net" href="../../index.html">inconvergent</a>
+</header>
+</div>
+</div>
+<!--googleon: all-->
+<main>
+<article itemscope itemtype="https://schema.org/Article">
+<meta itemprop="headline" content="Depth of Field">
+<meta itemprop="datePublished" content="2019-05-26" />
+<meta itemprop="dateModified" content="2019-12-04" />
+<div itemscope itemprop="author" itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<div itemscope itemprop="publisher" itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<div itemprop="image" itemscope itemtype="https://schema.org/ImageObject">
+<meta itemprop="url" content="img/writing/depth-of-field/20190324-095603-b88a268-32aeb54c.png">
+<meta itemprop="width" content="800">
+<meta itemprop="height" content="800">
+</div>
+<!--googleon: all-->
+<div class="text">
+<h1 class="dark"><a href="index.html">Depth of Field</a></h1>
+<p>The 3D webs in the <a href="../a-tangle-of-webs-3d/index.html">previous post</a>
+are represented as graphs. Rendering them in 3D presents a few challenges.
+Depending on what tools you use, you might be able to convert them into
+meshes. There are several other ways to do it as well. </p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="" />
+<meta itemprop="artMedium" content="digital" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<a href="../../img/writing/depth-of-field/20190324-095603-b88a268-32aeb54c.png"><img itemprop="image" src="../../img/writing/depth-of-field/20190324-095603-b88a268-32aeb54c.png" alt="" title="" /></a>
+<div class="cred">3D structure rendered with Depth of Field</div>
+</div>
+<div class="text">
+<p>The following is the outline of the method <a class="footnote-counter" href="index.html#footnotes"></a> used to render the webs, as well as the images you
+see here, that does not involve building meshes. It should work for a wide
+range of graph structures, and probably other things as well.
+<a class="footnote-counter" href="index.html#footnotes"></a></p>
+<p>Assuming <a class="footnote-counter" href="index.html#footnotes"></a> you have:</p>
+<ul>
+<li>A line in 3D, <code>l=[a, b]</code>;</li>
+<li>a camera at position, <code>c</code>;</li>
+<li>a focus distance from camera, <code>f</code></li>
+<li>a distance function, <code>dst(a, b)</code> that yields the distance
+between <code>a</code> and <code>b</code>;</li>
+<li>a function, <code>lerp(a, b, s) = a + s*(b-a)</code>, which
+interpolates between <code>a</code> and <code>b</code>;</li>
+<li>a function, <code>rnd()</code>, that yields random numbers between
+<code>0</code> and <code>1</code>; and</li>
+<li>a function, <code>rndSphere(r)</code>, that returns random points
+inside a sphere with radius, <code>r</code>.</li>
+</ul>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="" />
+<meta itemprop="artMedium" content="digital" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<a href="../../img/writing/depth-of-field/20190506-233222-f8fe6a5-56814124.png"><img itemprop="image" src="../../img/writing/depth-of-field/20190506-233222-f8fe6a5-56814124.png" alt="" title="" /></a>
+<div class="cred">3D structure rendered with Depth of Field</div>
+</div>
+<div class="text">
+<p>With the previous definitions in mind, you can draw all the lines,
+<code>l</code>, in your graph structure using the following method:</p>
+<ul>
+<li>Select a point, <code>v = lerp(a, b, rnd())</code>, on
+<code>l</code>.</li>
+<li>Calculate the distance, <code>d = dst(v, c)</code>.</li>
+<li>Find the sample radius, <code>r = m * pow(abs(f - d), e)</code>.</li>
+<li>find the new position, <code>w = v + rndSphere(r)</code>.</li>
+<li>Project <code>w</code> into 2D, and draw a pixel/dot.</li>
+<li>Sample a fixed number of times, or according to the length of
+<code>l</code>. Use a low alpha value, and a high number of samples for a
+smooth result.</li>
+</ul>
+<p>Here <code>m</code> is a parameter that adjusts the size of the depth of
+field sphere (the "Circle of Confusion"), and <code>e</code> adjusts the
+distribution of the samples inside the sampling sphere. Start by setting
+both to numbers close to <code>1</code>, then adjust them and see what
+happens.</p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="" />
+<meta itemprop="artMedium" content="digital" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<a href="../../img/writing/depth-of-field/20190324-102645-b88a268-75ecc80e.png"><img itemprop="image" src="../../img/writing/depth-of-field/20190324-102645-b88a268-75ecc80e.png" alt="" title="" /></a>
+<div class="cred">3D structure rendered with Depth of Field</div>
+</div>
+<div class="text">
+<p>If you try this you will probably notice that there are a lot of other
+things to tweak as well. At least this should get you started. </p>
+<p>One thing to keep in mind is that this method doesn't really require you
+to work in 3D space. The sampling might as well happen in 2D, and the
+sampling radius, <code>r</code>, described above, could be any number
+different functions.</p>
+<p>Read the <a href="../colour-shift/index.html">next post</a> to see how to add a
+colour shift effect as well.</p>
+</div>
+<div class="text">
+<div class="footnotes">
+<hr>
+<ol id="footnotes">
+<li>An extension of the method described in this <a href="../../2017/grains-of-sand/index.html">earlier post</a>.</li> <li>I use the
+word "render" in a rather lose sense here. I have by no means built a
+3D pipeline. Just a few tools that can do 3D to 2D
+projection, and that (rather inefficiently) draw raster images.</li>
+<li>All of this assumes world coordinates. How that affects you depends
+on how you project your 3D points into 2D. Moreover, since my
+projection function uses orthographic projection, the distance function
+does not calculate the distance from <code>p</code> to <code>c</code>.
+Instead it calculates the distance from <code>p</code> to the point
+where <code>p</code> hits the camera plane.</li>
+</ol>
+</div>
+</div>
+</article>
+</main>
+<!--googleoff: all-->
+<footer class="footer">
+<small>
+© 2014-2021 anders hoff
+<br>⁂
+</small>
+</footer>
+</body>
+</html>

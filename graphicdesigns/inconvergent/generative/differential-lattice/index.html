@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3" />
+<link rel="stylesheet" href="../../css/main-16.css" />
+<link rel="apple-touch-icon" sizes="180x180" href="../../img/icons/apple-touch-icon.png?v=7kb27Qjm9N" />
+<link rel="icon" type="image/png" sizes="32x32" href="../../img/icons/favicon-32x32.png?v=7kb27Qjm9N" />
+<link rel="icon" type="image/png" sizes="16x16" href="../../img/icons/favicon-16x16.png?v=7kb27Qjm9N" />
+<link rel="manifest" href="../../img/icons/manifest.json?v=7kb27Qjm9N" />
+<link rel="mask-icon" href="../../img/icons/safari-pinned-tab.svg?v=7kb27Qjm9N" color="#333333" />
+<link rel="shortcut icon" href="../../img/icons/favicon.ico?v=7kb27Qjm9N" />
+<meta name="msapplication-config" content="img/icons/browserconfig.xml?v=7kb27Qjm9N" />
+<meta name="theme-color" content="#ffffff" />
+<title>On Generative Algorithms&#58; Differential Lattice &middot; inconvergent</title>
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@inconvergent" />
+<meta name="twitter:domain" content="inconvergent.net" />
+<meta name="twitter:creator" content="@inconvergent" />
+<meta property="og:image" content="img/generative/difflat-plot.png" />
+<meta name="twitter:image0" content="img/generative/difflat-plot.png" />
+<meta property="og:title" content="On Generative Algorithms&#58; Differential Lattice &middot; inconvergent" />
+<meta property="og:site_name" content="inconvergent.net" />
+<meta property="og:url" content="generative/differential-lattice/" />
+<link rel="canonical" href="index.html" />
+<meta property="og:type" content="website" />
+<meta property="og:description" content="Differential Lattice is a generative algorithm that builds a grid structure." />
+<meta name="description" content="Differential Lattice is a generative algorithm that builds a grid structure." />
+<meta name="google-site-verification" content="KymIUCYkzGHgYeDgr3pIZyz63dwmhDhNkNj9Yd1IIfM" />
+<link rel="alternate" type="application/atom+xml" href="../../atom.xml" />
+
+<meta name="pinterest" content="nopin" />
+
+<meta name="author" content="inconvergent, anders hoff" />
+<meta name="keywords" content="generative, art, generative art, algorithm, algorithms, inconvergent, anders hoff, computational, lisp, common lisp, python, mathematics, biology, patterns, rules" />
+<link href="https://fonts.googleapis.com/css?family=Inconsolata|Open+Sans|Open+Sans+Condensed:300&display=swap" rel="stylesheet">
+</head>
+<body>
+<!--googleoff: all-->
+<div class="wide">
+<div class="site-title">
+<header>
+<a title="inconvergent.net" href="../../index.html">inconvergent</a>
+</header>
+</div>
+</div>
+<!--googleon: all-->
+<main>
+<article itemscope itemtype="https://schema.org/Article">
+<meta itemprop="headline" content="On Generative Algorithms&#58; Differential Lattice">
+<meta itemprop="datePublished" content="2015-11-01" />
+<meta itemprop="dateModified" content="2016-09-01" />
+<div itemscope itemprop="author" itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<div itemscope itemprop="publisher" itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<div itemprop="image" itemscope itemtype="https://schema.org/ImageObject">
+<meta itemprop="url" content="img/generative/difflat-plot.png">
+<meta itemprop="width" content="800">
+<meta itemprop="height" content="800">
+</div>
+<div class="text">
+<h1 class="fade"><a href="../index.html">On Generative Algorithms</a></h1>
+<h2>Differential Lattice
+<a class="ghlink" href="incovnvergent-git-repos/differential-lattice">Github</a>
+</h2>
+<p>When working on <a href="../differential-line/index.html">Differential Line</a>, <a href="../differential-mesh/index.html">Differential Mesh</a> and <a href="../differential-mesh-3d/index.html">Differential Mesh 3d</a> the most tedious
+part was managing the data structure. Partly because I decided to try to
+learn to use the <a href="https://en.wikipedia.org/wiki/Doubly_connected_edge_list">half-edge</a>
+data structure properly in the process. Partly because I failed to do just
+that. And finally because I was writing it in <a href="http://cython.org/">Cython</a>, which was new to me at the
+time.</p>
+<p>Regardless of all of this, I got there eventually. This process
+led me to wish for a more loosely connected system. Such a system would be
+more easy to manage. I also had the idea that such a system could be
+similar to <a href="https://en.wikipedia.org/wiki/Slime_mold">slime
+mold</a>, in the same way that <a href="../differential-mesh/index.html">Differential Mesh</a> is more or less
+recognizable as <a href="https://en.wikipedia.org/wiki/Lichen">lichen</a>.</p>
+<p>With this in mind I started Differential Lattice. Part of the algorithm is
+very similar to <a href="../differential-mesh/index.html">Differential Mesh</a>; it
+consists of connected nodes, and the connected nodes attempt to remain
+close together. It also shares the behaviour where each node tries to avoid
+all non-connected nodes within a certain radius. The important difference
+is that the connections between nodes is re-calculated <em>before every
+iteration</em>. This means that we need a nice way of deciding whether
+two nearby nodes should be neighbors or not.</p>
+<p>It turns out that <a href="https://en.wikipedia.org/wiki/Relative_neighborhood_graph">Relative
+neighborhoods</a> work well for this. Relative neighborhoods are
+introduced in the previously mentioned <a href="http://algorithmicbotany.org/papers/venation.sig2005.pdf">leaf
+venation algorithm</a>. Somewhat simplified we can say that two nodes are
+relative neighbors if a <em>sufficiently large</em> area between the two
+nodes does not contain any other nodes.</p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="differential lattice ani" />
+<meta itemprop="artMedium" content="digital" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<img itemprop="image" src="../../img/generative/difflat.gif" alt="differential
+  lattice ani" title="differential lattice ani" />
+</div>
+<div class="text">
+<p>Another thing to consider in this system is how new nodes are introduced. In
+<a href="../differential-mesh/index.html">Differential Mesh</a> new nodes are
+introduced by splitting edges in half. This is one of the somewhat tedious
+processes of a half-edge data structure. Especially if you have stubbornly
+implemented your own version of the data structure, like me. In a loosely
+connected system, such as Differential Lattice, adding a new node is simply a
+matter deciding on a position, introducing the node, and recalculating the
+neighborhoods. As you would in any step of the simulation.</p>
+<p>Because of this, the challenge is reduced to deciding where to place the new
+nodes, and how often new nodes should appear. In these examples, new nodes
+appear in areas where the local density of nodes is greater than zero, yet
+sufficiently low. This causes new nodes to largely appear on the outside of
+the existing structure. In a manner somewhat similar to slime mold which is
+gradually growing outwards.</p>
+<p>So far this system does not have any kind of food distribution, which is an
+interesting aspect to explore at a later time. E.g. is this simple system
+somehow able to replicate the <a href="https://www.youtube.com/watch?v=GwKuFREOgmo">Tokyo Railway System</a>
+or display other kinds of interesting behaviours?</p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="differential lattice ani 2" />
+<meta itemprop="artMedium" content="digital" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<img itemprop="image" src="../../img/generative/difflat-3.gif" alt="differential
+  lattice ani 2" title="differential lattice ani 2" />
+</div>
+<div class="text">
+<p>This algorithm has been implemented using <a href="https://documen.tician.de/pycuda/">pyCUDA</a>, which means that all
+distance calculations, and neighborhood calculations can be done on the GPU.
+Because of this it is probably one of the fastest algorithms I have ever
+implemented. It is possible to make systems with hundreds of thousands of nodes
+surprisingly quickly, considering the amount of computation involved.</p>
+<p>Below is an image with about 80 000 nodes which has been plotted on my
+mechanical plotter.</p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="differential lattice" />
+<meta itemprop="artMedium" content="digital" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<a href="http://store.inconvergent.net/product/differential-lattice-plot-l"><img itemprop="image" src="../../img/generative/difflat-plot.png" alt="differential
+    lattice" title="differential lattice" />
+</div>
+<div class="text">
+<a class="prev" href="../sand-spline/index.html">Sand Spline</a>
+<a class="next" href="../sand-creatures/index.html">Sand Creatures</a>
+</div>
+</article>
+</main>
+<!--googleoff: all-->
+<footer class="footer">
+<small>
+© 2014-2021 anders hoff
+<br>⁂
+</small>
+</footer>
+</body>
+</html>

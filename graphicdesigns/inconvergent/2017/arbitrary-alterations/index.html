@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3" />
+<link rel="stylesheet" href="../../css/main-16.css" />
+<link rel="apple-touch-icon" sizes="180x180" href="../../img/icons/apple-touch-icon.png?v=7kb27Qjm9N" />
+<link rel="icon" type="image/png" sizes="32x32" href="../../img/icons/favicon-32x32.png?v=7kb27Qjm9N" />
+<link rel="icon" type="image/png" sizes="16x16" href="../../img/icons/favicon-16x16.png?v=7kb27Qjm9N" />
+<link rel="manifest" href="../../img/icons/manifest.json?v=7kb27Qjm9N" />
+<link rel="mask-icon" href="../../img/icons/safari-pinned-tab.svg?v=7kb27Qjm9N" color="#333333" />
+<link rel="shortcut icon" href="../../img/icons/favicon.ico?v=7kb27Qjm9N" />
+<meta name="msapplication-config" content="img/icons/browserconfig.xml?v=7kb27Qjm9N" />
+<meta name="theme-color" content="#ffffff" />
+<title>Arbitrary Alterations &middot; inconvergent</title>
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@inconvergent" />
+<meta name="twitter:domain" content="inconvergent.net" />
+<meta name="twitter:creator" content="@inconvergent" />
+<meta property="og:image" content="img/writing/arbitrary/head.png" />
+<meta name="twitter:image0" content="img/writing/arbitrary/head.png" />
+<meta property="og:title" content="Arbitrary Alterations &middot; inconvergent" />
+<meta property="og:site_name" content="inconvergent.net" />
+<meta property="og:url" content="2017/arbitrary-alterations/" />
+<link rel="canonical" href="index.html" />
+<meta property="og:type" content="website" />
+<meta property="og:description" content="An example of how to use custom alterations in the snek data structure." />
+<meta name="description" content="An example of how to use custom alterations in the snek data structure." />
+<meta name="google-site-verification" content="KymIUCYkzGHgYeDgr3pIZyz63dwmhDhNkNj9Yd1IIfM" />
+<link rel="alternate" type="application/atom+xml" href="../../atom.xml" />
+
+<meta name="pinterest" content="nopin" />
+
+<meta name="author" content="inconvergent, anders hoff" />
+<meta name="keywords" content="generative, art, generative art, algorithm, algorithms, inconvergent, anders hoff, computational, lisp, common lisp, python, mathematics, biology, patterns, rules" />
+<link href="https://fonts.googleapis.com/css?family=Inconsolata|Open+Sans|Open+Sans+Condensed:300&display=swap" rel="stylesheet">
+</head>
+<body>
+<!--googleoff: all-->
+<div class="wide">
+<div class="site-title">
+<header>
+<a title="inconvergent.net" href="../../index.html">inconvergent</a>
+</header>
+</div>
+</div>
+<!--googleon: all-->
+<main>
+<article itemscope itemtype="https://schema.org/Article">
+<meta itemprop="headline" content="Arbitrary Alterations">
+<meta itemprop="datePublished" content="2017-05-18" />
+<meta itemprop="dateModified" content="2018-06-10" />
+<div itemscope itemprop="author" itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<div itemscope itemprop="publisher" itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<div itemprop="image" itemscope itemtype="https://schema.org/ImageObject">
+<meta itemprop="url" content="img/writing/arbitrary/head.png">
+<meta itemprop="width" content="800">
+<meta itemprop="height" content="800">
+</div>
+<!--googleon: all-->
+<div class="text">
+<h1 class="dark"><a href="index.html">Arbitrary Alterations</a></h1>
+<p>
+Recently I have been looking for a solution to a particular problem related
+to my <a href="../snek-is-not-an-acronym/index.html"><code>snek</code></a> data
+structure. The problem is this:
+</p>
+<p>
+<em>What if I want to perform a particular action only if a given
+alteration is applied? Moreover, what if that action depends on changes to
+the data structure that will not exist until after the alteration has
+been applied?</em>
+</p>
+<p>
+A suitable example is a variation of a two-dimensional <a href="https://en.wikipedia.org/wiki/Random_walk">random walk</a>, with the
+additional limitation that vertices are not allowed to be too close to any
+existing vertex. Below is an animation to give you an idea.
+</p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="Random Walk Animation" />
+<meta itemprop="artMedium" content="animation" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<img itemprop="image" src="../../img/writing/arbitrary/ani.gif" alt="Random Walk Animation" title="Random Walk Animation" />
+<div class="cred">Limited random walk animation</div>
+</div>
+<div class="text">
+<p>
+One way to implement this is to continuously try to place a new vertex in
+the vicinity of the previously added vertex. You can keep doing this until
+you find a free spot, or until you get into a deadlock.
+</p>
+<p>
+It turns out I had the necessary functionality to solve this all along:
+<em>custom alterations</em>. <a class="footnote-counter" href="index.html#footnotes"></a>
+</p>
+<p>
+The ability to add your own alterations has been a
+part of the design plan for <code>snek</code> all along. After a bit of
+testing I have come to the conclusion that custom alterations are probably
+the best and most flexible solution to this problem as well.
+</p>
+<p>
+Below <a class="footnote-counter" href="index.html#footnotes"></a> is an example
+using a <code>snek</code> instance called <code>snk</code>, and the current
+vertex index <code>w</code>. Also note that the <code>(snek:append-edge?
+...)</code> <a class="footnote-counter" href="index.html#footnotes"></a> alteration
+will attempt to create a new edge between an existing vertex and a new
+point. The important thing to note here is that the point will turn into a
+<code>snek</code> vertex when the alteration has been applied.
+</p>
+<pre><span>; create custom alteration func</span>
+(defun do-append-edge-alt* (snk a)
+  <span>; append edge if it is not too close</span>
+  <span>; to any existing vert</span>
+  (if (&lt;= (length
+            (snek:verts-in-rad snk
+              (snek:append-edge-alt-xy a)
+              rad))
+          1)
+    <span>; (snek:append-edge-alt ...) returns index of</span>
+    <span>; the added vert. if the alteration is</span>
+    <span>; not applied, it returns nil.</span>
+    (aif (snek:do-append-edge-alt snk a)
+       <span>; update if alteration was applied</span>
+       (setf w it)))
+
+<span>; override the func that applies</span>
+<span>; append edge alterations</span>
+(let ((snk (snek:make
+             :alts '((snek:append-edge-alt
+                      do-append-edge-alt*)))))
+  <span>; initial vert at xy</span>
+  (setf w (snek:add-vert! snk xy))
+
+  (loop for i from 0 below n do
+    (snek:with (snk :zwidth rad)
+      <span>; pick a point near w</span>
+      <span>; w will only be updated if the edge</span>
+      <span>; is applied</span>
+      (snek:append-edge?
+        w (add (snek:get-vert snk w)
+               (rnd:in-circ rad))
+        :rel nil))))</pre>
+<p>
+This example extends the existing alteration <code>(snek:append-edge?
+...)</code>. There is obviously nothing stopping you from implementing
+completely new alterations. While this might not be a perfect solution, it
+seems to solve all the challenges I've encountered so far.
+</p>
+</div>
+<div class="text">
+<div class="footnotes">
+<hr>
+<ol id="footnotes">
+<li>In fact I have been thinking about this for a few days. Which is
+embarrassing for a number of reasons ...</li>
+<li>A complete working example can be seen in the <a href="incovnvergent-git-repos/snek/blob/master/examples/custom-alt.lisp">repository</a>.</li>
+<li>All alterations are now postfixed with <code>?</code>, to indicate
+that it may or may not be applied.</li>
+</ol>
+</div>
+</div>
+</article>
+</main>
+<!--googleoff: all-->
+<footer class="footer">
+<small>
+© 2014-2021 anders hoff
+<br>⁂
+</small>
+</footer>
+</body>
+</html>

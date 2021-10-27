@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3" />
+<link rel="stylesheet" href="../../css/main-16.css" />
+<link rel="apple-touch-icon" sizes="180x180" href="../../img/icons/apple-touch-icon.png?v=7kb27Qjm9N" />
+<link rel="icon" type="image/png" sizes="32x32" href="../../img/icons/favicon-32x32.png?v=7kb27Qjm9N" />
+<link rel="icon" type="image/png" sizes="16x16" href="../../img/icons/favicon-16x16.png?v=7kb27Qjm9N" />
+<link rel="manifest" href="../../img/icons/manifest.json?v=7kb27Qjm9N" />
+<link rel="mask-icon" href="../../img/icons/safari-pinned-tab.svg?v=7kb27Qjm9N" color="#333333" />
+<link rel="shortcut icon" href="../../img/icons/favicon.ico?v=7kb27Qjm9N" />
+<meta name="msapplication-config" content="img/icons/browserconfig.xml?v=7kb27Qjm9N" />
+<meta name="theme-color" content="#ffffff" />
+<title>SNEK is Not an Acronym &middot; inconvergent</title>
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@inconvergent" />
+<meta name="twitter:domain" content="inconvergent.net" />
+<meta name="twitter:creator" content="@inconvergent" />
+<meta property="og:image" content="img/writing/snek/head.png" />
+<meta name="twitter:image0" content="img/writing/snek/head.png" />
+<meta property="og:title" content="SNEK is Not an Acronym &middot; inconvergent" />
+<meta property="og:site_name" content="inconvergent.net" />
+<meta property="og:url" content="2017/snek-is-not-an-acronym/" />
+<link rel="canonical" href="index.html" />
+<meta property="og:type" content="website" />
+<meta property="og:description" content="A description of SNEK—an experimental system for writing generative systems" />
+<meta name="description" content="A description of SNEK—an experimental system for writing generative systems" />
+<meta name="google-site-verification" content="KymIUCYkzGHgYeDgr3pIZyz63dwmhDhNkNj9Yd1IIfM" />
+<link rel="alternate" type="application/atom+xml" href="../../atom.xml" />
+
+<meta name="pinterest" content="nopin" />
+
+<meta name="author" content="inconvergent, anders hoff" />
+<meta name="keywords" content="generative, art, generative art, algorithm, algorithms, inconvergent, anders hoff, computational, lisp, common lisp, python, mathematics, biology, patterns, rules" />
+<link href="https://fonts.googleapis.com/css?family=Inconsolata|Open+Sans|Open+Sans+Condensed:300&display=swap" rel="stylesheet">
+</head>
+<body>
+<!--googleoff: all-->
+<div class="wide">
+<div class="site-title">
+<header>
+<a title="inconvergent.net" href="../../index.html">inconvergent</a>
+</header>
+</div>
+</div>
+<!--googleon: all-->
+<main>
+<article itemscope itemtype="https://schema.org/Article">
+<meta itemprop="headline" content="SNEK is Not an Acronym">
+<meta itemprop="datePublished" content="2017-03-02" />
+<meta itemprop="dateModified" content="2018-06-10" />
+<div itemscope itemprop="author" itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<div itemscope itemprop="publisher" itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<div itemprop="image" itemscope itemtype="https://schema.org/ImageObject">
+<meta itemprop="url" content="img/writing/snek/head.png">
+<meta itemprop="width" content="800">
+<meta itemprop="height" content="800">
+</div>
+<!--googleon: all-->
+<div class="text">
+<h1 class="dark"><a href="index.html">SNEK is Not an Acronym</a></h1>
+<p>
+I've been learning <a href="https://en.wikipedia.org/wiki/Common_Lisp">Common Lisp</a> since
+some time at the end of 2016. I wrote a little bit about why in my <a href="a-barrel-of-bots/">previous post</a>. This text describes what I
+have been doing in some more detail. Specifically it describes an
+experimental data structure and&mdash;more importantly&mdash;a programming
+<em>system</em> or <em>pattern</em>.
+</p>
+<p>
+For no particularly good reason I have named this system <code>snek</code>.
+The code is at <a href="incovnvergent-git-repos/snek">incovnvergent-git-repos/snek</a>.
+</p>
+</div>
+<div class="text-img" itemscope itemtype="https://schema.org/VisualArtwork">
+<meta itemprop="name" content="@sandpaintbot" />
+<meta itemprop="artMedium" content="digital" />
+<meta itemprop="artForm" content="generative" />
+<div itemprop="creator" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Anders Hoff" />
+<meta itemprop="sameAs" content="https://inconvergent.net" />
+</div>
+<img itemprop="image" src="../../img/writing/snek/head.png" alt="@sandpaintbot" title="@sanpaintbot" />
+<div class="cred">
+Every image created by the @sandpaintbot uses the
+<code>snek</code> system.
+</div>
+</div>
+<div class="text">
+<p>
+I do not really know if this pattern is particularly novel, but at least I
+have not seen anything quite like this before. Moreover, I haven't decided
+whether I think that this is a good pattern. Having said that: it does seem
+quite useful to me, it is also fun to work with. Implementing it in Lisp
+has also proven to be an interesting challenge.
+</p>
+<p>
+I tend to write code that performs some kind of growth. As an example, let
+us consider this <a href="shepherding-random-growth/">differential growth
+algorithm</a>.
+</p>
+<p>
+For this to work I need to be able to iterate over all vertices in the
+structure, calculate a set of forces, and move the vertices according to
+those forces. I also want to be able to split edges by inserting new
+vertices at the middle of the edge. The important thing to notice here is
+that the forces depend on distances between vertices. This means that if we
+were to start moving vertices around while we are iterating, we will affect
+future distance calculations within the same iteration. This is not what
+you want.
+</p>
+<p>
+In general this situation is common when doing simulation, and there are
+multiple ways of solving this. For instance you can introduce some kind of
+temporary state. That is, you can iterate over the vertices, calculate the
+new positions of each vertex, then append those changes later. Similarly,
+you can calculate a list of edges that need to be split, then perform the
+splits later.
+</p>
+<p>
+Instead of working this way I propose the idea of <em>alterations</em>. An
+alteration is an object that represents an action (alteration) that can be
+performed on the structure at a later time. For instance <code>(snek:move-vert? a
+(20d0 10d0))</code> will create an alteration that, when (eventually)
+applied to the structure, will move vertex <code>a</code> 20 units along
+the x-axis, and 10 units along the y-axis. <a class="footnote-counter" href="index.html#footnotes"></a>
+</p>
+<p>
+Similarly, you can have alterations like:
+</p>
+<ul>
+<li><code>(snek:join-verts? a b)</code>,
+which will create edge <code>(a b)</code> between vertices <code>a</code>
+and <code>b</code>;</li>
+<li><code>(snek:append-edge? a 10d0 30d0)</code>, which will
+create a new vertex at <code>(10d0 30d0)</code>, and add an edge between
+that vertex and <code>a</code>; and </li>
+<li><code>(snek:split-edge? (a b))</code>, which will split edge <code>(a
+b)</code> by inserting a vertex in the middle.</li>
+</ul>
+<p>
+Let us assume that we have an instance of <code>snek</code> called
+<code>snk</code>. For this pattern to work, you will need a way to apply
+these changes to <code>snk</code>. We do this by creating a context,
+<code>(snek:with (snk) ...)</code>, which will apply all alterations
+created within it to <code>snk</code> once the context is closed.
+</p>
+<p>
+For instance, if you wanted to randomly move every vertex in
+<code>snk</code> by some small amount, it will look like this:
+</p>
+<pre><span>; context start</span>
+(snek:with (snk)
+  <span>; iterate over all vertices in snk</span>
+  <span>; v is the current vertex in the iteration</span>
+  (snek:itr-all-verts (snk v)
+    <span>; an alteration for each v</span>
+    (snek:move-vert? v (rnd:in-circ 10d0))))
+<span>; context end</span>
+<span>; alterations have been applied</span></pre>
+<p>
+Here <code>(rnd:in-circ)</code> returns a random coordinate from a uniform
+distribution over the <a href="https://en.wikipedia.org/wiki/Unit_circle">unit circle</a>.
+</p>
+<p>
+This is not entirely different from the original strategy of states, but
+there are a few differences. With this method there is no need to
+explicitly save state, the alterations represent changes that will be
+applied at the end of the context. But the context will do this for you.
+This also means that <code>snk</code> does not change at all inside of the
+context. This is important because it means you can freely grab information
+from <code>snk</code> without having to worry about the state.
+</p>
+<p>
+In the above example the state does not actually matter. To illustrate
+better, let's assume you also want to select a random vertex,
+<code>w</code>, and create edge, <code>(v w)</code>. But you only want to
+create this edge if they are within a certain distance of each other. Now
+it looks like this:
+</p>
+<pre><span>; context start</span>
+(snek:with (snk)
+  <span>; iterate</span>
+  (snek:itr-all-verts (snk v)
+    <span>; move alteration</span>
+    (snek:move-vert? v (rnd:in-circ 10d0))
+    <span>; w will be an arbitrary</span>
+    <span>; vertex in snk</span>
+    (snek:with-rnd-vert (snk w)
+      <span>; join v and w if they are closer than d</span>
+      (if (&lt; (snek:vert-dst snk (list v w)) d)
+        (snek:join-verts? v w))))
+<span>; context end</span>
+<span>; alterations have been applied</span></pre>
+<p>
+Here we can move vertices around without worrying that it will affect the
+conditional join. We can also be certain that <code>(snek:with-rnd-vert
+...)</code> will not select a vertex that has been inserted in the
+current context: those alterations have not been applied yet.
+</p>
+<p>
+Another useful thing about this pattern is that the code that generates the
+alterations does not have to know anything about the underlying data
+structure <a class="footnote-counter" href="index.html#footnotes"></a>. In fact, you
+can create alterations without even knowing anything about
+<code>snk</code>. This makes it easy to generate alterations in code. It
+also makes it easier to write code that generates code that creates
+alterations. The latter is something I would like to achieve eventually.
+This pattern also has the useful property of making it possible to
+parallelize everything that happens inside of <code>(snek:with ...)</code>.
+</p>
+<p>
+Since alterations are created independently of each other there is nothing
+stopping you from creating alterations that does not make sense, or that
+will leave the structure in an inconsistent state. This means that we need
+a few strategies for how to apply alterations. I have not really
+experimented a lot with this yet, but a simple example is that we can
+simply silently discard alterations that will create duplicate edges. We
+can also implement the logic that applies each alterations such that we are
+certain that it is only applied provided that it does not create an
+inconsistent state.
+</p>
+<p>
+More advanced structures will probably need more involved rules for
+applying the alterations. One might also want to randomize the order in
+which the alterations are applied. This way we can avoid systemic behaviour
+that we do not intend.
+</p>
+<p>
+As mentioned earlier, this method is interesting for my kind of work, but
+obviously it has some important weaknesses. These weaknesses make it
+unsuitable in many cases. Most notably, if you need strict control over the
+final result, the discarding behaviour mentioned above could be impractical
+or catastrophic.
+</p>
+<p>
+Finally I would like to mention that there is no specific reason why this
+needs to be done in Lisp<a class="footnote-counter" href="index.html#footnotes"></a>.
+However, Lisp does have some highly useful constructs that makes it
+appealing for a system like this. For instance, it is <a href="http://www.gigamonkeys.com/book/macros-defining-your-own.html">Lisp
+macros</a> that make it possible to elegantly create the contexts
+<code>(snek:with ...)</code> and <code>(snek:with-rnd-vert ...)</code> above.
+In addition, I think Lisp will be excellent for eventually writing code
+that is capable of generating code that creates (and applies) alterations.
+</p>
+<p>
+In the event that you would like to learn Lisp, I enjoyed reading <a href="https://www.amazon.com/dp/B00IZUEG1G/ref=pe_385040_118058080_TE_M1DP">
+Common LISP: A Gentle Introduction to Symbolic Computation</a>. If you
+want to read more about Macros, and Lisp in general, I recommend <a href="http://www.paulgraham.com/onlisp.html">On Lisp</a> by <a href="http://www.paulgraham.com/">Paul Graham</a>.
+</p>
+</div>
+<div class="text">
+<div class="footnotes">
+<hr>
+<ol id="footnotes">
+<li>If you are unfamiliar with Lisp: <code>(func a b)</code> is
+equivalent to <code>func(a, b)</code> in e.g. Python or Javascript.
+And, similarly, a Lisp list is represented as <code>(a b)</code>, not
+<code>[a, b]</code>.</li>
+<li>Admittedly this can be achieved with most other structures and
+patterns as well.</li>
+<li>If you were to write this in another language you could use a
+map-reduce like pattern where you have a function that generates a list
+of alterations, and another function that applies those alterations to
+the structure.</li>
+</ol>
+</div>
+</div>
+</article>
+</main>
+<!--googleoff: all-->
+<footer class="footer">
+<small>
+© 2014-2021 anders hoff
+<br>⁂
+</small>
+</footer>
+</body>
+</html>
