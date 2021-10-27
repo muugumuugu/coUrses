@@ -1,0 +1,334 @@
+<html><head><link rel="stylesheet" href="/styles/home.css"><title>necessarily-disorder tutorials</title><script src="/styles/syntaxhighlighter.js"></script><script>hljs.highlightAll();</script></head><body><header><h1>drawing from noise, and then making animated loopy GIFs from there</h1></header><main>
+<p>This tutorial will focus on explaining how to draw things from noise functions in Processing, and then will present an automatic way to produce GIFs that loop well from a noise-based drawing.</p>
+<p>It will explain how to obtain the following GIFs with the same animation technique :</p>
+<p><img alt="agif3opt" src="images/agif3opt.gif" title="agif3opt"></p>
+<p><img alt="agif4" src="images/agif4.gif" title="agif4"></p>
+<p>Most of my latest gifs have all used this same trick I will present here, so I thought it was worth sharing it.</p>
+<h3>About noise functions</h3>
+<p>First of all let's explain a little bit noise functions.</p>
+<p>Processing has a function noise() that produces values between 0 and 1, centered on 0.5 given some inputs. Those values are random, but will always be the same with the same inputs on the same noise seed (fixed when the program is launched). Another property is that noise is continuous : for close inputs you get nearly the same value. Computing noise values is fast, you don't have to compute previous values. The noise function of Processing is sometimes called Perlin noise.</p>
+<p>Let's show with a quite short code what noise() gives us :</p>
+<pre><code lang="java">
+void setup(){
+  size(500,500);
+  background(0);
+  stroke(255);
+  noFill();
+}
+
+void draw(){
+  float scale = 0.03;
+
+  beginShape();
+  for(int x = 0; x&lt;width;x++){
+    float y = height*noise(scale*x);
+    vertex(x,y);
+  }
+  endShape();
+}
+</code></pre>
+<p>Result :<br/>
+<img alt="tuto" src="images/tuto.jpg" title="tuto"></p>
+<p>The parameter scale is used because without it the values changed too fast.</p>
+<p>Beware that the noise function is symmetrical (noise(x) = noise(-x)).</p>
+<p>Everytime the sketch is launched, the curve looks different.<br/>
+You can have the noise functions to give always the same result by using Processing's function noiseSeed. Also check out the function noiseDetail to change the parameters of the noise function (for example its smoothness).</p>
+<p>Here's a trick : To draw another independant curve at the same time one can just take the noise values far away from previously (use noise(scale*x) first, then noise(scale*x + 1000) ).</p>
+<p>That was 1-dimensional noise. 2-dimensional noise takes 2 float values and returns a value between 0 and 1. We can represent that by brightness level on a 2D picture.</p>
+<pre><code lang="java">
+void setup(){
+  size(500,500);
+  background(0);
+  stroke(255);
+  noFill();
+}
+
+void draw(){
+  float scale = 0.01;
+
+  for(int x = 0; x&lt;width;x++){
+    for(int y = 0; y&lt;height;y++){
+      stroke(255*noise(scale*x,scale*y));
+      point(x,y);
+    }
+  }
+}
+</code></pre>
+<p>Result :<br/>
+<img alt="tuto2" src="images/tuto2.png" title="tuto2"></p>
+<p>One way to visualize 3D noise is to use time as third dimension…</p>
+<pre><code lang="java">
+void setup(){
+  size(500,500);
+  background(0);
+  stroke(255);
+  noFill();
+  noiseDetail(5);
+}
+
+void draw(){
+  background(0);
+  float scale = 0.01;
+
+  loadPixels();
+  for(int x = 0; x&lt;width;x++){
+    for(int y = 0; y&lt;height;y++){
+      float col = 255*noise(scale*x,scale*y,10*scale*frameCount);
+      pixels[x + width*y] = color(col);
+    }
+  }
+  updatePixels();
+
+  if(frameCount&lt;=50){
+    saveFrame("tuto###.png");
+  }
+}
+</code></pre>
+<p>Result :<br/>
+<img alt="tuto1" src="images/tuto1.gif" title="tuto1"></p>
+<p>We're getting closer to making animated GIFs that loop well but this doesn't loop well so far.</p>
+<p>To make it loop we'll need 4-dimensional noise. Processing's noise is limited to 3D so I'll introduce openSimplex noise (code by Kurt Spencer). To use it paste <a href="https://gist.github.com/Bleuje/fce86ef35b66c4a2b6a469b27163591e">this code</a> in another tab of your Processing sketch.</p>
+<p>openSimplex noise is similar to Perlin noise but returns values between -1 and 1 (centered on 0).</p>
+<p>openSimplex noise can be used this way (back to the first example) :</p>
+<pre><code lang="java">
+OpenSimplexNoise noise;
+
+void setup(){
+  size(500,500);
+  background(0);
+  stroke(255);
+  noFill();
+
+  noise = new OpenSimplexNoise();
+}
+
+void draw(){
+  float scale = 0.03;
+
+  beginShape();
+  for(int x = 0; x&lt;width;x++){
+    float ns = (float)noise.eval(scale*x,0);
+    float y = map(ns,-1,1,0,height);
+    vertex(x,y);
+  }
+  endShape();
+}
+</code></pre>
+<p>Result :<br/>
+<img alt="tuto2" src="images/tuto2.jpg" title="tuto2"></p>
+<p>I actually used 2D noise here with 0 as second input because the implementation of openSimplex noise I have only has 2D,3D and 4D noise.</p>
+<p>Before using my trick to make loopy animations, let's draw something more interesting/different from noise…</p>
+<p>Let's use a threshold on the noise to draw pixels in black or white :</p>
+<pre><code lang="java">
+OpenSimplexNoise noise;
+ 
+void setup(){
+  size(500,500);
+  background(0);
+  stroke(255);
+  noFill();
+ 
+  noise = new OpenSimplexNoise();
+}
+ 
+void draw(){
+  background(0);
+  float scale = 0.02;
+ 
+  loadPixels();
+  for(int x = 0; x&lt;width;x++){
+    for(int y = 0; y&lt;height;y++){
+      boolean b = (float)noise.eval(scale*x,scale*y) &gt; 0;
+      float col = b?255:0;
+      pixels[x + width*y] = color(col);
+    }
+  }
+  updatePixels();
+ 
+  saveFrame("tuto3.jpg");
+}
+</code></pre>
+<p>Update : there may be a wordpress/HTML bug to display the above code, but you can find it <a href="https://gist.github.com/Bleuje/907dfc2da1be07fad3edc8ed9cd888ed">here</a>.</p>
+<p>Result :<br/>
+<img alt="tuto3" src="images/tuto3.jpg" title="tuto3"></p>
+<h3>How to animate noisy stuff with a nice trick</h3>
+<p>Now here's the trick to animate this with a perfect loop, a trick that will work with anything that uses 1D or 2D noise…<br/>
+<strong>Replace noise.eval(scale*x,scale*y) by noise.eval(scale*x,scale*y,<em>radius*cos(TWO_PI*t),radius*sin(TWO_PI*t)</em>)</strong>.</p>
+<p>We make a circle in the two new dimensions of noise space to make the animation loop perfectly. It's hard to have a graphical interpretation with 2D noise but from 1D noise, (noise.eval(scale*x,radius*cos(TWO_PI*t),radius*sin(TWO_PI*t))) would mean to take noise values on a line for each frame, and move this line along a cylinder as time increases…</p>
+<p>So let's apply this to the thresholded drawing :</p>
+<pre><code lang="java">
+OpenSimplexNoise noise;
+
+void setup(){
+  size(500,500);
+  background(0);
+  stroke(255);
+  noFill();
+
+  noise = new OpenSimplexNoise();
+}
+
+int numFrames = 75;
+
+float radius = 1.0;
+
+void draw(){
+  float t = 1.0*frameCount/numFrames;
+
+  background(0);
+  float scale = 0.02;
+
+  loadPixels();
+  for(int x = 0; x&lt;width;x++){
+    for(int y = 0; y&lt;height;y++){
+      boolean b = (float)noise.eval(scale*x,scale*y,radius*cos(TWO_PI*t),radius*sin(TWO_PI*t)) &gt; 0;
+      float col = b?255:0;
+      pixels[x + width*y] = color(col);
+    }
+  }
+  updatePixels();
+
+  println(t);
+
+  if(frameCount&lt;=numFrames){
+    saveFrame("tuto2###.gif");
+  }
+  if(frameCount == numFrames){
+    println("finished");
+    stop();
+  }
+}
+</code></pre>
+<p>Update : there may be a wordpress/HTML bug to display the above code, but you can find it <a href="https://gist.github.com/Bleuje/7ac1335641d939923e414c3fcf45a94b">here</a>.</p>
+<p>Result :<br/>
+<img alt="tuto2" src="images/tuto2.gif" title="tuto2"></p>
+<p>radius is a parameter that will control how much things will change in the animation.</p>
+<p>We can animate the curve example with the same technique :</p>
+<pre><code lang="java">
+OpenSimplexNoise noise;
+
+void setup(){
+  size(500,500);
+  background(0);
+  stroke(255);
+  noFill();
+
+  noise = new OpenSimplexNoise();
+}
+
+int numFrames = 150;
+
+float radius = 1.5;
+
+void draw(){
+  float t = 1.0*frameCount/numFrames;
+
+  background(0);
+  float scale = 0.02;
+
+  beginShape();
+  for(int x = 0; x&lt;width;x++){
+    float ns = (float)noise.eval(scale*x,radius*cos(TWO_PI*t),radius*sin(TWO_PI*t));
+    float y = map(ns,-1,1,0,height);
+    vertex(x,y);
+  }
+  endShape();
+
+  println(t);
+
+  if(frameCount&lt;=numFrames){
+    saveFrame("tuto2###.jpg");
+  }
+  if(frameCount == numFrames){
+    println("finished");
+    stop();
+  }
+}
+</code></pre>
+<p>Result :<br/>
+<img alt="tuto3" src="images/tuto3.gif" title="tuto3"></p>
+<p>Let's apply the technique to the previous noisy brightness example. Here the result will look blurred because the implementation of openSimplex noise used here doesn't have a lot of details (but that smoothness looks nice sometimes 🙂 ).</p>
+<p>Code :</p>
+<pre><code lang="java">
+OpenSimplexNoise noise;
+
+void setup(){
+  size(500,500);
+  background(0);
+  stroke(255);
+  noFill();
+
+  noise = new OpenSimplexNoise();
+}
+
+int numFrames = 75;
+
+float radius = 1.5;
+
+void draw(){
+  float t = 1.0*frameCount/numFrames;
+
+  background(0);
+  float scale = 0.02;
+
+  loadPixels();
+  for(int x = 0; x&lt;width;x++){
+    for(int y = 0; y&lt;height;y++){
+      float ns = (float)noise.eval(scale*x,scale*y,radius*cos(TWO_PI*t),radius*sin(TWO_PI*t));
+      float col = map(ns,-1,1,0,255);
+      pixels[x + width*y] = color(col);
+    }
+  }
+  updatePixels();
+
+  println(t);
+
+  if(frameCount&lt;=numFrames){
+    saveFrame("tuto3###.jpg");
+  }
+  if(frameCount == numFrames){
+    println("finished");
+    stop();
+  }
+}
+</code></pre>
+<p>Result :<br/>
+<img alt="tuto4" src="images/tuto4.gif" title="tuto4"></p>
+<p>Now you must be convinced that every Processing drawing that uses 1D or 2D noise can be turned into a perfectly looping animation easily. I haven't spent time explaining where the trick comes from, but I hope it will seem natural to you after thinking about it for a while.</p>
+<p>I'm going to explain how I obtained some more complex and interesting gifs.<br/>
+I'll start with that one :<br/>
+<img alt="agif5" src="images/agif5.gif" title="agif5"></p>
+<p>White points are randomly generated inside a circle. Each one follows an horizontal and a vertical displacement based on 2D noise. Also the intensity of the displacement becomes 0 near the border (near the circle). The animation is done just by using the same 4D noise technique. The GIF also uses motion blur from @beesandbombs.</p>
+<p>Here is the code to generate the frames of the GIF : <a href="https://gist.github.com/Bleuje/ae3662d67bea2e24092d64efe022ed4c">noisetraj.pde</a><br/>
+Note that drawCurve just draws a circle but it was coded so that it could be easily disorted too.</p>
+<p>Let's move to another example…<br/>
+<img alt="agif2" src="images/agif2.gif" title="agif2"><br/>
+Here some points start from a grid and draw their trajectory following a noise-based field. This field changes using the 4D-noise technique.<br/>
+(<a href="https://gist.github.com/Bleuje/e93045c1dc34c21bbe24cc97501348fb">Code</a>)</p>
+<p><img alt="agif" src="images/agif.gif" title="agif"></p>
+<p>Here a threshold on 2D noise determines if it will show ‘/' or ‘\'. Animated with 4D noise once again.<br/>
+(<a href="https://gist.github.com/Bleuje/85caf5a0324b6b5e717f1b26182cd758">Code</a>)</p>
+<p><img alt="tumblr_oxqbzm52qK1w3y4ilo1_500" src="images/tumblr_oxqbzm52qK1w3y4ilo1_500.gif" title="tumblr_oxqbzm52qK1w3y4ilo1_500"></p>
+<p>The lines represent a 2D field based on 2D noise. Once again animated with the same trick.<br/>
+(<a href="https://gist.github.com/Bleuje/e21bb5eae14405f8df5653221929e0ab">Code</a>)</p>
+<p><img alt="agif4" src="images/agif4.gif" title="agif4"></p>
+<p>That one is a little complex to do. Basically it thresholds 1D noise curves to determine if it will draw in black or white. Parameters to animate each column are different. A big disk is drawn in the center in exclusion mode.<br/>
+(<a href="https://gist.github.com/Bleuje/75347b04a29bb8442fe88f2f5aed2ee1">Code for something similar</a>)</p>
+<p><img alt="tumblr_oyjk1cPdef1w3y4ilo1_500" src="images/tumblr_oyjk1cPdef1w3y4ilo1_500.gif" title="tumblr_oyjk1cPdef1w3y4ilo1_500"></p>
+<p>Each line uses independant noise values from 1D noise, animated with 3D noise with the trick.<br/>
+(<a href="https://gist.github.com/Bleuje/98e8b4a2c276a302069ebf1a7ce9fd7a">Code</a>)</p>
+<p>That's the end of this tutorial, thanks for having a look, I hope you liked it !</p>
+<p>You can use noise to draw all sort of things so I hope you'll come up with totally different animations 🙂</p>
+<p>PS : openSimplex noise isn't symmetrical and there isn't any problem when using (radius*cos(TWO_PI*t),radius*sin(TWO_PI*t)) as inputs (since it uses positive and negative values, there will be an undesired effect if the noise is symmetrical – that could be avoided by shifting the circle).</p>
+<p>Special thanks to Chris Ball for letting me know about openSimplex noise !</p>
+<h4>Selection of work from other people inspired by this tutorial</h4>
+<p>Golan Levin made a gif that explains how a value can be looped with noise :<br/>
+<img src="https://media.giphy.com/media/xUOxeU2ELSPeTbevle/giphy.gif"/></p>
+<p>Also I love those gifs by littlecuuub on tumblr, inspired by the tutorial :<br/>
+<img src="https://78.media.tumblr.com/1d746494e9281ec49e35d62a4a7d2056/tumblr_p6dimpWwRj1x77npzo1_500.gif"/><br/>
+<img src="https://78.media.tumblr.com/1eb64597157502de0d0c8d1fa3966ef5/tumblr_p5s7feLDpq1x77npzo1_500.gif"/></p>
+<p>And this one by echophon :<br/>
+<img src="https://i1.wp.com/78.media.tumblr.com/368f157476f5808bc682a46ba8611aaa/tumblr_p048r2Q07t1six59bo1_500.gif"/></p>
+</main><footer style="background:rgba(0,0,0,0.1); margin:0px;">
+	<center><a style="color:#b5e853; font-size:20px;" href="../index.html">necessary-disorder notes index</a></center>
+</footer></body></html>
