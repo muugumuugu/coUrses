@@ -18,6 +18,15 @@ class Bill{
 
     }
   }
+  categorycount(){
+  let temp={};
+    for (let i=0; i<this.items.length;i++){
+      if(temp[this.items[i].cat])temp[this.items[i].cat]+=this.items[i].qt;
+      else temp[this.items[i].cat]=this.items[i].qt;
+
+    }
+  return temp;
+  }
 }
 class Item{
   constructor(name,category,quantity,price){
@@ -148,19 +157,214 @@ itemlst.push(new Items(
 ["Trousers","Basa Fish","Boxers","Face Wash","Slippers"],
 ["Men/Apparel","Meat/Food","Men/Apparel","Toiletries","Footwear/Apparel"],
 [2,1,4,1,1],
-[950,350,160,72,170],
-[1900,350,640,72,170]
+[950,350,160,72,170]
 )
 )
 //9
 itemlst.push(new Items(
-["Trousers","Basa Fish","Boxers","Face Wash","Slippers"],
-["Men/Apparel","Meat/Food","Men/Apparel","Toiletries","Footwear/Apparel"],
-[2,1,4,1,1],
-[950,350,160,72,170],
-[1900,350,640,72,170]
+["Mosquito Coil","Bananas","Ball Pens","Paper Clips"],
+["Household","Fruits/Food","Stationery","Stationery"],
+[2,6,4,1],
+[24,5,12,60]
 )
 )
+//10
+itemlst.push(new Items(
+["Bread","Biscuits"],
+["Packed/Food","Packed/Food"],
+[1,3],
+[30,22]
+)
+)
+//11
+itemlst.push(new Items(
+["Lindt","Socks","Spring Onions","Lettuce","Cookies"],
+["Chocolate/Food","Footwear/Apparel","Vegetables/Food","Vegetables/Food","Snacks/Food"],
+[1,1,0.5,0.6,2 ],
+[125,120,220,150,75]
+)
+)
+//12
+itemlst.push(new Items(
+["Phone Charger","Razor Blades","Razor","Shaving Lotion","Earphones","Pencils "],
+["Utilities","Grooming","Grooming","Grooming","Electronics","Stationery"],
+[1,1,1,0.8,1,3 ],
+[230,12,45,180,210,5]
+)
+)
+//13
+itemlst.push(new Items(
+["Chocolates","Cereal","Bananas","Tomatoes","Curd","Milk","Horlicks","Plates","Eggs "],
+["Packed/Food","Packed/Food","Fruits/Food","Vegetables/Food","Dairy/Food","Dairy/Food","Packed/Food","Household","Food"],
+[1,1,6,1,1,2,1,4,1 ],
+[10,220,8,40,32,24,270,45,45]
+)
+)
+//14
+itemlst.push(new Items(
+["Shoes","Polish","Socks "],
+["Footwear/Apparel","Footwear/Apparel","Footwear/Apparel"],
+[1,1,2 ],
+[2700,120,120]
+)
+)
+//15
+itemlst.push(new Items(
+["Keyboard","Mouse "],
+["Electronics","Electronics"],
+[1,1 ],
+[780,320]
+)
+)
+//16
+itemlst.push(new Items(
+["Cereal","Milk","Cupcakes","Chocolates"],
+["Packed/Food","Dairy/Food","Packed/Food","Packed/Food"],
+[1,1,1,1],
+[220,24,25,10]
+)
+)
+//17
+itemlst.push(new Items(
+["Broccoli","Chicken Legs","Basa Fish","Lettuce","Eggs "],
+["Vegetables/Food","Meat/Food","Meat/Food","Vegetables/Food","Meat/Food"],
+[0.5,0.5,1,0.8,12 ],
+[120,320,350,150,9 ]
+)
+)
+//18
+itemlst.push(new Items(
+["Pencils","Notebooks","Geometry Box","Graph Book "],
+["Stationery","Stationery","Stationery","Stationery"],
+[2,4,1,1 ],
+[5,20,72,25 ]
+)
+)
+//19
+itemlst.push(new Items(
+["Tomatoes","Curd","Cupcakes","Carrots","Beans","Onions","Turmeric","Ghee "],
+["Vegetables/Food","Dairy/Food","Packed/Food","Vegetables/Food","Vegetables/Food","Vegetables/Food","Packed/Food","Packed/Food"],
+[1,1,2,1.5,1,0.5,1,1 ],
+[40,32,25,50,45,98,82,230 ]
+)
+)
+//20
+itemlst.push(new Items(
+["Batteries","Tomatoes","Spinach","Bananas","Mosquito coils","Guava","Potato "],
+["Utilities","Vegetables/Food","Vegetables/Food","Fruits/Food","Household","Fruits/Food","Vegetables/Food"],
+[2,1.5,1,4,1,0.4,1.5 ],
+[14,80,15,5,24,120,40 ]
+)
+)
+//21
+itemlst.push(new Items(
+["Tomatoes","Curd","Cupcakes","Carrots","Onions","Handwash ","Bananas","Eggs"],
+["Vegetables/Food","Dairy/Food","Packed/Food","Vegetables/Food","Vegetables/Food","Toiletries","Fruits/Food","Food"],
+[2,2,3,0.5,1,1,12,1],
+[40,32,25,50,98,139,8,45]
+)
+)
+//22
+itemlst.push(new Items(
+["Carrots","Horlicks","Chips","Kajal "],
+["Milk Vegetables/Food","Packed/Food","Packed/Food","Cosmetics","Dairy/Food"],
+[1,1,1,1,3],
+[50,270,20,180,24]
+)
+)
+//23
+itemlst.push(new Items(
+["Curd","Butter","Milk "],
+["Dairy/Food","Dairy/Food","Dairy/Food "],
+[0.5,0.2,2 ],
+[32,320,24 ]
+)
+)
+//24
+itemlst.push(new Items(
+["Carrots","Bananas","Curd","Milk","Cereal","Maggi "],
+["Vegetables/Food","Fruits/Food","Dairy/Food","Dairy/Food","Packed/Food","Packed/Food "],
+[1.5,12,3,4,2,1 ],
+[50,8,32,24,220,85 ]
+)
+)
+//25
+itemlst.push(new Items(
+["Earphones","Phone cover","Dongle","A4 sheets","Ball Pens "],
+["Electronics","Accessories","Electronics","Stationery","Stationery "],
+[1,1,1,200,2 ],
+[210,140,790,1,12 ]
+)
+)
+//26
+itemlst.push(new Items(
+["Beans","Bread","Onions","Bananas","Curd","Milk "],
+["Vegetables/Food","Packed/Food","Vegetables/Food","Fruits/Food","Dairy/Food","Dairy/Food "],
+[1,1,0.5,6,1,3 ],
+[45,30,98,8,32,24]
+)
+)
+//27
+itemlst.push(new Items(
+["Broom","Dustpan","Floor Cleaner","Tissue Paper"],
+["Household","Household","Household","Household"],
+[1,1,1,2],
+[70,45,125,50 ]
+)
+)
+//28
+itemlst.push(new Items(
+["Milk","Chips "],
+["Dairy/Food","Packed/Food"],
+[3,1] ,
+[24,20 ]
+)
+)
+//29
+itemlst.push(new Items(
+["Face Wash","Shampoo","Maggi","Chips","Chocolates","Air Freshener "],
+["Toiletries","Toiletries","Packed/Food","Packed/Food","Packed/Food","Toiletries"],
+[1,1,1,1,4,2 ],
+[89,140,85,20,10,70 ]
+)
+)
+//30
+itemlst.push(new Items(
+["Chocolates","Curd","Bananas "],
+["Packed/Food","Dairy/Food","Fruits/Food"],
+[1,2,4 ],
+[10,32,8]
+)
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 for (let i=0; i<30; i++){

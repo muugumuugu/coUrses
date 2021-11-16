@@ -4,7 +4,10 @@ function preload(){
 }
 function setup() {
   noCanvas();
-  saveJSON(bills,"nill.json")
+  console.log("data accesible thru variables :")
+  console.log("marks,")
+  console.log("words,")
+  console.log("bills")
 }
 
 function draw() {
