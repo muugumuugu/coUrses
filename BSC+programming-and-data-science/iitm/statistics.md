@@ -2,32 +2,32 @@ TOC
 ---
 |Lec Name|
 |---|
-|[#playlist](Playlist)|
-|[#introduction](Introduction)|
-|[#understanding-data](Understanding Data)|
-|[#organization-of-data](Organization of Data)|
-|[#variables-and-cases](Variables and Cases)|
-|[#tabulation](Tabulation)|
-|[#classification-of-data](Classification of Data)|
-|[#scales-of-measurement](Scales of Measurement)|
-|[#describing-data](Describing Data)|
-|[#association-between-two-categorical-variables](Association between two categorical variables)|
-|[#association-between-two-numerical-variables](Association between two numerical variables)|
-|[#association-between-categorical-and-numerical-variables](Association between categorical and numerical variables)|
-|[#permutations-and-combinations](Permutations and Combinations)|
-|[#probability](Probability)|
-|[#random-variables](Random variables)|
-|[#probability-mass-function](Probability mass function)|
-|[#cumulative-distribution-function](Cumulative distribution function)|
-|[#expectation-of-a-random-variable](Expectation of a random variable)|
-|[#variance-of-a-random-variable](Variance of a random variable)|
-|[#discrete-distributions](Discrete Distributions)|
-|[#probability-density-function](probability density function)|
-|[#continous-distributions](continous distributions)|
-|[#working-with-g-sheets](WOrking With G-SHeets)|
+|[Playlist](#playlist)|
+|[Introduction](#introduction)|
+|[Understanding Data](#understanding-data)|
+|[Organization of Data](#organization-of-data)|
+|[Variables and Cases](#variables-and-cases)|
+|[Tabulation](#tabulation)|
+|[Classification of Data](#classification-of-data)|
+|[Scales of Measurement](#scales-of-measurement)|
+|[Describing Data](#describing-data)|
+|[Association between two categorical variables](#association-between-two-categorical-variables)|
+|[Association between two numerical variables](#association-between-two-numerical-variables)|
+|[Association between categorical and numerical variables](#association-between-categorical-and-numerical-variables)|
+|[Permutations and Combinations](#permutations-and-combinations)|
+|[Probability](#probability)|
+|[Random variables](#random-variables)|
+|[Probability mass function](#probability-mass-function)|
+|[Cumulative distribution function](#cumulative-distribution-function)|
+|[Expectation of a random variable](#expectation-of-a-random-variable)|
+|[Variance of a random variable](#variance-of-a-random-variable)|
+|[Discrete Distributions](#discrete-distributions)|
+|[probability density function](#probability-density-function)|
+|[continous distributions](#continous-distributions)|
+|[WOrking With G-SHeets](#working-with-g-sheets)|
 
 # Playlist
-[yt](https://www.youtube.com/playlist?list=PLZ2ps__7DhBYrMs3zybOqr1DzMFCX49xG)
+[https://www.youtube.com/playlist?list=PLZ2ps__7DhBYrMs3zybOqr1DzMFCX49xG](yt)
 
 ---
 # Introduction
@@ -52,7 +52,7 @@ TOC
 > facts & figures collected, analyzed, and summarized for interpretation and presentation.
 + Where to Find Data?
 	+ Data Already Available - download the published data
-		+ [Gov. provided Common Data Sets](http://data.gov.in)
+		+ [http://data.gov.in](Gov. provided Common Data Sets)
 	+ Data Not Available - generate and/or collect data.
 	
 # Organization of Data
