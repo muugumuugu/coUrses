@@ -1,5 +1,4 @@
-<script src="/styles/syntaxhighlighter.js"></script>
-<script>hljs.highlightAll();</script>
+# playlist 
 
 [yt](https://www.youtube.com/playlist?list=PLZ2ps__7DhBYSzaAFqpyQKqmoni-EefS7)
 ---
