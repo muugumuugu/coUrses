@@ -7,10 +7,10 @@
 + [x] WEEK-5
 + [x] WEEK-6
 + [x] WEEK-7
-<input type="checkbox"checked> type="checkbox"> [ ] WEEK-8
-<input type="checkbox"checked> type="checkbox"> [ ] WEEK-9
-<input type="checkbox"checked> type="checkbox"> [ ] WEEK-10
-<input type="checkbox"checked> type="checkbox"> [ ] WEEK-11
+<input type="checkbox" checked> type="checkbox"> [ ] WEEK-8
+<input type="checkbox" checked> type="checkbox"> [ ] WEEK-9
+<input type="checkbox" checked> type="checkbox"> [ ] WEEK-10
+<input type="checkbox" checked> type="checkbox"> [ ] WEEK-11
 </details>
 <details><summary><a href="computational-thinking.md">Computational Thinking</a></summary>
 + [x] WEEK-1
