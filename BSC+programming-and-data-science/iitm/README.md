@@ -1,6 +1,4 @@
 ## TOC
-<li>semester-1
-
 <details><summary><a href="english.md">English</a></summary>
 <input type="checkbox"checked> type="checkbox"checked> WEEK-1
 <input type="checkbox"checked> type="checkbox"checked> WEEK-2
