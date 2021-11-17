@@ -2,29 +2,29 @@ TOC
 ---
 |Lec Name|
 |---|
-|[playlist](Playlist)|
-|[introduction](Introduction)|
-|[understanding-data](Understanding Data)|
-|[organization-of-data](Organization of Data)|
-|[variables-and-cases](Variables and Cases)|
-|[tabulation](Tabulation)|
-|[classification-of-data](Classification of Data)|
-|[scales-of-measurement](Scales of Measurement)|
-|[describing-data](Describing Data)|
-|[association-between-two-categorical-variables](Association between two categorical variables)|
-|[association-between-two-numerical-variables](Association between two numerical variables)|
-|[association-between-categorical-and-numerical-variables](Association between categorical and numerical variables)|
-|[permutations-and-combinations](Permutations and Combinations)|
-|[probability](Probability)|
-|[random-variables](Random variables)|
-|[probability-mass-function](Probability mass function)|
-|[cumulative-distribution-function](Cumulative distribution function)|
-|[expectation-of-a-random-variable](Expectation of a random variable)|
-|[variance-of-a-random-variable](Variance of a random variable)|
-|[discrete-distributions](Discrete Distributions)|
-|[probability-density-function](probability density function)|
-|[continous-distributions](continous distributions)|
-|[working-with-g-sheets](WOrking With G-SHeets)|
+|[#playlist](Playlist)|
+|[#introduction](Introduction)|
+|[#understanding-data](Understanding Data)|
+|[#organization-of-data](Organization of Data)|
+|[#variables-and-cases](Variables and Cases)|
+|[#tabulation](Tabulation)|
+|[#classification-of-data](Classification of Data)|
+|[#scales-of-measurement](Scales of Measurement)|
+|[#describing-data](Describing Data)|
+|[#association-between-two-categorical-variables](Association between two categorical variables)|
+|[#association-between-two-numerical-variables](Association between two numerical variables)|
+|[#association-between-categorical-and-numerical-variables](Association between categorical and numerical variables)|
+|[#permutations-and-combinations](Permutations and Combinations)|
+|[#probability](Probability)|
+|[#random-variables](Random variables)|
+|[#probability-mass-function](Probability mass function)|
+|[#cumulative-distribution-function](Cumulative distribution function)|
+|[#expectation-of-a-random-variable](Expectation of a random variable)|
+|[#variance-of-a-random-variable](Variance of a random variable)|
+|[#discrete-distributions](Discrete Distributions)|
+|[#probability-density-function](probability density function)|
+|[#continous-distributions](continous distributions)|
+|[#working-with-g-sheets](WOrking With G-SHeets)|
 
 # Playlist
 [yt](https://www.youtube.com/playlist?list=PLZ2ps__7DhBYrMs3zybOqr1DzMFCX49xG)
