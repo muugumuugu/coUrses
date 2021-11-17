@@ -1,4 +1,4 @@
-()[https://www.youtube.com/playlist?list=PLZ2ps__7DhBbf28nnkgAuFwaWjGtjaNck]
+[yt](https://www.youtube.com/playlist?list=PLZ2ps__7DhBbf28nnkgAuFwaWjGtjaNck)
 # WEEK 1
 > [yt-playlist](http://www.youtube.com/watch_videos?video_ids=DgKYu1pi3qg,xcc0U_U4xhg,MMBrfQC0V9A,fC-UbX3MsGs,7tesanmUjFo,VSwUcHGAMcE,asMh3flE47E)
 

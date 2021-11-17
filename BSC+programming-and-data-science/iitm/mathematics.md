@@ -1,4 +1,7 @@
-(yt)[https://www.youtube.com/playlist?list=PLZ2ps__7DhBZYDZo9A0pZ_i0xhstrk5cR]
+<script src="/styles/syntaxhighlighter.js"></script>
+<script>hljs.highlightAll();</script>
+
+[yt]([https://www.youtube.com/playlist?list=PLZ2ps__7DhBZYDZo9A0pZ_i0xhstrk5cR)
 # Number Systems
 
 ## Natural Nums
@@ -449,9 +452,9 @@ b. increment component number and start scan on smallest unvisited node.
 > edges that connect the graph.
 
 ### classifying tree edges using dfs numbers
-	1. forward :Interval  \[pre(start),post(start)\] contains \[pre(end),post(end)\]
-	2. backward:Interval  \[pre(end),post(end)\] contains \[pre(start),post(start)\]
-	3. cross :Intervals  \[pre(start),post(start)\] & \[pre(end),post(end)\] are disjoint.
+1. forward :Interval  \[pre(start),post(start)\] contains \[pre(end),post(end)\]
+2. backward:Interval  \[pre(end),post(end)\] contains \[pre(start),post(start)\]
+3. cross :Intervals  \[pre(start),post(start)\] & \[pre(end),post(end)\] are disjoint.
 ### Longest Paths in DAGs
 > time it takes to finish a task set described by constraint DAG.
 >> longest-path-to(i)= 1 + max\{longest-path-to(j) ∋ (j,i)∈E\}

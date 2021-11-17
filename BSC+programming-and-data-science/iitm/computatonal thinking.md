@@ -1,11 +1,13 @@
-[yt](https://www.youtube.com/playlist?list=PLZ2ps__7DhBYSzaAFqpyQKqmoni-EefS7)
+<script src="/styles/syntaxhighlighter.js"></script>
+<script>hljs.highlightAll();</script>
 
+[yt](https://www.youtube.com/playlist?list=PLZ2ps__7DhBYSzaAFqpyQKqmoni-EefS7)
 ---
 
-
-# the datasets
--- > make a subset of data from the available set
-
+# data parsing and cleanup
+main goal:
+	make a subset of data from the available set
+## running examples
 + simplified reportcards
 + simplified shopping reciepts
 + words - letters and pos.
@@ -103,16 +105,6 @@ while (set.length>0){
 	set.remove current element.
 }
 ```
-
----
-# Presentation of datasets in Forms of Tables
-
----
-# Below Average Students in Two Iterations
-
----
-# Systematic process of Hypothesis verification
-
 ---
 # Three Prizes Problem
 ## PseudoCode for three prizes problem
@@ -158,8 +150,6 @@ while (set.length>0){
 > they make study pairs with contrasting mark ratios in two subjects
 + two iterations thru the data
 
----
-# Procedure to find same date of birth for different students
 
 ---
 # Procedure to resolve pronoun with its equivalent matching noun
