@@ -2,20 +2,20 @@
 ---
 |Lec Name|
 |---|
-|[#number-systems](Number Systems)|
-|[#set-theory](Set Theory)|
-|[#relations](Relations)|
-|[#functions](Functions)|
-|[#sets-v/s-collections](Sets V/S Collections)|
-|[#degrees-of-infinity](Degrees of Infinity)|
-|[#rectangular-co-ordinate-system](Rectangular Co-Ordinate System)|
-|[#general-equation-of-a-line](General Equation of a Line)|
-|[#distance-of-point-from-line](Distance of Point from Line)|
-|[#exponential-functions](Exponential Functions)|
-|[#logarithmic-functions](Logarithmic Functions)|
-|[#graphs](Graphs)|
+|[Number Systems](#number-systems)|
+|[Set Theory](#set-theory)|
+|[Relations](#relations)|
+|[Functions](#functions)|
+|[Sets V/S Collections](#sets-v/s-collections)|
+|[Degrees of Infinity](#degrees-of-infinity)|
+|[Rectangular Co-Ordinate System](#rectangular-co-ordinate-system)|
+|[General Equation of a Line](#general-equation-of-a-line)|
+|[Distance of Point from Line](#distance-of-point-from-line)|
+|[Exponential Functions](#exponential-functions)|
+|[Logarithmic Functions](#logarithmic-functions)|
+|[Graphs](#graphs)|
 
-[yt](https://www.youtube.com/playlist?list=PLZ2ps__7DhBZYDZo9A0pZ_i0xhstrk5cR)
+[https://www.youtube.com/playlist?list=PLZ2ps__7DhBZYDZo9A0pZ_i0xhstrk5cR](yt)
 # Number Systems
 
 ## Natural Nums
