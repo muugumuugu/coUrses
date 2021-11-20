@@ -4,7 +4,7 @@
 
 ------
 ## Lec 01 - Learning English
->[yt - lec](https://youtu.be/DgKYu1pi3qg)
+
 
 ### how language works.
 + a product of human mind's tendency to fins and apply patterns.
@@ -23,7 +23,7 @@
 
 ------
 ## Lec 02 - Sounds and Writing Symbols in English
->[yt - lec](https://youtu.be/xcc0U_U4xhg)
+
 
 ### Symbols in English - Two Sets
 #### 26 Symbols
@@ -100,7 +100,7 @@
 
 ------
 ## Lec 03 - Speech sounds in English
->[yt - lec](https://youtu.be/MMBrfQC0V9A)
+
 
 ### Vowel v/s Consonants
 > Vowels are *nearly free* flow of air, minimum obstruction from articulators.
@@ -123,7 +123,7 @@
 
 ------
 ## Lec 04 - Articulation of Vowel and Consonant sounds
->[yt - lec](https://youtu.be/fC-UbX3MsGs)
+
 
 ### English doesn't have all consonant sounds, only 24.
 
@@ -142,14 +142,11 @@
 
 ------
 ## Lec 05 - How to Improve your Language Skills
-> [yt - lec](https://youtu.be/7tesanmUjFo)
-
-### More input --> Better Output.
-> Read from context, and do try applying rules from known Languages when the grammer seems alien.
+ from context, and do try applying rules from known Languages when the grammer seems alien.
 
 ------
 ## Lec 06 - Telephone English
->[yt - lec](https://youtu.be/VSwUcHGAMcE)
+
 
 ### Sequence of Conversation
 
@@ -157,10 +154,10 @@ Greet->Purpose->Availibility Check.
 
 ------
 ## Lec 07 - Language Learning and Use
-> [yt - lec](https://youtu.be/asMh3flE47E)
+
 |E-Language|Internal Language|
 |---|---|
-|External language, finite input from environment.|Universal Grammer picked up in formative years, and paterns extended from it.|
+ronment.|Universal Grammer picked up in formative years, and paterns extended from it.|
 
 ------------------------------------
 ------------------------------------
@@ -171,7 +168,7 @@ Greet->Purpose->Availibility Check.
 
 ------
 ## Lec 01 - Consonant Clusters in English Words
-[yt - lec](https://youtu.be/Hpmh-iv6e4I)
+
 
 ### Vowel Builds the Word.
 
@@ -194,7 +191,7 @@ Greet->Purpose->Availibility Check.
 ------
 ## Lec 02 - Three Consonants in Clusters in English Vowel
 
->[yt - lec](https://youtu.be/BR7dQgD8qlk)
+
 
 + rarer words, restrained word construction
 + only possible, largely, in first position.
@@ -237,7 +234,7 @@ Greet->Purpose->Availibility Check.
 ------
 ## Lec 03 - Syllables And Words.
 
->[yt - lec](https://youtu.be/RAFLD5HY6Jc)
+
 
 ### POS -- > Classes of Words.
 
@@ -292,36 +289,28 @@ Greet->Purpose->Availibility Check.
 ------
 ## Lec 04 - What is Good Vocabulary? Part -1.
 
-> [yt - lec](https://youtu.be/A2eI-Ttmd7I)
+
 
 ------
 ## Lec 05 - What is Good Vocabulary? Part -2.
 
-> [yt - lec](https://youtu.be/pHkc23_0ULI)
+
 
 ------
-## Lec 06 - What is Good Vocabulary? Part -3.
-
-> [yt - lec](https://youtu.be/b8Wq_9P7uqI)
-
-------------------------------------
-------------------------------------
-# WEEK 3
-
-> [yt-playlist](http://www.youtube.com/watch_videos?video_ids=8gud9XJsL6k,42hufxqiOAk,mbE_MAhkj_A,htFNZapzHr8,BQDrv4mQHFE,LdteKj-oE5I,TMfBbpmCfdI)
+## Lec 06 - What is------------------------
+-------------------------------.youtube.com/watch_videos?video_ids=8gud9XJsL6k,42hufxqiteKj-oE5I,TMfBbpmCfdI)
 
 ---
 
 ## Lec 01 - Stress in Words
 
-> [yt - lec](https://youtu.be/8gud9XJsL6k)
+
 
 > Stress is the difference in artiulation that creates a prominent feature to the word.
 >> Syllabification, and stress patterns are intutive things.\
 
 ### General Patterns for Stress Syllable
-1. If **noun** stems from monosyllabic word --> root word
-2. Disallybic **verb** --> 2nd Syllables (differentiates verb form from noun form)
+1. If **noun** s2. Disallybic **verb** --> 2nd Syllables (differentiates verb form from noun form)
 3. Compounf **noun** --> 1st part
 4. Ending in *shion*  / *ic* sound --> on the syllable before this suffix
 5. ending in *ee* / *oo* --> on the suffix itself.
@@ -331,7 +320,7 @@ Greet->Purpose->Availibility Check.
 
 ## Lec 02 - Plurality in English#
 
-> [yt - lec](https://youtu.be/42hufxqiOAk)
+
 
 ## Pluralization
  + generally using suffixes
@@ -347,41 +336,32 @@ Greet->Purpose->Availibility Check.
 + else --> /z/
 
 -----
-## Lec 03 - Aspiration in English Words - 1
-
-> [yt - lec](https://youtu.be/mbE_MAhkj_A)
-
-+ p,t,k are voiceless stop sounds.
+## Lec 03 - Aspiration ess stop sounds.
 	+ aspirated if they are at the initial position  of the stress syllables.
 
 ---
 
 ## Lec 04 - Aspiration in English Words - 2
 
-> [yt - lec](https://youtu.be/htFNZapzHr8)
+
 
 ---
 
 ## Lec 05 - Syllables and Stress in Words
 
-> [yt - lec](https://youtu.be/BQDrv4mQHFE)
+
 
 ### Syllabification
 > Jaw Drop Test:
->> # syllables = # times jaw drops to pronounce word.
-
-### Identifying Stress Syllable
+>> # syllables = # times jaw drops to pronle
 #### Suffix Rules
 1. er, or, ly, y, consonant.
 	+ 1st syllable
 2. able, ary, cian, ely, graphy, ial, ian, ible, ic, ial, ics, ion, ity, ium, imum, logy, tal
-	+ syllable before suffix
-3. ee, ese, ique, oo, ette
+	+ o, ette
 	+ suffix itself
 #### Compound Words
-1. Noun
-	+ 1st Part's stress syllable
-2. Adjective
+1. Noive
 	+ 2nd Part's stress syllable
 3. Phrasal Verb (verb + preposition , eg wornout, backup)
 	+ 2nd part
@@ -396,7 +376,7 @@ Greet->Purpose->Availibility Check.
 
 ## Lec 06 - Aspiration, Stress and Syllabification
 
-> [yt - lec](https://youtu.be/LdteKj-oE5I)
+
 
 ### 3 - clusters at final position :
 + ado*pts*
@@ -407,7 +387,7 @@ Greet->Purpose->Availibility Check.
 
 ## Lec 07 - Fundamentals of Learning English#
 
-> [yt - lec](https://youtu.be/TMfBbpmCfdI)
+
 
 > summary lecture.
 ------------------------------------
@@ -420,24 +400,22 @@ Greet->Purpose->Availibility Check.
 -------
 ## Lec 01 - Spoken English Preliminaries
 
-> [yt - lec](https://youtu.be/_mD9iGMD73g)
 
-+ English is a *Slow Tempo Language*.
-+ Vowels are either very long & prominent or very short.
+
++ ls are either very long & prominent or very short.
 
 ----
 ## Lec 02 - Speak Slowly
 
-> [yt - lec](https://youtu.be/9ZWNeEQEdSI)
 
-+ slow speaking helps clear communication.
-+ english has pauses after each clause to indicate a unit of words.
+
++ slow speaking helps clear communicati to indicate a unit of words.
 
 
 ----
 ## Lec 03 - Phrasal Pause
 
-> [yt - lec](https://youtu.be/tGch4v-bKsU)
+
 
 > Phrase
 >> Group of words behaving as independant unit of sentence.
@@ -447,8 +425,7 @@ Greet->Purpose->Availibility Check.
 
 ### Recomended Pauses
 1. after a word of addressal ( calling someone out / pointing to something)
-2. after small chunk of numbers in a long string of numbers
-3. after ralational / conditional indicators
+2. after small chunk of numralational / conditional indicators
 	+ so
 	+ therefore
 	+ but
@@ -459,12 +436,7 @@ Greet->Purpose->Availibility Check.
 
 
 ----
-## Lec 04 - Do You Have Something To Say?
-
-> [yt - lec](https://youtu.be/XfbkqslFsTA)
-
-> Gandhi
->> eye for an eye...
+## Lec 04 - D> eye for an eye...
 
 > Mandela
 >>... fell down and got back up
@@ -474,12 +446,7 @@ Greet->Purpose->Availibility Check.
 
 
 ----
-## Lec 05 - Effective Presentations
-
-> [yt - lec](https://youtu.be/M0jkrPkUbTg)
-
-+ eye contact
-+ short slides
+## Lec 05 - Effort slides
 + stage demeanour
 + visual medium more potent
 + hand gestures
@@ -489,7 +456,7 @@ Greet->Purpose->Availibility Check.
 ----
 ## Lec 06 - Structure of Spoken Word
 
-> [yt - lec](https://youtu.be/7KIPtso75t4)
+
 
 > one syllable has only one spoken vowel
 
@@ -504,26 +471,62 @@ Greet->Purpose->Availibility Check.
 -----
 ## Lec 01 - Words and Phrases in English
 
-> [yt - lec](https://youtu.be/on8KaQZFzOQ)
+
 
 1. Determiner + Noun
-	1. indefinite = a/ an to maintain cvcv pattern
-	2. definite = the
-	> Determiner always preceedes a noun / partial noun phrase
+	1. indefinite = a/ an to mainterminer always preceedes a noun / partial noun phrase
 2. Adjective + Noun
 	> description of noun as identification
 3. Preposition + Noun Phrase
 
 ### Subject
 > nucleus of a phrase.
-
-### Shuffling
-> all non subject phrases can be shuffled as long as they follow the subject's noun phrase.
+an be shuffled as long as they follow the subject's noun phrase.
 
 ---
 ## Lec 02 - Sentences in English
 
-> [yt - lec](https://youtu.be/Cs1WRMEt10o)
+
+
+> Subject (nucleus) + Predicate
+
+ **verb-phrase** object-phrase adverbial-phrase
+
+
+> Indian Languages
+>> subject-phrase adverbial-phrase object-phrase **verb**
+
+---
+## Lec 03 - Command or Request?
+
+
+
+### imperetive sentences
+
+> Classified based on intention.
+
+> have hidden implied subject glish Sentences
+
+
+
+> Verb agrees with subject noun, and is marked acccordingly
+
+### Agreement Fields:
+1. Person : 1st,2nd or 3rd --> ( I , you, they)
+2. Count : Singular / Plural
+
+> Gender Irrelavant -- different from most indian languages, where verb is gender marked also.
+
+
+----------
+-------------
+
+<!---------------------->fled as long as they follow the subject's noun phrase.
+
+---
+## Lec 02 - Sentences in English
+
+
 
 > Subject (nucleus) + Predicate
 
@@ -538,7 +541,7 @@ Greet->Purpose->Availibility Check.
 ---
 ## Lec 03 - Command or Request?
 
-> [yt - lec](https://youtu.be/iCx2F6E_nGg)
+
 
 ### imperetive sentences
 
@@ -549,18 +552,3 @@ Greet->Purpose->Availibility Check.
 ---
 ## Lec 04 - Agreement in English Sentences
 
-> [yt - lec](https://youtu.be/Ct_FZPjzkZM)
-
-> Verb agrees with subject noun, and is marked acccordingly
-
-### Agreement Fields:
-1. Person : 1st,2nd or 3rd --> ( I , you, they)
-2. Count : Singular / Plural
-
-> Gender Irrelavant -- different from most indian languages, where verb is gender marked also.
-
-
-----------
--------------
-
-<!---------------------->

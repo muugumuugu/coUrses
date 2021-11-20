@@ -39,7 +39,7 @@ TOC
 + Inferential Statistics - drawing conclusions from data
 	+ involves dealing with possibility of chance
 	+ draws conclusion about the entire dataset( *poplation* ) from a chosen subset( the *sample* )
-	
+
 ## DataSet Classification
 + population
 	+ all elements we are interested in
@@ -54,7 +54,7 @@ TOC
 	+ Data Already Available - download the published data
 		+ [http://data.gov.in](Gov. provided Common Data Sets)
 	+ Data Not Available - generate and/or collect data.
-	
+
 # Organization of Data
 + Unstructured Data is scattered and needs *Contextualization* and *Organization* before Analysis.
 + Organization is posible thru many ways, like **tabulation**, etc.
@@ -247,7 +247,7 @@ TOC
 	+ Std Deviation
 		+ √variance
 		+ To maintain units of dispersion measure and data-points
-	
+
 ### Five Number Summary
 1. Min
 2. Q₁ : lower quartile
@@ -259,7 +259,7 @@ TOC
 	+ make a I cursor marking min/max.
 	+ make a box on the cursor showing the IQR
 	+ mark Q2 with a slicing line on the box
-	
+
 #### Percentiles
 > Percentiles are right-closed - left-open
 >> 80percentile means 80% are < it, and 20% are >= to it.
@@ -288,7 +288,7 @@ TOC
 
 
 ---
-# Association between two categorical variables 
+# Association between two categorical variables
 + Contigency Table : Two-way Table for bivariate categorical data.
 + ij position has the data which satisfies both catgeory₁ val=c<sub>i₁</sub> and category<sub>2</sub> val=c<sub>2<sub>j</sub></sub>
 + Google Sheet Method
@@ -402,7 +402,7 @@ TOC
 ## axiomatic theory of probability
 1. 0≤P(E)≤1
 2. P(S)=1
-3. for a countable sequence of mutually disjoint events: P(∪Eᵢ) = ∑P(Eᵢ) 
+3. for a countable sequence of mutually disjoint events: P(∪Eᵢ) = ∑P(Eᵢ)
 	+ addition rule of probability
 
 ## Conditional Probability
@@ -483,7 +483,7 @@ P(E)=P(F)P(E|F)+P(Fᶜ)P(E|Fᶜ)
 * knowing the value of one doesnt change the expectation of the other.
 * Var(X+Y)=Var(X)+Var(Y)
 
-# Discrete Distributions 
+# Discrete Distributions
 
 |Distribution                   |Description                                                                   |PMF                         |E(X)     |Var(X)                       |CDF         |
 |    ---                        | ---                                                                          |    ---                     |    ---  |     ---                     |    ---     |
@@ -502,8 +502,7 @@ P(E)=P(F)P(E|F)+P(Fᶜ)P(E|Fᶜ)
 |Distribution                   |Description                                                                   |PDF                         |E(X)        |Var(X)                       |CDF                      |
 |    ---                        | ---                                                                          |    ---                     |    ---     |     ---                     |    ---                  |
 |uniform                        |constant distribution                                                         | f(I)=1/(max-min)           |(min+max)/2 |((max-min)²/12               |  (x-min)/(max-min)      |
-|Hypergeometric(K true in N)    |bernoulli sampling without replacement, n at a time,k=var=num of successes    | f(x)=ke⁻ᵏˣ                 |1/k          |1/k²                        | 1- e⁻ᵏᵃ       |
-|exponential                    |multiplicative probabilty, like no of offsprings in time                     | f(i)= ⁿCᵢ x pⁱ x (1-p)⁽ⁿ⁻ⁱ⁾    |np          | np(p-1)                     |            |
+|exponential                    |multiplicative probabilty, like no of offsprings in time                      | f(x)=ke⁻ᵏˣ                              |1/k         |1/k²                         | 1- e⁻ᵏᵃ       |
 
 ---
 # WOrking With G-SHeets
