@@ -487,10 +487,10 @@ P(E)=P(F)P(E|F)+P(Fᶜ)P(E|Fᶜ)
 
 |Distribution                   |Description                                                                   |PMF                         |E(X)     |Var(X)                       |CDF         |
 |    ---                        | ---                                                                          |    ---                     |    ---  |     ---                     |    ---     |
-|Bernoulli                      |random variable that takes two value 1 or 0                                   | f(x)=p if x=1, 0 otherwise.|p        |p(p-1)                       |            |
+|Bernoulli                      |random variable that takes two value 1 or 0                                   | f(x)=p if x=1, 1-p if x=0 .|p        |p(1-p)                       |            |
 |Discrete uniform               |each outcome is equally likely                                                | f(x)=1/n for each xᵢ.       |(n+1)/2  |(n²-1)/12                    |            |
-|Hypergeometric(K true in N)    |bernoulli sampling without replacement, n at a time,k=var=num of successes    | f(k)=ᴷCₖ * ᴺ⁻ᴷCₙ₋ₖ / ᴺCₙ    |nm/N     |E*((n-1)(m-1)/(N-1) + 1 - E) |            |
-|Binomial distribution          |var= # of successes in n iid bernoulli trials                                 | f(i)= ⁿCᵢ x pⁱ x (1-p)⁽ⁿ⁻ⁱ⁾    |np      | np(p-1)                     |            |
+|Hypergeometric(K true in N)    |bernoulli sampling without replacement, n at a time,k=var=num of successes    | f(k)=ᴷCₖ * ᴺ⁻ᴷCₙ₋ₖ / ᴺCₙ          |nK/N     |E x (N-K)/N x (N-n)/(N-1) |            |
+|Binomial distribution          |var= # of successes in n iid bernoulli trials                                 | f(i)= ⁿCᵢ x pⁱ x (1-p)⁽ⁿ⁻ⁱ⁾         |np      | np(p-1)                     |            |
 
 # probability density function
 * every continous random variable has a curve associated with it.
