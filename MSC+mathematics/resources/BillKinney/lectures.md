@@ -1,4 +1,4 @@
-[Yt playlist](https://www.youtube.com/playlist?list=PLmU0FIlJY-MngWPhBDUPelVV3GhDw_mJu)
+[Real Analysis](https://www.youtube.com/playlist?list=PLmU0FIlJY-MngWPhBDUPelVV3GhDw_mJu)
 
 /home/muku/Desktop/coUrses/MSC+mathematics/resources/BillKinney/RealAnalysis/lectures/Intro Real Analysis, Lec 1 - Overview, Mean Value Theorem, Sqrt(2) is Irrational.mp4
 /home/muku/Desktop/coUrses/MSC+mathematics/resources/BillKinney/RealAnalysis/lectures/Intro Real Analysis, Lec 2 - Completeness Axiom, Counterexamples, Ordered Fields.mp4
