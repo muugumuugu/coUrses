@@ -9,7 +9,7 @@
 * [Craig Kaplan - Computer based Islamic Art](https://www.youtube.com/watch?v=FBn6VgoF3fE&list=WL&index=8)
 
 # BOOKS
-* [Collection of Geometric Books](../../bOOkshelf/islamic art)
+* [Collection of Geometric Books](https://muugumuugu.github.io/bOOkshelF/islamic%20art/)
 * [Euclid's Elements]
 # WEBSITES
 * [Tiling Database](http://www.tilingsearch.org/)
