@@ -1,4 +1,4 @@
-# playlist 
+# playlist
 [yt](https://www.youtube.com/playlist?list=PLZ2ps__7DhBYSzaAFqpyQKqmoni-EefS7)
 
 ---
@@ -111,7 +111,7 @@ while (set.length>0){
 * set pointing to different positions in another ordered set --> indexing list
 	* basically an array of pointers.
 	* demarcate where to find data in a collection that has been flagged.
-	
+
 
 # Insertion sort and ordered list
 * ordered list makes comparison based and search based operations efficient.
@@ -166,8 +166,6 @@ while (set.length>0){
 3. find the intersection of the lists if it exists.
 * from data of top 3 marks in each subject
 * find if ∃ a student who has scored with top 3 in all subjects.
--
-
 
 
 
