@@ -1,4 +1,0 @@
-# box object
-## attributes
-
-## methods
